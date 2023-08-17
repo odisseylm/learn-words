@@ -24,7 +24,7 @@ Currently used dictionaries (en-ru):
         - [Russian - Russia => en-us English - USA](http://www.slovnyk.org/csv/slovnyk_ru-ru_en-us.csv.gz)
         - [Russian - Russia => en-gb English - United Kingdom](http://www.slovnyk.org/csv/slovnyk_ru-ru_en-gb.csv.gz)
 - [DictionaryForMIDs](https://dictionarymid.sourceforge.net/) (Dictionaries packed for MID (old java platform for mobile phones))
-  - !!! Remember to extract JAD files from archives !!!
+  - !!! Remember to extract JAR files from archives !!!
   - Used now
     - dicts/DfM_OmegaWiki_Eng_3.5.9.jar
     - dicts/DfM_OmegaWiki_EngRus_3.5.9.jar
@@ -53,3 +53,9 @@ Other references
   - https://dictionarymid.sourceforge.net/dictionaries/dictsIDP.html
   - https://dictionarymid.sourceforge.net/dictionaries/dictsOtherBilinguals.html#Russian
 
+
+
+***
+
+Run application
+ - `mvn exec:java`
