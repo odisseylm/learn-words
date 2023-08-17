@@ -38,7 +38,7 @@ const val appTitle = "Words"
 
 class MainWordsPane : BorderPane() /*GridPane()*/ {
 
-    private val projectDirectory = getProjectDirectory()
+    private val projectDirectory = getProjectDirectory(this.javaClass)
 
     private val allDictionaries: List<Dictionary> = listOf(
         DictDictionary(DictDictionarySource("mueller-base",
@@ -471,7 +471,9 @@ fun main() {
     //val dbF = DatabaseFactory()
     //dbF.
 
-    val dictRootDir = getProjectDirectory().resolve("dicts/04/mueller-dict-3.1.1").toFile()
+
+
+    val dictRootDir = getProjectDirectory(MainWordsPane::class).resolve("dicts/04/mueller-dict-3.1.1").toFile()
 
     val props = Properties()
     val dbFilename = "mueller-base"

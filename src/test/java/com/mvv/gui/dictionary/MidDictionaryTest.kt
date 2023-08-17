@@ -1,15 +1,16 @@
 package com.mvv.gui.dictionary
 
-import com.mvv.gui.getProjectDirectory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class MidDictionaryTest {
 
+    private fun getProjectDir() = getProjectDirectory(this.javaClass)
+
     @Test
     fun findExisting1() {
 
-        val dict = MidDictionary(MidDictionarySource(getProjectDirectory().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
 
         // dict.find("a") // fileIndex=1, Ok
         // dict.find("adobe") // fileIndex=2, Ok
@@ -25,7 +26,7 @@ class MidDictionaryTest {
     @Test
     fun findExisting2() {
 
-        val dict = MidDictionary(MidDictionarySource(getProjectDirectory().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
 
         val dictEntry = dict.find("apple")
         println(dictEntry)
@@ -47,7 +48,7 @@ class MidDictionaryTest {
     @Test
     fun findExisting2_caseInsensitive() {
 
-        val dict = MidDictionary(MidDictionarySource(getProjectDirectory().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
 
         val dictEntry = dict.find("aPpLe")
         println(dictEntry)
@@ -69,7 +70,7 @@ class MidDictionaryTest {
     @Test
     fun findNonExisting1() {
 
-        val dict = MidDictionary(MidDictionarySource(getProjectDirectory().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
 
         val dictEntry = dict.find("NonExistentWord")
         println(dictEntry)
@@ -84,7 +85,7 @@ class MidDictionaryTest {
     @Test
     fun findWithDuplicates() {
 
-        val dict = MidDictionary(MidDictionarySource(getProjectDirectory().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
 
         val dictEntry = dict.find("un")
         println(dictEntry)
@@ -109,7 +110,7 @@ class MidDictionaryTest {
     @Test
     fun findExisting_fromDfM_OmegaWiki_EngRus() {
 
-        val dict = MidDictionary(MidDictionarySource(getProjectDirectory().resolve("dicts/DfM_OmegaWiki_EngRus_3.5.9.jar")))
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DfM_OmegaWiki_EngRus_3.5.9.jar")))
 
         val dictEntry = dict.find("apple")
         println(dictEntry)
@@ -130,7 +131,7 @@ class MidDictionaryTest {
     @Test
     fun findExisting_fromDfM_OmegaWiki_Eng__illumination() {
 
-        val dict = MidDictionary(MidDictionarySource(getProjectDirectory().resolve("dicts/DfM_OmegaWiki_Eng_3.5.9.jar")))
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DfM_OmegaWiki_Eng_3.5.9.jar")))
 
         val dictEntry = dict.find("illumination")
         println(dictEntry)

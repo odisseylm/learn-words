@@ -1,6 +1,5 @@
 package com.mvv.gui.dictionary
 
-import com.mvv.gui.getProjectDirectory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -136,7 +135,7 @@ class DictDictionaryTest {
     @Test
     fun findInDictDictionary() {
 
-        val dictionaryRootDir = getProjectDirectory().resolve("dicts/mueller-dict-3.1.1/dict")
+        val dictionaryRootDir = getProjectDir().resolve("dicts/mueller-dict-3.1.1/dict")
         val dict = DictDictionary(DictDictionarySource(
             "mueller-base",
             dictionaryRootDir,
@@ -163,7 +162,7 @@ class DictDictionaryTest {
     @Test
     fun findInDictDictionary_forIllumination() {
 
-        val dictionaryRootDir = getProjectDirectory().resolve("dicts/mueller-dict-3.1.1/dict")
+        val dictionaryRootDir = getProjectDir().resolve("dicts/mueller-dict-3.1.1/dict")
         val dict = DictDictionary(DictDictionarySource(
             "mueller-base",
             dictionaryRootDir,
@@ -188,5 +187,7 @@ class DictDictionaryTest {
             )
 
     }
+
+    private fun getProjectDir() = getProjectDirectory(this.javaClass)
 
 }

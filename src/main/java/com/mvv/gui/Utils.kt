@@ -121,11 +121,6 @@ fun buttonIcon(path: String, iconSize: Double = 16.0): ImageView {
 }
 
 
-fun getProjectDirectory(): Path {
-    // TODO: implement getProjectDirectory()
-    return Path.of("/home/vmelnykov/projects/words/words-gui")
-}
-
 
 fun String.removeSuffixCaseInsensitive(suffix: String): String =
     when {

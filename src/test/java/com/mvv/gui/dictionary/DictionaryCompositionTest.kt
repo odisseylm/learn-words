@@ -1,6 +1,5 @@
 package com.mvv.gui.dictionary
 
-import com.mvv.gui.getProjectDirectory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -8,7 +7,7 @@ import org.junit.jupiter.api.Test
 class DictionaryCompositionTest {
 
     companion object {
-        private val projectDirectory = getProjectDirectory()
+        private val projectDirectory = getProjectDirectory(this::class.java)
 
         private val allDictionaries: List<Dictionary> = listOf(
             DictDictionary(DictDictionarySource("mueller-base",

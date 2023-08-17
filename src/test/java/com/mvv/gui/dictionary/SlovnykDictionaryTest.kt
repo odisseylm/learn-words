@@ -1,6 +1,5 @@
 package com.mvv.gui.dictionary
 
-import com.mvv.gui.getProjectDirectory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -14,9 +13,8 @@ class SlovnykDictionaryTest {
         @BeforeAll
         @JvmStatic
         fun setUoBeforeAll() {
-            dict = SlovnykDictionary(
-                SlovnykDictionarySource(
-                    getProjectDirectory().resolve("dicts/slovnyk/slovnyk_en-us_ru-ru.csv.gz")))
+            dict = SlovnykDictionary(SlovnykDictionarySource(
+                    getProjectDirectory(this::class.java).resolve("dicts/slovnyk/slovnyk_en-us_ru-ru.csv.gz")))
         }
     }
 
