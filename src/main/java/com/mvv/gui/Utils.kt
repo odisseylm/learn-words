@@ -6,6 +6,7 @@ import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.input.KeyCombination
 import javafx.scene.layout.ColumnConstraints
 import javafx.scene.layout.Priority
 import javafx.stage.Modality
@@ -68,6 +69,26 @@ fun newButton(label: String, action: ()->Unit): Button {
 fun newButton(label: String, icon: ImageView, action: ()->Unit): Button {
     val button = Button(label, icon)
     button.onAction = EventHandler { action() }
+    return button
+}
+
+fun newMenuItem(label: String, action: ()->Unit): MenuItem {
+    val button = MenuItem(label)
+    button.onAction = EventHandler { action() }
+    return button
+}
+
+@Suppress("unused")
+fun newMenuItem(label: String, icon: ImageView, action: ()->Unit): MenuItem {
+    val button = MenuItem(label, icon)
+    button.onAction = EventHandler { action() }
+    return button
+}
+
+fun newMenuItem(label: String, keyCombination: KeyCombination, action: ()->Unit): MenuItem {
+    val button = MenuItem(label)
+    button.onAction = EventHandler { action() }
+    button.accelerator = keyCombination // MnemonicInfo.MnemonicKeyCombination()
     return button
 }
 

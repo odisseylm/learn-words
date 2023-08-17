@@ -79,7 +79,12 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     private val ignoredWordsFile = dictDirectory.resolve(ignoredWordsFilename)
     private var currentWordsFile: Path? = null
 
+    private val lowerCaseKeyCombination = KeyCodeCombination(KeyCode.U, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN)
+
     private val currentWordsList = TableView<CardWordEntry>()
+    private val fromColumn = TableColumn<CardWordEntry, String>("English")
+    private val toColumn = TableColumn<CardWordEntry, String>("Russian")
+
     private val ignoredWordsList = ListView<String>()
     private val allProcessedWordsList = ListView<String>()
 
@@ -114,7 +119,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             newButton("Translate") { translateCurrentWords() },
             newButton("Split") { splitCurrentWords() },
             Label("  "),
-            newButton("Insert") { insertWordCard() },
+            newButton("Insert above") { insertWordCard(InsertPosition.Below) },
+            newButton("Insert below") { insertWordCard(InsertPosition.Below) },
         )
         this.top = toolBar
 
@@ -161,12 +167,10 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         currentWordsList.isEditable = true
 
-        val fromColumn = TableColumn<CardWordEntry, String>("English")
         fromColumn.isEditable = true
         fromColumn.cellValueFactory = Callback { p -> p.value.fromProperty }
         fromColumn.cellFactory = TextFieldTableCell.forTableColumn()
 
-        val toColumn = TableColumn<CardWordEntry, String>("Russian")
         toColumn.isEditable = true
         toColumn.cellValueFactory = PropertyValueFactory("to")
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
@@ -202,12 +206,24 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             if (newScene != null) {
                 newScene.accelerators[KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN)] = Runnable { saveAll() }
                 newScene.accelerators[KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN)] = Runnable { loadWordsFromFile() }
-                newScene.accelerators[KeyCodeCombination(KeyCode.U, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN)] =
-                    Runnable { toLowerCaseRow() }
+                newScene.accelerators[lowerCaseKeyCombination] = Runnable { toLowerCaseRow() }
             }
         }
 
+        addContextMenu()
+
         loadExistentWords()
+    }
+
+    private fun addContextMenu() {
+        val menu = ContextMenu(
+            newMenuItem("Insert above") { insertWordCard(InsertPosition.Above) },
+            newMenuItem("Insert below") { insertWordCard(InsertPosition.Below) },
+            newMenuItem("Lower case", lowerCaseKeyCombination)   { toLowerCaseRow() },
+            newMenuItem("To ignore >>") { moveToIgnored() },
+        )
+
+        currentWordsList.contextMenu = menu
     }
 
 
@@ -326,30 +342,17 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         }
     }
 
-    /*
-    private fun exportCurrentAsCards() {
+    enum class InsertPosition { Above, Below }
 
-        val currentWords = currentWords.toList()
-
-        val currentWordsFile1 = currentWordsFile
-        requireNotNull(currentWordsFile1) // TODO: replace by if and alert
-
-        val csvFile = currentWordsFile1.parent.resolve(currentWordsFile1.name.removeSuffix(".txt") + ".csv")
-        val w = FileWriter(csvFile.toFile(), StandardCharsets.UTF_8)
-        w.use {
-            currentWords.forEach { word ->
-                w.write(";")
-                w.write(word)
-                w.write("\n")
-            }
-        }
-    }
-    */
-
-    private fun insertWordCard() {
+    private fun insertWordCard(insertPosition: InsertPosition) {
         val currentlySelectedIndex = currentWordsList.selectionModel.selectedIndex
         if (currentlySelectedIndex != -1) {
-            currentWordsList.items.add(currentlySelectedIndex, CardWordEntry("", ""))
+            val positionToInsert = when (insertPosition) {
+                InsertPosition.Above -> currentlySelectedIndex
+                InsertPosition.Below -> currentlySelectedIndex + 1
+            }
+            currentWordsList.items.add(positionToInsert, CardWordEntry("", ""))
+            currentWordsList.edit(positionToInsert, fromColumn)
         }
     }
 
