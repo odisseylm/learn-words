@@ -9,9 +9,9 @@ import javafx.collections.ObservableList
 import javafx.collections.transformation.SortedList
 import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.control.cell.PropertyValueFactory
-import javafx.scene.control.cell.TextFieldTableCell
 import javafx.scene.input.*
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
@@ -79,8 +79,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     private val ignoredWordsFile = dictDirectory.resolve(ignoredWordsFilename)
     private var currentWordsFile: Path? = null
 
-    private val lowerCaseKeyCombination = KeyCodeCombination(KeyCode.U, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN)
-
     private val currentWordsList = TableView<CardWordEntry>()
     private val fromColumn = TableColumn<CardWordEntry, String>("English")
     private val toColumn = TableColumn<CardWordEntry, String>("Russian")
@@ -112,16 +110,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWordsList.selectionModel.selectionMode = SelectionMode.MULTIPLE
 
 
-        val toolBar = ToolBar(
-            newButton("Load file", buttonIcon("/icons/open16x16.gif")) { loadWordsFromFile() },
-            newButton("Parse text from clipboard", buttonIcon("/icons/paste.gif" /*paste-3388622.png"*/, -1.0)) { loadFromClipboard() },
-            newButton("Save All", buttonIcon("/icons/save16x16.gif", -1.0)) { saveAll() },
-            newButton("Translate") { translateCurrentWords() },
-            newButton("Split") { splitCurrentWords() },
-            Label("  "),
-            newButton("Insert above") { insertWordCard(InsertPosition.Below) },
-            newButton("Insert below") { insertWordCard(InsertPosition.Below) },
-        )
+        val toolBar = ToolBar()
         this.top = toolBar
 
         val buttonsMiddleBar = VBox(5.0)
@@ -169,12 +158,13 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         fromColumn.isEditable = true
         fromColumn.cellValueFactory = Callback { p -> p.value.fromProperty }
-        fromColumn.cellFactory = TextFieldTableCell.forTableColumn()
+        //fromColumn.cellFactory = TextFieldTableCell.forTableColumn()
+        fromColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextField)
 
         toColumn.isEditable = true
         toColumn.cellValueFactory = PropertyValueFactory("to")
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
-        toColumn.cellFactory = MultilineTextFieldTableCell.forStringTableColumn()
+        toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
 
         // alternative approach
         //toColumn.cellValueFactory = PropertyValueFactory("to")
@@ -202,17 +192,22 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         this.center = contentPane
 
-        this.sceneProperty().addListener { _, _, newScene ->
-            if (newScene != null) {
-                newScene.accelerators[KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN)] = Runnable { saveAll() }
-                newScene.accelerators[KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN)] = Runnable { loadWordsFromFile() }
-                newScene.accelerators[lowerCaseKeyCombination] = Runnable { toLowerCaseRow() }
-            }
-        }
+        this.sceneProperty().addListener { _, _, newScene -> newScene?.let { addKeyBindings(it) } }
 
+        fillToolBar(toolBar)
         addContextMenu()
 
         loadExistentWords()
+    }
+
+    private fun addKeyBindings(newScene: Scene) {
+        newScene.accelerators[KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN)] = Runnable { saveAll() }
+        newScene.accelerators[KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN)] =
+            Runnable { loadWordsFromFile() }
+        newScene.accelerators[lowerCaseKeyCombination] = Runnable { toLowerCaseRow() }
+
+        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT1, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingFrom() }
+        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTo() }
     }
 
     private fun addContextMenu() {
@@ -221,13 +216,41 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             newMenuItem("Insert below") { insertWordCard(InsertPosition.Below) },
             newMenuItem("Lower case", lowerCaseKeyCombination)   { toLowerCaseRow() },
             newMenuItem("To ignore >>") { moveToIgnored() },
+            newMenuItem("Translate selected", translateSelectedKeyCombination) { translateSelected() },
         )
 
         currentWordsList.contextMenu = menu
     }
 
+    private fun fillToolBar(toolBar: ToolBar) {
+        val controls = listOf(
+            newButton("Load file", buttonIcon("/icons/open16x16.gif")) { loadWordsFromFile() },
+            newButton("Parse text from clipboard", buttonIcon("/icons/paste.gif" /*paste-3388622.png"*/, -1.0)) { loadFromClipboard() },
+            newButton("Save All", buttonIcon("/icons/save16x16.gif", -1.0)) { saveAll() },
+            newButton("Translate") { translateAll() },
+            newButton("Split") { splitCurrentWords() },
+            Label("  "),
+            newButton("Insert above") { insertWordCard(InsertPosition.Below) },
+            newButton("Insert below") { insertWordCard(InsertPosition.Below) },
+        )
+
+        toolBar.items.addAll(controls)
+    }
+
+    private fun startEditingFrom() {
+        val selectedIndex = currentWordsList.selectionModel.selectedIndex
+        if (selectedIndex != -1) currentWordsList.edit(selectedIndex, fromColumn)
+    }
+
+    private fun startEditingTo() {
+        val selectedIndex = currentWordsList.selectionModel.selectedIndex
+        if (selectedIndex != -1) currentWordsList.edit(selectedIndex, toColumn)
+    }
 
     private fun toLowerCaseRow() {
+        val isEditingNow = currentWordsList.editingCell != null
+        if (isEditingNow) return
+
         currentWordsList.selectionModel.selectedItems.forEach {
             it.from = it.from.lowercase()
             it.to = it.to.lowercase()
@@ -237,16 +260,30 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     }
 
 
-    private fun translateCurrentWords() {
-        currentWords.forEach {
-            if (it.to.isBlank()) {
-                it.to = dictionaryComposition.find(it.from.trim())
-                    .translations.joinToString("\n")
-            }
-        }
-
+    private fun translateSelected() {
+        translateImpl(currentWordsList.selectionModel.selectedItems)
         currentWordsList.refresh()
     }
+
+
+    private fun translateAll() {
+        translateImpl(currentWords)
+        currentWordsList.refresh()
+    }
+
+
+    private fun translateImpl(words: Iterable<CardWordEntry>) =
+        words
+            .filter  { it.from.isNotBlank() }
+            .forEach {
+                if (it.to.isBlank()) {
+                    it.to = dictionaryComposition
+                        .find(it.from.trim())
+                        .translations.joinToString("\n")
+                }
+            }
+
+
 
     private fun removeIgnoredFromCurrentWords() {
         val toRemove = currentWords.asSequence()

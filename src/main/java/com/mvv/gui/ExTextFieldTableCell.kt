@@ -1,5 +1,7 @@
 package com.mvv.gui
 
+import com.mvv.gui.TextFieldTableCellUtils.Companion.createTextArea
+import com.mvv.gui.TextFieldTableCellUtils.Companion.createTextField
 import javafx.application.Platform
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
@@ -8,6 +10,7 @@ import javafx.event.EventHandler
 import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyCombination
 import javafx.scene.input.KeyEvent
 import javafx.scene.layout.HBox
 import javafx.util.Callback
@@ -35,7 +38,7 @@ typealias BeanPropertySetter<S,T> = (T, S) -> Unit
  * @param <T> The type of the elements contained within the TableColumn.
  * @since JavaFX 2.2
 </T></S> */
-class MultilineTextFieldTableCell<S, T>
+class ExTextFieldTableCell<S, T>
 
     /**
      * Creates a TextFieldTableCell that provides a [TextField] when put
@@ -51,18 +54,21 @@ class MultilineTextFieldTableCell<S, T>
      * type T.
      */
     private constructor(
+        private val textFieldType: TextFieldType,
         converter: StringConverter<T>,
         private val customValueSetter: BeanPropertySetter<S,T>? = null,
     )
 
     : TableCell<S, T>() {
 
+    enum class TextFieldType { TextField, TextArea }
+
     /* *************************************************************************
      *                                                                         *
      * Fields                                                                  *
      *                                                                         *
      **************************************************************************/
-    private var textField: TextArea? = null
+    private var textField: TextInputControl? = null
 
     /* *************************************************************************
      *                                                                         *
@@ -113,22 +119,25 @@ class MultilineTextFieldTableCell<S, T>
             return
         }
         if (textField == null) {
-            textField = CellUtils2.createTextArea(this, getConverter(), customValueSetter)
+            textField = when (textFieldType) {
+                TextFieldType.TextArea  -> createTextArea(this, getConverter(), customValueSetter)
+                TextFieldType.TextField -> createTextField(this, getConverter(), customValueSetter)
+            }
         }
 
-        CellUtils2.startEdit(this, getConverter(), null, null, textField)
+        TextFieldTableCellUtils.startEdit(this, getConverter(), null, null, textField)
     }
 
     /** {@inheritDoc}  */
     override fun cancelEdit() {
         super.cancelEdit()
-        CellUtils2.cancelEdit(this, getConverter(), null)
+        TextFieldTableCellUtils.cancelEdit(this, getConverter(), null)
     }
 
     /** {@inheritDoc}  */
     public override fun updateItem(item: T, empty: Boolean) {
         super.updateItem(item, empty)
-        CellUtils2.updateItem(this, getConverter(), null, null, textField)
+        TextFieldTableCellUtils.updateItem(this, getConverter(), null, null, textField)
     }
 
 
@@ -151,12 +160,12 @@ class MultilineTextFieldTableCell<S, T>
          * [cell factory property][TableColumn.cellFactoryProperty] of a
          * TableColumn, that enables textual editing of the content.
         </S> */
-        fun <S> forStringTableColumn(): Callback<TableColumn<S, String>, TableCell<S, String>> =
-            forTableColumn<S,String>(DefaultStringConverter())
+        fun <S> forStringTableColumn(textFieldType: TextFieldType): Callback<TableColumn<S, String>, TableCell<S, String>> =
+            forTableColumn<S,String>(textFieldType, DefaultStringConverter())
 
         @Suppress("unused")
-        fun <S> forStringTableColumn(customValueSetter: (String, S) -> Unit): Callback<TableColumn<S, String>, TableCell<S, String>> =
-            forTableColumn<S,String>(DefaultStringConverter(), customValueSetter)
+        fun <S> forStringTableColumn(textFieldType: TextFieldType, customValueSetter: (String, S) -> Unit): Callback<TableColumn<S, String>, TableCell<S, String>> =
+            forTableColumn<S,String>(textFieldType, DefaultStringConverter(), customValueSetter)
 
         /**
          * Provides a [TextField] that allows editing of the cell content when
@@ -177,18 +186,21 @@ class MultilineTextFieldTableCell<S, T>
          * TableColumn, that enables textual editing of the content.
         </T></S> */
         @Suppress("MemberVisibilityCanBePrivate")
-        fun <S, T> forTableColumn(converter: StringConverter<T>): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            Callback { _: TableColumn<S, T>? -> MultilineTextFieldTableCell(converter) }
+        fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>): Callback<TableColumn<S, T>, TableCell<S, T>> =
+            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter) }
 
         @Suppress("MemberVisibilityCanBePrivate")
-        fun <S, T> forTableColumn(converter: StringConverter<T>, customValueSetter: BeanPropertySetter<S,T>): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            Callback { _: TableColumn<S, T>? -> MultilineTextFieldTableCell(converter, customValueSetter) }
+        fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>, customValueSetter: BeanPropertySetter<S,T>): Callback<TableColumn<S, T>, TableCell<S, T>> =
+            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, customValueSetter) }
 
     } // companion end
 }
 
 
-class CellUtils2 {
+/**
+ * It is modified copy of javafx.scene.control.cell.CellUtils (only functions which are required for TableView)
+ */
+internal class TextFieldTableCellUtils {
 
     companion object {
 
@@ -253,7 +265,6 @@ class CellUtils2 {
         }
 
 
-        @Suppress("unused")
         fun <S,T> createTextField(cell: TableCell<S,T>, converter: StringConverter<T>?, customValueSetter: ((T, S)->Unit)?): TextField {
             val textField = TextField(getItemText(cell, converter))
 
@@ -264,12 +275,11 @@ class CellUtils2 {
                 event.consume()
             }
 
-            textField.onKeyReleased = EventHandler { t: KeyEvent ->
-                if (t.code == KeyCode.ESCAPE) {
-                    cell.cancelEdit()
-                    t.consume()
-                }
-            }
+            addKeyBinding(textField, lowerCaseKeyCombination) { toLowerCase(it) }
+
+            textField.addEventHandler(KeyEvent.KEY_RELEASED) {
+                processEditCompletion(textField, it, cell, converter, customValueSetter) }
+
             return textField
         }
 
@@ -283,16 +293,6 @@ class CellUtils2 {
             val textField = TextArea(getItemText(cell, converter))
 
             /*
-            val l: ChangeListener<in Number> = object : ChangeListener<Number> {
-                override fun changed(observable: ObservableValue<out Number>?, oldValue: Number?, newValue: Number?) {
-                    println("height changed from $oldValue to $newValue")
-                    Exception("height changed from $oldValue to $newValue").printStackTrace()
-                }
-            }
-            textField.heightProperty().addListener(l)
-            */
-
-            /*
             textField.focusedProperty().addListener { prop, oldPropertyValue, newPropertyValue ->
                 if (!newPropertyValue) {
                     Math.random()
@@ -304,28 +304,36 @@ class CellUtils2 {
             }
             */
 
-            textField.onKeyReleased = EventHandler { t: KeyEvent ->
+            addKeyBinding(textField, lowerCaseKeyCombination) { toLowerCase(it) }
 
-                if (t.isControlDown && (t.character == "\n" || t.code == KeyCode.ENTER)) {
+            textField.addEventHandler(KeyEvent.KEY_RELEASED) {
+                processEditCompletion(textField, it, cell, converter, customValueSetter) }
 
-                    val index = cell.index
-                    val tableColumn = cell.tableColumn
+            return textField
+        }
 
-                    commitEdit(converter, textField, cell, customValueSetter)
-                    t.consume()
+        private fun <S, T> processEditCompletion(
+            textField: TextInputControl, keyEvent: KeyEvent, cell: TableCell<S, T>,
+            converter: StringConverter<T>?, customValueSetter: ((T, S) -> Unit)?
+        ) {
+            if (keyEvent.isControlDown && (keyEvent.character == "\n" || keyEvent.code == KeyCode.ENTER)) {
 
-                    if (index >= 0) Platform.runLater {
-                        cell.tableView.requestFocus()
-                        cell.tableView.selectionModel.select(index, tableColumn)
-                    }
-                }
+                val index = cell.index
+                val tableColumn = cell.tableColumn
 
-                if (t.code == KeyCode.ESCAPE) {
-                    cell.cancelEdit()
-                    t.consume()
+                commitEdit(converter, textField, cell, customValueSetter)
+                keyEvent.consume()
+
+                if (index >= 0) Platform.runLater {
+                    cell.tableView.requestFocus()
+                    cell.tableView.selectionModel.select(index, tableColumn)
                 }
             }
-            return textField
+
+            if (keyEvent.code == KeyCode.ESCAPE) {
+                cell.cancelEdit()
+                keyEvent.consume()
+            }
         }
 
 
@@ -348,4 +356,17 @@ class CellUtils2 {
         }
 
     } // companion object
+}
+
+
+fun <C: Control> addKeyBinding(control: C, keyBinding: KeyCombination, action: (C)-> Unit) =
+    addKeyBinding(control, mapOf(keyBinding to action))
+
+fun <C: Control> addKeyBinding(control: C, keyBindings: Map<KeyCombination, (C)-> Unit>) {
+    control.addEventHandler(KeyEvent.KEY_PRESSED) {
+        keyBindings.forEach { (keyBinding, action) -> if (keyBinding.match(it)) action(control) } }
+    control.addEventHandler(KeyEvent.KEY_TYPED) {
+        keyBindings.forEach { (keyBinding, action) -> if (keyBinding.match(it)) action(control) } }
+    control.addEventHandler(KeyEvent.KEY_RELEASED) {
+        keyBindings.forEach { (keyBinding, action) -> if (keyBinding.match(it)) action(control) } }
 }

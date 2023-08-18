@@ -142,6 +142,19 @@ fun buttonIcon(path: String, iconSize: Double = 16.0): ImageView {
 }
 
 
+fun toLowerCase(textInput: TextInputControl) {
+
+    val currentText = textInput.text
+    val hasUpperCaseChars = currentText.any { it.isUpperCase() }
+    if (!hasUpperCaseChars) return
+
+    val caretPosition = textInput.caretPosition
+    val anchor = textInput.anchor
+
+    textInput.text = currentText.lowercase()
+    textInput.selectRange(anchor, caretPosition)
+}
+
 
 fun String.removeSuffixCaseInsensitive(suffix: String): String =
     when {
