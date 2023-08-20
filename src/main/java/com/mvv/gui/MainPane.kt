@@ -117,7 +117,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         buttonsMiddleBar.isFillWidth = true
 
 
-        val ignoreButton = newButton("To ignore >>") { moveToIgnored() }
+        val ignoreButton = newButton("To ignore >>", buttonIcon("icons/rem_all_co.png")) { moveToIgnored() }
         ignoreButton.maxWidth = maxButtonWidth
         buttonsMiddleBar.children.add(ignoreButton)
 
@@ -179,6 +179,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWordsList.columns.setAll(fromColumn, toColumn)
         currentWordsList.sortOrder.add(fromColumn)
 
+        addKeyBindings(currentWordsList, copyKeyCombinations.associateWith { { copySelectedWord() } })
+
         fromColumn.isSortable = true
         fromColumn.sortType = TableColumn.SortType.ASCENDING
         fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
@@ -212,11 +214,11 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     private fun addContextMenu() {
         val menu = ContextMenu(
-            newMenuItem("Insert above") { insertWordCard(InsertPosition.Above) },
-            newMenuItem("Insert below") { insertWordCard(InsertPosition.Below) },
-            newMenuItem("Lower case", lowerCaseKeyCombination)   { toLowerCaseRow() },
-            newMenuItem("To ignore >>") { moveToIgnored() },
-            newMenuItem("Translate selected", translateSelectedKeyCombination) { translateSelected() },
+            newMenuItem("Insert above", buttonIcon("/icons/insertAbove-01.png")) { insertWordCard(InsertPosition.Above) },
+            newMenuItem("Insert below", buttonIcon("/icons/insertBelow-01.png")) { insertWordCard(InsertPosition.Below) },
+            newMenuItem("Lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination)   { toLowerCaseRow() },
+            newMenuItem("To ignore >>", buttonIcon("icons/rem_all_co.png")) { moveToIgnored() },
+            newMenuItem("Translate selected", buttonIcon("icons/forward_nav.png"), translateSelectedKeyCombination) { translateSelected() },
         )
 
         currentWordsList.contextMenu = menu
@@ -226,12 +228,13 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         val controls = listOf(
             newButton("Load file", buttonIcon("/icons/open16x16.gif")) { loadWordsFromFile() },
             newButton("Parse text from clipboard", buttonIcon("/icons/paste.gif" /*paste-3388622.png"*/, -1.0)) { loadFromClipboard() },
-            newButton("Save All", buttonIcon("/icons/save16x16.gif", -1.0)) { saveAll() },
-            newButton("Translate") { translateAll() },
-            newButton("Split") { splitCurrentWords() },
+            newButton("Save All", buttonIcon("/icons/disks.png", -1.0)) { saveAll() },
+            newButton("Translate", buttonIcon("/icons/forward_nav.png")) { translateAll() },
+            // slidesstack.png slidesstack.png
+            newButton("Split", buttonIcon("/icons/slidesstack.png")) { splitCurrentWords() },
             Label("  "),
-            newButton("Insert above") { insertWordCard(InsertPosition.Below) },
-            newButton("Insert below") { insertWordCard(InsertPosition.Below) },
+            newButton("Insert above", buttonIcon("/icons/insertAbove-01.png")) { insertWordCard(InsertPosition.Below) },
+            newButton("Insert below", buttonIcon("/icons/insertBelow-01.png")) { insertWordCard(InsertPosition.Below) },
         )
 
         toolBar.items.addAll(controls)
@@ -257,6 +260,16 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         }
         currentWordsList.sort()
         currentWordsList.refresh()
+    }
+
+    private fun copySelectedWord() {
+
+        val wordCardsAsString = currentWordsList.selectionModel.selectedItems
+            .joinToString("\n") { "${it.from}  ${it.to}" }
+
+        val clipboardContent = ClipboardContent()
+        clipboardContent.putString(wordCardsAsString)
+        Clipboard.getSystemClipboard().setContent(clipboardContent)
     }
 
 

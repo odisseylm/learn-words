@@ -72,6 +72,7 @@ fun newButton(label: String, icon: ImageView, action: ()->Unit): Button {
     return button
 }
 
+@Suppress("unused")
 fun newMenuItem(label: String, action: ()->Unit): MenuItem {
     val button = MenuItem(label)
     button.onAction = EventHandler { action() }
@@ -85,8 +86,16 @@ fun newMenuItem(label: String, icon: ImageView, action: ()->Unit): MenuItem {
     return button
 }
 
+@Suppress("unused")
 fun newMenuItem(label: String, keyCombination: KeyCombination, action: ()->Unit): MenuItem {
     val button = MenuItem(label)
+    button.onAction = EventHandler { action() }
+    button.accelerator = keyCombination // MnemonicInfo.MnemonicKeyCombination()
+    return button
+}
+
+fun newMenuItem(label: String, icon: ImageView, keyCombination: KeyCombination, action: ()->Unit): MenuItem {
+    val button = MenuItem(label, icon)
     button.onAction = EventHandler { action() }
     button.accelerator = keyCombination // MnemonicInfo.MnemonicKeyCombination()
     return button
@@ -162,3 +171,7 @@ fun String.removeSuffixCaseInsensitive(suffix: String): String =
         this.lowercase().endsWith(suffix.lowercase()) -> this.substring(0, this.length - suffix.length)
         else -> this
     }
+
+
+@Suppress("unused")
+fun <S: CharSequence> S.ifNotBlank(action: (S)->S): S = if (this.isBlank()) this else action(this)
