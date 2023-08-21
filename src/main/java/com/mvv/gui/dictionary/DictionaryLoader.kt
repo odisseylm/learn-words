@@ -11,20 +11,16 @@ interface DictionariesLoader {
 }
 
 
+typealias DictionaryLoader = (dictionariesRootDirectory: Path, dictionaryFile: Path)->Dictionary?
+
 
 @Suppress("unused")
 class AutoDictionariesLoader : DictionariesLoader {
 
-    private val loaders: List<SpecificDictionaryLoader> = listOf(
-        dictLoader(
-            { dir, file -> DictDictionarySource(dir, file) },
-            { dir, file -> DictDictionary(DictDictionarySource(dir, file)) }),
-        dictLoader(
-            { _, file -> MidDictionarySource(file) },
-            { _, file -> MidDictionary(MidDictionarySource(file)) }),
-        dictLoader(
-            { _, file -> SlovnykDictionarySource(file) },
-            { _, file -> SlovnykDictionary(SlovnykDictionarySource(file)) }),
+    private val loaders: List<DictionaryLoader> = listOf(
+        { dir, file -> tryToDo<Dictionary> { DictDictionary(DictDictionarySource(dir, file)) } },
+        { _, file   -> tryToDo<Dictionary> { MidDictionary(MidDictionarySource(file)) } },
+        { _, file   -> tryToDo<Dictionary> { SlovnykDictionary(SlovnykDictionarySource(file)) } },
     )
 
     override fun load(): List<Dictionary> {
@@ -47,28 +43,14 @@ class AutoDictionariesLoader : DictionariesLoader {
 
     private fun tryToLoadDictionary(dictionariesRootDirectory: Path, dictionaryFile: Path): Dictionary? =
         loaders
-            .find { it.isValid(dictionariesRootDirectory, dictionaryFile) }
-            ?.load(dictionariesRootDirectory, dictionaryFile)
+            .asSequence()
+            .map { it(dictionariesRootDirectory, dictionaryFile) }
+            .find { it != null}
 }
 
 
 
-// TODO: try to avoid this interface
-internal interface SpecificDictionaryLoader {
-    fun isValid(dictionariesRootDirectory: Path, dictionaryFile: Path): Boolean
-    fun load(dictionariesRootDirectory: Path, dictionaryFile: Path): Dictionary
-}
-
-
-private fun <DictSource> dictLoader(dictSourceCreator: (Path,Path)->DictSource, dictCreator: (Path,Path)->Dictionary) =
-  object : SpecificDictionaryLoader {
-    override fun isValid(dictionariesRootDirectory: Path, dictionaryFile: Path): Boolean =
-        try { dictSourceCreator(dictionariesRootDirectory, dictionaryFile); true }
-        catch (ignore: Exception) { false }
-
-    override fun load(dictionariesRootDirectory: Path, dictionaryFile: Path): Dictionary =
-        dictCreator(dictionariesRootDirectory, dictionaryFile)
-}
+private fun <T> tryToDo(action: ()->T): T? = try { action() } catch (ignore: Exception) { null }
 
 
 
