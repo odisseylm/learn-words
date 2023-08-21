@@ -38,35 +38,10 @@ const val appTitle = "Words"
 
 class MainWordsPane : BorderPane() /*GridPane()*/ {
 
-    private val projectDirectory = getProjectDirectory(this.javaClass)
+    //private val projectDirectory = getProjectDirectory(this.javaClass)
 
-    private val allDictionaries: List<Dictionary> = listOf(
-        DictDictionary(DictDictionarySource("mueller-base",
-            projectDirectory.resolve("dicts/mueller-dict-3.1.1/dict"))),
-        DictDictionary(DictDictionarySource("mueller-dict",
-            projectDirectory.resolve("dicts/mueller-dict-3.1.1/dict"))),
-        DictDictionary(DictDictionarySource("mueller-abbrev",
-            projectDirectory.resolve("dicts/mueller-dict-3.1.1/dict"))),
-        DictDictionary(DictDictionarySource("mueller-names",
-            projectDirectory.resolve("dicts/mueller-dict-3.1.1/dict"))),
-        DictDictionary(DictDictionarySource("mueller-geo",
-            projectDirectory.resolve("dicts/mueller-dict-3.1.1/dict"))),
-
-        SlovnykDictionary(SlovnykDictionarySource(
-            projectDirectory.resolve("dicts/slovnyk/slovnyk_en-gb_ru-ru.csv.gz"))),
-        SlovnykDictionary(SlovnykDictionarySource(
-            projectDirectory.resolve("dicts/slovnyk/slovnyk_en-us_ru-ru.csv.gz"))),
-
-        MidDictionary(MidDictionarySource(
-            projectDirectory.resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar"))),
-        MidDictionary(MidDictionarySource(
-            projectDirectory.resolve("dicts/DfM_OmegaWiki_EngRus_3.5.9.jar"))),
-        MidDictionary(MidDictionarySource(
-            projectDirectory.resolve("dicts/DfM_OmegaWiki_Eng_3.5.9.jar"))),
-    )
-
+    private val allDictionaries: List<Dictionary> = AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
     private val dictionaryComposition = DictionaryComposition(allDictionaries)
-
 
     private val currentWords: ObservableList<CardWordEntry> = FXCollections.observableArrayList()
     //private val currentWordsSorted: SortedList<CardWordEntry> = SortedList(currentWords, cardWordEntryComparator)
@@ -87,6 +62,10 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     private val allProcessedWordsList = ListView<String>()
 
     init {
+
+        println("Used dictionaries")
+        allDictionaries.forEachIndexed() { i, d -> println("${i + 1} $d") }
+        println("---------------------------------------------------\n\n")
 
         val contentPane = GridPane()
 
@@ -395,14 +374,31 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     enum class InsertPosition { Above, Below }
 
     private fun insertWordCard(insertPosition: InsertPosition) {
+        val noWordCards = currentWordsList.items.isEmpty()
         val currentlySelectedIndex = currentWordsList.selectionModel.selectedIndex
-        if (currentlySelectedIndex != -1) {
-            val positionToInsert = when (insertPosition) {
-                InsertPosition.Above -> currentlySelectedIndex
-                InsertPosition.Below -> currentlySelectedIndex + 1
-            }
-            currentWordsList.items.add(positionToInsert, CardWordEntry("", ""))
-            currentWordsList.edit(positionToInsert, fromColumn)
+
+        val positionToInsert = when {
+            noWordCards -> 0
+
+            currentlySelectedIndex != -1 -> when (insertPosition) {
+                    InsertPosition.Above -> currentlySelectedIndex
+                    InsertPosition.Below -> currentlySelectedIndex + 1
+                }
+
+            else -> -1
+        }
+
+        if (positionToInsert != -1) {
+            val newCardWordEntry = CardWordEntry("", "")
+            currentWordsList.items.add(positionToInsert, newCardWordEntry)
+
+            if (noWordCards) currentWordsList.selectionModel.select(newCardWordEntry)
+
+            // Bug in JavaFX: without runLaterWithDelay() editing cell does not get focus (you need to click on it or use Tab key)
+            // if column cells were not present before (if TableView did not have content yet).
+            // Platform.runLater() also does not help.
+            //
+            runLaterWithDelay(50) { currentWordsList.edit(positionToInsert, fromColumn) }
         }
     }
 

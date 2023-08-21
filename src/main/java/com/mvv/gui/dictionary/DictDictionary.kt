@@ -1,5 +1,6 @@
 package com.mvv.gui.dictionary
 
+import com.mvv.gui.replaceFilenamesSuffix
 import org.dict.kernel.DictEngine
 import org.dict.kernel.IAnswer
 import org.dict.kernel.IDatabase
@@ -8,6 +9,8 @@ import java.nio.charset.Charset
 import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
+import kotlin.io.path.name
 
 
 /**
@@ -45,6 +48,33 @@ data class DictDictionarySource (
         operator fun invoke(dictionaryIdAndBaseFilename: String, dictRootDirectory: Path,
                             dataEncoding: Charset = Charsets.UTF_8): DictDictionarySource =
             invoke(dictionaryIdAndBaseFilename, dictRootDirectory, dictionaryIdAndBaseFilename, dataEncoding)
+
+        operator fun invoke(dictionariesRootDirectory: Path, dictionaryFile: Path, dataEncoding: Charset = Charsets.UTF_8): DictDictionarySource {
+
+            val dictExt = "dict.dz"
+            val dictIndexExt = "index"
+
+            require(dictionaryFile.name.lowercase().endsWith(".$dictExt")) {
+                "File [$dictionaryFile] does not have expected extension [.$dictExt]." }
+            require(dictionaryFile.startsWith(dictionariesRootDirectory)) {
+                "File [$dictionaryFile] is not located in dictionaries root directory [$dictionariesRootDirectory]." }
+            require(dictionaryFile.exists()) {
+                "File [$dictionaryFile] does not exist." }
+
+            val indexFile = dictionaryFile.replaceFilenamesSuffix(".$dictExt", ".$dictIndexExt")
+            require(indexFile.exists()) { "Index file [$dictionaryFile] does not exist." }
+
+            val dictionaryId = dictionaryFile.subpath(dictionariesRootDirectory.nameCount, dictionaryFile.nameCount)
+                .toString()
+                .replace("/", "--")
+                .replace("\\", "--")
+
+            return DictDictionarySource(
+                dictionaryId, dictionaryFile.parent,
+                dictionaryFile, indexFile,
+                dataEncoding,
+            )
+        }
     }
 }
 
@@ -61,6 +91,8 @@ class DictDictionary(val source: DictDictionarySource) : Dictionary {
         database = DatabaseFactory.createDatabase(source.id, source.dictRootDirectory.toFile(), source.toProperties())
         fEngine.databases = arrayOf(database)
     }
+
+    override fun toString(): String = "${javaClass.simpleName} { ${source.dataFile} }"
 
     override fun find(word: String): DictionaryEntry {
 

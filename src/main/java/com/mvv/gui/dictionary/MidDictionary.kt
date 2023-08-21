@@ -3,7 +3,6 @@ package com.mvv.gui.dictionary
 import org.apache.commons.lang3.StringUtils
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
-import java.io.FileInputStream
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.URL
@@ -13,20 +12,43 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import kotlin.Comparator
 import kotlin.io.path.exists
+import kotlin.io.path.extension
 import kotlin.streams.asSequence
 
 
 data class MidDictionarySource (
-    val jarPath: Path,              // dicts/DictionaryForMIDs_EngRus_Mueller.jar
-    //val dictionaryDirectory: Path,  // dictionary
-)
+    val jarDictionaryFile: Path,   // Example: dictionaries/DictionaryForMIDs_EngRus_Mueller.jar
+) {
+
+    init {
+        val dictExt = "jar"
+
+        require(jarDictionaryFile.extension.lowercase() == dictExt) {
+            "File [$jarDictionaryFile] does not have expected extension [.$dictExt]." }
+        require(jarDictionaryFile.exists()) {
+            "File [$jarDictionaryFile] does not exist." }
+
+        // Mandatory files
+        // dictionary/searchlistEng.csv
+        // dictionary/directory1.csv
+        //
+        require(
+            jarContains(jarDictionaryFile, Path.of("dictionary/searchlistEng.csv"))) {
+            "JAR file [$jarDictionaryFile] does not contains [dictionary/searchlistEng.csv]" }
+        require(
+            jarContains(jarDictionaryFile, Path.of("dictionary/directory1.csv"))) {
+            "JAR file [$jarDictionaryFile] does not contains [dictionary/directory1.csv]" }
+    }
+
+}
 
 
 class MidDictionary(val source: MidDictionarySource) : Dictionary {
 
     private val searchListEntries: List<SearchListEntry> = loadSearchListEntries()
     private val indexesMap: ConcurrentMap<Int, IndexFile> = ConcurrentHashMap()
-    //private val indexesMap: Map<Int, IndexFile> = ConcurrentHashMap()
+
+    override fun toString(): String = "${javaClass.simpleName} { ${source.jarDictionaryFile} }"
 
     override fun find(word: String): DictionaryEntry = findImpl(word.trim().lowercase())
 
@@ -89,9 +111,7 @@ class MidDictionary(val source: MidDictionarySource) : Dictionary {
     }
 
 
-    private fun getFileStream(path: Path): InputStream =
-        if (path.exists()) FileInputStream(path.toFile())
-        else URL("jar:file:${source.jarPath}!/${path}").openStream()
+    private fun getFileStream(path: Path): InputStream = getFileStream(source.jarDictionaryFile, path)
 
 
     private fun loadFileBytes(path: Path): ByteArray =
@@ -280,3 +300,13 @@ class MidDictionary(val source: MidDictionarySource) : Dictionary {
     }
 
 }
+
+
+private fun getFileStream(jarFile: Path, pathInArchive: Path): InputStream =
+    //if (jarFile.exists()) FileInputStream(jarFile.toFile())
+    //else URL("jar:file:${jarFile}!/${pathInArchive}").openStream()
+    URL("jar:file:${jarFile}!/${pathInArchive}").openStream()
+
+
+private fun jarContains(jarFile: Path, pathInArchive: Path): Boolean =
+    jarFile.exists() && getFileStream(jarFile, pathInArchive).use { it.read() != -1 }

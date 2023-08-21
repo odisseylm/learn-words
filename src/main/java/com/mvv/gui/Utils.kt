@@ -1,5 +1,8 @@
 package com.mvv.gui
 
+import javafx.animation.KeyFrame
+import javafx.animation.Timeline
+import javafx.application.Platform
 import javafx.event.EventHandler
 import javafx.geometry.HPos
 import javafx.scene.Node
@@ -11,6 +14,7 @@ import javafx.scene.layout.ColumnConstraints
 import javafx.scene.layout.Priority
 import javafx.stage.Modality
 import javafx.stage.Stage
+import javafx.util.Duration
 import java.io.FileInputStream
 import java.nio.file.Path
 import java.util.*
@@ -148,6 +152,13 @@ fun buttonIcon(path: String, iconSize: Double = 16.0): ImageView {
     //return imageView
 
     return ImageView(image)
+}
+
+
+fun runLaterWithDelay(delayMillis: Long, action: ()->Unit) {
+    val timeline = Timeline(KeyFrame(Duration.millis(delayMillis.toDouble()), { Platform.runLater(action) }))
+    timeline.cycleCount = 1
+    timeline.play()
 }
 
 

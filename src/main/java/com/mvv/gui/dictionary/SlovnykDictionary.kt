@@ -5,31 +5,53 @@ import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
+import kotlin.io.path.extension
+import kotlin.io.path.name
 import kotlin.text.Charsets.UTF_8
 
 
-data class SlovnykDictionarySource(
-    val path: Path,
-)
+data class SlovnykDictionarySource(val path: Path) {
+    init {
+        // Example: dictionaries/slovnyk/slovnyk_en-gb_ru-ru.csv.gz
+
+        val fileNameLowercase = path.name.lowercase()
+
+        require(fileNameLowercase.endsWith(".csv") || fileNameLowercase.endsWith(".csv.gz")) {
+            "Path [$path] should have extension .csv or .csv.gz." }
+
+        require(
+            // one of subdirectory should contain 'slovnyk'
+            path.any { it.name.lowercase().contains("slovnyk") }
+            // or filename should contain 'slovnyk'
+            || fileNameLowercase.contains("slovnyk")
+        ) { "Path [$path] should contain 'slovnyk'." }
+    }
+}
 
 
 // Example (slovnyk):
 //  en-gb,ru-ru,"Aboard ship","Берег"
 //  en-gb,ru-ru,"Aboard ship","Борт"
 //
-class SlovnykDictionary(source: SlovnykDictionarySource) : Dictionary {
+class SlovnykDictionary(private val source: SlovnykDictionarySource) : Dictionary {
 
-    private val translations: Map<String, List<Translation>>
+    private val translations: Map<String, List<Translation>> = loadData()
 
-    init {
+    override fun toString(): String = "${javaClass.simpleName} { ${source.path} }"
+
+    private fun loadData(): Map<String, List<Translation>> {
         val fileInputStream = FileInputStream(source.path.toFile())
-        fileInputStream.use {
-            val csvReader = CSVReader(InputStreamReader(GZIPInputStream(fileInputStream), UTF_8))
+        return fileInputStream.use {
+            val isGzipFile = source.path.extension.lowercase() == "gz"
+            val inStream = if (isGzipFile) GZIPInputStream(fileInputStream) else fileInputStream
+            val csvReader = CSVReader(InputStreamReader(inStream, UTF_8))
 
-            translations = csvReader
+            val translations = csvReader
                 .map { Translation(it[2].lowercase(), it[2], it[3]) }
                 .flatMap { splitToImplicits(it) }
                 .groupBy { it.fromLowercase }
+
+            translations
         }
     }
 
