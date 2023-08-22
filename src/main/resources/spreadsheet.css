@@ -1,0 +1,79 @@
+
+
+#currentWordsList_id  .table-cell #qwerty123 { -fx-background-color: green; }
+
+/*#currentWordsList_id  #qwerty123 { -fx-background-color: red; }*/
+/*#qwerty123 { -fx-background-color: cyan; }*/
+
+/*#currentWordsList_id  #NotBad { -fx-alignment: center; -fx-background-color: #fffac5; -fx-background-insets: 0 0 1 0; }*/
+/*#currentWordsList_id  #Warn   { -fx-alignment: center; -fx-background-color: #ffdcc0; -fx-background-insets: 0 0 1 0; }*/
+/*#currentWordsList_id  #ToMany { -fx-alignment: center; -fx-background-color: #ffbbbb; -fx-background-insets: 0 0 1 0; }*/
+
+/*!*#currentWordsList_id  #NotBad:selected { -fx-alignment: center; -fx-background-color: red; -fx-background-insets: 1 0 1 0; }*!*/
+/*!*#currentWordsList_id  #Warn:selected   { -fx-alignment: center; -fx-background-color: green; -fx-background-insets: 1 0 1 0; }*!*/
+/*!*#currentWordsList_id  #ToMany:selected { -fx-alignment: center; -fx-background-color: blue; -fx-background-insets: 1 0 1 0; }*!*/
+
+/*#currentWordsList_id  #NotBad:cell-selection { -fx-alignment: center; -fx-background-color: red; -fx-background-insets: 1 0 1 0; }*/
+/*#currentWordsList_id  #Warn:cell-selection   { -fx-alignment: center; -fx-background-color: green; -fx-background-insets: 1 0 1 0; }*/
+/*#currentWordsList_id  #ToMany:cell-selection { -fx-alignment: center; -fx-background-color: blue; -fx-background-insets: 1 0 1 0; }*/
+
+/*#currentWordsList_id  #NotBad:row-selection { -fx-alignment: center; -fx-background-color: red; -fx-background-insets: 1 0 1 0; }*/
+/*#currentWordsList_id  #Warn:row-selection   { -fx-alignment: center; -fx-background-color: green; -fx-background-insets: 1 0 1 0; }*/
+/*#currentWordsList_id  #ToMany:row-selection { -fx-alignment: center; -fx-background-color: blue; -fx-background-insets: 1 0 1 0; }*/
+
+
+/*
+.table-row-cell{
+    -fx-background-color: transparent;
+    -fx-table-cell-border-color: transparent;
+    -fx-background-insets: 0, 0 0 0 0;
+    -fx-padding: 0.2em;
+    -fx-cell-size: 20px;
+}
+
+
+.table-row-cell:selected {
+    -fx-background-color: rgba(120,0,0,.90);
+    -fx-table-cell-border-color: transparent;
+    -fx-background-insets: 0, 0 0 0 0;
+    -fx-padding: 0.2em;
+    -fx-cell-size: 20px;
+}
+*/
+
+#currentWords  .table-row-cell .TranslationCountStatus-Ok {
+    -fx-alignment: center;
+}
+
+
+#currentWords  .table-row-cell .TranslationCountStatus-NotBad {
+    -fx-alignment: center;
+    -fx-background-color: #fffac5;
+    -fx-background-insets: 0 0 1 0;
+}
+#currentWords  .table-row-cell:selected .TranslationCountStatus-NotBad {
+    -fx-background-insets: 1 0 1 0; /* to fix top selection border */
+    -fx-text-fill: black;           /* to avoid default white text color. */
+}
+
+
+#currentWords  .table-row-cell .TranslationCountStatus-Warn {
+    -fx-alignment: center;
+    -fx-background-color: #ffdcc0;
+    -fx-background-insets: 0 0 1 0;
+}
+#currentWords  .table-row-cell:selected .TranslationCountStatus-Warn {
+    -fx-background-insets: 1 0 1 0; /* to fix top selection border */
+    -fx-text-fill: black;           /* to avoid default white text color. */
+}
+
+
+#currentWords  .table-row-cell .TranslationCountStatus-ToMany {
+    -fx-alignment: center;
+    -fx-background-color: #ffbbbb;
+    -fx-background-insets: 0 0 1 0;
+}
+#currentWords  .table-row-cell:selected .TranslationCountStatus-ToMany {
+    -fx-background-insets: 1 0 1 0; /* to fix top selection border */
+    -fx-text-fill: black;           /* to avoid default white text color. */
+}

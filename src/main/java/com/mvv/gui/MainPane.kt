@@ -14,7 +14,6 @@ import javafx.scene.control.*
 import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.input.*
 import javafx.scene.layout.*
-import javafx.scene.paint.Color
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.util.Callback
@@ -69,6 +68,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         println("Used dictionaries")
         allDictionaries.forEachIndexed { i, d -> println("${i + 1} $d") }
         println("---------------------------------------------------\n\n")
+
+        this.stylesheets.add("spreadsheet.css")
 
         val contentPane = GridPane()
 
@@ -155,31 +156,12 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         translationCountColumn.isEditable = false
         translationCountColumn.cellValueFactory = Callback { p -> p.value.translationCountProperty }
 
-        translationCountColumn.cellFactory = LabelStatusTableCell.forTableColumn { cell, card, translationCount ->
+        val allTranslationCountStatusCssClasses = TranslationCountStatus.values().map { "TranslationCountStatus-${it.name}" }
 
-            val translationCountStatus = translationCount.toTranslationCountStatus
-            cell.alignment = Pos.CENTER
-
-            if (translationCountStatus == TranslationCountStatus.Ok) {
-                cell.background = null
-            }
-            else {
-
-                val prevBg = cell.background
-                val borderWidth = 1.0 // T O D O: get this width programmatically
-                val insets = Insets(
-                    // actually cell.isRowSelected does not work now
-                    // because refresh of cells (method updateItem())
-                    // is not called on selection... seems it is cached in some way...
-                    // Currently, I don't know how to fix it. TODO: find way to fix it
-                    if (cell.isRowSelected) borderWidth else 0.0, // top
-                    0.0,
-                    borderWidth, // bottom
-                    0.0)
-
-                cell.background = Background(BackgroundFill(translationCountStatus.color, prevBg?.fills?.first()?.radii, insets))
-                cell.textFill = Color.BLACK
-            }
+        translationCountColumn.cellFactory = LabelStatusTableCell.forTableColumn { cell, _, translationCount ->
+            val translationCountStatus = translationCount?.toTranslationCountStatus ?: TranslationCountStatus.Ok
+            cell.styleClass.removeAll(allTranslationCountStatusCssClasses)
+            cell.styleClass.add("TranslationCountStatus-${translationCountStatus.name}")
         }
 
         transcriptionColumn.isEditable = true
@@ -203,6 +185,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         //currentWordsList.setComparator(cardWordEntryComparator)
         currentWordsList.columns.setAll(fromColumn, toColumn, translationCountColumn, transcriptionColumn, examplesColumn)
         currentWordsList.sortOrder.add(fromColumn)
+
+        currentWordsList.id = "currentWords"
 
         addKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
             if (!currentWordsList.isEditing) copySelectedWord() } })
@@ -682,6 +666,7 @@ fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S,T>) {
 }
 
 
+@Suppress("unused") // Do not use it during cell rendering (during rendering runtime selection state is not accessible )
 private val <S, T> TableCell<S, T>.isRowSelected: Boolean get() =
     this.isSelected || this.tableRow.isSelected
     //   || this.tableView.selectionModel.selectedItems.contains(this.tableRow.item)
