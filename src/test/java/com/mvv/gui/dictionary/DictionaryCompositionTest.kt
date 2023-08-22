@@ -44,7 +44,7 @@ class DictionaryCompositionTest {
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("apple")
-        assertThat(dictEntry.transcription).isIn("[ˈæpl][01(ˈæpl)]", "[01(ˈæpl)][ˈæpl]") // TODO: improve transcription comparing
+        assertThat(dictEntry.transcription).isEqualTo("[ˈæpl]")
         assertThat(dictEntry.translations).containsExactly(
             "1) яблоко",
             "2) яблоня",
@@ -80,7 +80,7 @@ class DictionaryCompositionTest {
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("illumination")
-        assertThat(dictEntry.transcription).isEqualTo("[ɪˌlju:mɪˈneɪʃən][01(ıˌljuːmıˈneıʃən)]")
+        assertThat(dictEntry.transcription).isEqualTo("[ıˌlju:mıˈneıʃən]")
         assertThat(dictEntry.translations).containsExactly(
             "1) освещение",
             "2) _эл. освещённость",
@@ -99,6 +99,23 @@ class DictionaryCompositionTest {
             "7. [02 (attr.)] осветительный",
             "illumination engineering осветительная техника",
             "[01The act of illuminating, or supplying with light; the state of being illuminated.]",
+        )
+    }
+
+
+    @Test
+    fun findFor_enjoyable() {
+        val dictEntry = dictionaryComposition.find("enjoyable", false)
+
+        assertThat(dictEntry).isNotNull
+        assertThat(dictEntry.word).isEqualTo("enjoyable")
+        assertThat(dictEntry.transcription).isEqualTo("[ınˈdʒɔıəbl]")
+        assertThat(dictEntry.translations).containsExactly(
+            "_a. приятный, доставляющий удовольствие",
+            "Приятный",
+            "[02 (a.)] приятный, доставляющий удовольствие",
+            "[01 Giving or capable of giving joy or pleasure.]",
+            "прия́тный",
         )
     }
 }

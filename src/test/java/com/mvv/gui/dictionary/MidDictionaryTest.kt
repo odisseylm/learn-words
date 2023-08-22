@@ -33,7 +33,7 @@ class MidDictionaryTest {
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("apple")
-        assertThat(dictEntry.transcription).isEqualTo("[01(ˈæpl)]")
+        assertThat(dictEntry.transcription).isEqualTo("[ˈæpl]")
         assertThat(dictEntry.translations).containsExactly(
             "[02 (n.)]",
             "1. яблоко",
@@ -55,7 +55,7 @@ class MidDictionaryTest {
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("apple")
-        assertThat(dictEntry.transcription).isEqualTo("[01(ˈæpl)]")
+        assertThat(dictEntry.transcription).isEqualTo("[ˈæpl]")
         assertThat(dictEntry.translations).containsExactly(
             "[02 (n.)]",
             "1. яблоко",
@@ -92,7 +92,7 @@ class MidDictionaryTest {
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("un")
-        assertThat(dictEntry.transcription).isEqualTo("[01(ʌn)]")
+        assertThat(dictEntry.transcription).isEqualTo("[ʌn]")
         assertThat(dictEntry.translations).containsExactlyInAnyOrder(
             "[02 (pref.)]",
             "1. придаёт глаголу противоположное значение: to undo уничтожать сделанное",

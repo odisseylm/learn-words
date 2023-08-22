@@ -159,8 +159,9 @@ private fun saveWordEntriesWithMemoWorldFormatImpl(file: Path, words: Iterable<C
 }
 
 
-private fun formatWordOrPhraseToMemoWorldFormat(wordOrPhrase: String): String =
+fun formatWordOrPhraseToMemoWorldFormat(wordOrPhrase: String): String =
     wordOrPhrase
+        .trim()
         .replace("\n ", ", ")
         .replace("\n", ", ")
         .replace("; ", ", ")
@@ -175,6 +176,12 @@ private fun formatWordOrPhraseToMemoWorldFormat(wordOrPhrase: String): String =
         .removeSuffix(";")
         .removeSuffix(",")
         .trim()
+
+
+// It would be nice to optimize it to avoid unneeded string conversions.
+val String.translationCount: Int get() =
+    formatWordOrPhraseToMemoWorldFormat(this).split(",").filter { it.isNotBlank() }.size
+
 
 
 fun saveSplitWords(file: Path, words: Iterable<CardWordEntry>, portionSize: Int) =

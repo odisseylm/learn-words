@@ -13,10 +13,8 @@ import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.input.*
-import javafx.scene.layout.BorderPane
-import javafx.scene.layout.GridPane
-import javafx.scene.layout.Priority
-import javafx.scene.layout.VBox
+import javafx.scene.layout.*
+import javafx.scene.paint.Color
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.util.Callback
@@ -27,11 +25,13 @@ import org.dict.kernel.IDictEngine
 import org.dict.server.DatabaseFactory
 import org.dict.server.DictHTMLPrinter
 import java.io.File
+import java.io.FileReader
 import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.*
+import kotlin.text.Charsets.UTF_8
 
 
 const val appTitle = "Words"
@@ -57,6 +57,9 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     private val currentWordsList = TableView<CardWordEntry>()
     private val fromColumn = TableColumn<CardWordEntry, String>("English")
     private val toColumn = TableColumn<CardWordEntry, String>("Russian")
+    private val translationCountColumn = TableColumn<CardWordEntry, Int>("n")
+    private val transcriptionColumn = TableColumn<CardWordEntry, String>("transcription")
+    private val examplesColumn = TableColumn<CardWordEntry, String>("examples")
 
     private val ignoredWordsList = ListView<String>()
     private val allProcessedWordsList = ListView<String>()
@@ -64,7 +67,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     init {
 
         println("Used dictionaries")
-        allDictionaries.forEachIndexed() { i, d -> println("${i + 1} $d") }
+        allDictionaries.forEachIndexed { i, d -> println("${i + 1} $d") }
         println("---------------------------------------------------\n\n")
 
         val contentPane = GridPane()
@@ -149,16 +152,60 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         //toColumn.cellValueFactory = PropertyValueFactory("to")
         //toColumn.cellFactory = MultilineTextFieldTableCell.forStringTableColumn { toText, card -> card.to = toText }
 
+        translationCountColumn.isEditable = false
+        translationCountColumn.cellValueFactory = Callback { p -> p.value.translationCountProperty }
+
+        translationCountColumn.cellFactory = LabelStatusTableCell.forTableColumn { cell, card, translationCount ->
+
+            val translationCountStatus = translationCount.toTranslationCountStatus
+            cell.alignment = Pos.CENTER
+
+            if (translationCountStatus == TranslationCountStatus.Ok) {
+                cell.background = null
+            }
+            else {
+
+                val prevBg = cell.background
+                val borderWidth = 1.0 // T O D O: get this width programmatically
+                val insets = Insets(
+                    // actually cell.isRowSelected does not work now
+                    // because refresh of cells (method updateItem())
+                    // is not called on selection... seems it is cached in some way...
+                    // Currently, I don't know how to fix it. TODO: find way to fix it
+                    if (cell.isRowSelected) borderWidth else 0.0, // top
+                    0.0,
+                    borderWidth, // bottom
+                    0.0)
+
+                cell.background = Background(BackgroundFill(translationCountStatus.color, prevBg?.fills?.first()?.radii, insets))
+                cell.textFill = Color.BLACK
+            }
+        }
+
+        transcriptionColumn.isEditable = true
+        transcriptionColumn.cellValueFactory = PropertyValueFactory("transcription")
+        transcriptionColumn.cellValueFactory = Callback { p -> p.value.transcriptionProperty }
+        transcriptionColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextField)
+
+        examplesColumn.isEditable = true
+        examplesColumn.cellValueFactory = PropertyValueFactory("examples")
+        examplesColumn.cellValueFactory = Callback { p -> p.value.examplesProperty }
+        examplesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+
         fromColumn.prefWidth = 200.0
         toColumn.prefWidth = 400.0
+        translationCountColumn.prefWidth = 50.0
+        transcriptionColumn.prefWidth = 200.0
+        examplesColumn.prefWidth = 200.0
 
 
         currentWordsList.items = currentWords // Sorted
         //currentWordsList.setComparator(cardWordEntryComparator)
-        currentWordsList.columns.setAll(fromColumn, toColumn)
+        currentWordsList.columns.setAll(fromColumn, toColumn, translationCountColumn, transcriptionColumn, examplesColumn)
         currentWordsList.sortOrder.add(fromColumn)
 
-        addKeyBindings(currentWordsList, copyKeyCombinations.associateWith { { copySelectedWord() } })
+        addKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
+            if (!currentWordsList.isEditing) copySelectedWord() } })
 
         fromColumn.isSortable = true
         fromColumn.sortType = TableColumn.SortType.ASCENDING
@@ -230,8 +277,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     }
 
     private fun toLowerCaseRow() {
-        val isEditingNow = currentWordsList.editingCell != null
-        if (isEditingNow) return
+        if (currentWordsList.isEditing) return
 
         currentWordsList.selectionModel.selectedItems.forEach {
             it.from = it.from.lowercase()
@@ -269,9 +315,10 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             .filter  { it.from.isNotBlank() }
             .forEach {
                 if (it.to.isBlank()) {
-                    it.to = dictionaryComposition
-                        .find(it.from.trim())
-                        .translations.joinToString("\n")
+                    val translation = dictionaryComposition.find(it.from.trim())
+                    it.to = translation.translations.joinToString("\n")
+                    it.transcription = translation.transcription ?: ""
+                    it.examples = extractExamples(translation)
                 }
             }
 
@@ -289,7 +336,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         val fc = FileChooser()
         fc.title = "Select words file"
         fc.initialDirectory = dictDirectory.toFile()
-        fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", "*.csv", "*.words", "*.txt"))
+        fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", "*.csv", "*.words", "*.txt", "*.srt"))
 
         val file = fc.showOpenDialog(this.scene.window)
 
@@ -307,6 +354,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
                     loadWords(filePath).map { CardWordEntry(it, "") }
                 "csv", "words" ->
                     loadWordEntries(filePath)
+                "srt" ->
+                    extractWordsFromFile(filePath)
                 else ->
                     throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
@@ -321,6 +370,11 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         }
     }
 
+    private fun extractWordsFromFile(filePath: Path): List<CardWordEntry> {
+        val r = FileReader(filePath.toFile(), UTF_8)
+        return r.use { extractWordsFromText(r.readText()) } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
+    }
+
     private fun loadFromClipboard() {
 
         val clipboard: Clipboard = Clipboard.getSystemClipboard()
@@ -330,12 +384,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         if (content == null) return
 
-        val words = TextParser()
-            .parse(content.toString())
-            .asSequence()
-            .filter { !ignoredWordsSorted.contains(it) }
-            .map { CardWordEntry(it, "") }
-            .toList()
+        val words = extractWordsFromText(content.toString())
 
         println("clipboard content as words: $words")
 
@@ -343,6 +392,14 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWordsFile = null
         setWindowTitle(this, appTitle)
     }
+
+    private fun extractWordsFromText(content: CharSequence): List<CardWordEntry> =
+        TextParser()
+            .parse(content)
+            .asSequence()
+            .filter { !ignoredWordsSorted.contains(it) }
+            .map { CardWordEntry(it, "") }
+            .toList()
 
     private fun moveToIgnored() {
 
@@ -602,22 +659,6 @@ private fun printAnswers(fEngine: IDictEngine, answers: Array<IAnswer>, word: St
 }
 
 
-//class TableView2<S>() : TableView<S>() {
-//
-//    override fun edit(row: Int, column: TableColumn<S, *>?) {
-//        //if (row < 0 && column == null) {
-//        //    //if (this.editingCell != null) {
-//        //    //    println("fddfd")
-//        //    //    //this.editingCell.
-//        //    //}
-//        //}
-//
-//        super.edit(row, column)
-//    }
-//}
-
-
-
 
 fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S,T>) {
 
@@ -639,3 +680,9 @@ fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S,T>) {
         }
     }
 }
+
+
+private val <S, T> TableCell<S, T>.isRowSelected: Boolean get() =
+    this.isSelected || this.tableRow.isSelected
+    //   || this.tableView.selectionModel.selectedItems.contains(this.tableRow.item)
+

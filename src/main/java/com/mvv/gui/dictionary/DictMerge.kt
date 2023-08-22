@@ -6,8 +6,9 @@ fun mergeDictionaryEntries(word: String, dictionaryEntries: Iterable<DictionaryE
 
     val uniqueTranscriptions = dictionaryEntries
         .asSequence()
-        .map { it.transcription }
-        .filter { !it.isNullOrBlank() }
+        .map { it.transcription.trimToEmpty() }
+        .filter { it.isNotBlank() }
+        .map { normalizeTranscription(it) }
         .distinct()
         .joinToString("")
         .trimToNull()
@@ -16,15 +17,37 @@ fun mergeDictionaryEntries(word: String, dictionaryEntries: Iterable<DictionaryE
         .asSequence()
         .flatMap { it.translations }
         .distinctBy {
-            if (partOfSpeechSynonyms.containsKey(it)) {
-                partOfSpeechSynonyms.get(it)
-            } else {
-                removePrefixNumber(it).lowercase()
-            }
+            if (partOfSpeechSynonyms.containsKey(it)) partOfSpeechSynonyms[it]
+            else it.removePrefixNumber().lowercase()
         }
         .toList()
 
     return DictionaryEntry(word, uniqueTranscriptions, uniqueTranslations)
+}
+
+private fun String?.trimToEmpty(): String = this?.trim() ?: ""
+
+// probably using array instead of map will be faster (but it is not critical now)
+private val transcriptionChars = mapOf(
+    'ɪ' to 'ı',
+    'a' to 'ɑ',
+    720.toChar() to 58.toChar(), // or 'ː' to ':',
+)
+
+
+fun normalizeTranscription(transcription: String): String {
+    val withoutUnneededPrefix = if (transcription.startsWith("[01(") && transcription.endsWith(")]")) {
+        val pureTranscription = transcription.removePrefix("[01(").removeSuffix(")]")
+        "[$pureTranscription]"
+    } else transcription
+
+    return withoutUnneededPrefix
+        .replace("ːː", "ː")
+        .replace("ʧ", "tʃ")
+        .replace("ʤ", "dʒ")
+        .asSequence()
+        .map { transcriptionChars.getOrDefault(it, it) }
+        .joinToString("")
 }
 
 
@@ -113,11 +136,11 @@ private val possiblePrefixes: List<String> = listOf(
 
 
 // It is not optimized at all, but it is not needed.
-private fun removePrefixNumber(translation: String): String =
+private fun String.removePrefixNumber(): String =
     possiblePrefixes
-        .find { translation.startsWith(it) }
-        ?.let { translation.removePrefix(it) }
-        ?: translation
+        .find { this.startsWith(it) }
+        ?.let { this.removePrefix(it) }
+        ?: this
 
 
 //private fun removePrefixNumber(translation: String): String {
@@ -133,3 +156,25 @@ private fun removePrefixNumber(translation: String): String =
 //    return try { this.toInt(); true }
 //    catch (ignore: NumberFormatException) { false }
 //}
+
+
+
+
+fun extractExamples(translation: DictionaryEntry): String {
+    val examplesFromDictFormat: List<String> = translation.translations
+        .filter { it.startsWith("*)") }
+        //.map { it.removePrefix("*)").trim() }
+        .map { it.trim() }
+
+    val omegaWikiExamples = translation.translations
+        .filter { it.startsWith("[0") && it.endsWith("]") && it.contains(translation.word) && !it.containsRussianChars() }
+        .map { it.removePrefixNumber().trim() }
+
+    return (examplesFromDictFormat + omegaWikiExamples).joinToString("\n")
+}
+
+
+private const val russianChars = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+
+internal fun String.containsRussianChars(): Boolean =
+    this.any { russianChars.contains(it) }

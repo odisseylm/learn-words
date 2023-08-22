@@ -174,7 +174,7 @@ class DictDictionaryTest {
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("illumination")
-        assertThat(dictEntry.transcription).isEqualTo("[ɪˌlju:mɪˈneɪʃən]")
+        assertThat(dictEntry.transcription).isEqualTo("[ıˌlju:mıˈneıʃən]")
         assertThat(dictEntry.translations).containsExactly(
             "1) освещение",
             "2) _эл. освещённость",
@@ -185,6 +185,27 @@ class DictDictionaryTest {
             // It would be nice to fix this unneeded '\n    '
             "7) _attr. осветительный; illumination engineering осветительная\n    техника",
             )
+
+    }
+
+
+    @Test
+    fun findInDictDictionary_forEnjoyable() {
+
+        val dictionaryRootDir = getProjectDir().resolve("dicts/mueller-dict-3.1.1/dict")
+        val dict = DictDictionary(DictDictionarySource(
+            "mueller-base",
+            dictionaryRootDir,
+            dictionaryRootDir.resolve("mueller-base.dict.dz"),
+            dictionaryRootDir.resolve("mueller-base.index"),
+        ))
+
+        val dictEntry = dict.find("enjoyable")
+
+        assertThat(dictEntry).isNotNull
+        assertThat(dictEntry.word).isEqualTo("enjoyable")
+        assertThat(dictEntry.transcription).isEqualTo("[ınˈdʒɔıəbl]")
+        assertThat(dictEntry.translations).containsExactly("_a. приятный, доставляющий удовольствие")
 
     }
 

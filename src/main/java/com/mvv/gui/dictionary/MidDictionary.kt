@@ -65,8 +65,11 @@ class MidDictionary(val source: MidDictionarySource) : Dictionary {
             // if result is negative  =>  result = (-insertionPoint - 1)  =>  insertionPoint = -i - 1
             val insertionPoint = -i - 1
             val indexRange = insertionPoint - 1
-            searchListEntries[indexRange].index
+
+            if (indexRange == -1) -1 else searchListEntries[indexRange].index
         }
+
+        if (fileIndex == -1) return DictionaryEntry.empty(word)
 
         val indexFile: IndexFile = indexesMap.computeIfAbsent(fileIndex) { loadIndexFile(fileIndex) }
 

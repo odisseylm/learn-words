@@ -54,6 +54,13 @@ Other references
   - https://dictionarymid.sourceforge.net/dictionaries/dictsOtherBilinguals.html#Russian
 
 
+MemoWorld format (described in [Download section](https://memowordapp.com/panel/import/index/665ebd51-66cb-43d7-9ad0-ee3f0b489710))
+ - CSV or XLSX format
+ - A set of cards in the table should be formed in the first two columns of the table - a word or phrase 
+   in the base language in 1st column, the translation - in 2nd column.
+ - Optionally, the name of the part of speech can be added to the 3rd column, a hint or transcription can be added to the 4th.
+ - One set should not exceed 300 entries
+
 
 ***
 

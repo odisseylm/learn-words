@@ -8,6 +8,7 @@ import org.dict.server.DatabaseFactory
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.name
@@ -140,8 +141,13 @@ internal fun parseDictDictionaryDefinition(word: String, definition: String): Di
     val transcription: String?
 
     if (isFirstItemIsTranscription) {
-        transcription = firstItem.removeSuffix("_n.").removeSuffix("_n").trimEnd()
-        translations = translItems.subList(1, translItems.size)
+        transcription = firstItem.substringBefore("]").plus("]").removeSuffix("_n.").removeSuffix("_n").trimEnd()
+        val remainingInFirstItem = firstItem.removePrefix(transcription).removeSuffix("_n.").removeSuffix("_n").trim()
+
+        val translationsTemp = ArrayList(translItems)
+        translationsTemp[0] = remainingInFirstItem
+
+        translations = translationsTemp.filter { it.isNotBlank() }
     } else {
         transcription = null
         translations = translItems

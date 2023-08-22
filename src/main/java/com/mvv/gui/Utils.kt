@@ -155,6 +155,12 @@ fun buttonIcon(path: String, iconSize: Double = 16.0): ImageView {
 }
 
 
+val TableView<*>.isEditing: Boolean get() {
+    val editingCell = this.editingCell
+    return (editingCell != null) && editingCell.row != -1 && editingCell.column != -1
+}
+
+
 fun runLaterWithDelay(delayMillis: Long, action: ()->Unit) {
     val timeline = Timeline(KeyFrame(Duration.millis(delayMillis.toDouble()), { Platform.runLater(action) }))
     timeline.cycleCount = 1

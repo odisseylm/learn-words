@@ -29,10 +29,11 @@ class DictionaryComposition (private val dictionaries: List<Dictionary>) : Dicti
             .map { findInDictionaryImpl(it, word, ignoreSubDirectoryErrors) }
             .let { mergeDictionaryEntries(word, it) }
 
-    private fun findInDictionaryImpl(it: Dictionary, word: String, ignoreErrors: Boolean) =
-        try { it.find(word) }
+    private fun findInDictionaryImpl(dictionary: Dictionary, word: String, ignoreErrors: Boolean) =
+        try { dictionary.find(word) }
         catch (ex: Exception) {
             if (ignoreErrors) {
+                System.err.println("Error of finding word [$word] in [$dictionary]")
                 ex.printStackTrace() /* TODO: use logger */
                 DictionaryEntry.empty(word)
             }
