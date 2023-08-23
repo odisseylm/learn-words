@@ -218,8 +218,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         wordCardStatusesColumn.prefWidth = 50.0
         toColumn.prefWidth = 400.0
         translationCountColumn.prefWidth = 50.0
-        transcriptionColumn.prefWidth = 200.0
-        examplesColumn.prefWidth = 200.0
+        transcriptionColumn.prefWidth = 150.0
+        examplesColumn.prefWidth = 400.0
 
 
         currentWordsList.items = currentWords // Sorted
@@ -421,7 +421,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
                         .map { CardWordEntry(it, "") }
                         .also { analyzeWordCards(it) }
                 "csv", "words" ->
-                    loadWordEntries(filePath)
+                    loadWordCards(filePath)
                         .also { analyzeWordCards(it) }
                 "srt" ->
                     extractWordsFromFile(filePath)
@@ -552,7 +552,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         if (currentWordsFile == null) {
             currentWordsFile = showTextInputDialog(this, "Enter new words filename")
-                .map { dictDirectory.resolve(addWordsFileExtIfNeeded(it, cardWordsFileExt)) }
+                .map { dictDirectory.resolve(addWordsFileExtIfNeeded(it, internalWordCardsFileExt)) }
                 .orElse(null)
         }
 
@@ -561,7 +561,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             return
         }
 
-        saveSplitWords(currentWordsFile, words, 30)
+        saveSplitWordCards(currentWordsFile, words, 30)
 
         // !!! ONLY if success !!!
         this.currentWordsFile = currentWordsFile
@@ -580,7 +580,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         if (currentWordsFile == null) {
             currentWordsFile = showTextInputDialog(this, "Enter new words filename")
-                .map { dictDirectory.resolve(addWordsFileExtIfNeeded(it, cardWordsFileExt)) }
+                .map { dictDirectory.resolve(addWordsFileExtIfNeeded(it, internalWordCardsFileExt)) }
                 .orElse(null)
             //val newFileNameDialog = TextInputDialog("")
             //newFileNameDialog.headerText = "Enter new words filename"
@@ -594,8 +594,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             return
         }
 
-        saveWordEntries(currentWordsFile.useFilenameSuffix(cardWordsFileExt), CsvFormat.Standard, words)
-        saveWordEntries(currentWordsFile.useFilenameSuffix(memoWorldCardWordsFileExt), CsvFormat.MemoWorld, words)
+        saveWordCards(currentWordsFile.useFilenameSuffix(internalWordCardsFileExt), CsvFormat.Internal, words)
+        saveWordCards(currentWordsFile.useFilenameSuffix(memoWordFileExt), CsvFormat.MemoWord, words)
 
         // !!! ONLY if success !!!
         this.currentWordsFile = currentWordsFile
@@ -625,12 +625,12 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         val allWordsFilesExceptIgnored = Files.list(dictDirectory)
             .filter { it.isRegularFile() }
             //.filter { it != ignoredWordsFile }
-            .filter { it.name.endsWith(cardWordsFileExt) }
+            .filter { it.name.endsWith(internalWordCardsFileExt) }
             .toList()
 
         val allWords = allWordsFilesExceptIgnored
             .asSequence()
-            .map { loadWordEntries(it) }
+            .map { loadWordCards(it) }
             .flatMap { it }
             .map { it.from }
             .distinctBy { it.lowercase() }

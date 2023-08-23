@@ -31,3 +31,10 @@ fun possibleEnglishBaseWords(word: String): List<String> {
     return baseWords
         .flatMap { w -> if (w.endsWith('e')) listOf(w) else listOf(w, w + 'e') }
 }
+
+
+// It would be nice to optimize it to avoid unneeded string conversions.
+val String.translationCount: Int get() =
+    formatWordOrPhraseToMemoWordFormat(this)
+        .split(",")
+        .filter { it.isNotBlank() }.size
