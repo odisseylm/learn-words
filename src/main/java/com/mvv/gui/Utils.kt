@@ -83,6 +83,14 @@ fun newButton(label: String, toolTip: String, icon: ImageView, action: ()->Unit)
     return button
 }
 
+@Suppress("unused")
+fun newButton(label: String, toolTip: String, action: ()->Unit): Button {
+    val button = Button(label)
+    button.onAction = EventHandler { action() }
+    button.tooltip = Tooltip(toolTip)
+    return button
+}
+
 
 @Suppress("unused")
 fun newMenuItem(label: String, action: ()->Unit): MenuItem {
