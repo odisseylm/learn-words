@@ -51,9 +51,9 @@ fun loadWordCardsFromMemoWordCsv(file: Path): List<CardWordEntry> =
                     card.to = it.getOrEmpty(index++)
                     card.from = it.getOrEmpty(index++)
                     index++ // part of speech
-                    val transcriptionAndExamples = it.getOrEmpty(index)
-                    card.transcription = "" // T O D O: extract transcription from transcriptionAndExamples
-                    card.examples = transcriptionAndExamples
+                    val transcriptionAndExamples = splitTransactionAndExamples(it.getOrEmpty(index))
+                    card.transcription = transcriptionAndExamples.first
+                    card.examples = transcriptionAndExamples.second
                     card
                 }
                 .filter { it.from.isNotBlank() }
@@ -101,3 +101,23 @@ fun formatWordOrPhraseToMemoWordFormat(wordOrPhrase: String): String =
         .removeSuffix(";")
         .removeSuffix(",")
         .trim()
+
+
+private fun splitTransactionAndExamples(memoWordTransactionAndExamples: String): Pair<String, String> {
+
+    val s = memoWordTransactionAndExamples.trim()
+
+    if (!s.startsWith("[0") && s.startsWith("[")) {
+        val possiblyEndOfTranscription = s.indexOf(']')
+        if (possiblyEndOfTranscription == -1) {
+            return Pair("", s)
+        }
+
+        val possiblyTranscription = s.substring(0, possiblyEndOfTranscription + 1)
+        val examples = s.substring(possiblyEndOfTranscription + 1)
+            .trim().removePrefix(",").trim()
+        return Pair(possiblyTranscription, examples)
+    }
+
+    return Pair("", s)
+}

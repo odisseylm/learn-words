@@ -29,7 +29,7 @@ fun mergeDictionaryEntries(word: String, dictionaryEntries: Iterable<DictionaryE
 private fun String?.trimToEmpty(): String = this?.trim() ?: ""
 
 // probably using array instead of map will be faster (but it is not critical now)
-private val transcriptionChars = mapOf(
+private val transcriptionCharsMapping = mapOf(
     'ɪ' to 'ı',
     'a' to 'ɑ',
     720.toChar() to 58.toChar(), // or 'ː' to ':',
@@ -47,7 +47,7 @@ fun normalizeTranscription(transcription: String): String {
         .replace("ʧ", "tʃ")
         .replace("ʤ", "dʒ")
         .asSequence()
-        .map { transcriptionChars.getOrDefault(it, it) }
+        .map { transcriptionCharsMapping.getOrDefault(it, it) }
         .joinToString("")
 }
 
@@ -141,23 +141,6 @@ private fun String.removePrefixNumber(): String =
         ?: this
 
 
-//private fun removePrefixNumber(translation: String): String {
-//    val possiblyPrefixNumber = translation.substringBefore(" ", "")
-//        .removeSuffix(")") // if number looks like "1) translation"
-//        .removeSuffix(".") // if number looks like "1. translation"
-//    return if (possiblyPrefixNumber.isNumber) translation.substringAfter(' ').trim()
-//           else translation
-//}
-//
-//
-//private val String.isNumber: Boolean get() {
-//    return try { this.toInt(); true }
-//    catch (ignore: NumberFormatException) { false }
-//}
-
-
-
-
 fun extractExamples(translation: DictionaryEntry): String {
     val examplesFromDictFormat: List<String> = translation.translations
         .filter { it.startsWith("*)") }
@@ -176,3 +159,9 @@ private const val russianChars = "абвгдеёжзийклмнопрстуфх
 
 internal fun String.containsRussianChars(): Boolean =
     this.any { russianChars.contains(it) }
+
+
+private const val transcriptionUniqueChars = "æðıŋɑɔəɛɪɵʃʊʌʒʤʧ"
+
+internal fun String.containsUniqueTranscriptionChars(): Boolean =
+    this.any { transcriptionUniqueChars.contains(it) }
