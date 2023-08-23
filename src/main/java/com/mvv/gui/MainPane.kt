@@ -1,5 +1,7 @@
 package com.mvv.gui
 
+import com.mvv.gui.WordCardStatus.BaseWordDoesNotExist
+import com.mvv.gui.WordCardStatus.NoBaseWordInSet
 import com.mvv.gui.dictionary.*
 import com.mvv.gui.dictionary.Dictionary
 import javafx.application.Platform
@@ -7,11 +9,14 @@ import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.collections.transformation.SortedList
+import javafx.event.EventHandler
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.control.cell.PropertyValueFactory
+import javafx.scene.image.Image
+import javafx.scene.image.ImageView
 import javafx.scene.input.*
 import javafx.scene.layout.*
 import javafx.scene.text.Text
@@ -55,6 +60,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     private val currentWordsList = TableView<CardWordEntry>()
     private val fromColumn = TableColumn<CardWordEntry, String>("English")
+    private val wordCardStatusesColumn = TableColumn<CardWordEntry, Set<WordCardStatus>>("St")
     private val toColumn = TableColumn<CardWordEntry, String>("Russian")
     private val translationCountColumn = TableColumn<CardWordEntry, Int>("n")
     private val transcriptionColumn = TableColumn<CardWordEntry, String>("transcription")
@@ -73,8 +79,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         val contentPane = GridPane()
 
-        val maxListViewWidth = 1000.0
-        val maxButtonWidth = 500.0
+        val maxListViewWidth = 5000.0 // TODO: move to CSS
+        val maxButtonWidth = 500.0 // TODO: move to CSS
 
         contentPane.alignment = Pos.CENTER
         contentPane.hgap = 10.0; contentPane.vgap = 10.0
@@ -85,6 +91,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         contentPane.add(currentWordsLabel, 0, 0)
 
         currentWords.addListener(ListChangeListener { currentWordsLabel.text = currentWordsLabelText.format(it.list.size) })
+        currentWords.addListener(ListChangeListener { analyzeWordCards(currentWords) })
 
         contentPane.add(currentWordsList, 0, 1, 1, 3)
         currentWordsList.maxWidth = maxListViewWidth
@@ -156,11 +163,9 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         translationCountColumn.isEditable = false
         translationCountColumn.cellValueFactory = Callback { p -> p.value.translationCountProperty }
 
-        val allTranslationCountStatusCssClasses = TranslationCountStatus.values().map { "TranslationCountStatus-${it.name}" }
-
         translationCountColumn.cellFactory = LabelStatusTableCell.forTableColumn { cell, _, translationCount ->
             val translationCountStatus = translationCount?.toTranslationCountStatus ?: TranslationCountStatus.Ok
-            cell.styleClass.removeAll(allTranslationCountStatusCssClasses)
+            cell.styleClass.removeAll(TranslationCountStatus.allCssClasses)
             cell.styleClass.add("TranslationCountStatus-${translationCountStatus.name}")
         }
 
@@ -174,7 +179,43 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         examplesColumn.cellValueFactory = Callback { p -> p.value.examplesProperty }
         examplesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
 
+
+        val icon = Image("icons/exclamation-1.png")
+
+        // Seems it is not allowed to share ImageView instance (between different cells rendering)
+        // It causes disappearing/erasing icons in table view during scrolling
+        // Most probably it is a bug or probably feature :-) */
+        //
+        // val iconView = ImageView(icon)
+
+        wordCardStatusesColumn.isEditable = false
+        wordCardStatusesColumn.cellValueFactory = PropertyValueFactory("wordCardStatuses")
+        wordCardStatusesColumn.cellValueFactory = Callback { p -> p.value.wordCardStatusesProperty }
+
+        wordCardStatusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, value ->
+            cell.styleClass.removeAll(WordCardStatus.allCssClasses)
+
+            val toolTips = mutableListOf<String>()
+            val wordCardStatuses = value ?: emptySet()
+
+            if (NoBaseWordInSet in wordCardStatuses && BaseWordDoesNotExist !in wordCardStatuses) {
+                toolTips.add(NoBaseWordInSet.toolTipF(card))
+                cell.styleClass.add(NoBaseWordInSet.cssClass)
+
+                // Setting icon in CSS does not work. See my other comments regarding it.
+                cell.graphic = ImageView(icon)
+            }
+            else {
+                cell.graphic = null
+            }
+
+            val toolTipText = toolTips.joinToString("\n").trimToNull()
+            cell.toolTipText = toolTipText
+        }
+
+        // TODO: move to CSS
         fromColumn.prefWidth = 200.0
+        wordCardStatusesColumn.prefWidth = 50.0
         toColumn.prefWidth = 400.0
         translationCountColumn.prefWidth = 50.0
         transcriptionColumn.prefWidth = 200.0
@@ -183,7 +224,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         currentWordsList.items = currentWords // Sorted
         //currentWordsList.setComparator(cardWordEntryComparator)
-        currentWordsList.columns.setAll(fromColumn, toColumn, translationCountColumn, transcriptionColumn, examplesColumn)
+        currentWordsList.columns.setAll(fromColumn, wordCardStatusesColumn, toColumn, translationCountColumn, transcriptionColumn, examplesColumn)
         currentWordsList.sortOrder.add(fromColumn)
 
         currentWordsList.id = "currentWords"
@@ -223,13 +264,20 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     }
 
     private fun addContextMenu() {
+        val ignoreNoBaseWordMenuItem = newMenuItem("Ignore 'No base word'", "Ignore warning 'no base word in set'", buttonIcon("/icons/skip_brkp.png")) { ignoreNoBaseWordInSet() }
+
         val menu = ContextMenu(
             newMenuItem("Insert above", buttonIcon("/icons/insertAbove-01.png")) { insertWordCard(InsertPosition.Above) },
             newMenuItem("Insert below", buttonIcon("/icons/insertBelow-01.png")) { insertWordCard(InsertPosition.Below) },
             newMenuItem("Lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination)   { toLowerCaseRow() },
             newMenuItem("To ignore >>", buttonIcon("icons/rem_all_co.png")) { moveToIgnored() },
             newMenuItem("Translate selected", buttonIcon("icons/forward_nav.png"), translateSelectedKeyCombination) { translateSelected() },
+            ignoreNoBaseWordMenuItem,
         )
+
+        menu.onShowing = EventHandler {
+            updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
+        }
 
         currentWordsList.contextMenu = menu
     }
@@ -240,14 +288,48 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             newButton("Parse text from clipboard", buttonIcon("/icons/paste.gif" /*paste-3388622.png"*/, -1.0)) { loadFromClipboard() },
             newButton("Save All", buttonIcon("/icons/disks.png", -1.0)) { saveAll() },
             newButton("Translate", buttonIcon("/icons/forward_nav.png")) { translateAll() },
-            // slidesstack.png slidesstack.png
             newButton("Split", buttonIcon("/icons/slidesstack.png")) { splitCurrentWords() },
             Label("  "),
             newButton("Insert above", buttonIcon("/icons/insertAbove-01.png")) { insertWordCard(InsertPosition.Below) },
             newButton("Insert below", buttonIcon("/icons/insertBelow-01.png")) { insertWordCard(InsertPosition.Below) },
+            Label("  "),
+            newButton("No base word", "Ignore warning 'no base word in set'", buttonIcon("/icons/skip_brkp.png")) {
+                ignoreNoBaseWordInSet() }
+
+            // For testing
+            //
+            //Label("  "),
+            //newButton("Reanalyze") { reanalyzeWords() },
+            //newButton("Refresh table") { currentWordsList.refresh() },
         )
 
         toolBar.items.addAll(controls)
+    }
+
+    private fun updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem: MenuItem) {
+        val oneOfSelectedWordsHasNoBaseWord = isOneOfSelectedWordsHasNoBaseWord()
+        ignoreNoBaseWordMenuItem.isVisible = oneOfSelectedWordsHasNoBaseWord
+
+        val selectedCards = currentWordsList.selectionModel.selectedItems
+        val ignoreNoBaseWordMenuItemText =
+            if (oneOfSelectedWordsHasNoBaseWord && selectedCards.size == 1)
+                "Ignore no base words [${possibleEnglishBaseWords(selectedCards[0].from).joinToString("|")}]"
+            else "Ignore 'No base word'"
+        ignoreNoBaseWordMenuItem.text = ignoreNoBaseWordMenuItemText
+    }
+
+    private fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =
+        currentWordsList.selectionModel.selectedItems
+            .any { !it.wordCardStatuses.contains(BaseWordDoesNotExist) && it.wordCardStatuses.contains(NoBaseWordInSet) }
+
+    private fun ignoreNoBaseWordInSet() =
+        currentWordsList.selectionModel.selectedItems.forEach {
+            updateSetProperty(it.wordCardStatusesProperty, BaseWordDoesNotExist, UpdateSet.Set) }
+
+    @Suppress("unused")
+    private fun reanalyzeWords() {
+        analyzeWordCards(currentWordsList.items)
+        currentWordsList.refresh()
     }
 
     private fun startEditingFrom() {
@@ -335,11 +417,15 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             val fileExt = filePath.extension.lowercase()
             val words: List<CardWordEntry> = when (fileExt) {
                 "txt" ->
-                    loadWords(filePath).map { CardWordEntry(it, "") }
+                    loadWords(filePath)
+                        .map { CardWordEntry(it, "") }
+                        .also { analyzeWordCards(it) }
                 "csv", "words" ->
                     loadWordEntries(filePath)
+                        .also { analyzeWordCards(it) }
                 "srt" ->
                     extractWordsFromFile(filePath)
+                        .also { analyzeWordCards(it) }
                 else ->
                     throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
@@ -348,15 +434,21 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             //currentWordsList.refresh()
             currentWordsList.sort()
 
-            // !!! Only if success !!!
-            this.currentWordsFile = filePath
-            setWindowTitle(this, "$appTitle - ${filePath.name}")
+            if (fileExt == "csv") {
+                // TODO: separate to 2 functions, this 1st branch should be called as Open
+                // !!! Only if success !!!
+                this.currentWordsFile = filePath
+                setWindowTitle(this, "$appTitle - ${filePath.name}")
+            }
+            else {
+                // TODO: separate to 2 functions, this 2nd branch should be called as Import
+            }
         }
     }
 
     private fun extractWordsFromFile(filePath: Path): List<CardWordEntry> {
         val r = FileReader(filePath.toFile(), UTF_8)
-        return r.use { extractWordsFromText(r.readText()) } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
+        return r.use { extractWordsFromText(r.readText()).also { analyzeWordCards(it) } } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
     }
 
     private fun loadFromClipboard() {
@@ -369,6 +461,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         if (content == null) return
 
         val words = extractWordsFromText(content.toString())
+            .also { analyzeWordCards(it) }
 
         println("clipboard content as words: $words")
 
@@ -431,6 +524,9 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         if (positionToInsert != -1) {
             val newCardWordEntry = CardWordEntry("", "")
+
+            // TODO: keep current scroll position
+
             currentWordsList.items.add(positionToInsert, newCardWordEntry)
 
             if (noWordCards) currentWordsList.selectionModel.select(newCardWordEntry)
@@ -439,7 +535,10 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             // if column cells were not present before (if TableView did not have content yet).
             // Platform.runLater() also does not help.
             //
-            runLaterWithDelay(50) { currentWordsList.edit(positionToInsert, fromColumn) }
+            runLaterWithDelay(50) {
+                if (!currentWordsList.isFocusVisible) currentWordsList.scrollTo(newCardWordEntry)
+                currentWordsList.edit(positionToInsert, fromColumn)
+            }
         }
     }
 
@@ -510,7 +609,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     private fun saveIgnored() {
         val ignoredWords = this.ignoredWordsSorted
         if (ignoredWords.isNotEmpty()) {
-            saveWords(ignoredWordsFile, ignoredWords)
+            saveWordsToTxtFile(ignoredWordsFile, ignoredWords)
         }
     }
 

@@ -1,11 +1,9 @@
 package com.mvv.gui
 
-import com.sun.javafx.binding.ExpressionHelper
-import javafx.beans.InvalidationListener
-import javafx.beans.property.ReadOnlyProperty
+import com.mvv.gui.WordCardStatus.BaseWordDoesNotExist
+import com.mvv.gui.WordCardStatus.NoBaseWordInSet
+import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
-import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
 import javafx.scene.paint.Color
 
 
@@ -16,6 +14,7 @@ class CardWordEntry {
     val translationCountProperty = AroundReadOnlyIntegerProperty<String>(this, "translationCount", toProperty) {
         to -> to?.translationCount ?: 0 }
     val examplesProperty = SimpleStringProperty(this, "examples", "")
+    val wordCardStatusesProperty = SimpleObjectProperty<Set<WordCardStatus>>(this, "wordCardStatuses", emptySet())
 
     var from: String
         get() = fromProperty.get()
@@ -34,6 +33,12 @@ class CardWordEntry {
     var translationCount: Int = 0
         private set
 
+    var wordCardStatuses: Set<WordCardStatus>
+        get() = wordCardStatusesProperty.get()
+        set(value) {
+            wordCardStatusesProperty.set(value)
+        }
+
     constructor(from: String, to: String) {
         toProperty.addListener { _, _, newValue -> translationCount = newValue?.translationCount ?: 0 }
 
@@ -42,12 +47,11 @@ class CardWordEntry {
     }
 
     override fun toString(): String {
-        return "CardWordEntry(from='$from', to='${to.take(20)}...', translationCount=$translationCount, transcription='$transcription', examples='${examples.take(10)}...')"
+        return "CardWordEntry(from='$from', to='${to.take(20)}...', wordCardStatuses=$wordCardStatuses, translationCount=$translationCount, transcription='$transcription', examples='${examples.take(10)}...')"
     }
 }
 
 
-@Suppress("unused")
 val cardWordEntryComparator: Comparator<CardWordEntry> = Comparator.comparing({ it.from }, String.CASE_INSENSITIVE_ORDER)
 
 
@@ -58,6 +62,12 @@ enum class TranslationCountStatus(val color: Color) {
     Warn(Color.valueOf("#ffdcc0")),
     ToMany(Color.valueOf("#ffbbbb")),
     ;
+
+    val cssClass: String get() = "TranslationCountStatus-${this.name}"
+
+    companion object {
+        val allCssClasses = TranslationCountStatus.values().map { it.cssClass }
+    }
 }
 
 val Int.toTranslationCountStatus: TranslationCountStatus get() = when (this) {
@@ -68,41 +78,57 @@ val Int.toTranslationCountStatus: TranslationCountStatus get() = when (this) {
 }
 
 
-class AroundReadOnlyIntegerProperty<OtherPropertyType>(
-    private val bean: Any,
-    private val name: String,
-    private val baseProperty: ObservableValue<OtherPropertyType>,
-    val convertFunction: (OtherPropertyType?)->Int,
-    ) : ReadOnlyProperty<Int>, ObservableValue<Int> {
+enum class WordCardStatus (
+    val toolTipF: (CardWordEntry)->String,
+    ) {
 
-    private var helper: ExpressionHelper<Int>? = null
+    Ok({""}),
 
-    init {
-        baseProperty.addListener { _, _, _ -> fireValueChangedEvent() } // <= Do I need this??
-        baseProperty.addListener { _ -> fireValueChangedEvent() }
+    /**
+     * If current word has ending/suffix 'ed', 'ing', 'es', 's' does not have
+     * but the whole set does not have base word without such ending/suffix.
+     *
+     * It is not comfortable to learn such word if you do not know base word.
+     */
+    NoBaseWordInSet({
+        "Words set does not have base word ${possibleEnglishBaseWords(it.from).joinToString("|")}.\n" +
+        "It is advised to add card for this word." }),
+
+    /**
+     * Marker to stop validation on NoBaseWordInSet.
+     */
+    BaseWordDoesNotExist({""}),
+    ;
+
+    val cssClass: String get() = "WordCardStatus-${this.name}"
+
+    companion object {
+        val allCssClasses = WordCardStatus.values().map { it.cssClass }
     }
+}
 
-    override fun addListener(listener: InvalidationListener) {
-        helper = ExpressionHelper.addListener(helper, this, listener)
+
+
+fun analyzeWordCards(wordCards: Iterable<CardWordEntry>) {
+
+    println("### analyzeWordCards") // TODO: use logger
+
+    val cards: Map<String, CardWordEntry> = wordCards.associateBy { it.from.trim().lowercase() }
+
+    cards.values.forEach { card ->
+        val englishWord = card.from.trim().lowercase()
+
+        if (BaseWordDoesNotExist !in card.wordCardStatuses
+            && englishWord.mayBeDerivedWord) {
+
+            val baseWords = possibleEnglishBaseWords(englishWord)
+            val cardSetContainsBaseWord = cards.containsOneOfKeys(baseWords)
+            val ignoreNoBaseWordInSet = BaseWordDoesNotExist in card.wordCardStatuses
+
+            if (!ignoreNoBaseWordInSet) {
+                val noBaseWordStatusAction = if (cardSetContainsBaseWord) UpdateSet.Remove else UpdateSet.Set
+                updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, noBaseWordStatusAction)
+            }
+        }
     }
-
-    override fun removeListener(listener: InvalidationListener) {
-        helper = ExpressionHelper.removeListener(helper, listener)
-    }
-
-    override fun getValue(): Int = convertFunction(baseProperty.value)
-
-    override fun addListener(listener: ChangeListener<in Int>) {
-        helper = ExpressionHelper.addListener(helper, this, listener)
-    }
-
-    override fun removeListener(listener: ChangeListener<in Int>) {
-        helper = ExpressionHelper.removeListener(helper, listener)
-    }
-
-    private fun fireValueChangedEvent() = ExpressionHelper.fireValueChangedEvent(helper)
-
-    override fun getBean(): Any = bean
-
-    override fun getName(): String = name
 }

@@ -38,3 +38,18 @@
     -fx-background-insets: 1 0 1 0; /* to fix top selection border */
     -fx-text-fill: black;           /* to avoid default white text color. */
 }
+
+
+#currentWords  .table-row-cell .WordCardStatus-NoBaseWordInSet {
+    -fx-alignment: center;
+    /*-fx-background-color: #ffdcc0;*/
+
+    /* Seems it is not allowed to share ImageView instance (at least between different cells rendering).*/
+    /* It causes disappearing/erasing icons in table-view during scrolling.*/
+    /* Most probably it is a bug or probably feature :-) */
+    /* */
+    /* Seems for the same reason we cannot use fx-graphic for table-view cells.*/
+    /* I'm sure that such CSS behavior it is surely bug! */
+
+    /*-fx-graphic: url("icons/exclamation-1.png");*/
+}

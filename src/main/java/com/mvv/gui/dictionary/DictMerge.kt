@@ -1,5 +1,6 @@
 package com.mvv.gui.dictionary
 
+import com.mvv.gui.trimToNull
 
 
 fun mergeDictionaryEntries(word: String, dictionaryEntries: Iterable<DictionaryEntry>): DictionaryEntry {
@@ -50,9 +51,6 @@ fun normalizeTranscription(transcription: String): String {
         .joinToString("")
 }
 
-
-private fun <T: CharSequence> T?.trimToNull(): T? =
-    if (this.isNullOrBlank()) null else this
 
 
 // 8 parts of speech: noun, pronoun, adjective, verb, adverb, preposition, conjunction, article, ?interjection, ?determiner

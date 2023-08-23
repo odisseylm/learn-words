@@ -76,33 +76,49 @@ fun newButton(label: String, icon: ImageView, action: ()->Unit): Button {
     return button
 }
 
+fun newButton(label: String, toolTip: String, icon: ImageView, action: ()->Unit): Button {
+    val button = Button(label, icon)
+    button.onAction = EventHandler { action() }
+    button.tooltip = Tooltip(toolTip)
+    return button
+}
+
+
 @Suppress("unused")
 fun newMenuItem(label: String, action: ()->Unit): MenuItem {
-    val button = MenuItem(label)
-    button.onAction = EventHandler { action() }
-    return button
+    val menuItem = MenuItem(label)
+    menuItem.onAction = EventHandler { action() }
+    return menuItem
 }
 
 @Suppress("unused")
 fun newMenuItem(label: String, icon: ImageView, action: ()->Unit): MenuItem {
-    val button = MenuItem(label, icon)
-    button.onAction = EventHandler { action() }
-    return button
+    val menuItem = MenuItem(label, icon)
+    menuItem.onAction = EventHandler { action() }
+    return menuItem
 }
 
 @Suppress("unused")
 fun newMenuItem(label: String, keyCombination: KeyCombination, action: ()->Unit): MenuItem {
-    val button = MenuItem(label)
-    button.onAction = EventHandler { action() }
-    button.accelerator = keyCombination // MnemonicInfo.MnemonicKeyCombination()
-    return button
+    val menuItem = MenuItem(label)
+    menuItem.onAction = EventHandler { action() }
+    menuItem.accelerator = keyCombination // MnemonicInfo.MnemonicKeyCombination()
+    return menuItem
 }
 
 fun newMenuItem(label: String, icon: ImageView, keyCombination: KeyCombination, action: ()->Unit): MenuItem {
-    val button = MenuItem(label, icon)
-    button.onAction = EventHandler { action() }
-    button.accelerator = keyCombination // MnemonicInfo.MnemonicKeyCombination()
-    return button
+    val menuItem = MenuItem(label, icon)
+    menuItem.onAction = EventHandler { action() }
+    menuItem.accelerator = keyCombination // MnemonicInfo.MnemonicKeyCombination()
+    return menuItem
+}
+
+fun newMenuItem(label: String, tooltip: String, icon: ImageView, action: ()->Unit): MenuItem {
+    // Standard MenuItem class does not support tooltips.
+    val menuItem = CustomMenuItem(Label(label, icon))
+    Tooltip.install(menuItem.content, Tooltip(tooltip))
+    menuItem.onAction = EventHandler { action() }
+    return menuItem
 }
 
 
@@ -129,6 +145,21 @@ fun setWindowTitle(node: Node, title: String) {
         (node.scene.window as Stage).title = title
     }
 }
+
+
+var Control.toolTipText: String?
+    get() = this.tooltip?.text
+    set(value) {
+        if (value.isNullOrBlank()) {
+            // We need set the whole ToolTip object to null!
+            // Just setting text to ""/null for existent ToolTip instance does not prevent showing empty tooltip.
+            this.tooltip = null
+        }
+        else {
+            if (this.tooltip == null) this.tooltip = Tooltip()
+            this.tooltip.text = value
+        }
+    }
 
 
 fun buttonIcon(path: String, iconSize: Double = 16.0): ImageView {
@@ -180,15 +211,3 @@ fun toLowerCase(textInput: TextInputControl) {
     textInput.text = currentText.lowercase()
     textInput.selectRange(anchor, caretPosition)
 }
-
-
-fun String.removeSuffixCaseInsensitive(suffix: String): String =
-    when {
-        this.endsWith(suffix) -> this.removeSuffix(suffix)
-        this.lowercase().endsWith(suffix.lowercase()) -> this.substring(0, this.length - suffix.length)
-        else -> this
-    }
-
-
-@Suppress("unused")
-fun <S: CharSequence> S.ifNotBlank(action: (S)->S): S = if (this.isBlank()) this else action(this)

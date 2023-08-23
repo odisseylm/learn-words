@@ -6,6 +6,7 @@ import java.io.FileReader
 import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.extension
 import kotlin.io.path.name
 import kotlin.text.Charsets.UTF_8
 
@@ -14,6 +15,8 @@ const val cardWordsFileExt = ".csv"
 const val memoWorldCardWordsFileExt = "-RuEn-MemoWord.csv" //
 const val plainWordsFileExt = ".txt"
 const val ignoredWordsFilename = "ignored-words${plainWordsFileExt}"
+
+val Path.isMemoWordFile: Boolean get() = this.name.lowercase().endsWith(memoWorldCardWordsFileExt.lowercase())
 
 val dictDirectory: Path = Path.of(System.getProperty("user.home") + "/english/words")
 
@@ -31,28 +34,33 @@ fun Path.useFilenameSuffix(filenameSuffix: String): Path =
     this.parent.resolve(this.baseWordsFilename + filenameSuffix)
 
 
-
-//private fun Path.withMemoWorldSuffix(): Path {
-//    val filename = this.name
-//        .removeSuffixCaseInsensitive(memoWorldCardWordsFileExt)
-//        .removeSuffixCaseInsensitive(cardWordsFileExt)
-//        .plus(memoWorldCardWordsFileExt)
-//
-//    return this.parent.resolve(filename)
-//}
-//
-//
-//private fun Path.withStandardSuffix(): Path {
-//    val filename = this.name
-//        .removeSuffixCaseInsensitive(memoWorldCardWordsFileExt)
-//        .removeSuffixCaseInsensitive(cardWordsFileExt)
-//        .plus(cardWordsFileExt)
-//
-//    return this.parent.resolve(filename)
-//}
+enum class CsvFormat { Standard, MemoWorld }
 
 
-fun loadWords(file: Path): List<String> =
+// -----------------------------------------------------------------------------
+fun loadWords(file: Path): List<String> {
+    val ext = file.extension.lowercase()
+    return when {
+        file.isMemoWordFile -> loadFromWordsFromMemoWordsCsv(file)
+        ext == "csv" -> loadFromWordsFromInternalCsv(file)
+        ext == "txt" -> loadWordsFromTxtFile(file)
+        else -> throw IllegalArgumentException("Unsupported file [$file].")
+    }
+}
+
+fun loadWordEntries(file: Path): List<CardWordEntry> {
+    val ext = file.extension.lowercase()
+    return when {
+        file.isMemoWordFile -> loadWordEntriesFromMemoWorldsCsv(file)
+        ext == "csv" -> loadWordEntriesFromInternalCsv(file)
+        ext == "txt" -> loadWordsFromTxtFile(file).map { CardWordEntry(it, "") }
+        else -> throw IllegalArgumentException("Unsupported file [$file].")
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+fun loadWordsFromTxtFile(file: Path): List<String> =
     BufferedReader(FileReader(file.toFile()))
         .use {
             val words = it.lineSequence()
@@ -60,47 +68,11 @@ fun loadWords(file: Path): List<String> =
                 .filter { word -> word.isNotEmpty() }
                 .toList()
             words
-    }
+        }
 
+fun saveWordsToTxtFile(file: Path, words: Iterable<String>) {
 
-fun loadWordEntries(file: Path): List<CardWordEntry> {
-
-    val isMemoWorldCsvFormat = file.name.lowercase().endsWith(memoWorldCardWordsFileExt)
-
-    return FileReader(file.toFile(), UTF_8)
-        .use { fileReader ->
-            val csvReader =
-                if (isMemoWorldCsvFormat)
-                    CSVReaderBuilder(fileReader)
-                        .withCSVParser(CSVParserBuilder()
-                            .withSeparator(';')
-                            .withEscapeChar(ICSVWriter.NO_ESCAPE_CHARACTER)
-                            .withQuoteChar(ICSVWriter.NO_QUOTE_CHARACTER)
-                            .build())
-                        .build()
-                else CSVReader(fileReader)
-
-            csvReader
-                .filter { it.size > 1 && it[0].isNotBlank() }
-                .map { CardWordEntry(it[0].trim(), readTranslations(it) ) }
-                .toList()
-    }
-}
-
-
-private fun readTranslations(csvLine: Array<String>): String =
-    csvLine
-        .asSequence()
-        .drop(1)
-        .filter { it.isNotBlank() }
-        .joinToString("\n")
-
-
-fun saveWords(file: Path, words: Iterable<String>) {
-
-    if (!words.iterator().hasNext()) {
-        throw IllegalArgumentException("Nothing to save to [$file].")
-    }
+    if (!words.iterator().hasNext()) throw IllegalArgumentException("Nothing to save to [$file].")
 
     Files.createDirectories(file.parent)
 
@@ -109,35 +81,42 @@ fun saveWords(file: Path, words: Iterable<String>) {
 }
 
 
-enum class CsvFormat { Standard, MemoWorld }
+// -----------------------------------------------------------------------------
+private fun internalFormatCsvReader(fileReader: FileReader): CSVReader = CSVReader(fileReader)
+
+fun loadFromWordsFromInternalCsv(file: Path): List<String> =
+    FileReader(file.toFile(), UTF_8)
+        .use { fileReader ->
+            internalFormatCsvReader(fileReader)
+                .map { it.getOrEmpty(0) }
+                .filter { it.isNotBlank() }
+                .toList()
+        }
+
+fun loadWordEntriesFromInternalCsv(file: Path): List<CardWordEntry> =
+    FileReader(file.toFile(), UTF_8)
+        .use { fileReader ->
+            internalFormatCsvReader(fileReader)
+                .filter { it.isNotEmpty() && it[0].isNotBlank() }
+                .map {
+                    // Fields order: from, to, transcription, examples, wordCardStatuses
+                    val card = CardWordEntry("", "")
+                    var index = 0
+                    card.from = it[index++]
+                    card.to = it.getOrEmpty(index++)
+                    card.transcription = it.getOrEmpty(index++)
+                    card.examples = it.getOrEmpty(index++)
+                    card.wordCardStatuses = wordCardStatusesFromString(it.getOrEmpty(index))
+                    card
+                }
+                .toList()
+    }
 
 
-
-fun saveWordEntries(file: Path, format: CsvFormat, words: Iterable<CardWordEntry>) {
-
+fun saveWordEntriesWithMemoWordFormat(file: Path, words: Iterable<CardWordEntry>) {
     if (!words.iterator().hasNext()) throw IllegalArgumentException("Nothing to save to [$file].")
-
     Files.createDirectories(file.parent)
 
-    when (format) {
-        CsvFormat.Standard  -> saveWordEntriesWithStandardFormatImpl(file, words)
-        CsvFormat.MemoWorld -> saveWordEntriesWithMemoWorldFormatImpl(file, words)
-    }
-}
-
-
-private fun saveWordEntriesWithStandardFormatImpl(file: Path, words: Iterable<CardWordEntry>) {
-    FileWriter(file.toFile(), UTF_8)
-        .use { fw ->
-            val csvWriter = CSVWriter(fw) // CSVWriterBuilder(fw).build()
-                words.forEach {
-                    csvWriter.writeNext(arrayOf(it.from, it.to))
-        }
-    }
-}
-
-
-private fun saveWordEntriesWithMemoWorldFormatImpl(file: Path, words: Iterable<CardWordEntry>) {
     FileWriter(file.toFile(), UTF_8)
         .use { fw ->
             val csvWriter = CSVWriterBuilder(fw)
@@ -153,14 +132,102 @@ private fun saveWordEntriesWithMemoWorldFormatImpl(file: Path, words: Iterable<C
                         // in reversed order -> ru-en
                         formatWordOrPhraseToMemoWorldFormat(it.to),
                         formatWordOrPhraseToMemoWorldFormat(it.from),
+                        "", // part of speech
+                        formatWordOrPhraseToMemoWorldFormat(it.transcription + '\n' + it.examples),
                     ))
+                }
+        }
+}
+
+
+// -----------------------------------------------------------------------------
+private fun memoWordCsvReader(fileReader: FileReader): CSVReader =
+    CSVReaderBuilder(fileReader)
+        .withCSVParser(
+            CSVParserBuilder()
+                .withSeparator(';')
+                .withEscapeChar(ICSVWriter.NO_ESCAPE_CHARACTER)
+                .withQuoteChar(ICSVWriter.NO_QUOTE_CHARACTER)
+                .withIgnoreQuotations(true)
+                .withStrictQuotes(false)
+                .build()
+        )
+        .build()
+
+fun loadFromWordsFromMemoWordsCsv(file: Path): List<String> =
+    FileReader(file.toFile(), UTF_8)
+        .use { fileReader ->
+            memoWordCsvReader(fileReader)
+                .map { it.getOrEmpty(1) }
+                .filter { it.isNotBlank() }
+                .toList()
+        }
+
+
+fun loadWordEntriesFromMemoWorldsCsv(file: Path): List<CardWordEntry> =
+    FileReader(file.toFile(), UTF_8)
+        .use { fileReader ->
+            memoWordCsvReader(fileReader)
+                .filter { it.size >= 2 && it[0].isNotBlank() }
+                .map {
+                    // Fields order: russian/to, english/from, transcription, examples, wordCardStatuses
+                    val card = CardWordEntry("", "")
+                    var index = 0
+                    card.to = it.getOrEmpty(index++)
+                    card.from = it.getOrEmpty(index++)
+                    index++ // part of speech
+                    val transcriptionAndExamples = it.getOrEmpty(index)
+                    card.transcription = "" // T O D O: extract transcription from transcriptionAndExamples
+                    card.examples = transcriptionAndExamples
+                    card
+                }
+                .filter { it.from.isNotBlank() }
+                .toList()
+    }
+
+
+fun saveWordEntriesWithStandardFormat(file: Path, words: Iterable<CardWordEntry>) {
+    if (!words.iterator().hasNext()) throw IllegalArgumentException("Nothing to save to [$file].")
+    Files.createDirectories(file.parent)
+
+    FileWriter(file.toFile(), UTF_8)
+        .use { fw ->
+            val csvWriter = CSVWriter(fw) // CSVWriterBuilder(fw).build()
+            words.forEach {
+                csvWriter.writeNext(arrayOf(it.from, it.to, it.transcription, it.examples,
+                    wordCardStatusesToString(it.wordCardStatuses)))
             }
         }
 }
 
 
+// -----------------------------------------------------------------------------
+
+fun saveWordEntries(file: Path, format: CsvFormat, words: Iterable<CardWordEntry>) =
+    when (format) {
+        CsvFormat.Standard  -> saveWordEntriesWithStandardFormat(file, words)
+        CsvFormat.MemoWorld -> saveWordEntriesWithMemoWordFormat(file, words)
+    }
+
+
+private fun wordCardStatusesToString(statuses: Iterable<WordCardStatus>) =
+    statuses.asSequence().map { it.name }.joinToString(",")
+
+private fun wordCardStatusesFromString(statuses: String): Set<WordCardStatus> =
+    statuses.splitToSequence(",")
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        // TODO: improve or log or... (remember that this is used to load)
+        // TODO: do not use it for loadAllWords
+        .map { try { WordCardStatus.valueOf(it) } catch (ignore: Exception) { null } }
+        .filterNotNull()
+        .toSet()
+
+
+
 fun formatWordOrPhraseToMemoWorldFormat(wordOrPhrase: String): String =
     wordOrPhrase
+        .replace('"', '\'')
         .trim()
         .replace("\n ", ", ")
         .replace("\n", ", ")
@@ -178,11 +245,16 @@ fun formatWordOrPhraseToMemoWorldFormat(wordOrPhrase: String): String =
         .trim()
 
 
+// -----------------------------------------------------------------------------
+
 // It would be nice to optimize it to avoid unneeded string conversions.
 val String.translationCount: Int get() =
-    formatWordOrPhraseToMemoWorldFormat(this).split(",").filter { it.isNotBlank() }.size
+    formatWordOrPhraseToMemoWorldFormat(this)
+        .split(",")
+        .filter { it.isNotBlank() }.size
 
 
+// -----------------------------------------------------------------------------
 
 fun saveSplitWords(file: Path, words: Iterable<CardWordEntry>, portionSize: Int) =
     words
