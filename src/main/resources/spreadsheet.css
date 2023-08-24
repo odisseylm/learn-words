@@ -1,4 +1,8 @@
 
+#currentWords {
+    -fx-max-width: 5000;
+}
+
 
 /* Styling TranslationCount-Status column. */
 
@@ -52,4 +56,27 @@
     /* I'm sure that such CSS behavior it is surely bug! */
 
     /*-fx-graphic: url("icons/exclamation-1.png");*/
+}
+
+/* That all does NOT work properly. Table column will have required width, */
+/* but it become un-sizable and looks strange and total table width is not calculated properly. */
+/* See https://stackoverflow.com/questions/54214655/problems-with-setting-tablecolumn-width-in-fxml-using-css */
+/*#currentWords #fromColumn { -fx-pref-width: 200; }*/
+/*#currentWords .fromColumn { -fx-pref-width: 200; }*/
+
+#allProcessedWords {
+    -fx-pref-width: 150;
+    -fx-max-width: 200;
+}
+
+#ignoredWords {
+    -fx-pref-width: 150;
+    -fx-max-width: 200;
+}
+
+/* It is needed if middle-bar buttons have different size.
+   Without it they will have different widths. */
+.middleBarButton {
+    -fx-max-width: 500;
+    -fx-min-width: 130;
 }

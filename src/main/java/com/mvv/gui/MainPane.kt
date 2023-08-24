@@ -79,9 +79,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         val contentPane = GridPane()
 
-        val maxListViewWidth = 5000.0 // TODO: move to CSS
-        val maxButtonWidth = 500.0    // TODO: move to CSS
-
         contentPane.alignment = Pos.CENTER
         contentPane.hgap = 10.0; contentPane.vgap = 10.0
         contentPane.padding = Insets(10.0, 10.0, 10.0, 10.0)
@@ -94,7 +91,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWords.addListener(ListChangeListener { analyzeWordCards(currentWords) })
 
         contentPane.add(currentWordsList, 0, 1, 1, 3)
-        currentWordsList.maxWidth = maxListViewWidth
         GridPane.setFillWidth(currentWordsList, true)
         GridPane.setHgrow(currentWordsList, Priority.ALWAYS)
         currentWordsList.selectionModel.selectionMode = SelectionMode.MULTIPLE
@@ -108,11 +104,11 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
 
         val ignoreButton = newButton("To ignore >>", buttonIcon("icons/rem_all_co.png")) { moveToIgnored() }
-        ignoreButton.maxWidth = maxButtonWidth
+        ignoreButton.styleClass.add("middleBarButton")
         buttonsMiddleBar.children.add(ignoreButton)
 
         val removeIgnoredButton = newButton("Remove ignored") { removeIgnoredFromCurrentWords() }
-        removeIgnoredButton.maxWidth = maxButtonWidth
+        removeIgnoredButton.styleClass.add("middleBarButton")
         buttonsMiddleBar.children.add(removeIgnoredButton)
 
         contentPane.add(buttonsMiddleBar, 1, 1)
@@ -124,9 +120,10 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         ignoredWords.addListener(ListChangeListener { ignoredWordsLabel.text = ignoredWordsLabelText.format(it.list.size) })
 
+        ignoredWordsList.id = "ignoredWords"
         ignoredWordsList.items = ignoredWordsSorted
         contentPane.add(ignoredWordsList, 2, 1)
-        ignoredWordsList.maxWidth = maxListViewWidth
+        //ignoredWordsList.maxWidth = maxListViewWidth
         GridPane.setFillWidth(ignoredWordsList, true)
         GridPane.setHgrow(ignoredWordsList, Priority.ALWAYS)
         ignoredWordsList.selectionModel.selectionMode = SelectionMode.MULTIPLE
@@ -137,20 +134,22 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         allProcessedWords.addListener(ListChangeListener { allProcessedWordsLabel.text = allProcessedWordsLabelText.format(it.list.size) })
 
+        allProcessedWordsList.id = "allProcessedWords"
         allProcessedWordsList.items = SortedList(allProcessedWords, String.CASE_INSENSITIVE_ORDER)
         contentPane.add(allProcessedWordsList, 2, 3)
-        allProcessedWordsList.maxWidth = maxListViewWidth
         GridPane.setFillWidth(allProcessedWordsList, true)
         GridPane.setHgrow(allProcessedWordsList, Priority.ALWAYS)
 
-
+        currentWordsList.id = "currentWords"
         currentWordsList.isEditable = true
 
+        fromColumn.id = "fromColumn"
         fromColumn.isEditable = true
         fromColumn.cellValueFactory = Callback { p -> p.value.fromProperty }
         //fromColumn.cellFactory = TextFieldTableCell.forTableColumn()
         fromColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextField)
 
+        toColumn.id = "toColumn"
         toColumn.isEditable = true
         toColumn.cellValueFactory = PropertyValueFactory("to")
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
@@ -160,6 +159,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         //toColumn.cellValueFactory = PropertyValueFactory("to")
         //toColumn.cellFactory = MultilineTextFieldTableCell.forStringTableColumn { toText, card -> card.to = toText }
 
+        translationCountColumn.id = "translationCountColumn"
         translationCountColumn.isEditable = false
         translationCountColumn.cellValueFactory = Callback { p -> p.value.translationCountProperty }
 
@@ -169,11 +169,13 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             cell.styleClass.add("TranslationCountStatus-${translationCountStatus.name}")
         }
 
+        transcriptionColumn.id = "transcriptionColumn"
         transcriptionColumn.isEditable = true
         transcriptionColumn.cellValueFactory = PropertyValueFactory("transcription")
         transcriptionColumn.cellValueFactory = Callback { p -> p.value.transcriptionProperty }
         transcriptionColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextField)
 
+        examplesColumn.id = "examplesColumn"
         examplesColumn.isEditable = true
         examplesColumn.cellValueFactory = PropertyValueFactory("examples")
         examplesColumn.cellValueFactory = Callback { p -> p.value.examplesProperty }
@@ -188,6 +190,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         //
         // val iconView = ImageView(icon)
 
+        wordCardStatusesColumn.id = "wordCardStatusesColumn"
         wordCardStatusesColumn.isEditable = false
         wordCardStatusesColumn.cellValueFactory = PropertyValueFactory("wordCardStatuses")
         wordCardStatusesColumn.cellValueFactory = Callback { p -> p.value.wordCardStatusesProperty }
@@ -213,7 +216,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             cell.toolTipText = toolTipText
         }
 
-        // TODO: move to CSS
+        // Impossible to move it to CSS ?!
         fromColumn.prefWidth = 200.0
         wordCardStatusesColumn.prefWidth = 50.0
         toColumn.prefWidth = 400.0
@@ -225,9 +228,9 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWordsList.items = currentWords // Sorted
         //currentWordsList.setComparator(cardWordEntryComparator)
         currentWordsList.columns.setAll(fromColumn, wordCardStatusesColumn, toColumn, translationCountColumn, transcriptionColumn, examplesColumn)
+
         currentWordsList.sortOrder.add(fromColumn)
 
-        currentWordsList.id = "currentWords"
 
         addKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
             if (!currentWordsList.isEditing) copySelectedWord() } })
