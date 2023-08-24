@@ -16,21 +16,16 @@ class TextParser {
         "\\", "/",
     )
 
-    fun parse(text: CharSequence): List<String> {
-
-        val wordsSeq = text.splitToSequence(delimiters = delimiters)
-        val words = wordsSeq
+    fun parse(text: CharSequence): List<String> =
+        text.splitToSequence(delimiters = delimiters)
             .filter { it.isNotEmpty() }
             .filter { it.length > 1 }
             .map { it.removePrefix("-") }
             .filter { !it.isNumber }
-            .distinctBy { it.uppercase() }
+            .distinctBy { it.lowercase() }
             //.filter { !ignoredWordsSorted.contains(it) }
             //.distinct()
             .toList()
-
-        return words
-    }
 
 }
 

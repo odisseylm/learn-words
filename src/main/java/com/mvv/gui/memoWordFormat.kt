@@ -83,6 +83,7 @@ fun saveWordCardsIntoMemoWordCsv(file: Path, words: Iterable<CardWordEntry>) {
 }
 
 
+// Not optimized but very-very simple approach :-)
 fun formatWordOrPhraseToMemoWordFormat(wordOrPhrase: String): String =
     wordOrPhrase
         .replace('"', '\'')

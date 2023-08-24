@@ -13,7 +13,6 @@ fun String.removeSuffixCaseInsensitive(suffix: String): String =
     }
 
 
-@Suppress("unused")
 fun <S: CharSequence> S.ifNotBlank(action: (S)->S): S = if (this.isBlank()) this else action(this)
 
 
