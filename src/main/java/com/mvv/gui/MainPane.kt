@@ -80,7 +80,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         val contentPane = GridPane()
 
         val maxListViewWidth = 5000.0 // TODO: move to CSS
-        val maxButtonWidth = 500.0 // TODO: move to CSS
+        val maxButtonWidth = 500.0    // TODO: move to CSS
 
         contentPane.alignment = Pos.CENTER
         contentPane.hgap = 10.0; contentPane.vgap = 10.0
@@ -196,9 +196,9 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             cell.styleClass.removeAll(WordCardStatus.allCssClasses)
 
             val toolTips = mutableListOf<String>()
-            val wordCardStatuses = value ?: emptySet()
+            val showNoBaseWordInSet = !card.ignoreNoBaseWordInSet && card.noBaseWordInSet
 
-            if (NoBaseWordInSet in wordCardStatuses && BaseWordDoesNotExist !in wordCardStatuses) {
+            if (showNoBaseWordInSet) {
                 toolTips.add(NoBaseWordInSet.toolTipF(card))
                 cell.styleClass.add(NoBaseWordInSet.cssClass)
 
@@ -264,7 +264,14 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     }
 
     private fun addContextMenu() {
-        val ignoreNoBaseWordMenuItem = newMenuItem("Ignore 'No base word'", "Ignore warning 'no base word in set'", buttonIcon("/icons/skip_brkp.png")) { ignoreNoBaseWordInSet() }
+        val ignoreNoBaseWordMenuItem = newMenuItem("Ignore 'No base word'",
+            "Ignore warning 'no base word in set'", buttonIcon("/icons/skip_brkp.png")) {
+            ignoreNoBaseWordInSet() }
+
+        val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
+            buttonIcon("/icons/toggleexpand.png")) { addBaseWordsInSetForSelected() }
+        val translateMenuItem = newMenuItem("Translate selected", buttonIcon("icons/forward_nav.png"),
+            translateSelectedKeyCombination ) { translateSelected() }
 
         val menu = ContextMenu(
             newMenuItem("Insert above", buttonIcon("/icons/insertAbove-01.png")) { insertWordCard(InsertPosition.Above) },
@@ -272,12 +279,15 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             newMenuItem("Lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination)   { toLowerCaseRow() },
             newMenuItem("To ignore >>", buttonIcon("icons/rem_all_co.png")) { moveToIgnored() },
             newMenuItem("Remove", buttonIcon("icons/cross-1.png")) { removeSelected() },
-            newMenuItem("Translate selected", buttonIcon("icons/forward_nav.png"), translateSelectedKeyCombination) { translateSelected() },
+            translateMenuItem,
             ignoreNoBaseWordMenuItem,
+            addMissedBaseWordsMenuItem
         )
 
         menu.onShowing = EventHandler {
             updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
+            updateAddMissedBaseWordsMenuItem(addMissedBaseWordsMenuItem)
+            updateTranslateMenuItem(translateMenuItem)
         }
 
         currentWordsList.contextMenu = menu
@@ -296,8 +306,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             Label("  "),
             newButton("No base word", "Ignore warning 'no base word in set'.", buttonIcon("/icons/skip_brkp.png")) {
                 ignoreNoBaseWordInSet() },
-            newButton("Add base words", "Add possible base words.", buttonIcon("/icons/toggleexpand.png")) {
-                addBaseWordsInSet() },
+            newButton("Add all missed base words", "Add all possible missed base words.", buttonIcon("/icons/toggleexpand.png")) {
+                addAllBaseWordsInSet() },
 
             // For testing
             //
@@ -309,31 +319,57 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         toolBar.items.addAll(controls)
     }
 
-    private fun updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem: MenuItem) {
+    private fun updateIgnoreNoBaseWordMenuItem(menuItem: MenuItem) {
         val oneOfSelectedWordsHasNoBaseWord = isOneOfSelectedWordsHasNoBaseWord()
-        ignoreNoBaseWordMenuItem.isVisible = oneOfSelectedWordsHasNoBaseWord
+        menuItem.isVisible = oneOfSelectedWordsHasNoBaseWord
 
         val selectedCards = currentWordsList.selectionModel.selectedItems
-        val ignoreNoBaseWordMenuItemText =
+        val menuItemText =
             if (oneOfSelectedWordsHasNoBaseWord && selectedCards.size == 1)
                 "Ignore no base words [${possibleEnglishBaseWords(selectedCards[0].from).joinToString("|")}]"
             else "Ignore 'No base word'"
-        ignoreNoBaseWordMenuItem.text = ignoreNoBaseWordMenuItemText
+        menuItem.text = menuItemText
+    }
+
+    private fun updateAddMissedBaseWordsMenuItem(menuItem: MenuItem) {
+        val oneOfSelectedWordsHasNoBaseWord = isOneOfSelectedWordsHasNoBaseWord()
+        menuItem.isVisible = oneOfSelectedWordsHasNoBaseWord
+
+        val selectedCards = currentWordsList.selectionModel.selectedItems
+        val menuItemText =
+            if (oneOfSelectedWordsHasNoBaseWord && selectedCards.size == 1)
+                "Add base word '${possibleBestEnglishBaseWord(selectedCards[0].from)}'"
+            else "Add missed base word"
+        menuItem.text = menuItemText
+    }
+
+    private fun updateTranslateMenuItem(menuItem: MenuItem) {
+        val oneOfSelectedIsNotTranslated = currentWordsList.selectionModel.selectedItems.any { it.to.isBlank() }
+        menuItem.isVisible = oneOfSelectedIsNotTranslated
+
+        val selectedCards = currentWordsList.selectionModel.selectedItems
+        val menuItemText =
+            if (oneOfSelectedIsNotTranslated && selectedCards.size == 1)
+                "Translate '${selectedCards[0].from}'"
+            else "Translate selected"
+        menuItem.text = menuItemText
     }
 
     private fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =
         currentWordsList.selectionModel.selectedItems
-            .any { !it.wordCardStatuses.contains(BaseWordDoesNotExist) && it.wordCardStatuses.contains(NoBaseWordInSet) }
+            .any { !it.ignoreNoBaseWordInSet && it.noBaseWordInSet }
 
     private fun ignoreNoBaseWordInSet() =
         currentWordsList.selectionModel.selectedItems.forEach {
             updateSetProperty(it.wordCardStatusesProperty, BaseWordDoesNotExist, UpdateSet.Set) }
 
-    private fun addBaseWordsInSet() {
-        val withoutBaseWord = currentWordsList.items
+    private fun addAllBaseWordsInSet() = addAllBaseWordsInSetImpl(currentWordsList.items)
+    private fun addBaseWordsInSetForSelected() = addAllBaseWordsInSetImpl(currentWordsList.selectionModel.selectedItems)
+
+    private fun addAllBaseWordsInSetImpl(wordCards: Iterable<CardWordEntry>) {
+        val withoutBaseWord = wordCards
             .asSequence()
-            // TODO: simplify such IFs
-            .filter { !it.wordCardStatuses.contains(BaseWordDoesNotExist) && it.wordCardStatuses.contains(NoBaseWordInSet) }
+            .filter { !it.ignoreNoBaseWordInSet && it.noBaseWordInSet }
             .map { it.from.trim() }
             .toSortedSet()
 

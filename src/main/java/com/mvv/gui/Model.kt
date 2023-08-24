@@ -108,6 +108,9 @@ enum class WordCardStatus (
 }
 
 
+val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(NoBaseWordInSet)
+val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(BaseWordDoesNotExist)
+
 
 fun analyzeWordCards(wordCards: Iterable<CardWordEntry>) {
 
@@ -118,17 +121,13 @@ fun analyzeWordCards(wordCards: Iterable<CardWordEntry>) {
     cards.values.forEach { card ->
         val englishWord = card.from.trim().lowercase()
 
-        if (BaseWordDoesNotExist !in card.wordCardStatuses
-            && englishWord.mayBeDerivedWord) {
+        if (!card.ignoreNoBaseWordInSet && englishWord.mayBeDerivedWord) {
 
             val baseWords = possibleEnglishBaseWords(englishWord)
-            val cardSetContainsBaseWord = cards.containsOneOfKeys(baseWords)
-            val ignoreNoBaseWordInSet = BaseWordDoesNotExist in card.wordCardStatuses
+            val cardsSetContainsBaseWord = cards.containsOneOfKeys(baseWords)
 
-            if (!ignoreNoBaseWordInSet) {
-                val noBaseWordStatusAction = if (cardSetContainsBaseWord) UpdateSet.Remove else UpdateSet.Set
-                updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, noBaseWordStatusAction)
-            }
+            val noBaseWordStatusUpdateAction = if (cardsSetContainsBaseWord) UpdateSet.Remove else UpdateSet.Set
+            updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, noBaseWordStatusUpdateAction)
         }
     }
 }
