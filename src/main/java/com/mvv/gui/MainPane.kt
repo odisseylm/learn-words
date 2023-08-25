@@ -195,7 +195,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         wordCardStatusesColumn.cellValueFactory = PropertyValueFactory("wordCardStatuses")
         wordCardStatusesColumn.cellValueFactory = Callback { p -> p.value.wordCardStatusesProperty }
 
-        wordCardStatusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, value ->
+        wordCardStatusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
             cell.styleClass.removeAll(WordCardStatus.allCssClasses)
 
             val toolTips = mutableListOf<String>()
@@ -284,7 +284,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             newMenuItem("Remove", buttonIcon("icons/cross-1.png")) { removeSelected() },
             translateMenuItem,
             ignoreNoBaseWordMenuItem,
-            addMissedBaseWordsMenuItem
+            addMissedBaseWordsMenuItem,
         )
 
         menu.onShowing = EventHandler {
@@ -373,16 +373,45 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         val withoutBaseWord = wordCards
             .asSequence()
             .filter { !it.ignoreNoBaseWordInSet && it.noBaseWordInSet }
-            .map { it.from.trim() }
-            .toSortedSet()
+            .toSortedSet(cardWordEntryComparator)
 
-        val baseWordsToAdd = withoutBaseWord
-            .mapNotNull { possibleBestEnglishBaseWord(it) }
-            .map { CardWordEntry(it, "") }
+        val baseWordsToAddMap: Map<CardWordEntry, CardWordEntry> = withoutBaseWord
+            .asSequence()
+            .map { Pair(it, possibleBestEnglishBaseWord(it.from)) }
+            .filterNotNullPairValue()
+            .map { Pair(it.first, CardWordEntry(it.second, "")) }
+            .associate { it }
 
-        currentWordsList.items.addAll(baseWordsToAdd)
-        currentWordsList.sort()
-        reanalyzeWords()
+        val prevAbsoluteOffset = currentWordsList.viewPortAbsoluteOffset
+
+        // This approach should keep less/more scrolling but due to bug in JavaFx auto-scrolling is unpredictable :-(
+        // This JavaFX bug appears if rows have different height.
+        // See my comments in TableView.setViewPortAbsoluteOffsetImpl()
+        //
+        baseWordsToAddMap.forEach { (currentWordCard, baseWordCard) ->
+            val index = currentWordsList.items.indexOf(currentWordCard)
+            currentWordsList.items.add(index, baseWordCard)
+        }
+        analyzeWordCards(withoutBaseWord, currentWordsList.items)
+
+
+        if (baseWordsToAddMap.size == 1) {
+
+            // Need to do it manually due to JavaFX bug (if a table has rows with different height)
+            // !!! both call currentWordsList.viewPortAbsoluteOffset are needed !!!
+            currentWordsList.viewPortAbsoluteOffset = prevAbsoluteOffset
+
+            val newBaseWordCard = baseWordsToAddMap.values.first()
+
+            // select new base word to edit it immediately
+            if (currentWordsList.selectionModel.selectedItems.size <= 1) {
+                currentWordsList.selectionModel.clearSelection()
+                currentWordsList.selectionModel.select(newBaseWordCard)
+            }
+        }
+
+        // Need to do it manually due to JavaFX bug (if a table has rows with different height)
+        currentWordsList.viewPortAbsoluteOffset = prevAbsoluteOffset
     }
 
     private fun removeSelected() {
@@ -495,7 +524,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             }
 
             currentWords.setAll(words)
-            //currentWordsList.refresh()
             currentWordsList.sort()
 
             if (fileExt == "csv") {

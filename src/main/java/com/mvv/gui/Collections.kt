@@ -32,3 +32,8 @@ private fun <T> updateSetPropertyImpl(get: ()->Set<T>, set: (Set<T>)->Unit, valu
 
 
 fun Array<String>.getOrEmpty(index: Int) = this.getOrElse(index) { "" }
+
+
+@Suppress("UNCHECKED_CAST")
+fun <K, V> Sequence<Pair<K,V?>>.filterNotNullPairValue(): Sequence<Pair<K,V>> =
+    this.filter { it.second != null } as Sequence<Pair<K,V>>

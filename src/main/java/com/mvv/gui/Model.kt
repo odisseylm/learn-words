@@ -112,19 +112,21 @@ val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contain
 val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(BaseWordDoesNotExist)
 
 
-fun analyzeWordCards(wordCards: Iterable<CardWordEntry>) {
+fun analyzeWordCards(allWordCards: Iterable<CardWordEntry>) = analyzeWordCards(allWordCards, allWordCards)
+
+fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>, allWordCards: Iterable<CardWordEntry>) {
 
     println("### analyzeWordCards") // TODO: use logger
 
-    val cards: Map<String, CardWordEntry> = wordCards.associateBy { it.from.trim().lowercase() }
+    val allWordCardsMap: Map<String, CardWordEntry> = allWordCards.associateBy { it.from.trim().lowercase() }
 
-    cards.values.forEach { card ->
+    wordCardsToVerify.forEach { card ->
         val englishWord = card.from.trim().lowercase()
 
         if (!card.ignoreNoBaseWordInSet && englishWord.mayBeDerivedWord) {
 
             val baseWords = possibleEnglishBaseWords(englishWord)
-            val cardsSetContainsBaseWord = cards.containsOneOfKeys(baseWords)
+            val cardsSetContainsBaseWord = allWordCardsMap.containsOneOfKeys(baseWords)
 
             val noBaseWordStatusUpdateAction = if (cardsSetContainsBaseWord) UpdateSet.Remove else UpdateSet.Set
             updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, noBaseWordStatusUpdateAction)
