@@ -382,41 +382,41 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             .map { Pair(it.first, CardWordEntry(it.second, "")) }
             .associate { it }
 
-        val prevAbsoluteOffset = currentWordsList.viewPortAbsoluteOffset
-
-        // This approach should keep less/more scrolling but due to bug in JavaFx auto-scrolling is unpredictable :-(
+        // Need to do it manually due to JavaFX bug (if a table has rows with different height)
         // This JavaFX bug appears if rows have different height.
         // See my comments in TableView.setViewPortAbsoluteOffsetImpl()
-        //
-        baseWordsToAddMap.forEach { (currentWordCard, baseWordCard) ->
-            val index = currentWordsList.items.indexOf(currentWordCard)
-            currentWordsList.items.add(index, baseWordCard)
-        }
-        analyzeWordCards(withoutBaseWord, currentWordsList.items)
+        currentWordsList.runWithScrollKeeping { // restoreScrollPosition ->
+
+            // Ideally this approach should keep less/more scrolling (without any hacks) but...
+            baseWordsToAddMap.forEach { (currentWordCard, baseWordCard) ->
+                val index = currentWordsList.items.indexOf(currentWordCard)
+                currentWordsList.items.add(index, baseWordCard)
+            }
+            analyzeWordCards(withoutBaseWord, currentWordsList.items)
 
 
-        if (baseWordsToAddMap.size == 1) {
+            if (baseWordsToAddMap.size == 1) {
 
-            // Need to do it manually due to JavaFX bug (if a table has rows with different height)
-            // !!! both call currentWordsList.viewPortAbsoluteOffset are needed !!!
-            currentWordsList.viewPortAbsoluteOffset = prevAbsoluteOffset
+                // Need to do it manually due to JavaFX bug (if a table has rows with different height)
+                // !!! both call currentWordsList.viewPortAbsoluteOffset are needed !!!
+                // restoreScrollPosition(SetViewPortAbsoluteOffsetMode.Immediately)
 
-            val newBaseWordCard = baseWordsToAddMap.values.first()
+                val newBaseWordCard = baseWordsToAddMap.values.first()
 
-            // select new base word to edit it immediately
-            if (currentWordsList.selectionModel.selectedItems.size <= 1) {
-                currentWordsList.selectionModel.clearSelection()
-                currentWordsList.selectionModel.select(newBaseWordCard)
+                // select new base word to edit it immediately
+                if (currentWordsList.selectionModel.selectedItems.size <= 1) {
+                    currentWordsList.selectionModel.clearSelection()
+                    currentWordsList.selectionModel.select(newBaseWordCard)
+                }
             }
         }
-
-        // Need to do it manually due to JavaFX bug (if a table has rows with different height)
-        currentWordsList.viewPortAbsoluteOffset = prevAbsoluteOffset
     }
 
     private fun removeSelected() {
         val selectedSafeCopy = currentWordsList.selectionModel.selectedItems.toList()
-        currentWordsList.items.removeAll(selectedSafeCopy)
+        currentWordsList.selectionModel.clearSelection()
+        currentWordsList.runWithScrollKeeping {
+            currentWordsList.items.removeAll(selectedSafeCopy) }
     }
 
     @Suppress("unused")
@@ -600,11 +600,11 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     enum class InsertPosition { Above, Below }
 
     private fun insertWordCard(insertPosition: InsertPosition) {
-        val noWordCards = currentWordsList.items.isEmpty()
+        val isWordCardsSetEmpty = currentWordsList.items.isEmpty()
         val currentlySelectedIndex = currentWordsList.selectionModel.selectedIndex
 
         val positionToInsert = when {
-            noWordCards -> 0
+            isWordCardsSetEmpty -> 0
 
             currentlySelectedIndex != -1 -> when (insertPosition) {
                     InsertPosition.Above -> currentlySelectedIndex
@@ -617,18 +617,20 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         if (positionToInsert != -1) {
             val newCardWordEntry = CardWordEntry("", "")
 
-            // TODO: keep current scroll position
+            currentWordsList.runWithScrollKeeping {
 
-            currentWordsList.items.add(positionToInsert, newCardWordEntry)
-
-            if (noWordCards) currentWordsList.selectionModel.select(newCardWordEntry)
+                currentWordsList.items.add(positionToInsert, newCardWordEntry)
+                //if (isWordCardsSetEmpty)
+                currentWordsList.selectionModel.clearSelection()
+                currentWordsList.selectionModel.select(newCardWordEntry)
+            }
 
             // Bug in JavaFX: without runLaterWithDelay() editing cell does not get focus (you need to click on it or use Tab key)
             // if column cells were not present before (if TableView did not have content yet).
             // Platform.runLater() also does not help.
             //
             runLaterWithDelay(50) {
-                if (!currentWordsList.isFocusVisible) currentWordsList.scrollTo(newCardWordEntry)
+                //if (!currentWordsList.isFocusVisible) currentWordsList.scrollTo(newCardWordEntry)
                 currentWordsList.edit(positionToInsert, fromColumn)
             }
         }
@@ -758,7 +760,7 @@ fun main() {
 
     val props = Properties()
     val dbFilename = "mueller-base"
-    val dbId = dbFilename
+    val dbId = dbFilename // TODO: how to suppress warning?
 
     props.setProperty("${dbFilename}.data", File(dictRootDir, "dict/${dbFilename}.dict.dz").absolutePath)
     props.setProperty("${dbFilename}.index", File(dictRootDir, "dict/${dbFilename}.index").absolutePath)

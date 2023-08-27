@@ -1,5 +1,6 @@
 package com.mvv.gui
 
+import com.mvv.gui.SetViewPortAbsoluteOffsetMode.*
 import javafx.application.Platform
 import javafx.scene.control.TableView
 import javafx.scene.control.skin.VirtualFlow
@@ -7,16 +8,33 @@ import javafx.scene.control.skin.absoluteOffsetValue
 import javafx.scene.control.skin.callAdjustPosition
 
 
-var <S> TableView<S>.viewPortAbsoluteOffset: Double?
+
+// We can make viewPortAbsoluteOffset public if it is really needed.
+//
+internal var <S> TableView<S>.viewPortAbsoluteOffset: Double?
     get() = this.virtualFlow?.absoluteOffsetValue
     set(value) { value?.let { this.setViewPortAbsoluteOffsetImpl(value) } }
 
-val <S> TableView<S>.virtualFlow: VirtualFlow<*>? get() = lookupAll("VirtualFlow")
+internal val <S> TableView<S>.virtualFlow: VirtualFlow<*>? get() = lookupAll("VirtualFlow")
     .filterIsInstance<VirtualFlow<*>>()
     .firstOrNull { it.isVertical }
 
 
-internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(absoluteOffset: Double) {
+enum class SetViewPortAbsoluteOffsetMode {
+    /** Setting is performed immediately */
+    /** Setting is performed immediately */
+    Immediately,
+    /** Setting is performed later using Platform.runLater() and probably with runWithDelay(several millis) */
+    Later,
+    /** Setting is performed immediately (to avoid or minimize blinking)
+      * and to make sure it is set again a bit later.
+      */
+    ImmediatelyAndLater,
+}
+
+internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
+    absoluteOffset: Double, setMode: SetViewPortAbsoluteOffsetMode = ImmediatelyAndLater
+) {
 
     val virtualFlow = this.virtualFlow
     if (virtualFlow == null) {
@@ -33,23 +51,42 @@ internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(absoluteOffset: Doub
     val safeItemsCopy = table.items.toList()
     safeItemsCopy.forEach { table.scrollTo(it) }
 
-    virtualFlow.absoluteOffsetValue = absoluteOffset
-    virtualFlow.callAdjustPosition()
+    // if (setMode in listOf(Immediately, ImmediatelyAndLater)) { // TODO: find something readable like 'in'
 
-    // If it was not picked up immediately (due to conflicts with other table deferred changes).
-    Platform.runLater {
+    if (setMode == Immediately
+     || setMode == ImmediatelyAndLater) {
+
         virtualFlow.absoluteOffsetValue = absoluteOffset
         virtualFlow.callAdjustPosition()
     }
 
-    // If it was not picked up immediately after Platform.runLater() (due to conflicts with other table deferred changes).
-    runLaterWithDelay(10) {
-        virtualFlow.absoluteOffsetValue = absoluteOffset
-        virtualFlow.callAdjustPosition()
+
+    if (setMode == Later
+     || setMode == ImmediatelyAndLater) {
+
+        // If it was not picked up immediately (due to conflicts with other table deferred changes).
+        Platform.runLater {
+            virtualFlow.absoluteOffsetValue = absoluteOffset
+            virtualFlow.callAdjustPosition()
+        }
+
+        // If it was not picked up immediately after Platform.runLater() (due to conflicts with other table deferred changes).
+        runLaterWithDelay(5) {
+            virtualFlow.absoluteOffsetValue = absoluteOffset
+            virtualFlow.callAdjustPosition()
+        }
     }
 }
 
+typealias RestoreScrollPositionFunction = (setMode: SetViewPortAbsoluteOffsetMode)->Unit
 
+fun <R, S> TableView<S>.runWithScrollKeeping(action: (RestoreScrollPositionFunction)->R): R {
+    val currentViewPortAbsoluteOffset = this.viewPortAbsoluteOffset
+    val restoreScrollPositionFunction: RestoreScrollPositionFunction = {
+        setMode: SetViewPortAbsoluteOffsetMode -> currentViewPortAbsoluteOffset?.let { this.setViewPortAbsoluteOffsetImpl(it, setMode) } }
+    return try { action(restoreScrollPositionFunction) }
+           finally { restoreScrollPositionFunction(ImmediatelyAndLater) }
+}
 
 
 /*
