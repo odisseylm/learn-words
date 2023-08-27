@@ -240,7 +240,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
 
         // It is needed if SortedList is used as TableView items
-        // ??? just needed :-) (otherwise warning in console) TODO: ???
+        // ??? just needed :-) (otherwise warning in console)
         //currentWordsSorted.comparatorProperty().bind(currentWordsList.comparatorProperty());
 
         fixSortingAfterCellEditCommit(fromColumn)
@@ -490,7 +490,14 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWords.removeAll(toRemove)
     }
 
-    private fun loadWordsFromFile() {
+    enum class LoadType {
+        /** In case of open action this file will/can/should be overwritten.  */
+        Open,
+        /** In case of import action during saving filename will/should be requested.  */
+        Import,
+    }
+
+    private fun doLoadAction(loadAction: (Path)->LoadType) {
 
         val fc = FileChooser()
         fc.title = "Select words file"
@@ -501,12 +508,30 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         if (file != null) {
             val filePath = file.toPath()
-
             if (filePath == ignoredWordsFile) {
                 showErrorAlert(this, "You cannot open [${ignoredWordsFile.name}].")
                 return
             }
 
+            val loadType = loadAction(filePath)
+
+            when (loadType) {
+                LoadType.Import -> { }
+                LoadType.Open   ->
+                    // !!! Only if success !!!
+                    updateCurrentWordsFile(filePath)
+            }
+        }
+    }
+
+    private fun updateCurrentWordsFile(filePath: Path?) {
+        this.currentWordsFile = filePath
+        val windowTitle = if (filePath == null) appTitle else "$appTitle - ${filePath.name}"
+        setWindowTitle(this, windowTitle)
+    }
+
+    private fun loadWordsFromFile() {
+        doLoadAction { filePath ->
             val fileExt = filePath.extension.lowercase()
             val words: List<CardWordEntry> = when (fileExt) {
                 "txt" ->
@@ -526,22 +551,14 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             currentWords.setAll(words)
             currentWordsList.sort()
 
-            if (fileExt == "csv") {
-                // TODO: separate to 2 functions, this 1st branch should be called as Open
-                // !!! Only if success !!!
-                this.currentWordsFile = filePath
-                setWindowTitle(this, "$appTitle - ${filePath.name}")
-            }
-            else {
-                // TODO: separate to 2 functions, this 2nd branch should be called as Import
-            }
+            if (filePath.isInternalCsvFormat) LoadType.Open else LoadType.Import
         }
     }
 
-    private fun extractWordsFromFile(filePath: Path): List<CardWordEntry> {
-        val r = FileReader(filePath.toFile(), UTF_8)
-        return r.use { extractWordsFromText(r.readText()).also { analyzeWordCards(it) } } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
-    }
+    private fun extractWordsFromFile(filePath: Path): List<CardWordEntry> =
+        FileReader(filePath.toFile(), UTF_8)
+            .use { r -> extractWordsFromText(r.readText())
+                .also { analyzeWordCards(it) } } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
 
     private fun loadFromClipboard() {
 
@@ -558,8 +575,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         println("clipboard content as words: $words")
 
         currentWords.setAll(words)
-        currentWordsFile = null
-        setWindowTitle(this, appTitle)
+        updateCurrentWordsFile(null)
     }
 
     private fun extractWordsFromText(content: CharSequence): List<CardWordEntry> =
@@ -572,8 +588,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     private fun moveToIgnored() {
 
-        val selectedWords = currentWordsList.selectionModel.selectedItems
-            .stream().toList()
+        val selectedWords = currentWordsList.selectionModel.selectedItems.toList()
 
         println("selectedWords: $selectedWords")
 
@@ -589,7 +604,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     private fun saveAll() {
         try {
-            saveCurrentWords(WordsOrder.SORTED)
+            saveCurrentWords()
             saveIgnored()
         }
         catch (ex: Exception) {
@@ -620,85 +635,52 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             currentWordsList.runWithScrollKeeping {
 
                 currentWordsList.items.add(positionToInsert, newCardWordEntry)
-                //if (isWordCardsSetEmpty)
-                currentWordsList.selectionModel.clearSelection()
-                currentWordsList.selectionModel.select(newCardWordEntry)
+                currentWordsList.selectionModel.clearAndSelect(positionToInsert, fromColumn)
             }
 
             // Bug in JavaFX: without runLaterWithDelay() editing cell does not get focus (you need to click on it or use Tab key)
             // if column cells were not present before (if TableView did not have content yet).
             // Platform.runLater() also does not help.
             //
-            runLaterWithDelay(50) {
-                //if (!currentWordsList.isFocusVisible) currentWordsList.scrollTo(newCardWordEntry)
+            runLaterWithDelay(250) {
                 currentWordsList.edit(positionToInsert, fromColumn)
             }
         }
     }
 
-    private fun splitCurrentWords() {
+    // enum class WordsOrder { ORIGINAL, SORTED }
 
-        // TODO: refactor, extract duplicated code
-
+    private fun saveCurrentWords() = doSaveCurrentWords { filePath ->
         val words = currentWordsList.items
+        saveWordCards(filePath.useFilenameSuffix(internalWordCardsFileExt), CsvFormat.Internal, words)
+        saveWordCards(filePath.useFilenameSuffix(memoWordFileExt), CsvFormat.MemoWord, words)
+    }
 
-        var currentWordsFile: Path? = this.currentWordsFile // TODO: remove shading var name
+    @Suppress("SameParameterValue")
+    private fun doSaveCurrentWords(saveAction:(Path)->Unit) {
 
-        if (currentWordsFile == null) {
-            currentWordsFile = showTextInputDialog(this, "Enter new words filename")
-                .map { dictDirectory.resolve(addWordsFileExtIfNeeded(it, internalWordCardsFileExt)) }
+        var filePath: Path? = this.currentWordsFile
+        if (filePath == null) {
+            filePath = showTextInputDialog(this, "Enter new words filename")
+                .map { dictDirectory.resolve(useFileExt(it, internalWordCardsFileExt)) }
                 .orElse(null)
         }
 
-        if (currentWordsFile == null) {
+        if (filePath == null) {
             showErrorAlert(this, "Filename is not specified.")
             return
         }
 
-        saveSplitWordCards(currentWordsFile, words, 30)
+        saveAction(filePath)
 
         // !!! ONLY if success !!!
-        this.currentWordsFile = currentWordsFile
-        setWindowTitle(this, "$appTitle - ${currentWordsFile.name}")
+        updateCurrentWordsFile(filePath)
     }
 
-    enum class WordsOrder { ORIGINAL, SORTED }
-
-    @Suppress("SameParameterValue")
-    private fun saveCurrentWords(wordsOrder: WordsOrder) {
-        //val words = if (wordsOrder == WordsOrder.SORTED) currentWordsSorted else currentWords
-        //val words = if (wordsOrder == WordsOrder.SORTED) currentWordsList.items else currentWordsList.items
+    private fun splitCurrentWords() = doSaveCurrentWords { filePath ->
         val words = currentWordsList.items
-
-        var currentWordsFile: Path? = this.currentWordsFile // TODO: remove shading var name
-
-        if (currentWordsFile == null) {
-            currentWordsFile = showTextInputDialog(this, "Enter new words filename")
-                .map { dictDirectory.resolve(addWordsFileExtIfNeeded(it, internalWordCardsFileExt)) }
-                .orElse(null)
-            //val newFileNameDialog = TextInputDialog("")
-            //newFileNameDialog.headerText = "Enter new words filename"
-            //currentWordsFile = newFileNameDialog.showAndWait()
-            //    .map { dictDirectory.resolve(addWordsFileExtIfNeeded(it)) }
-            //    .orElse(null)
-        }
-
-        if (currentWordsFile == null) {
-            showErrorAlert(this, "Filename is not specified.")
-            return
-        }
-
-        saveWordCards(currentWordsFile.useFilenameSuffix(internalWordCardsFileExt), CsvFormat.Internal, words)
-        saveWordCards(currentWordsFile.useFilenameSuffix(memoWordFileExt), CsvFormat.MemoWord, words)
-
-        // !!! ONLY if success !!!
-        this.currentWordsFile = currentWordsFile
-        setWindowTitle(this, "$appTitle - ${currentWordsFile.name}")
+        saveSplitWordCards(filePath, words, 30)
     }
-
-    @Suppress("SameParameterValue")
-    private fun addWordsFileExtIfNeeded(wordsFilename: String, wordsFileExt: String): String =
-        if (wordsFilename.endsWith(wordsFileExt)) wordsFilename else wordsFilename + wordsFileExt
 
     private fun saveIgnored() {
         val ignoredWords = this.ignoredWordsSorted
@@ -719,7 +701,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         val allWordsFilesExceptIgnored = Files.list(dictDirectory)
             .filter { it.isRegularFile() }
             //.filter { it != ignoredWordsFile }
-            .filter { it.name.endsWith(internalWordCardsFileExt) }
+            .filter { it.isInternalCsvFormat || it.isMemoWordFile }
             .toList()
 
         val allWords = allWordsFilesExceptIgnored
@@ -746,21 +728,12 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
 fun main() {
 
-    //val aa = DictLoadFileProcessor()
-    //aa.add(FileObjectImpl())
-    //aa.process();
-
-    //val aa = org.dict.kernel.DictEngine()
-    //val dbF = DatabaseFactory()
-    //dbF.
-
-
-
     val dictRootDir = getProjectDirectory(MainWordsPane::class).resolve("dicts/04/mueller-dict-3.1.1").toFile()
 
     val props = Properties()
     val dbFilename = "mueller-base"
-    val dbId = dbFilename // TODO: how to suppress warning?
+    @SuppressWarnings("UnnecessaryVariable")
+    val dbId = dbFilename
 
     props.setProperty("${dbFilename}.data", File(dictRootDir, "dict/${dbFilename}.dict.dz").absolutePath)
     props.setProperty("${dbFilename}.index", File(dictRootDir, "dict/${dbFilename}.index").absolutePath)

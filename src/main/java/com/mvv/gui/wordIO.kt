@@ -14,6 +14,10 @@ const val plainWordsFileExt = ".txt"
 const val ignoredWordsFilename = "ignored-words${plainWordsFileExt}"
 
 val Path.isMemoWordFile: Boolean get() = this.name.lowercase().endsWith(memoWordFileExt.lowercase())
+val Path.isInternalCsvFormat: Boolean get() {
+    val lowerFilename = this.name.lowercase()
+    return lowerFilename.endsWith(internalWordCardsFileExt) && !lowerFilename.endsWith(memoWordFileExt.lowercase())
+}
 
 val dictDirectory: Path = Path.of(System.getProperty("user.home") + "/english/words")
 
@@ -35,9 +39,9 @@ fun Path.useFilenameSuffix(filenameSuffix: String): Path =
 fun loadWords(file: Path): List<String> {
     val ext = file.extension.lowercase()
     return when {
-        file.isMemoWordFile -> loadWordsFromMemoWordCsv(file)
-        ext == "csv" -> loadWordsFromInternalCsv(file)
-        ext == "txt" -> loadWordsFromTxtFile(file)
+        file.isMemoWordFile      -> loadWordsFromMemoWordCsv(file)
+        file.isInternalCsvFormat -> loadWordsFromInternalCsv(file)
+        ext == "txt"             -> loadWordsFromTxtFile(file)
         else -> throw IllegalArgumentException("Unsupported file [$file].")
     }
 }
@@ -46,9 +50,9 @@ fun loadWords(file: Path): List<String> {
 fun loadWordCards(file: Path): List<CardWordEntry> {
     val ext = file.extension.lowercase()
     return when {
-        file.isMemoWordFile -> loadWordCardsFromMemoWordCsv(file)
-        ext == "csv" -> loadWordCardsFromInternalCsv(file)
-        ext == "txt" -> loadWordsFromTxtFile(file).map { CardWordEntry(it, "") }
+        file.isMemoWordFile      -> loadWordCardsFromMemoWordCsv(file)
+        file.isInternalCsvFormat -> loadWordCardsFromInternalCsv(file)
+        ext == "txt"             -> loadWordsFromTxtFile(file).map { CardWordEntry(it, "") }
         else -> throw IllegalArgumentException("Unsupported file [$file].")
     }
 }
@@ -56,7 +60,7 @@ fun loadWordCards(file: Path): List<CardWordEntry> {
 
 fun saveWordCards(file: Path, format: CsvFormat, words: Iterable<CardWordEntry>) =
     when (format) {
-        CsvFormat.Internal  -> saveWordCardsIntoInternalCsv(file, words)
+        CsvFormat.Internal -> saveWordCardsIntoInternalCsv(file, words)
         CsvFormat.MemoWord -> saveWordCardsIntoMemoWordCsv(file, words)
     }
 

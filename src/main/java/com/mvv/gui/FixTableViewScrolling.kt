@@ -80,10 +80,14 @@ internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
 
 typealias RestoreScrollPositionFunction = (setMode: SetViewPortAbsoluteOffsetMode)->Unit
 
+
 fun <R, S> TableView<S>.runWithScrollKeeping(action: (RestoreScrollPositionFunction)->R): R {
-    val currentViewPortAbsoluteOffset = this.viewPortAbsoluteOffset
+
+    val prevViewPortOffset = this.viewPortAbsoluteOffset
     val restoreScrollPositionFunction: RestoreScrollPositionFunction = {
-        setMode: SetViewPortAbsoluteOffsetMode -> currentViewPortAbsoluteOffset?.let { this.setViewPortAbsoluteOffsetImpl(it, setMode) } }
+        setMode: SetViewPortAbsoluteOffsetMode -> prevViewPortOffset?.let {
+            this.setViewPortAbsoluteOffsetImpl(prevViewPortOffset, setMode) } }
+
     return try { action(restoreScrollPositionFunction) }
            finally { restoreScrollPositionFunction(ImmediatelyAndLater) }
 }
