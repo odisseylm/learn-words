@@ -32,6 +32,7 @@ import java.io.FileReader
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.*
+import kotlin.streams.asSequence
 import kotlin.text.Charsets.UTF_8
 
 
@@ -662,19 +663,30 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         if (positionToInsert != -1) {
             val newCardWordEntry = CardWordEntry("", "")
 
-            currentWordsList.runWithScrollKeeping {
+            if (currentWordsList.editingCell?.row != -1)
+                currentWordsList.edit(-1, null)
 
-                currentWordsList.items.add(positionToInsert, newCardWordEntry)
-                currentWordsList.selectionModel.clearAndSelect(positionToInsert, fromColumn)
-            }
+            currentWordsList.runWithScrollKeeping( {
 
-            // Bug in JavaFX: without runLaterWithDelay() editing cell does not get focus (you need to click on it or use Tab key)
-            // if column cells were not present before (if TableView did not have content yet).
-            // Platform.runLater() also does not help.
-            //
-            runLaterWithDelay(250) {
-                currentWordsList.edit(positionToInsert, fromColumn)
-            }
+                    currentWordsList.items.add(positionToInsert, newCardWordEntry)
+                    currentWordsList.selectionModel.clearAndSelect(positionToInsert, fromColumn)
+                },
+                {
+                    // JavaFX bug.
+                    // Without this call at the end of view editing cell appears twice (in right position and in wrong some below position)
+                    // and erases data in wrong (below) position !!!
+                    // Probably such behavior happens due to my hack in TableView.fixEstimatedContentHeight() (which uses scrolling over all rows)
+                    // but now I have no better idea how to fix EstimatedContentHeight.
+                    //
+                    currentWordsList.refresh()
+
+                    // JavaFX bug: without runLaterWithDelay() editing cell does not get focus (you need to click on it or use Tab key)
+                    // if column cells were not present before (if TableView did not have content yet).
+                    // Platform.runLater() also does not help.
+                    //
+                    runLaterWithDelay(50) { currentWordsList.edit(positionToInsert, fromColumn) }
+                }
+            )
         }
     }
 
@@ -729,6 +741,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         if (dictDirectory.notExists()) return
 
         val allWordsFilesExceptIgnored = Files.list(dictDirectory)
+            .asSequence()
             .filter { it.isRegularFile() }
             //.filter { it != ignoredWordsFile }
             .filter { it.isInternalCsvFormat || it.isMemoWordFile }

@@ -36,8 +36,9 @@ enum class SetViewPortAbsoluteOffsetMode {
     ImmediatelyAndLater,
 }
 
+
 internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
-    absoluteOffset: Double, setMode: SetViewPortAbsoluteOffsetMode = ImmediatelyAndLater
+    absoluteOffset: Double, nextAction: ()->Unit = { }, setMode: SetViewPortAbsoluteOffsetMode = ImmediatelyAndLater
 ) {
 
     val virtualFlow = this.virtualFlow
@@ -46,54 +47,74 @@ internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
         return
     }
 
-    // JavaFx has bug when after adding new item its estimated content height (see VirtualFlow.estimatedSize)
-    // is broken (for example, before adding item estimatedSize=4500, after adding new item is estimatedSize=3500)
-    // For that reason we need to recalculate it properly.
-    // The simplest known for me solution is just scroll over all items/rows to recalculate them again.
+    fixEstimatedContentHeight()
 
-    val table = this
-    val safeItemsCopy = table.items.toList()
-    safeItemsCopy.forEach { table.scrollTo(it) }
-
-    // if (setMode in listOf(Immediately, ImmediatelyAndLater)) { // TODO: find something readable like 'in'
-
-    if (setMode == Immediately
-     || setMode == ImmediatelyAndLater) {
-
-        virtualFlow.absoluteOffsetValue = absoluteOffset
+    fun setAdjustPosIml(pos: Double) {
+        virtualFlow.absoluteOffsetValue = pos
         virtualFlow.callAdjustPosition()
     }
 
+    // !!! These IFs cannot be replaced with 'when' !!!
+    //
+    if (setMode == Immediately) {
+        setAdjustPosIml(absoluteOffset)
+        nextAction()
+    }
+
+    if (setMode == ImmediatelyAndLater) {
+        setAdjustPosIml(absoluteOffset)
+        // nextAction() will be called later
+    }
 
     if (setMode == Later
      || setMode == ImmediatelyAndLater) {
 
         // If it was not picked up immediately (due to conflicts with other table deferred changes).
-        Platform.runLater {
-            virtualFlow.absoluteOffsetValue = absoluteOffset
-            virtualFlow.callAdjustPosition()
-        }
+        Platform.runLater { setAdjustPosIml(absoluteOffset) }
 
         // If it was not picked up immediately after Platform.runLater() (due to conflicts with other table deferred changes).
-        runLaterWithDelay(5) {
-            virtualFlow.absoluteOffsetValue = absoluteOffset
-            virtualFlow.callAdjustPosition()
+        runLaterWithDelay(25) {
+            setAdjustPosIml(absoluteOffset)
+            Platform.runLater(nextAction)
         }
     }
 }
 
-typealias RestoreScrollPositionFunction = (setMode: SetViewPortAbsoluteOffsetMode)->Unit
+
+// JavaFx has bug when after adding new item its estimated content height (see VirtualFlow.estimatedSize)
+// is broken (for example, before adding item estimatedSize=4500, after adding new item is estimatedSize=3500)
+// For that reason we need to recalculate it properly.
+// The simplest known for me solution is just scroll over all items/rows to recalculate them again.
+// TODO: unsafe method with scrolling over all rows, we need to find better way
+private fun <S> TableView<S>.fixEstimatedContentHeight() {
+    val safeItemsCopy = this.items.toList()
+
+    // It does not work
+    //val virtualFlow = this.virtualFlow
+    //safeItemsCopy.forEachIndexed { index, _ -> virtualFlow?.getCell(index) }
+
+    safeItemsCopy.forEach { this.scrollTo(it) }
+}
 
 
-fun <R, S> TableView<S>.runWithScrollKeeping(action: (RestoreScrollPositionFunction)->R): R {
+typealias RestoreScrollPositionFunction = ()->Unit
+
+
+fun <R, S> TableView<S>.runWithScrollKeeping(action: (RestoreScrollPositionFunction)->R): R =
+    this.runWithScrollKeeping(action, { })
+
+
+fun <R, S> TableView<S>.runWithScrollKeeping(action: (RestoreScrollPositionFunction)->R, nextAction: ()->Unit): R {
 
     val prevViewPortOffset = this.viewPortAbsoluteOffset
     val restoreScrollPositionFunction: RestoreScrollPositionFunction = {
-        setMode: SetViewPortAbsoluteOffsetMode -> prevViewPortOffset?.let {
-            this.setViewPortAbsoluteOffsetImpl(prevViewPortOffset, setMode) } }
+        prevViewPortOffset?.let {
+            this.setViewPortAbsoluteOffsetImpl(prevViewPortOffset, { }, Immediately) } }
 
     return try { action(restoreScrollPositionFunction) }
-           finally { restoreScrollPositionFunction(ImmediatelyAndLater) }
+           finally { prevViewPortOffset?.let {
+               this.setViewPortAbsoluteOffsetImpl(prevViewPortOffset, nextAction, ImmediatelyAndLater) }
+           }
 }
 
 
