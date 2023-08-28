@@ -342,8 +342,12 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         val selectedCards = currentWordsList.selectionModel.selectedItems
         val menuItemText =
-            if (oneOfSelectedWordsHasNoBaseWord && selectedCards.size == 1)
-                "Add base word '${possibleBestEnglishBaseWord(selectedCards[0].from)}'"
+            if (oneOfSelectedWordsHasNoBaseWord && selectedCards.size == 1) {
+                val possibleBaseWord = possibleBestEnglishBaseWord(selectedCards[0].from)
+                val showBaseWord = if (possibleBaseWord != null && !possibleBaseWord.endsWith('e'))
+                    "${possibleBaseWord}(e)" else possibleBaseWord
+                "Add base word '$showBaseWord'"
+            }
             else "Add missed base word"
         menuItem.text = menuItemText
     }
@@ -377,11 +381,12 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             .filter { !it.ignoreNoBaseWordInSet && it.noBaseWordInSet }
             .toSortedSet(cardWordEntryComparator)
 
-        val baseWordsToAddMap: Map<CardWordEntry, CardWordEntry> = withoutBaseWord
+        val baseWordsToAddMap: Map<CardWordEntry, List<CardWordEntry>> = withoutBaseWord
             .asSequence()
-            .map { Pair(it, possibleBestEnglishBaseWord(it.from)) }
-            .filterNotNullPairValue()
-            .map { Pair(it.first, CardWordEntry(it.second, "")) }
+            .map { card -> Pair(card, englishBaseWords(card.from)) }
+            //.filterNotNullPairValue()
+            .filter { it.second.isNotEmpty() }
+            //.map { Pair(it.first, CardWordEntry(it.second, "")) }
             .associate { it }
 
         // Need to do it manually due to JavaFX bug (if a table has rows with different height)
@@ -390,9 +395,11 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWordsList.runWithScrollKeeping { // restoreScrollPosition ->
 
             // Ideally this approach should keep less/more scrolling (without any hacks) but...
-            baseWordsToAddMap.forEach { (currentWordCard, baseWordCard) ->
+            baseWordsToAddMap.forEach { (currentWordCard, baseWordCards) ->
                 val index = currentWordsList.items.indexOf(currentWordCard)
-                currentWordsList.items.add(index, baseWordCard)
+                baseWordCards.forEachIndexed { i, baseWordCard ->
+                    currentWordsList.items.add(index + i, baseWordCard)
+                }
             }
             analyzeWordCards(withoutBaseWord, currentWordsList.items)
 
@@ -403,7 +410,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
                 // !!! both call currentWordsList.viewPortAbsoluteOffset are needed !!!
                 // restoreScrollPosition(SetViewPortAbsoluteOffsetMode.Immediately)
 
-                val newBaseWordCard = baseWordsToAddMap.values.first()
+                val newBaseWordCard = baseWordsToAddMap.values.asSequence().flatten().first()
 
                 // select new base word to edit it immediately
                 if (currentWordsList.selectionModel.selectedItems.size <= 1) {
@@ -412,6 +419,21 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
                 }
             }
         }
+    }
+
+    private fun englishBaseWords(word: String): List<CardWordEntry> {
+        val foundWords: List<CardWordEntry> = possibleEnglishBaseWords(word)
+            .asSequence()
+            .map { baseWord ->
+                try { translateWord(baseWord) }
+                catch (ignore: Exception) { CardWordEntry(baseWord, "") } }
+            .filter { it.to.isNotBlank() }
+            .toList()
+
+        val baseWords: List<CardWordEntry> = foundWords.ifEmpty {
+             possibleBestEnglishBaseWord(word)?.let { listOf(CardWordEntry(it, "")) } ?: emptyList() }
+
+        return baseWords.sortedBy { it.from.lowercase() }
     }
 
     private fun removeSelected() {
@@ -476,13 +498,19 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             .filter  { it.from.isNotBlank() }
             .forEach {
                 if (it.to.isBlank()) {
-                    val translation = dictionaryComposition.find(it.from.trim())
-                    it.to = translation.translations.joinToString("\n")
-                    it.transcription = translation.transcription ?: ""
-                    it.examples = extractExamples(translation)
+                    translateWord(it)
                 }
             }
 
+    private fun translateWord(word: String): CardWordEntry=
+        CardWordEntry(word, "").also { translateWord(it) }
+
+    private fun translateWord(card: CardWordEntry) {
+        val translation = dictionaryComposition.find(card.from.trim())
+        card.to = translation.translations.joinToString("\n")
+        card.transcription = translation.transcription ?: ""
+        card.examples = extractExamples(translation)
+    }
 
 
     private fun removeIgnoredFromCurrentWords() {
