@@ -1,7 +1,11 @@
 package com.mvv.gui.dictionary
 
+import mu.KotlinLogging
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+
+
+private val log = KotlinLogging.logger {}
 
 class MidDictionaryTest {
 
@@ -19,7 +23,7 @@ class MidDictionaryTest {
         // dict.find("allllien") // fileIndex=3, Ok
 
         val translation = dict.find("adobe")
-        println(translation)
+        log.info("{}", translation)
     }
 
 
@@ -29,7 +33,7 @@ class MidDictionaryTest {
         val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
 
         val dictEntry = dict.find("apple")
-        println(dictEntry)
+        log.info("{}", dictEntry)
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("apple")
@@ -51,7 +55,7 @@ class MidDictionaryTest {
         val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
 
         val dictEntry = dict.find("aPpLe")
-        println(dictEntry)
+        log.info("{}", dictEntry)
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("apple")
@@ -73,7 +77,7 @@ class MidDictionaryTest {
         val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
 
         val dictEntry = dict.find("NonExistentWord")
-        println(dictEntry)
+        log.info("{}", dictEntry)
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("nonexistentword")
@@ -88,7 +92,7 @@ class MidDictionaryTest {
         val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DictionaryForMIDs_EngRus_Mueller.jar")))
 
         val dictEntry = dict.find("un")
-        println(dictEntry)
+        log.info("{}", dictEntry)
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("un")
@@ -113,7 +117,7 @@ class MidDictionaryTest {
         val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DfM_OmegaWiki_EngRus_3.5.9.jar")))
 
         val dictEntry = dict.find("apple")
-        println(dictEntry)
+        log.info("{}", dictEntry)
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("apple")
@@ -134,7 +138,7 @@ class MidDictionaryTest {
         val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DfM_OmegaWiki_Eng_3.5.9.jar")))
 
         val dictEntry = dict.find("illumination")
-        println(dictEntry)
+        log.info("{}", dictEntry)
 
         assertThat(dictEntry).isNotNull
         assertThat(dictEntry.word).isEqualTo("illumination")
@@ -145,7 +149,95 @@ class MidDictionaryTest {
     }
 
 
+    /*
+
     // TODO: to test ???  washer laundry machine washer	16-57682-S (with OmegaWiki_EngRus) ???
     // TODO: to test ???  washing machine clothes washer laundry machine washer	16-57682-B (with OmegaWiki_EngRus) ???
+
+    @Test
+    fun findExisting_fromDfM_OmegaWiki_EngRus__washer() {
+
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DfM_OmegaWiki_EngRus_3.5.9.jar")))
+
+        //val dictEntry = dict.find("laundry")
+        val dictEntry = dict.find("washerwasher")
+        log.info("{}", dictEntry)
+
+        assertThat(dictEntry).isNotNull
+        assertThat(dictEntry.translations).isNotEmpty
+        assertThat(dictEntry.word).isEqualTo("laundry")
+        assertThat(dictEntry.transcription).isNull()
+        assertThat(dictEntry.translations).containsExactlyInAnyOrder(
+            "[01The act of illuminating, or supplying with light; the state of being illuminated.]",
+        )
+    }
+
+
+    @Test
+    fun findExisting_fromDfM_OmegaWiki_EngRus__washingSoda() {
+
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DfM_OmegaWiki_EngRus_3.5.9.jar")))
+
+        //val dictEntry = dict.find("laundry")
+        val dictEntry = dict.find("washing soda")
+        log.info("{}", dictEntry)
+
+        assertThat(dictEntry).isNotNull
+        assertThat(dictEntry.translations).isNotEmpty
+        assertThat(dictEntry.word).isEqualTo("laundry")
+        assertThat(dictEntry.transcription).isNull()
+        assertThat(dictEntry.translations).containsExactlyInAnyOrder(
+            "[01The act of illuminating, or supplying with light; the state of being illuminated.]",
+        )
+    }
+    */
+
+
+    // washer	16-57682-S
+    // washer laundry machine washer	16-57682-S
+    // washing machine clothes washer laundry machine washer	16-57682-B
+    // washing soda
+    // waste balance	5-84323-B
+    // washington d c	13-34643-S
+    // washington washington d c	13-34643-B
+    @Test
+    fun findExisting_fromDfM_OmegaWiki_EngRus__washingtonWashingtonDC() {
+
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DfM_OmegaWiki_EngRus_3.5.9.jar")))
+
+        //val dictEntry = dict.find("laundry")
+        val dictEntry = dict.find("washington washington d c")
+        log.info("{}", dictEntry)
+
+        assertThat(dictEntry).isNotNull
+        assertThat(dictEntry.translations).isNotEmpty
+        assertThat(dictEntry.word).isEqualTo("washington washington d c")
+        assertThat(dictEntry.transcription).isNull()
+        assertThat(dictEntry.translations).containsExactlyInAnyOrder(
+            "[02noun]",
+            "[01 The capital of the United States of America, located in the District of Columbia.]",
+            "Вашингтон",
+        )
+    }
+
+
+    @Test
+    fun findExisting_fromDfM_OmegaWiki_EngRus__wasteBalance() {
+
+        val dict = MidDictionary(MidDictionarySource(getProjectDir().resolve("dicts/DfM_OmegaWiki_EngRus_3.5.9.jar")))
+
+        //val dictEntry = dict.find("laundry")
+        val dictEntry = dict.find("waste balance")
+        log.info("{}", dictEntry)
+
+        assertThat(dictEntry).isNotNull
+        assertThat(dictEntry.translations).isNotEmpty
+        assertThat(dictEntry.word).isEqualTo("waste balance")
+        assertThat(dictEntry.transcription).isNull()
+        assertThat(dictEntry.translations).containsExactlyInAnyOrder(
+            "[01 The inventory of all waste produced or recovered during a certain time period, classified by type and quantity. (Source: DOG)]",
+            "баланс отходов",
+        )
+    }
 
 }

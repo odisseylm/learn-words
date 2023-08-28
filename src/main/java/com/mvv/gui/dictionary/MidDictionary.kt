@@ -1,5 +1,6 @@
 package com.mvv.gui.dictionary
 
+import com.mvv.gui.startsWithOneOf
 import org.apache.commons.lang3.StringUtils
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
@@ -280,6 +281,8 @@ class MidDictionary(val source: MidDictionarySource) : Dictionary {
                 .toMutableList()
 
             val hasTranscription = transcriptionOrDescription.endsWith(")]")
+                    && !transcriptionOrDescription.startsWithOneOf(
+                        "[0 ", "[0\n", "[01 ", "[01\n", "[02 ", "[02\n", "[03 ", "[03\n", )
             val transcription = if (hasTranscription) transcriptionOrDescription else null
 
             if (!hasTranscription) translations.add(0, transcriptionOrDescription)

@@ -6,6 +6,10 @@ import javafx.scene.control.TableView
 import javafx.scene.control.skin.VirtualFlow
 import javafx.scene.control.skin.absoluteOffsetValue
 import javafx.scene.control.skin.callAdjustPosition
+import mu.KotlinLogging
+
+
+private val log = KotlinLogging.logger {}
 
 
 
@@ -38,7 +42,7 @@ internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
 
     val virtualFlow = this.virtualFlow
     if (virtualFlow == null) {
-        println("VirtualFlow is not found") // TODO: use logger
+        log.warn("VirtualFlow is not found")
         return
     }
 
@@ -172,7 +176,7 @@ class ScrollPositionSate (
                     .toList()
 
                 itemsHeight.forEach {
-                    println(it)
+                    log.info("{}", it)
                 }
 
 
@@ -456,9 +460,9 @@ val TableView<*>.horizontalScrollBar: ScrollBar? get() =
         val prevContentViewPortTop = currentWordsList.contentViewPortTop
         val prevContentHeight = currentWordsList.contentHeight
         val virtualFlow = currentWordsList.virtualFlow
-        println("virtualFlow: $virtualFlow")
+        log.info("{}", "virtualFlow: $virtualFlow")
         val prevAbsoluteOffset = virtualFlow?.absoluteOffsetValue
-        println("prevAbsoluteOffset: $prevAbsoluteOffset")
+        log.info("{}", "prevAbsoluteOffset: $prevAbsoluteOffset")
 
         // This approach should keep less/more scrolling but due to bug in JavaFx auto-scrolling is still unpredictable :-(
         // This JavaFX bug appears if rows have different height.
@@ -493,14 +497,14 @@ val TableView<*>.horizontalScrollBar: ScrollBar? get() =
                 //setContentViewPortTop2(currentWordsList, prevContentViewPortTop, prevContentHeight!! + 24.0) // it may not work
 
                 if (prevAbsoluteOffset != null) {
-                    println("virtualFlow.callAdjustPosition()")
+                    log.info("{}", "virtualFlow.callAdjustPosition()")
                     virtualFlow.absoluteOffsetValue = prevAbsoluteOffset
                     virtualFlow.callAdjustPosition()
                 }
 
-                println("prevScrollValue: ${prevScrollValue}, after attempt to restore: ${currentWordsList.verticalScrollBarValue}")
-                println("prevContentHeight: ${prevContentHeight}, after attempt to restore: ${currentWordsList.contentHeight}")
-                println("prevContentViewPortTop: ${prevContentViewPortTop}, after attempt to restore: ${currentWordsList.contentViewPortTop}")
+                log.info("{}", "prevScrollValue: ${prevScrollValue}, after attempt to restore: ${currentWordsList.verticalScrollBarValue}")
+                log.info("{}", "prevContentHeight: ${prevContentHeight}, after attempt to restore: ${currentWordsList.contentHeight}")
+                log.info("{}", "prevContentViewPortTop: ${prevContentViewPortTop}, after attempt to restore: ${currentWordsList.contentViewPortTop}")
 
                 if (currentWordsList.selectionModel.selectedItems.size <= 1) {
                     currentWordsList.selectionModel.clearSelection()
@@ -515,7 +519,7 @@ val TableView<*>.horizontalScrollBar: ScrollBar? get() =
                 runLaterWithDelay(5) {
                     if (prevAbsoluteOffset != null) {
                         currentWordsList.verticalScrollBarValue = prevScrollValue    // it may not work
-                        println("virtualFlow.callAdjustPosition()")
+                        log.info("{}", "virtualFlow.callAdjustPosition()")
                         virtualFlow.absoluteOffsetValue = prevAbsoluteOffset
                         virtualFlow.callAdjustPosition()
 
@@ -540,42 +544,42 @@ class TableView2<S>() : TableView<S>() {
 
     /*
     fun printChildren() {
-        println("\n-------------------------------\n")
+        log.info("{}", "\n-------------------------------\n")
 
         childrenUnmodifiable.forEachIndexed { i, node ->
-            //println("$i: $node")
+            //log.info("{}", "$i: $node")
             //if (node is Parent) {
             //    node.childrenUnmodifiable
             //}
             printNode(node)
         }
-        println("\n-------------------------------\n")
-        println("\n--------- Skin ----------------\n")
+        log.info("{}", "\n-------------------------------\n")
+        log.info("{}", "\n--------- Skin ----------------\n")
 
         //this.typeSelector
         //this.createDefaultSkin()
         @Suppress("UNCHECKED_CAST") val skin = this.skin as TableViewSkin<S>
         skin.children.forEachIndexed { i, node ->
-            println("skin $i: $node")
+            log.info("{}", "skin $i: $node")
             printNode(node)
         }
 
-        println("\n-------------------------------\n")
+        log.info("{}", "\n-------------------------------\n")
     }
     */
 }
 
 fun printNode(node: Node) {
-    println("$node (${node.boundsInParent.width}, ${node.boundsInParent.height})")
+    log.info("{}", "$node (${node.boundsInParent.width}, ${node.boundsInParent.height})")
     if (node is Parent) {
         node.childrenUnmodifiable.forEach { printNode(it) }
     }
 }
 
 fun printNodeShortly(node: Node) {
-    //println("${node.javaClass.name} ${node.typeSelector} (${node.boundsInParent.width}, ${node.boundsInParent.height})")
-    //println("(${node.boundsInParent.width}, ${node.boundsInParent.height})   ${node.javaClass.simpleName} ${node.typeSelector}")
-    println("(${"%6d".format(node.boundsInParent.height.toInt())})   ${node.javaClass.simpleName}")
+    //log.info("{}", "${node.javaClass.name} ${node.typeSelector} (${node.boundsInParent.width}, ${node.boundsInParent.height})")
+    //log.info("{}", "(${node.boundsInParent.width}, ${node.boundsInParent.height})   ${node.javaClass.simpleName} ${node.typeSelector}")
+    log.info("{}", "(${"%6d".format(node.boundsInParent.height.toInt())})   ${node.javaClass.simpleName}")
     if (node is Parent) {
         node.childrenUnmodifiable.forEach { printNodeShortly(it) }
     }

@@ -2,8 +2,10 @@ package com.mvv.gui
 
 import com.mvv.gui.WordCardStatus.BaseWordDoesNotExist
 import com.mvv.gui.WordCardStatus.NoBaseWordInSet
-import com.mvv.gui.dictionary.*
+import com.mvv.gui.dictionary.AutoDictionariesLoader
 import com.mvv.gui.dictionary.Dictionary
+import com.mvv.gui.dictionary.DictionaryComposition
+import com.mvv.gui.dictionary.extractExamples
 import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
@@ -18,27 +20,25 @@ import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.input.*
-import javafx.scene.layout.*
+import javafx.scene.layout.BorderPane
+import javafx.scene.layout.GridPane
+import javafx.scene.layout.Priority
+import javafx.scene.layout.VBox
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.util.Callback
-import org.dict.kernel.DictEngine
-import org.dict.kernel.IAnswer
-import org.dict.kernel.IDatabase
-import org.dict.kernel.IDictEngine
-import org.dict.server.DatabaseFactory
-import org.dict.server.DictHTMLPrinter
-import java.io.File
+import mu.KotlinLogging
 import java.io.FileReader
-import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.*
 import kotlin.io.path.*
 import kotlin.text.Charsets.UTF_8
 
 
 const val appTitle = "Words"
+
+private val log = KotlinLogging.logger {}
+
 
 class MainWordsPane : BorderPane() /*GridPane()*/ {
 
@@ -71,9 +71,11 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     init {
 
-        println("Used dictionaries")
-        allDictionaries.forEachIndexed { i, d -> println("${i + 1} $d") }
-        println("---------------------------------------------------\n\n")
+        log.info(
+            "Used dictionaries" +
+            allDictionaries.mapIndexed { i, d -> "${i + 1} $d" }.joinToString("\n") +
+            "---------------------------------------------------\n\n"
+        )
 
         this.stylesheets.add("spreadsheet.css")
 
@@ -565,14 +567,14 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         val clipboard: Clipboard = Clipboard.getSystemClipboard()
         val content = clipboard.getContent(DataFormat.PLAIN_TEXT)
 
-        println("clipboard content: [${content}]")
+        log.info("clipboard content: [${content}]")
 
         if (content == null) return
 
         val words = extractWordsFromText(content.toString())
             .also { analyzeWordCards(it) }
 
-        println("clipboard content as words: $words")
+        log.info("clipboard content as words: $words")
 
         currentWords.setAll(words)
         updateCurrentWordsFile(null)
@@ -590,11 +592,11 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         val selectedWords = currentWordsList.selectionModel.selectedItems.toList()
 
-        println("selectedWords: $selectedWords")
+        log.debug("selectedWords: {} moved to IGNORED.", selectedWords)
 
         val newIgnoredWordEntries = selectedWords.filter { !ignoredWordsSorted.contains(it.from) }
         val newIgnoredWords = newIgnoredWordEntries.map { it.from }
-        println("newIgnored: $newIgnoredWords")
+        log.debug("newIgnored: {}", newIgnoredWords)
         ignoredWords.addAll(newIgnoredWords)
 
         // T O D O: in case of big words count it may be inefficient!!! It would be nice to improve it!
@@ -725,7 +727,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 }
 
 
-
+/*
 fun main() {
 
     val dictRootDir = getProjectDirectory(MainWordsPane::class).resolve("dicts/04/mueller-dict-3.1.1").toFile()
@@ -745,7 +747,7 @@ fun main() {
         props
     )
 
-    println(db)
+    log.info("{}", db)
 
     val fEngine = DictEngine()
     fEngine.databases = arrayOf(db)
@@ -755,46 +757,46 @@ fun main() {
     val word = "apple"
 
     //val answers: Array<IAnswer?>? = fEngine.defineMatch(dbId, word, pos, true, IDatabase.STRATEGY_NEAR)
-    //println(answers)
+    //log.info("{}", answers)
 
     //val strategy = IDatabase.STRATEGY_EXACT // IDatabase.STRATEGY_NEAR
 
-    //println("\n-----------------------------------------------------------------------------------------")
+    //log.info("{}", "\n-----------------------------------------------------------------------------------------")
     //val answers2: Array<IAnswer> = fEngine.defineMatch(dbId, word, "2026", false, strategy)
     //printAnswers(fEngine, answers2, word)
 
 
-    println("\n--------------------------- match STRATEGY_EXACT ----------------------------------------")
+    log.info("{}", "\n--------------------------- match STRATEGY_EXACT ----------------------------------------")
     val answersMatchedByStrategyExact: Array<IAnswer> = fEngine.match(dbId, word, IDatabase.STRATEGY_EXACT)
     printAnswers(fEngine, answersMatchedByStrategyExact, word)
 
-    println("\n--------------------------- match STRATEGY_NONE -----------------------------------------")
+    log.info("{}", "\n--------------------------- match STRATEGY_NONE -----------------------------------------")
     val answersMatchedByStrategyNone: Array<IAnswer> = fEngine.match(dbId, word, IDatabase.STRATEGY_NONE)
     printAnswers(fEngine, answersMatchedByStrategyNone, word)
 
 
-    println("\n--------------------------- defineMatch define=false STRATEGY_EXACT ---------------------")
+    log.info("{}", "\n--------------------------- defineMatch define=false STRATEGY_EXACT ---------------------")
     val answersByDefineMatchByStrategyExactWithDefineFalse: Array<IAnswer> = fEngine.defineMatch(
         dbId, word, null, false, IDatabase.STRATEGY_EXACT)
     printAnswers(fEngine, answersByDefineMatchByStrategyExactWithDefineFalse, word)
 
-    println("\n--------------------------- defineMatch define=false STRATEGY_NONE ---------------------")
+    log.info("{}", "\n--------------------------- defineMatch define=false STRATEGY_NONE ---------------------")
     val answersByDefineMatchByStrategyNoneWithDefineFalse: Array<IAnswer> = fEngine.defineMatch(
         dbId, word, null, false, IDatabase.STRATEGY_NONE)
     printAnswers(fEngine, answersByDefineMatchByStrategyNoneWithDefineFalse, word)
 
-    println("\n--------------------------- defineMatch define=true STRATEGY_EXACT ---------------------")
+    log.info("{}", "\n--------------------------- defineMatch define=true STRATEGY_EXACT ---------------------")
     val answersByDefineMatchByStrategyExactWithDefineTrue: Array<IAnswer> = fEngine.defineMatch(
         dbId, word, null, true, IDatabase.STRATEGY_EXACT)
     printAnswers(fEngine, answersByDefineMatchByStrategyExactWithDefineTrue, word)
 
-    println("\n--------------------------- defineMatch define=true STRATEGY_NONE ---------------------")
+    log.info("{}", "\n--------------------------- defineMatch define=true STRATEGY_NONE ---------------------")
     val answersByDefineMatchByStrategyNoneWithDefineTrue: Array<IAnswer> = fEngine.defineMatch(
         dbId, word, null, true, IDatabase.STRATEGY_NONE)
     printAnswers(fEngine, answersByDefineMatchByStrategyNoneWithDefineTrue, word)
 
 
-    println("\n--------------------------- define (default) ------------------------------------------")
+    log.info("{}", "\n--------------------------- define (default) ------------------------------------------")
     val answers3: Array<IAnswer> = fEngine.define(dbId, word)
     printAnswers(fEngine, answers3, word)
 }
@@ -807,6 +809,7 @@ private fun printAnswers(fEngine: IDictEngine, answers: Array<IAnswer>, word: St
     try { printer.printAnswers(fEngine, answers, outAsWriter, word, "") } catch (ignore: Exception) { }
     outAsWriter.flush()
 }
+*/
 
 
 
@@ -830,10 +833,3 @@ fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S,T>) {
         }
     }
 }
-
-
-@Suppress("unused") // Do not use it during cell rendering (during rendering runtime selection state is not accessible )
-private val <S, T> TableCell<S, T>.isRowSelected: Boolean get() =
-    this.isSelected || this.tableRow.isSelected
-    //   || this.tableView.selectionModel.selectedItems.contains(this.tableRow.item)
-

@@ -1,6 +1,9 @@
 package com.mvv.gui.dictionary
 
-import java.lang.Exception
+import mu.KotlinLogging
+
+
+private val log = KotlinLogging.logger {}
 
 
 data class DictionaryEntry (
@@ -33,8 +36,7 @@ class DictionaryComposition (private val dictionaries: List<Dictionary>) : Dicti
         try { dictionary.find(word) }
         catch (ex: Exception) {
             if (ignoreErrors) {
-                System.err.println("Error of finding word [$word] in [$dictionary]")
-                ex.printStackTrace() /* TODO: use logger */
+                log.error("Error of finding word [{}] in [{}]", word, dictionary, ex)
                 DictionaryEntry.empty(word)
             }
             else { throw ex }

@@ -17,6 +17,7 @@
 
   <properties>
     <java.version>15</java.version>
+    <java.release>${java.version}</java.release>
     <kotlin.version>1.6.21</kotlin.version>
     <kotlin.compiler.languageVersion>1.6</kotlin.compiler.languageVersion>
     <kotlin.compiler.jvmTarget>15</kotlin.compiler.jvmTarget>
@@ -31,12 +32,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <!-- java minimal version should be <= 12 (code for maven plugins should use java <= 12) -->
-    <!--<java.min.version>12</java.min.version>-->
-    <!--<java.max.version>17</java.max.version>-->
-
-    <java.version>${java.version}</java.version>
-    <java.release>${java.version}</java.release>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
 
@@ -219,6 +214,33 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>${apache-commons-io.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4j2.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.microutils</groupId>
+      <artifactId>kotlin-logging-jvm</artifactId>
+      <version>2.1.23</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4j2.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>${log4j2.version}</version>
     </dependency>
 
 

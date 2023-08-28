@@ -5,6 +5,10 @@ import com.mvv.gui.WordCardStatus.NoBaseWordInSet
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.paint.Color
+import mu.KotlinLogging
+
+
+private val log = KotlinLogging.logger {}
 
 
 class CardWordEntry {
@@ -116,7 +120,7 @@ fun analyzeWordCards(allWordCards: Iterable<CardWordEntry>) = analyzeWordCards(a
 
 fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>, allWordCards: Iterable<CardWordEntry>) {
 
-    println("### analyzeWordCards") // TODO: use logger
+    log.info("### analyzeWordCards")
 
     val allWordCardsMap: Map<String, CardWordEntry> = allWordCards.associateBy { it.from.trim().lowercase() }
 

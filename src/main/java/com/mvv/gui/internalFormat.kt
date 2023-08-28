@@ -3,12 +3,15 @@ package com.mvv.gui
 import com.opencsv.CSVReader
 import com.opencsv.CSVWriter
 import com.opencsv.ICSVWriter
+import mu.KotlinLogging
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Path
 
+
+private val log = KotlinLogging.logger {}
 
 
 // -----------------------------------------------------------------------------
@@ -87,8 +90,8 @@ private fun wordCardStatusesFromString(statuses: String): Set<WordCardStatus> =
     statuses.splitToSequence(",")
         .map { it.trim() }
         .filter { it.isNotEmpty() }
-        // TODO: improve or log or... (remember that this is used to load)
-        // TODO: do not use it for loadAllWords
-        .map { try { WordCardStatus.valueOf(it) } catch (ignore: Exception) { null } }
+        .map {
+            try { WordCardStatus.valueOf(it) }
+            catch (ex: Exception) { log.warn("Error of parsing WordCardStatus from [{}].", it); null } }
         .filterNotNull()
         .toSet()

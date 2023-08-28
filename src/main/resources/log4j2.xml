@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+        </Console>
+        <!--<File name="MyFile" fileName="./logs/learn-words-editor.log">-->
+        <!--    <PatternLayout>-->
+        <!--        &lt;!&ndash;<Pattern>%d %p %c{1.} [%t] %m%n</Pattern>&ndash;&gt;-->
+        <!--        <PatternLayout-->
+        <!--                pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />-->
+        <!--    </PatternLayout>-->
+        <!--</File>-->
+        <RollingFile name="rollingFile" fileName="./logs/learn-words-editor.log"
+                     filePattern="./logs/$${date:yyyy-MM}/learn-words-editor-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout
+                    pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="info" additivity="false">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="rollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>

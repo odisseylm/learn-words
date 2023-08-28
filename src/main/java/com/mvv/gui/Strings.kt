@@ -3,6 +3,8 @@ package com.mvv.gui
 
 
 fun String.endsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.endsWith(it) }
+fun String.startsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.startsWith(it) }
+fun String.startsWithOneOf(vararg suffixes: String): Boolean = this.startsWithOneOf(suffixes.asIterable())
 
 
 fun String.removeSuffixCaseInsensitive(suffix: String): String =

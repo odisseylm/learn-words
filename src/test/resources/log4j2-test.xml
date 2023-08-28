@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="DEBUG">
+<Configuration status="INFO">
     <Appenders>
         <Console name="console" target="SYSTEM_OUT">
             <PatternLayout
@@ -10,8 +10,5 @@
         <Root level="info" additivity="false">
             <AppenderRef ref="console" />
         </Root>
-        <Logger name="com.mvv.bank.account.soa.it.AccountSoaK8sITest" level="debug" additivity="false">
-            <AppenderRef ref="console" />
-        </Logger>
     </Loggers>
 </Configuration>
