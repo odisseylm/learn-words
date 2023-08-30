@@ -31,6 +31,8 @@ import mu.KotlinLogging
 import java.io.FileReader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.io.path.*
 import kotlin.streams.asSequence
 import kotlin.text.Charsets.UTF_8
@@ -73,11 +75,12 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     init {
 
         log.info(
-            "Used dictionaries" +
+            "Used dictionaries\n" +
             allDictionaries.mapIndexed { i, d -> "${i + 1} $d" }.joinToString("\n") +
-            "---------------------------------------------------\n\n"
+            "\n---------------------------------------------------\n\n"
         )
 
+        this.stylesheets.add("dark-theme.css")
         this.stylesheets.add("spreadsheet.css")
 
         val contentPane = GridPane()
@@ -104,11 +107,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         val buttonsMiddleBar = VBox(5.0)
         buttonsMiddleBar.isFillWidth = true
-
-
-        val ignoreButton = newButton("To ignore >>", buttonIcon("icons/rem_all_co.png")) { moveToIgnored() }
-        ignoreButton.styleClass.add("middleBarButton")
-        buttonsMiddleBar.children.add(ignoreButton)
 
         val removeIgnoredButton = newButton("Remove ignored") { removeIgnoredFromCurrentWords() }
         removeIgnoredButton.styleClass.add("middleBarButton")
@@ -254,7 +252,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         this.sceneProperty().addListener { _, _, newScene -> newScene?.let { addKeyBindings(it) } }
 
         fillToolBar(toolBar)
-        addContextMenu()
+        currentWordsList.contextMenu = fillContextMenu()
 
         loadExistentWords()
     }
@@ -267,9 +265,54 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT1, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingFrom() }
         newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTo() }
+        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT3, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTranscription() }
+        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT4, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingRemarks() }
     }
 
-    private fun addContextMenu() {
+    private fun fillToolBar(toolBar: ToolBar) {
+        val controls = listOf(
+            newButton("Load file", "Open internal or memo-word csv, or srt file",
+                buttonIcon("/icons/open16x16.gif")) { loadWordsFromFile() },
+            newButton("From clipboard", "Parse text from clipboard", buttonIcon("/icons/paste.gif" /*paste-3388622.png"*/, -1.0)) { loadFromClipboard() },
+            newButton("Save All", "Save current file in internal and memo-word csv format and save ignored words",
+                buttonIcon("/icons/disks.png", -1.0)) { saveAll() },
+            newButton("Split", "Split current big set to several ones",
+                buttonIcon("/icons/slidesstack.png")) { splitCurrentWords() },
+
+            Label("  "),
+
+            newButton("To ignore >>", "Move selected words to ignored",
+                buttonIcon("icons/rem_all_co.png")) { moveToIgnored() }
+                .also { it.styleClass.add("middleBarButton") },
+            newButton("Translate", "Translate all words", buttonIcon("/icons/forward_nav.png")) { translateAll() },
+            newButton("Remove words from other sets", "Remove words from other sets") { removeWordsFromOtherSetsFromCurrentWords() },
+
+            Label("  "),
+
+            newButton("Insert above", buttonIcon("/icons/insertAbove-01.png")) { insertWordCard(InsertPosition.Below) }
+                .also { it.contentDisplay = ContentDisplay.RIGHT },
+            newButton("Insert below", buttonIcon("/icons/insertBelow-01.png")) { insertWordCard(InsertPosition.Below) },
+
+            Label("  "),
+
+            newButton("No base word", "Ignore warning 'no base word in set'.", buttonIcon("/icons/skip_brkp.png")) {
+                ignoreNoBaseWordInSet() },
+            newButton("Add all missed base words", "Add all possible missed base words.", buttonIcon("/icons/toggleexpand.png")) {
+                addAllBaseWordsInSet() },
+            newButton("Add transcriptions", "Add missed transcription.", buttonIcon("/icons/transcription-1.png")) {
+                addTranscriptions() },
+
+            // For testing
+            //
+            //Label("  "),
+            //newButton("Reanalyze") { reanalyzeWords() },
+            //newButton("Refresh table") { currentWordsList.refresh() },
+        )
+
+        toolBar.items.addAll(controls)
+    }
+
+    private fun fillContextMenu(): ContextMenu {
         val ignoreNoBaseWordMenuItem = newMenuItem("Ignore 'No base word'",
             "Ignore warning 'no base word in set'", buttonIcon("/icons/skip_brkp.png")) {
             ignoreNoBaseWordInSet() }
@@ -296,33 +339,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             updateTranslateMenuItem(translateMenuItem)
         }
 
-        currentWordsList.contextMenu = menu
-    }
-
-    private fun fillToolBar(toolBar: ToolBar) {
-        val controls = listOf(
-            newButton("Load file", buttonIcon("/icons/open16x16.gif")) { loadWordsFromFile() },
-            newButton("Parse text from clipboard", buttonIcon("/icons/paste.gif" /*paste-3388622.png"*/, -1.0)) { loadFromClipboard() },
-            newButton("Save All", buttonIcon("/icons/disks.png", -1.0)) { saveAll() },
-            newButton("Translate", buttonIcon("/icons/forward_nav.png")) { translateAll() },
-            newButton("Split", buttonIcon("/icons/slidesstack.png")) { splitCurrentWords() },
-            Label("  "),
-            newButton("Insert above", buttonIcon("/icons/insertAbove-01.png")) { insertWordCard(InsertPosition.Below) },
-            newButton("Insert below", buttonIcon("/icons/insertBelow-01.png")) { insertWordCard(InsertPosition.Below) },
-            Label("  "),
-            newButton("No base word", "Ignore warning 'no base word in set'.", buttonIcon("/icons/skip_brkp.png")) {
-                ignoreNoBaseWordInSet() },
-            newButton("Add all missed base words", "Add all possible missed base words.", buttonIcon("/icons/toggleexpand.png")) {
-                addAllBaseWordsInSet() },
-
-            // For testing
-            //
-            //Label("  "),
-            //newButton("Reanalyze") { reanalyzeWords() },
-            //newButton("Refresh table") { currentWordsList.refresh() },
-        )
-
-        toolBar.items.addAll(controls)
+        return menu
     }
 
     private fun updateIgnoreNoBaseWordMenuItem(menuItem: MenuItem) {
@@ -437,6 +454,14 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         return baseWords.sortedBy { it.from.lowercase() }
     }
 
+    private fun addTranscriptions() {
+        val cardsWithoutTranscription = currentWordsList.items.filter { it.transcription.isEmpty() }
+        cardsWithoutTranscription.forEach {
+            try { it.transcription = translateWord(it.from).transcription }
+            catch (ex: Exception) { log.warn("Error of getting transcription for [${it.from}].", ex) }
+        }
+    }
+
     private fun removeSelected() {
         val selectedSafeCopy = currentWordsList.selectionModel.selectedItems.toList()
         currentWordsList.selectionModel.clearSelection()
@@ -450,14 +475,14 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWordsList.refresh()
     }
 
-    private fun startEditingFrom() {
-        val selectedIndex = currentWordsList.selectionModel.selectedIndex
-        if (selectedIndex != -1) currentWordsList.edit(selectedIndex, fromColumn)
-    }
+    private fun startEditingFrom() = startEditingColumnCell(fromColumn)
+    private fun startEditingTo() = startEditingColumnCell(toColumn)
+    private fun startEditingTranscription() = startEditingColumnCell(transcriptionColumn)
+    private fun startEditingRemarks() = startEditingColumnCell(examplesColumn)
 
-    private fun startEditingTo() {
+    private fun startEditingColumnCell(column: TableColumn<CardWordEntry, String>) {
         val selectedIndex = currentWordsList.selectionModel.selectedIndex
-        if (selectedIndex != -1) currentWordsList.edit(selectedIndex, toColumn)
+        if (selectedIndex != -1) currentWordsList.edit(selectedIndex, column)
     }
 
     private fun toLowerCaseRow() {
@@ -518,7 +543,29 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         val toRemove = currentWords.asSequence()
             .filter { word -> ignoredWordsSorted.contains(word.from) }
             .toList()
-        currentWords.removeAll(toRemove)
+        currentWordsList.runWithScrollKeeping { currentWordsList.items.removeAll(toRemove) }
+    }
+
+    private fun removeWordsFromOtherSetsFromCurrentWords() {
+
+        val skipFiles: Collection<Path> = this.currentWordsFile?.let { listOf(
+                it,
+                it.useFilenameSuffix(memoWordFileExt),
+                it.useFilenameSuffix(internalWordCardsFileExt),
+                it.useFilenameSuffix(plainWordsFileExt),
+                ) }
+            ?: emptyList()
+
+        val toRemove = loadWordsFromAllExistentDictionaries(skipFiles)
+        val toRemoveAsSet = toRemove.asSequence()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toSortedSet(String.CASE_INSENSITIVE_ORDER)
+
+        val currentToRemove = currentWordsList.items.filter { it.from.trim() in toRemoveAsSet }
+
+        // perform removing as ONE operation to minimize change events
+        currentWords.removeAll(currentToRemove)
     }
 
     enum class LoadType {
@@ -628,9 +675,10 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         log.debug("newIgnored: {}", newIgnoredWords)
         ignoredWords.addAll(newIgnoredWords)
 
-        // T O D O: in case of big words count it may be inefficient!!! It would be nice to improve it!
-        currentWords.removeAll(newIgnoredWordEntries)
-        currentWordsList.selectionModel.clearSelection()
+        currentWordsList.runWithScrollKeeping {
+            currentWordsList.selectionModel.clearSelection()
+            currentWordsList.items.removeAll(selectedWords)
+        }
     }
 
     private fun saveAll() {
@@ -719,9 +767,33 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         updateCurrentWordsFile(filePath)
     }
 
-    private fun splitCurrentWords() = doSaveCurrentWords { filePath ->
+    private fun splitCurrentWords(): Unit = doSaveCurrentWords { filePath ->
         val words = currentWordsList.items
-        saveSplitWordCards(filePath, words, 30)
+        val df = SimpleDateFormat("yyyyMMdd-HHmmss")
+        val splitFilesDir = filePath.parent.resolve("split-${df.format(Date())}")
+
+        val defaultSplitWordCountPerFile = 40
+        val strSplitWordCountPerFile = showTextInputDialog(this,
+            "Current words will be split into several files and put into directory $splitFilesDir.\n" +
+                "Please, enter word count for every file.", "Splitting current words",
+            "$defaultSplitWordCountPerFile")
+
+        strSplitWordCountPerFile.ifPresent {
+            try {
+                val wordCountPerFile: Int = it.toInt()
+                require(wordCountPerFile >= 1) { "Word count should be positive value." }
+
+                val maxMemoCardWordCount = 300
+                require(wordCountPerFile <= maxMemoCardWordCount) {
+                    "Word count should be less than 300 since memo-word supports only $maxMemoCardWordCount sized word sets." }
+
+                saveSplitWordCards(filePath, words, splitFilesDir, wordCountPerFile)
+            }
+            catch (ex: Exception) {
+                log.error("${ex.message}", ex)
+                showErrorAlert(this, ex.message ?: "Unknown error", "Error of splitting.")
+            }
+        }
     }
 
     private fun saveIgnored() {
@@ -733,29 +805,28 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     private fun loadExistentWords() {
         loadIgnored()
-        loadAllExistentDictionaries()
+        allProcessedWords.setAll(loadWordsFromAllExistentDictionaries())
     }
 
-    private fun loadAllExistentDictionaries() {
+    private fun loadWordsFromAllExistentDictionaries(skipFiles: Collection<Path> = emptyList()): List<String> {
 
-        if (dictDirectory.notExists()) return
+        if (dictDirectory.notExists()) return emptyList()
 
         val allWordsFilesExceptIgnored = Files.list(dictDirectory)
             .asSequence()
             .filter { it.isRegularFile() }
-            //.filter { it != ignoredWordsFile }
+            .filter { it !in skipFiles && it != ignoredWordsFile }
             .filter { it.isInternalCsvFormat || it.isMemoWordFile }
+            .sorted()
             .toList()
 
-        val allWords = allWordsFilesExceptIgnored
+        return allWordsFilesExceptIgnored
             .asSequence()
             .map { loadWordCards(it) }
             .flatMap { it }
             .map { it.from }
             .distinctBy { it.lowercase() }
             .toList()
-
-        this.allProcessedWords.setAll(allWords)
     }
 
     private fun loadIgnored() {

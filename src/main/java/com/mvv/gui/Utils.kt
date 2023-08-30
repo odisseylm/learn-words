@@ -130,8 +130,8 @@ fun newMenuItem(label: String, tooltip: String, icon: ImageView, action: ()->Uni
 }
 
 
-fun showTextInputDialog(parent: Node, msg: String, title: String = ""): Optional<String> {
-    val textInputDialog = TextInputDialog("")
+fun showTextInputDialog(parent: Node, msg: String, title: String = "", defaultValue: String = ""): Optional<String> {
+    val textInputDialog = TextInputDialog(defaultValue)
 
     textInputDialog.title = title
     textInputDialog.headerText = msg

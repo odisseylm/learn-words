@@ -68,15 +68,15 @@ fun saveWordCards(file: Path, format: CsvFormat, words: Iterable<CardWordEntry>)
 
 // -----------------------------------------------------------------------------
 
-fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, portionSize: Int) =
+fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Path, portionSize: Int) =
     words
         .asSequence()
         .windowed(portionSize, portionSize, true)
         .forEachIndexed { i, cardWordEntries ->
             val baseWordsFilename = file.baseWordsFilename
-            val folder = file.parent.resolve("split")
+            //val folder = file.parent.resolve("split")
             val numberSuffix = "%02d".format(i + 1)
 
-            saveWordCards(folder.resolve("${baseWordsFilename}_${numberSuffix}${internalWordCardsFileExt}"), CsvFormat.Internal, cardWordEntries)
-            saveWordCards(folder.resolve("${baseWordsFilename}_${numberSuffix}${memoWordFileExt}"), CsvFormat.MemoWord, cardWordEntries)
+            saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${internalWordCardsFileExt}"), CsvFormat.Internal, cardWordEntries)
+            saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${memoWordFileExt}"), CsvFormat.MemoWord, cardWordEntries)
         }
