@@ -1,6 +1,6 @@
 package com.mvv.gui.dictionary
 
-import com.mvv.gui.trimToNull
+import com.mvv.gui.util.trimToNull
 
 
 fun mergeDictionaryEntries(word: String, dictionaryEntries: Iterable<DictionaryEntry>): DictionaryEntry {

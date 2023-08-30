@@ -2,6 +2,7 @@ package com.mvv.gui
 
 import com.mvv.gui.dictionary.containsRussianChars
 import com.mvv.gui.dictionary.normalizeTranscription
+import com.mvv.gui.words.translationCount
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Condition

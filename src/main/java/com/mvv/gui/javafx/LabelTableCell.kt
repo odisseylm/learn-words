@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.javafx
 
 import javafx.scene.control.TableCell
 import javafx.scene.control.TableColumn

@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.javafx
 
 import javafx.animation.KeyFrame
 import javafx.animation.Timeline

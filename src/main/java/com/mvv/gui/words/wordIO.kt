@@ -1,5 +1,6 @@
-package com.mvv.gui
+package com.mvv.gui.words
 
+import com.mvv.gui.util.removeSuffixCaseInsensitive
 import java.nio.file.Path
 import kotlin.io.path.extension
 import kotlin.io.path.name

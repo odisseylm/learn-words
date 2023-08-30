@@ -1,6 +1,6 @@
 package com.mvv.gui.dictionary
 
-import com.mvv.gui.replaceFilenamesSuffix
+import com.mvv.gui.util.replaceFilenamesSuffix
 import org.dict.kernel.DictEngine
 import org.dict.kernel.IAnswer
 import org.dict.kernel.IDatabase

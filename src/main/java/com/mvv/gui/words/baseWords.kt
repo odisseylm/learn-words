@@ -1,5 +1,6 @@
-package com.mvv.gui
+package com.mvv.gui.words
 
+import com.mvv.gui.util.trimToNull
 
 
 private val derivedWordSuffixes = listOf("ed", "ing", "es", "s", "er")
@@ -37,9 +38,3 @@ fun possibleEnglishBaseWords(word: String): List<String> {
 fun possibleBestEnglishBaseWord(word: String): String? =
     possibleEnglishBaseWords(word).minOfOrNull { it }
 
-
-// It would be nice to optimize it to avoid unneeded string conversions.
-val String.translationCount: Int get() =
-    formatWordOrPhraseToMemoWordFormat(this)
-        .split(",")
-        .filter { it.isNotBlank() }.size

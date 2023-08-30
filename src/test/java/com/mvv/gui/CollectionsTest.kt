@@ -1,5 +1,9 @@
 package com.mvv.gui
 
+import com.mvv.gui.javafx.UpdateSet
+import com.mvv.gui.javafx.updateSetProperty
+import com.mvv.gui.util.containsOneOfKeys
+import com.mvv.gui.util.filterNotNullPairValue
 import javafx.beans.value.WritableObjectValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -101,6 +105,31 @@ class CollectionsTest {
             //assertThat(p.updated).isTrue()
         }
     }
+
+
+    @Test
+    @DisplayName("filterNotNullPairValue")
+    fun test_filterNotNullPairValue() {
+
+        val items: List<Pair<String?, String?>> = listOf(
+            Pair("0", "0"),
+            Pair(null, null),
+            Pair(null, "1"),
+            Pair("2", null),
+            Pair("3", "4"),
+        )
+
+        val filtered: List<Pair<String, String>> = items
+            .asSequence()
+            .filterNotNullPairValue()
+            .toList()
+
+        assertThat(filtered).containsExactly(
+            Pair("0", "0"),
+            Pair("3", "4"),
+        )
+    }
+
 
 }
 

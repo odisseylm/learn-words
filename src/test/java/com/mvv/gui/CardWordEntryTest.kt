@@ -1,5 +1,7 @@
 package com.mvv.gui
 
+import com.mvv.gui.words.CardWordEntry
+import com.mvv.gui.words.cardWordEntryComparator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

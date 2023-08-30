@@ -347,56 +347,6 @@
 
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.2.0</version>
-        <executions>
-          <execution>
-            <id>add-test-source</id>
-            <phase>generate-test-sources</phase>
-            <goals>
-              <goal>add-test-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>src/integration/java</source>
-              </sources>
-            </configuration>
-          </execution>
-          <execution>
-            <id>add-test-resource</id>
-            <phase>generate-test-resources</phase>
-            <goals>
-              <goal>add-test-resource</goal>
-            </goals>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>src/integration/resources</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-          <execution>
-            <id>create-temp-directories</id>
-            <phase>generate-test-resources</phase>
-            <goals>
-              <goal>bsh-property</goal>
-            </goals>
-            <configuration>
-              <source><![CDATA[
-              // TODO: fix k8s volume to avoid using host directory
-              // temporary solution to avoid later creating this dir by root/docker user
-              for (int i=0; i<10; i++) {
-                new File(project.getBasedir(), "target/k8s/data/postgres-data-volume-" + i + "/").mkdirs();
-              }
-              ]]></source>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${maven-compiler-plugin.version}</version>

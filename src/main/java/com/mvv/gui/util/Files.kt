@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.util
 
 import java.nio.file.Path
 import kotlin.io.path.name

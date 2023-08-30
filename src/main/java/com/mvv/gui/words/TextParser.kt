@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.words
 
 
 class TextParser {

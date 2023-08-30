@@ -1,6 +1,6 @@
-package com.mvv.gui
+package com.mvv.gui.javafx
 
-import com.mvv.gui.SetViewPortAbsoluteOffsetMode.*
+import com.mvv.gui.javafx.SetViewPortAbsoluteOffsetMode.*
 import javafx.application.Platform
 import javafx.scene.control.TableView
 import javafx.scene.control.skin.VirtualFlow

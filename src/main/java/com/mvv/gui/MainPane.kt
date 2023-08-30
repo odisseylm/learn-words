@@ -1,11 +1,17 @@
 package com.mvv.gui
 
-import com.mvv.gui.WordCardStatus.BaseWordDoesNotExist
-import com.mvv.gui.WordCardStatus.NoBaseWordInSet
+import com.mvv.gui.words.WordCardStatus.BaseWordDoesNotExist
+import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
 import com.mvv.gui.dictionary.AutoDictionariesLoader
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.DictionaryComposition
 import com.mvv.gui.dictionary.extractExamples
+import com.mvv.gui.javafx.*
+import com.mvv.gui.javafx.UpdateSet
+import com.mvv.gui.util.trimToNull
+import com.mvv.gui.javafx.updateSetProperty
+import com.mvv.gui.util.useFileExt
+import com.mvv.gui.words.*
 import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener

@@ -1,7 +1,8 @@
-package com.mvv.gui
+package com.mvv.gui.javafx
 
-import com.mvv.gui.TextFieldTableCellUtils.Companion.createTextArea
-import com.mvv.gui.TextFieldTableCellUtils.Companion.createTextField
+import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextArea
+import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextField
+import com.mvv.gui.lowerCaseKeyCombination
 import javafx.application.Platform
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
