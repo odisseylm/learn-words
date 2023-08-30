@@ -8,19 +8,20 @@ import kotlin.io.path.name
 
 enum class CsvFormat { Internal, MemoWord }
 
+val dictDirectory: Path = Path.of(System.getProperty("user.home") + "/english/words")
 
 const val internalWordCardsFileExt = ".csv"
 const val memoWordFileExt = "-RuEn-MemoWord.csv" //
 const val plainWordsFileExt = ".txt"
 const val ignoredWordsFilename = "ignored-words${plainWordsFileExt}"
+val ignoredWordsFile = dictDirectory.resolve(ignoredWordsFilename)
+
 
 val Path.isMemoWordFile: Boolean get() = this.name.lowercase().endsWith(memoWordFileExt.lowercase())
 val Path.isInternalCsvFormat: Boolean get() {
     val lowerFilename = this.name.lowercase()
     return lowerFilename.endsWith(internalWordCardsFileExt) && !lowerFilename.endsWith(memoWordFileExt.lowercase())
 }
-
-val dictDirectory: Path = Path.of(System.getProperty("user.home") + "/english/words")
 
 
 // Function name uses 'suffix' because it can be any suffix (not only file extension)

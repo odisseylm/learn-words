@@ -100,10 +100,12 @@ private fun <S> TableView<S>.fixEstimatedContentHeight() {
 typealias RestoreScrollPositionFunction = ()->Unit
 
 
+// We need to restore view-port offset (scroll position) manually due to JavaFX bug (if a table has rows with different height)
 fun <R, S> TableView<S>.runWithScrollKeeping(action: (RestoreScrollPositionFunction)->R): R =
     this.runWithScrollKeeping(action, { })
 
 
+// We need to restore view-port offset (scroll position) manually due to JavaFX bug (if a table has rows with different height)
 fun <R, S> TableView<S>.runWithScrollKeeping(action: (RestoreScrollPositionFunction)->R, nextAction: ()->Unit): R {
 
     val prevViewPortOffset = this.viewPortAbsoluteOffset

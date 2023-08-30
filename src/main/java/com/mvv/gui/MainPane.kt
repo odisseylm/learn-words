@@ -1,17 +1,13 @@
 package com.mvv.gui
 
-import com.mvv.gui.words.WordCardStatus.BaseWordDoesNotExist
-import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
 import com.mvv.gui.dictionary.AutoDictionariesLoader
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.DictionaryComposition
-import com.mvv.gui.dictionary.extractExamples
 import com.mvv.gui.javafx.*
-import com.mvv.gui.javafx.UpdateSet
 import com.mvv.gui.util.trimToNull
-import com.mvv.gui.javafx.updateSetProperty
 import com.mvv.gui.util.useFileExt
 import com.mvv.gui.words.*
+import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
 import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
@@ -25,7 +21,10 @@ import javafx.scene.control.*
 import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
-import javafx.scene.input.*
+import javafx.scene.input.Clipboard
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyCodeCombination
+import javafx.scene.input.KeyCombination
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Priority
@@ -34,14 +33,12 @@ import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.util.Callback
 import mu.KotlinLogging
-import java.io.FileReader
-import java.nio.file.Files
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.io.path.*
-import kotlin.streams.asSequence
-import kotlin.text.Charsets.UTF_8
+import kotlin.io.path.exists
+import kotlin.io.path.extension
+import kotlin.io.path.name
 
 
 const val appTitle = "Words"
@@ -64,7 +61,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     private val allProcessedWords: ObservableList<String> = FXCollections.observableArrayList()
 
-    private val ignoredWordsFile = dictDirectory.resolve(ignoredWordsFilename)
     private var currentWordsFile: Path? = null
 
     private val currentWordsList = TableView<CardWordEntry>()
@@ -153,7 +149,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         fromColumn.id = "fromColumn"
         fromColumn.isEditable = true
         fromColumn.cellValueFactory = Callback { p -> p.value.fromProperty }
-        //fromColumn.cellFactory = TextFieldTableCell.forTableColumn()
         fromColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextField)
 
         toColumn.id = "toColumn"
@@ -389,52 +384,21 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     }
 
     private fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =
-        currentWordsList.selectionModel.selectedItems
-            .any { !it.ignoreNoBaseWordInSet && it.noBaseWordInSet }
+        currentWordsList.selectionModel.selectedItems.isOneOfSelectedWordsHasNoBaseWord
 
-    private fun ignoreNoBaseWordInSet() =
-        currentWordsList.selectionModel.selectedItems.forEach {
-            updateSetProperty(it.wordCardStatusesProperty, BaseWordDoesNotExist, UpdateSet.Set) }
+    private fun ignoreNoBaseWordInSet() = ignoreNoBaseWordInSet(currentWordsList.selectionModel.selectedItems)
 
     private fun addAllBaseWordsInSet() = addAllBaseWordsInSetImpl(currentWordsList.items)
     private fun addBaseWordsInSetForSelected() = addAllBaseWordsInSetImpl(currentWordsList.selectionModel.selectedItems)
 
     private fun addAllBaseWordsInSetImpl(wordCards: Iterable<CardWordEntry>) {
-        val withoutBaseWord = wordCards
-            .asSequence()
-            .filter { !it.ignoreNoBaseWordInSet && it.noBaseWordInSet }
-            .toSortedSet(cardWordEntryComparator)
 
-        val baseWordsToAddMap: Map<CardWordEntry, List<CardWordEntry>> = withoutBaseWord
-            .asSequence()
-            .map { card -> Pair(card, englishBaseWords(card.from)) }
-            //.filterNotNullPairValue()
-            .filter { it.second.isNotEmpty() }
-            //.map { Pair(it.first, CardWordEntry(it.second, "")) }
-            .associate { it }
+        currentWordsList.runWithScrollKeeping {
 
-        // Need to do it manually due to JavaFX bug (if a table has rows with different height)
-        // This JavaFX bug appears if rows have different height.
-        // See my comments in TableView.setViewPortAbsoluteOffsetImpl()
-        currentWordsList.runWithScrollKeeping { // restoreScrollPosition ->
+            val addedWordsMapping = addBaseWordsInSet(wordCards, currentWordsList.items, dictionaryComposition)
 
-            // Ideally this approach should keep less/more scrolling (without any hacks) but...
-            baseWordsToAddMap.forEach { (currentWordCard, baseWordCards) ->
-                val index = currentWordsList.items.indexOf(currentWordCard)
-                baseWordCards.forEachIndexed { i, baseWordCard ->
-                    currentWordsList.items.add(index + i, baseWordCard)
-                }
-            }
-            analyzeWordCards(withoutBaseWord, currentWordsList.items)
-
-
-            if (baseWordsToAddMap.size == 1) {
-
-                // Need to do it manually due to JavaFX bug (if a table has rows with different height)
-                // !!! both call currentWordsList.viewPortAbsoluteOffset are needed !!!
-                // restoreScrollPosition(SetViewPortAbsoluteOffsetMode.Immediately)
-
-                val newBaseWordCard = baseWordsToAddMap.values.asSequence().flatten().first()
+            if (addedWordsMapping.size == 1) {
+                val newBaseWordCard = addedWordsMapping.values.asSequence().flatten().first()
 
                 // select new base word to edit it immediately
                 if (currentWordsList.selectionModel.selectedItems.size <= 1) {
@@ -445,27 +409,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         }
     }
 
-    private fun englishBaseWords(word: String): List<CardWordEntry> {
-        val foundWords: List<CardWordEntry> = possibleEnglishBaseWords(word)
-            .asSequence()
-            .map { baseWord ->
-                try { translateWord(baseWord) }
-                catch (ignore: Exception) { CardWordEntry(baseWord, "") } }
-            .filter { it.to.isNotBlank() }
-            .toList()
-
-        val baseWords: List<CardWordEntry> = foundWords.ifEmpty {
-             possibleBestEnglishBaseWord(word)?.let { listOf(CardWordEntry(it, "")) } ?: emptyList() }
-
-        return baseWords.sortedBy { it.from.lowercase() }
-    }
-
     private fun addTranscriptions() {
-        val cardsWithoutTranscription = currentWordsList.items.filter { it.transcription.isEmpty() }
-        cardsWithoutTranscription.forEach {
-            try { it.transcription = translateWord(it.from).transcription }
-            catch (ex: Exception) { log.warn("Error of getting transcription for [${it.from}].", ex) }
-        }
+        addTranscriptions(currentWordsList.items, dictionaryComposition)
     }
 
     private fun removeSelected() {
@@ -478,7 +423,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     @Suppress("unused")
     private fun reanalyzeWords() {
         analyzeWordCards(currentWordsList.items)
-        currentWordsList.refresh()
+        //currentWordsList.refresh()
     }
 
     private fun startEditingFrom() = startEditingColumnCell(fromColumn)
@@ -494,56 +439,25 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     private fun toLowerCaseRow() {
         if (currentWordsList.isEditing) return
 
-        currentWordsList.selectionModel.selectedItems.forEach {
-            it.from = it.from.lowercase()
-            it.to = it.to.lowercase()
-        }
-        currentWordsList.sort()
-        currentWordsList.refresh()
+        wordCardsToLowerCaseRow(currentWordsList.selectionModel.selectedItems)
+
+        //currentWordsList.sort()
+        //currentWordsList.refresh()
     }
 
-    private fun copySelectedWord() {
-
-        val wordCardsAsString = currentWordsList.selectionModel.selectedItems
-            .joinToString("\n") { "${it.from}  ${it.to}" }
-
-        val clipboardContent = ClipboardContent()
-        clipboardContent.putString(wordCardsAsString)
-        Clipboard.getSystemClipboard().setContent(clipboardContent)
-    }
+    private fun copySelectedWord() = copyWordsToClipboard(currentWordsList.selectionModel.selectedItems)
 
 
     private fun translateSelected() {
-        translateImpl(currentWordsList.selectionModel.selectedItems)
+        dictionaryComposition.translateWords(currentWordsList.selectionModel.selectedItems)
         currentWordsList.refresh()
     }
 
 
     private fun translateAll() {
-        translateImpl(currentWords)
+        dictionaryComposition.translateWords(currentWords)
         currentWordsList.refresh()
     }
-
-
-    private fun translateImpl(words: Iterable<CardWordEntry>) =
-        words
-            .filter  { it.from.isNotBlank() }
-            .forEach {
-                if (it.to.isBlank()) {
-                    translateWord(it)
-                }
-            }
-
-    private fun translateWord(word: String): CardWordEntry=
-        CardWordEntry(word, "").also { translateWord(it) }
-
-    private fun translateWord(card: CardWordEntry) {
-        val translation = dictionaryComposition.find(card.from.trim())
-        card.to = translation.translations.joinToString("\n")
-        card.transcription = translation.transcription ?: ""
-        card.examples = extractExamples(translation)
-    }
-
 
     private fun removeIgnoredFromCurrentWords() {
         val toRemove = currentWords.asSequence()
@@ -552,27 +466,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWordsList.runWithScrollKeeping { currentWordsList.items.removeAll(toRemove) }
     }
 
-    private fun removeWordsFromOtherSetsFromCurrentWords() {
-
-        val skipFiles: Collection<Path> = this.currentWordsFile?.let { listOf(
-                it,
-                it.useFilenameSuffix(memoWordFileExt),
-                it.useFilenameSuffix(internalWordCardsFileExt),
-                it.useFilenameSuffix(plainWordsFileExt),
-                ) }
-            ?: emptyList()
-
-        val toRemove = loadWordsFromAllExistentDictionaries(skipFiles)
-        val toRemoveAsSet = toRemove.asSequence()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .toSortedSet(String.CASE_INSENSITIVE_ORDER)
-
-        val currentToRemove = currentWordsList.items.filter { it.from.trim() in toRemoveAsSet }
-
-        // perform removing as ONE operation to minimize change events
-        currentWords.removeAll(currentToRemove)
-    }
+    private fun removeWordsFromOtherSetsFromCurrentWords() =
+        removeWordsFromOtherSetsFromCurrentWords(currentWordsList.items, this.currentWordsFile)
 
     enum class LoadType {
         /** In case of open action this file will/can/should be overwritten.  */
@@ -600,7 +495,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             val loadType = loadAction(filePath)
 
             when (loadType) {
-                LoadType.Import -> { }
+                LoadType.Import -> { } // or reset current words file ??
                 LoadType.Open   ->
                     // !!! Only if success !!!
                     updateCurrentWordsFile(filePath)
@@ -618,19 +513,12 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         doLoadAction { filePath ->
             val fileExt = filePath.extension.lowercase()
             val words: List<CardWordEntry> = when (fileExt) {
-                "txt" ->
-                    loadWords(filePath)
-                        .map { CardWordEntry(it, "") }
-                        .also { analyzeWordCards(it) }
-                "csv", "words" ->
-                    loadWordCards(filePath)
-                        .also { analyzeWordCards(it) }
-                "srt" ->
-                    extractWordsFromFile(filePath)
-                        .also { analyzeWordCards(it) }
-                else ->
-                    throw IllegalArgumentException("Unexpected file extension [${filePath}]")
+                "txt"          -> loadWords(filePath).map { CardWordEntry(it, "") }
+                "csv", "words" -> loadWordCards(filePath)
+                "srt"          -> extractWordsFromFile(filePath, ignoredWords)
+                else           -> throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
+            .also { analyzeWordCards(it) }
 
             currentWords.setAll(words)
             currentWordsList.sort()
@@ -639,36 +527,14 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         }
     }
 
-    private fun extractWordsFromFile(filePath: Path): List<CardWordEntry> =
-        FileReader(filePath.toFile(), UTF_8)
-            .use { r -> extractWordsFromText(r.readText())
-                .also { analyzeWordCards(it) } } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
-
     private fun loadFromClipboard() {
+        val words = extractWordsFromClipboard(Clipboard.getSystemClipboard(), ignoredWords)
 
-        val clipboard: Clipboard = Clipboard.getSystemClipboard()
-        val content = clipboard.getContent(DataFormat.PLAIN_TEXT)
-
-        log.info("clipboard content: [${content}]")
-
-        if (content == null) return
-
-        val words = extractWordsFromText(content.toString())
-            .also { analyzeWordCards(it) }
-
-        log.info("clipboard content as words: $words")
-
-        currentWords.setAll(words)
+        currentWords.setAll(words) // or add all ??
+        reanalyzeWords()
         updateCurrentWordsFile(null)
     }
 
-    private fun extractWordsFromText(content: CharSequence): List<CardWordEntry> =
-        TextParser()
-            .parse(content)
-            .asSequence()
-            .filter { !ignoredWordsSorted.contains(it) }
-            .map { CardWordEntry(it, "") }
-            .toList()
 
     private fun moveToIgnored() {
 
@@ -752,7 +618,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         saveWordCards(filePath.useFilenameSuffix(memoWordFileExt), CsvFormat.MemoWord, words)
     }
 
-    @Suppress("SameParameterValue")
     private fun doSaveCurrentWords(saveAction:(Path)->Unit) {
 
         var filePath: Path? = this.currentWordsFile
@@ -804,9 +669,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     private fun saveIgnored() {
         val ignoredWords = this.ignoredWordsSorted
-        if (ignoredWords.isNotEmpty()) {
+        if (ignoredWords.isNotEmpty())
             saveWordsToTxtFile(ignoredWordsFile, ignoredWords)
-        }
     }
 
     private fun loadExistentWords() {
@@ -814,26 +678,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         allProcessedWords.setAll(loadWordsFromAllExistentDictionaries())
     }
 
-    private fun loadWordsFromAllExistentDictionaries(skipFiles: Collection<Path> = emptyList()): List<String> {
-
-        if (dictDirectory.notExists()) return emptyList()
-
-        val allWordsFilesExceptIgnored = Files.list(dictDirectory)
-            .asSequence()
-            .filter { it.isRegularFile() }
-            .filter { it !in skipFiles && it != ignoredWordsFile }
-            .filter { it.isInternalCsvFormat || it.isMemoWordFile }
-            .sorted()
-            .toList()
-
-        return allWordsFilesExceptIgnored
-            .asSequence()
-            .map { loadWordCards(it) }
-            .flatMap { it }
-            .map { it.from }
-            .distinctBy { it.lowercase() }
-            .toList()
-    }
 
     private fun loadIgnored() {
         if (ignoredWordsFile.exists()) {
@@ -843,92 +687,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     }
 
 }
-
-
-/*
-fun main() {
-
-    val dictRootDir = getProjectDirectory(MainWordsPane::class).resolve("dicts/04/mueller-dict-3.1.1").toFile()
-
-    val props = Properties()
-    val dbFilename = "mueller-base"
-    @SuppressWarnings("UnnecessaryVariable")
-    val dbId = dbFilename
-
-    props.setProperty("${dbFilename}.data", File(dictRootDir, "dict/${dbFilename}.dict.dz").absolutePath)
-    props.setProperty("${dbFilename}.index", File(dictRootDir, "dict/${dbFilename}.index").absolutePath)
-    props.setProperty("${dbFilename}.encoding", "UTF-8")
-
-    val db = DatabaseFactory.createDatabase(
-        dbId,
-        dictRootDir,
-        props
-    )
-
-    log.info("{}", db)
-
-    val fEngine = DictEngine()
-    fEngine.databases = arrayOf(db)
-
-    //db.search()
-
-    val word = "apple"
-
-    //val answers: Array<IAnswer?>? = fEngine.defineMatch(dbId, word, pos, true, IDatabase.STRATEGY_NEAR)
-    //log.info("{}", answers)
-
-    //val strategy = IDatabase.STRATEGY_EXACT // IDatabase.STRATEGY_NEAR
-
-    //log.info("{}", "\n-----------------------------------------------------------------------------------------")
-    //val answers2: Array<IAnswer> = fEngine.defineMatch(dbId, word, "2026", false, strategy)
-    //printAnswers(fEngine, answers2, word)
-
-
-    log.info("{}", "\n--------------------------- match STRATEGY_EXACT ----------------------------------------")
-    val answersMatchedByStrategyExact: Array<IAnswer> = fEngine.match(dbId, word, IDatabase.STRATEGY_EXACT)
-    printAnswers(fEngine, answersMatchedByStrategyExact, word)
-
-    log.info("{}", "\n--------------------------- match STRATEGY_NONE -----------------------------------------")
-    val answersMatchedByStrategyNone: Array<IAnswer> = fEngine.match(dbId, word, IDatabase.STRATEGY_NONE)
-    printAnswers(fEngine, answersMatchedByStrategyNone, word)
-
-
-    log.info("{}", "\n--------------------------- defineMatch define=false STRATEGY_EXACT ---------------------")
-    val answersByDefineMatchByStrategyExactWithDefineFalse: Array<IAnswer> = fEngine.defineMatch(
-        dbId, word, null, false, IDatabase.STRATEGY_EXACT)
-    printAnswers(fEngine, answersByDefineMatchByStrategyExactWithDefineFalse, word)
-
-    log.info("{}", "\n--------------------------- defineMatch define=false STRATEGY_NONE ---------------------")
-    val answersByDefineMatchByStrategyNoneWithDefineFalse: Array<IAnswer> = fEngine.defineMatch(
-        dbId, word, null, false, IDatabase.STRATEGY_NONE)
-    printAnswers(fEngine, answersByDefineMatchByStrategyNoneWithDefineFalse, word)
-
-    log.info("{}", "\n--------------------------- defineMatch define=true STRATEGY_EXACT ---------------------")
-    val answersByDefineMatchByStrategyExactWithDefineTrue: Array<IAnswer> = fEngine.defineMatch(
-        dbId, word, null, true, IDatabase.STRATEGY_EXACT)
-    printAnswers(fEngine, answersByDefineMatchByStrategyExactWithDefineTrue, word)
-
-    log.info("{}", "\n--------------------------- defineMatch define=true STRATEGY_NONE ---------------------")
-    val answersByDefineMatchByStrategyNoneWithDefineTrue: Array<IAnswer> = fEngine.defineMatch(
-        dbId, word, null, true, IDatabase.STRATEGY_NONE)
-    printAnswers(fEngine, answersByDefineMatchByStrategyNoneWithDefineTrue, word)
-
-
-    log.info("{}", "\n--------------------------- define (default) ------------------------------------------")
-    val answers3: Array<IAnswer> = fEngine.define(dbId, word)
-    printAnswers(fEngine, answers3, word)
-}
-
-
-@Suppress("SameParameterValue")
-private fun printAnswers(fEngine: IDictEngine, answers: Array<IAnswer>, word: String) {
-    val printer = DictHTMLPrinter.getInstance()
-    val outAsWriter = PrintWriter(System.out)
-    try { printer.printAnswers(fEngine, answers, outAsWriter, word, "") } catch (ignore: Exception) { }
-    outAsWriter.flush()
-}
-*/
-
 
 
 fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S,T>) {

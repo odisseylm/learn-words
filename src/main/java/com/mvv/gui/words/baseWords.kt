@@ -1,5 +1,6 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.util.trimToNull
 
 
@@ -38,3 +39,18 @@ fun possibleEnglishBaseWords(word: String): List<String> {
 fun possibleBestEnglishBaseWord(word: String): String? =
     possibleEnglishBaseWords(word).minOfOrNull { it }
 
+
+fun englishBaseWords(word: String, dictionary: Dictionary): List<CardWordEntry> {
+    val foundWords: List<CardWordEntry> = possibleEnglishBaseWords(word)
+        .asSequence()
+        .map { baseWord ->
+            try { dictionary.translateWord(baseWord) }
+            catch (ignore: Exception) { CardWordEntry(baseWord, "") } }
+        .filter { it.to.isNotBlank() }
+        .toList()
+
+    val baseWords: List<CardWordEntry> = foundWords.ifEmpty {
+        possibleBestEnglishBaseWord(word)?.let { listOf(CardWordEntry(it, "")) } ?: emptyList() }
+
+    return baseWords.sortedBy { it.from.lowercase() }
+}
