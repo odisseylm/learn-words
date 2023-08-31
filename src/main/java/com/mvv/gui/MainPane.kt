@@ -30,7 +30,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     internal val currentWordsLabel = Text("File/Clipboard")
     internal val ignoredWordsLabel = Text("Ignored words")
-    //val allProcessedWordsLabelText = "All processed words (%d)"
     internal val allProcessedWordsLabel = Text("All processed words")
 
     internal val toolBar = ToolBar()
@@ -118,7 +117,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         translationCountColumn.cellFactory = LabelStatusTableCell.forTableColumn { cell, _, translationCount ->
             val translationCountStatus = translationCount?.toTranslationCountStatus ?: TranslationCountStatus.Ok
             cell.styleClass.removeAll(TranslationCountStatus.allCssClasses)
-            cell.styleClass.add("TranslationCountStatus-${translationCountStatus.name}")
+            cell.styleClass.add(translationCountStatus.cssClass)
         }
 
         transcriptionColumn.id = "transcriptionColumn"
@@ -148,20 +147,18 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         wordCardStatusesColumn.cellValueFactory = Callback { p -> p.value.wordCardStatusesProperty }
 
         wordCardStatusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
+
             cell.styleClass.removeAll(WordCardStatus.allCssClasses)
+            cell.graphic = null
 
             val toolTips = mutableListOf<String>()
-            val showNoBaseWordInSet = !card.ignoreNoBaseWordInSet && card.noBaseWordInSet
 
-            if (showNoBaseWordInSet) {
+            if (card.showNoBaseWordInSet) {
                 toolTips.add(NoBaseWordInSet.toolTipF(card))
                 cell.styleClass.add(NoBaseWordInSet.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.
                 cell.graphic = ImageView(icon)
-            }
-            else {
-                cell.graphic = null
             }
 
             val toolTipText = toolTips.joinToString("\n").trimToNull()
@@ -178,8 +175,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
 
         currentWordsList.columns.setAll(fromColumn, wordCardStatusesColumn, toColumn, translationCountColumn, transcriptionColumn, examplesColumn)
-
-        currentWordsList.sortOrder.add(fromColumn)
 
 
         this.center = contentPane

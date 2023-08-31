@@ -13,6 +13,7 @@ private val log = KotlinLogging.logger {}
 
 val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(NoBaseWordInSet)
 val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(BaseWordDoesNotExist)
+val CardWordEntry.showNoBaseWordInSet: Boolean get() = !this.ignoreNoBaseWordInSet && this.noBaseWordInSet
 
 
 fun analyzeWordCards(allWordCards: Iterable<CardWordEntry>) = analyzeWordCards(allWordCards, allWordCards)

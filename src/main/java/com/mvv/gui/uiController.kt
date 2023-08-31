@@ -90,6 +90,8 @@ class LearnWordsController (
         mainPane.fromColumn.sortType = TableColumn.SortType.ASCENDING
         mainPane.fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
 
+        currentWordsList.sortOrder.add(mainPane.fromColumn)
+
         // It is needed if SortedList is used as TableView items
         // ??? just needed :-) (otherwise warning in console)
         //currentWordsSorted.comparatorProperty().bind(currentWordsList.comparatorProperty());
