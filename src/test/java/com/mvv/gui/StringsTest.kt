@@ -1,9 +1,6 @@
 package com.mvv.gui
 
-import com.mvv.gui.util.endsWithOneOf
-import com.mvv.gui.util.ifNotBlank
-import com.mvv.gui.util.lastChar
-import com.mvv.gui.util.lastCharOrNull
+import com.mvv.gui.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.DisplayName
@@ -46,6 +43,29 @@ class StringsTest {
         assertThat("qwerty".ifNotBlank { "alt value" }).isEqualTo("alt value")
         assertThat(" ".ifNotBlank { "alt value" }).isEqualTo(" ")
         assertThat("\t".ifNotBlank { "alt value" }).isEqualTo("\t")
+    }
+
+
+    @Test
+    @DisplayName("containsOneOf")
+    fun test_containsOneOf() {
+        assertThat("qwerty".containsOneOf("qw")).isTrue()
+        assertThat("qwerty".containsOneOf("QW")).isFalse()
+
+        assertThat("qwerty".containsOneOf("er")).isTrue()
+        assertThat("qwerty".containsOneOf("ER")).isFalse()
+
+        assertThat("qwerty".containsOneOf("ty")).isTrue()
+        assertThat("qwerty".containsOneOf("TY")).isFalse()
+
+        assertThat("qwerty".containsOneOf("ab", "qw")).isTrue()
+        assertThat("qwerty".containsOneOf("ab", "QW")).isFalse()
+
+        assertThat("qwerty".containsOneOf("ab", "er")).isTrue()
+        assertThat("qwerty".containsOneOf("ab", "ER")).isFalse()
+
+        assertThat("qwerty".containsOneOf("ab", "ty")).isTrue()
+        assertThat("qwerty".containsOneOf("ab", "TY")).isFalse()
     }
 
 }

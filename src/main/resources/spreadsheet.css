@@ -58,6 +58,22 @@
     /*-fx-graphic: url("icons/exclamation-1.png");*/
 }
 
+#currentWords  .table-row-cell .WordCardStatus-NoTranslation {
+    -fx-alignment: center;
+    /*-fx-background-color: #ffdcc0;*/
+
+    /* Does not work properly! JavaFX bug */
+    /*-fx-graphic: url("icons/exclamation-4.png");*/
+}
+
+#currentWords  .table-row-cell .WordCardStatus-TranslationIsNotPrepared {
+    -fx-alignment: center;
+    /*-fx-background-color: #ffdcc0;*/
+
+    /* Does not work properly! JavaFX bug */
+    /*-fx-graphic: url("icons/exclamation-4.png");*/
+}
+
 /* That all does NOT work properly. Table column will have required width, */
 /* but it become un-sizable and looks strange and total table width is not calculated properly. */
 /* See https://stackoverflow.com/questions/54214655/problems-with-setting-tablecolumn-width-in-fxml-using-css */

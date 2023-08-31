@@ -3,8 +3,12 @@ package com.mvv.gui.util
 
 
 fun String.endsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.endsWith(it) }
+
 fun String.startsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.startsWith(it) }
 fun String.startsWithOneOf(vararg suffixes: String): Boolean = this.startsWithOneOf(suffixes.asIterable())
+
+fun String.containsOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.contains(it) }
+fun String.containsOneOf(vararg suffixes: String): Boolean = this.containsOneOf(suffixes.asIterable())
 
 
 fun String.removeSuffixCaseInsensitive(suffix: String): String =

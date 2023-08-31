@@ -109,6 +109,11 @@ enum class WordCardStatus (
      * Marker to stop validation on NoBaseWordInSet.
      */
     BaseWordDoesNotExist({""}),
+
+    NoTranslation({"No translation for '${it.from}'."}),
+
+    TranslationIsNotPrepared({"The translation for '${it.from}' is not prepared for learning. " +
+            "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on)."}),
     ;
 
     val cssClass: String get() = "WordCardStatus-${this.name}"

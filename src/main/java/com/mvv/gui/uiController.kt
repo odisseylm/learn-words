@@ -90,6 +90,13 @@ class LearnWordsController (
 
         currentWordsList.sortOrder.add(pane.fromColumn)
 
+        // Platform.runLater is used to perform analysis AFTER word card changing
+        // It would be nice to find better/proper event (with already changed underlying model after edit commit)
+        val reanalyzeChangedWord: (card: CardWordEntry)->Unit = { Platform.runLater { analyzeWordCards(listOf(it), currentWordsList.items) } }
+
+        pane.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { reanalyzeChangedWord(it.rowValue) }
+        pane.toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { reanalyzeChangedWord(it.rowValue) }
+
         // It is needed if SortedList is used as TableView items
         // ??? just needed :-) (otherwise warning in console)
         //currentWordsSorted.comparatorProperty().bind(currentWordsList.comparatorProperty());
@@ -159,7 +166,7 @@ class LearnWordsController (
     }
 
     @Suppress("unused")
-    private fun reanalyzeWords() {
+    internal fun reanalyzeWords() {
         analyzeWordCards(currentWordsList.items)
         //currentWordsList.refresh()
     }

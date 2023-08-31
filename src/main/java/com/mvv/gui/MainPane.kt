@@ -6,7 +6,7 @@ import com.mvv.gui.javafx.LabelStatusTableCell
 import com.mvv.gui.javafx.toolTipText
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.*
-import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
+import com.mvv.gui.words.WordCardStatus.*
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
@@ -134,7 +134,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         examplesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
 
 
-        val icon = Image("icons/exclamation-1.png")
+        val iconLowPriority = Image("icons/exclamation-1.png")
+        val iconHighPriority = Image("icons/exclamation-4.png")
 
         // Seems it is not allowed to share ImageView instance (between different cells rendering)
         // It causes disappearing/erasing icons in table view during scrolling
@@ -159,7 +160,23 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
                 cell.styleClass.add(NoBaseWordInSet.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.
-                cell.graphic = ImageView(icon)
+                cell.graphic = ImageView(iconLowPriority)
+            }
+
+            if (NoTranslation in card.wordCardStatuses) {
+                toolTips.add(NoTranslation.toolTipF(card))
+                cell.styleClass.add(NoTranslation.cssClass)
+
+                // Setting icon in CSS does not work. See my other comments regarding it.
+                cell.graphic = ImageView(iconHighPriority)
+            }
+
+            if (TranslationIsNotPrepared in card.wordCardStatuses) {
+                toolTips.add(TranslationIsNotPrepared.toolTipF(card))
+                cell.styleClass.add(TranslationIsNotPrepared.cssClass)
+
+                // Setting icon in CSS does not work. See my other comments regarding it.
+                cell.graphic = ImageView(iconHighPriority)
             }
 
             val toolTipText = toolTips.joinToString("\n").trimToNull()
