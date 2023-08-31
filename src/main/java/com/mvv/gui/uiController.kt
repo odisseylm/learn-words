@@ -31,13 +31,13 @@ private val log = mu.KotlinLogging.logger {}
 
 
 class LearnWordsController (
-    private val mainPane: MainWordsPane,
+    private val pane: MainWordsPane,
 ) {
 
     //private val projectDirectory = getProjectDirectory(this.javaClass)
 
     private val allDictionaries: List<Dictionary> = AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
-    private val dictionaryComposition = DictionaryComposition(allDictionaries)
+    private val dictionary = DictionaryComposition(allDictionaries)
 
     private val currentWords: ObservableList<CardWordEntry> = FXCollections.observableArrayList()
     //private val currentWordsSorted: SortedList<CardWordEntry> = SortedList(currentWords, cardWordEntryComparator)
@@ -57,47 +57,47 @@ class LearnWordsController (
         )
 
         val currentWordsLabelText = "File/Clipboard (%d words)"
-        currentWords.addListener(ListChangeListener { mainPane.currentWordsLabel.text = currentWordsLabelText.format(it.list.size) })
+        currentWords.addListener(ListChangeListener { pane.currentWordsLabel.text = currentWordsLabelText.format(it.list.size) })
 
         currentWords.addListener(ListChangeListener { analyzeWordCards(currentWords) })
 
         val ignoredWordsLabelText = "Ignored words (%d)"
-        ignoredWords.addListener(ListChangeListener { mainPane.ignoredWordsLabel.text = ignoredWordsLabelText.format(it.list.size) })
+        ignoredWords.addListener(ListChangeListener { pane.ignoredWordsLabel.text = ignoredWordsLabelText.format(it.list.size) })
 
 
-        mainPane.ignoredWordsList.items = ignoredWordsSorted
+        pane.ignoredWordsList.items = ignoredWordsSorted
 
         val allProcessedWordsLabelText = "All processed words (%d)"
-        allProcessedWords.addListener(ListChangeListener { mainPane.allProcessedWordsLabel.text = allProcessedWordsLabelText.format(it.list.size) })
+        allProcessedWords.addListener(ListChangeListener { pane.allProcessedWordsLabel.text = allProcessedWordsLabelText.format(it.list.size) })
 
-        mainPane.allProcessedWordsList.items = SortedList(allProcessedWords, String.CASE_INSENSITIVE_ORDER)
+        pane.allProcessedWordsList.items = SortedList(allProcessedWords, String.CASE_INSENSITIVE_ORDER)
 
 
-        mainPane.currentWordsList.items = currentWords // Sorted
+        pane.currentWordsList.items = currentWords // Sorted
         //currentWordsList.setComparator(cardWordEntryComparator)
 
         addKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
             if (!currentWordsList.isEditing) copySelectedWord() } })
 
-        mainPane.sceneProperty().addListener { _, _, newScene -> newScene?.let { addKeyBindings(it) } }
+        pane.sceneProperty().addListener { _, _, newScene -> newScene?.let { addKeyBindings(it) } }
 
-        mainPane.removeIgnoredButton.onAction = EventHandler { removeIgnoredFromCurrentWords() }
+        pane.removeIgnoredButton.onAction = EventHandler { removeIgnoredFromCurrentWords() }
 
 
-        mainPane.fromColumn.isSortable = true
-        mainPane.fromColumn.sortType = TableColumn.SortType.ASCENDING
-        mainPane.fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
+        pane.fromColumn.isSortable = true
+        pane.fromColumn.sortType = TableColumn.SortType.ASCENDING
+        pane.fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
 
-        currentWordsList.sortOrder.add(mainPane.fromColumn)
+        currentWordsList.sortOrder.add(pane.fromColumn)
 
         // It is needed if SortedList is used as TableView items
         // ??? just needed :-) (otherwise warning in console)
         //currentWordsSorted.comparatorProperty().bind(currentWordsList.comparatorProperty());
 
-        fixSortingAfterCellEditCommit(mainPane.fromColumn)
+        fixSortingAfterCellEditCommit(pane.fromColumn)
 
 
-        ToolBarController(this).fillToolBar(mainPane.toolBar)
+        ToolBarController(this).fillToolBar(pane.toolBar)
 
         currentWordsList.contextMenu = ContextMenu()
         ContextMenuController(this).fillContextMenu(currentWordsList.contextMenu)
@@ -106,7 +106,7 @@ class LearnWordsController (
         loadExistentWords()
     }
 
-    internal val currentWordsList: TableView<CardWordEntry> get() = mainPane.currentWordsList
+    internal val currentWordsList: TableView<CardWordEntry> get() = pane.currentWordsList
 
 
     private fun addKeyBindings(newScene: Scene) {
@@ -133,7 +133,7 @@ class LearnWordsController (
 
         currentWordsList.runWithScrollKeeping {
 
-            val addedWordsMapping = addBaseWordsInSet(wordCards, currentWordsList.items, dictionaryComposition)
+            val addedWordsMapping = addBaseWordsInSet(wordCards, currentWordsList.items, dictionary)
 
             if (addedWordsMapping.size == 1) {
                 val newBaseWordCard = addedWordsMapping.values.asSequence().flatten().first()
@@ -148,7 +148,7 @@ class LearnWordsController (
     }
 
     fun addTranscriptions() {
-        addTranscriptions(currentWordsList.items, dictionaryComposition)
+        addTranscriptions(currentWordsList.items, dictionary)
     }
 
     fun removeSelected() {
@@ -164,10 +164,10 @@ class LearnWordsController (
         //currentWordsList.refresh()
     }
 
-    private fun startEditingFrom() = startEditingColumnCell(mainPane.fromColumn)
-    private fun startEditingTo() = startEditingColumnCell(mainPane.toColumn)
-    private fun startEditingTranscription() = startEditingColumnCell(mainPane.transcriptionColumn)
-    private fun startEditingRemarks() = startEditingColumnCell(mainPane.examplesColumn)
+    private fun startEditingFrom() = startEditingColumnCell(pane.fromColumn)
+    private fun startEditingTo() = startEditingColumnCell(pane.toColumn)
+    private fun startEditingTranscription() = startEditingColumnCell(pane.transcriptionColumn)
+    private fun startEditingRemarks() = startEditingColumnCell(pane.examplesColumn)
 
     private fun startEditingColumnCell(column: TableColumn<CardWordEntry, String>) {
         val selectedIndex = currentWordsList.selectionModel.selectedIndex
@@ -187,13 +187,13 @@ class LearnWordsController (
 
 
     fun translateSelected() {
-        dictionaryComposition.translateWords(currentWordsList.selectionModel.selectedItems)
+        dictionary.translateWords(currentWordsList.selectionModel.selectedItems)
         currentWordsList.refresh()
     }
 
 
     fun translateAll() {
-        dictionaryComposition.translateWords(currentWords)
+        dictionary.translateWords(currentWords)
         currentWordsList.refresh()
     }
 
@@ -221,12 +221,12 @@ class LearnWordsController (
         fc.initialDirectory = dictDirectory.toFile()
         fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", "*.csv", "*.words", "*.txt", "*.srt"))
 
-        val file = fc.showOpenDialog(mainPane.scene.window)
+        val file = fc.showOpenDialog(pane.scene.window)
 
         if (file != null) {
             val filePath = file.toPath()
             if (filePath == ignoredWordsFile) {
-                showErrorAlert(mainPane, "You cannot open [${ignoredWordsFile.name}].")
+                showErrorAlert(pane, "You cannot open [${ignoredWordsFile.name}].")
                 return
             }
 
@@ -244,7 +244,7 @@ class LearnWordsController (
     private fun updateCurrentWordsFile(filePath: Path?) {
         this.currentWordsFile = filePath
         val windowTitle = if (filePath == null) appTitle else "$appTitle - ${filePath.name}"
-        setWindowTitle(mainPane, windowTitle)
+        setWindowTitle(pane, windowTitle)
     }
 
     fun loadWordsFromFile() {
@@ -297,7 +297,7 @@ class LearnWordsController (
             saveIgnored()
         }
         catch (ex: Exception) {
-            showErrorAlert(mainPane, "Error of saving words\n${ex.message}")
+            showErrorAlert(pane, "Error of saving words\n${ex.message}")
         }
     }
 
@@ -327,7 +327,7 @@ class LearnWordsController (
             currentWordsList.runWithScrollKeeping( {
 
                 currentWordsList.items.add(positionToInsert, newCardWordEntry)
-                currentWordsList.selectionModel.clearAndSelect(positionToInsert, mainPane.fromColumn)
+                currentWordsList.selectionModel.clearAndSelect(positionToInsert, pane.fromColumn)
             },
                 {
                     // JavaFX bug.
@@ -342,7 +342,7 @@ class LearnWordsController (
                     // if column cells were not present before (if TableView did not have content yet).
                     // Platform.runLater() also does not help.
                     //
-                    runLaterWithDelay(50) { currentWordsList.edit(positionToInsert, mainPane.fromColumn) }
+                    runLaterWithDelay(50) { currentWordsList.edit(positionToInsert, pane.fromColumn) }
                 }
             )
         }
@@ -360,13 +360,13 @@ class LearnWordsController (
 
         var filePath: Path? = this.currentWordsFile
         if (filePath == null) {
-            filePath = showTextInputDialog(mainPane, "Enter new words filename")
+            filePath = showTextInputDialog(pane, "Enter new words filename")
                 .map { dictDirectory.resolve(useFileExt(it, internalWordCardsFileExt)) }
                 .orElse(null)
         }
 
         if (filePath == null) {
-            showErrorAlert(mainPane, "Filename is not specified.")
+            showErrorAlert(pane, "Filename is not specified.")
             return
         }
 
@@ -382,7 +382,7 @@ class LearnWordsController (
         val splitFilesDir = filePath.parent.resolve("split-${df.format(Date())}")
 
         val defaultSplitWordCountPerFile = 40
-        val strSplitWordCountPerFile = showTextInputDialog(mainPane,
+        val strSplitWordCountPerFile = showTextInputDialog(pane,
             "Current words will be split into several files and put into directory $splitFilesDir.\n" +
                     "Please, enter word count for every file.", "Splitting current words",
             "$defaultSplitWordCountPerFile")
@@ -400,7 +400,7 @@ class LearnWordsController (
             }
             catch (ex: Exception) {
                 log.error("${ex.message}", ex)
-                showErrorAlert(mainPane, ex.message ?: "Unknown error", "Error of splitting.")
+                showErrorAlert(pane, ex.message ?: "Unknown error", "Error of splitting.")
             }
         }
     }

@@ -16,7 +16,7 @@ class ContextMenuController (val controller: LearnWordsController) {
 
     private val currentWordsList: TableView<CardWordEntry> get() = controller.currentWordsList
 
-    fun fillContextMenu(menu: ContextMenu) {
+    fun fillContextMenu(contextMenu: ContextMenu) {
         val ignoreNoBaseWordMenuItem = newMenuItem("Ignore 'No base word'",
             "Ignore warning 'no base word in set'", buttonIcon("/icons/skip_brkp.png")
         ) { controller.ignoreNoBaseWordInSet() }
@@ -42,9 +42,9 @@ class ContextMenuController (val controller: LearnWordsController) {
             addMissedBaseWordsMenuItem,
         )
 
-        menu.items.addAll(menuItems)
+        contextMenu.items.addAll(menuItems)
 
-        menu.onShowing = EventHandler {
+        contextMenu.onShowing = EventHandler {
             updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
             updateAddMissedBaseWordsMenuItem(addMissedBaseWordsMenuItem)
             updateTranslateMenuItem(translateMenuItem)
