@@ -66,3 +66,17 @@ MemoWorld format (described in [Download section](https://memowordapp.com/panel/
 
 Run application
  - `mvn exec:java`
+
+
+
+***
+
+Licenses:
+
+Some icons can have [Attribution 3.0 Unported] license(https://creativecommons.org/licenses/by/3.0/)
+- Yusuke Kamiyamane
+    - https://iconbird.com/search/?q=iconset:Fugue%20Icons
+
+Dark theme
+- [JavaFX-Dark-Theme](https://github.com/antoniopelusi/JavaFX-Dark-Theme) - Creative Commons Legal Code (CC0 1.0 Universal) license
+    - https://github.com/antoniopelusi/JavaFX-Dark-Theme/blob/main/style.css (with some my local fixes)

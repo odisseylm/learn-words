@@ -6,7 +6,6 @@ import com.mvv.gui.dictionary.DictionaryComposition
 import com.mvv.gui.javafx.*
 import com.mvv.gui.util.useFileExt
 import com.mvv.gui.words.*
-import javafx.application.Application
 import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
@@ -20,7 +19,6 @@ import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
 import javafx.stage.FileChooser
-import javafx.stage.Stage
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
@@ -449,25 +447,3 @@ fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S,T>) {
         }
     }
 }
-
-
-class LearnWordCardsEditorApp : Application() {
-
-    override fun start(stage: Stage) = showMain(stage)
-
-    private fun showMain(primaryStage: Stage) {
-
-        val mainWordsPane = MainWordsPane()
-        LearnWordsController(mainWordsPane)
-
-        val scene = Scene(mainWordsPane)
-        primaryStage.setScene(scene)
-        primaryStage.title = appTitle
-
-        primaryStage.scene = scene
-        primaryStage.show()
-    }
-}
-
-
-fun main() = Application.launch(LearnWordCardsEditorApp::class.java)
