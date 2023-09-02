@@ -19,6 +19,14 @@ data class DictionaryEntry (
 
 
 interface Dictionary {
+
+    /**
+     * In case if translation is not found, 'to' (translation) will be empty.
+     * In this case we could return null value (or Optional<DictionaryEntry>)
+     * but it would make merging more complicated.
+     *
+     * (But probably in the future I'll change it to this way, but not now. Need to investigate.)
+     */
     fun find(word: String): DictionaryEntry
 }
 

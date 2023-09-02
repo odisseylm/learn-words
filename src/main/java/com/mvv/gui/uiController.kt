@@ -1,6 +1,7 @@
 package com.mvv.gui
 
 import com.mvv.gui.dictionary.AutoDictionariesLoader
+import com.mvv.gui.dictionary.CachedDictionary
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.DictionaryComposition
 import com.mvv.gui.javafx.*
@@ -38,7 +39,7 @@ class LearnWordsController (
     //private val projectDirectory = getProjectDirectory(this.javaClass)
 
     private val allDictionaries: List<Dictionary> = AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
-    internal val dictionary = DictionaryComposition(allDictionaries)
+    internal val dictionary = CachedDictionary(DictionaryComposition(allDictionaries))
 
     private val currentWords: ObservableList<CardWordEntry> = FXCollections.observableArrayList()
     //private val currentWordsSorted: SortedList<CardWordEntry> = SortedList(currentWords, cardWordEntryComparator)
