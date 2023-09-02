@@ -157,7 +157,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             val toolTips = mutableListOf<String>()
 
             if (card.showNoBaseWordInSet) {
-                toolTips.add(NoBaseWordInSet.toolTipF(card, dictionary))
+                toolTips.add(NoBaseWordInSet.toolTipF(card))
                 cell.styleClass.add(NoBaseWordInSet.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.
@@ -165,7 +165,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             }
 
             if (NoTranslation in card.wordCardStatuses) {
-                toolTips.add(NoTranslation.toolTipF(card, dictionary))
+                toolTips.add(NoTranslation.toolTipF(card))
                 cell.styleClass.add(NoTranslation.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.
@@ -173,7 +173,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             }
 
             if (TranslationIsNotPrepared in card.wordCardStatuses) {
-                toolTips.add(TranslationIsNotPrepared.toolTipF(card, dictionary))
+                toolTips.add(TranslationIsNotPrepared.toolTipF(card))
                 cell.styleClass.add(TranslationIsNotPrepared.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.

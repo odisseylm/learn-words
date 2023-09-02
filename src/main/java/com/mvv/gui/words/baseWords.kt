@@ -10,6 +10,8 @@ private interface BaseWordRule {
 }
 
 
+private const val minBaseWordLength = 3
+
 private class SuffixBaseWordRule (val suffix: String, val excludeSuffixes: List<String>, val replaceSuffixBy: List<String>) : BaseWordRule {
 
     constructor(suffix: String, replaceSuffixBy: List<String>)
@@ -19,7 +21,8 @@ private class SuffixBaseWordRule (val suffix: String, val excludeSuffixes: List<
         : this(suffix, listOf(replaceSuffixBy))
 
     override fun possibleBaseWords(word: String): List<String> {
-        val suitableWord = word.length > suffix.length && word.endsWith(suffix) && !word.endsWithOneOf(excludeSuffixes)
+        val suitableWord = word.length > suffix.length + minBaseWordLength
+                && word.endsWith(suffix) && !word.endsWithOneOf(excludeSuffixes)
 
         return if (suitableWord) {
             val wordWithoutSuffix = word.removeSuffix(suffix)
@@ -43,7 +46,8 @@ private class PrefixBaseWordRule (val prefix: String, val excludePrefixes: List<
         : this(prefix, listOf(replacePrefixBy))
 
     override fun possibleBaseWords(word: String): List<String> {
-        val suitableWord = word.length > prefix.length && word.startsWith(prefix) && !word.startsWithOneOf(excludePrefixes)
+        val suitableWord = word.length > prefix.length + minBaseWordLength
+                && word.startsWith(prefix) && !word.startsWithOneOf(excludePrefixes)
 
         return if (suitableWord) {
             val wordWithoutPrefix = word.removePrefix(prefix)

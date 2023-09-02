@@ -7,10 +7,9 @@ import com.mvv.gui.util.containsAllKeys
 import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.containsOneOfKeys
 import com.mvv.gui.words.WordCardStatus.*
-import mu.KotlinLogging
 
 
-private val log = KotlinLogging.logger {}
+private val log = mu.KotlinLogging.logger {}
 
 
 val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(NoBaseWordInSet)
@@ -59,11 +58,13 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>, allWordCards: I
             val baseWordCards = englishBaseWords(englishWord, dictionary)
             val baseWords = baseWordCards.map { it.from }
 
-            //val baseWords = possibleEnglishBaseWords(englishWord)
             val cardsSetContainsOneOfBaseWords = allWordCardsMap.containsOneOfKeys(baseWords)
             val cardsSetContainsAllBaseWords = allWordCardsMap.containsAllKeys(baseWords)
+            // TODO: move to UI to use cardsSetContainsOneOfBaseWords or cardsSetContainsAllBaseWords
             val showWarningAboutMissedBaseWord = baseWords.isNotEmpty() && !cardsSetContainsOneOfBaseWords
 
+            val missedBaseWords = baseWords.filterNot { allWordCardsMap.containsKey(it) }
+            card.missedBaseWords = missedBaseWords
 
             log.debug("analyzeWordCards => '{}', cardsSetContainsOneOfBaseWords: {}, cardsSetContainsAllBaseWords: {}, baseWords: {}",
                 englishWord, cardsSetContainsOneOfBaseWords, cardsSetContainsAllBaseWords, baseWords)

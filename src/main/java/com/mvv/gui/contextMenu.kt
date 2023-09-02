@@ -11,7 +11,7 @@ import javafx.scene.control.MenuItem
 import javafx.scene.control.TableView
 
 
-private val log = mu.KotlinLogging.logger {}
+//private val log = mu.KotlinLogging.logger {}
 
 
 class ContextMenuController (val controller: LearnWordsController) {
@@ -66,7 +66,7 @@ class ContextMenuController (val controller: LearnWordsController) {
         val selectedCards = currentWordsList.selectionModel.selectedItems
         val menuItemText =
             if (selectedCards.size == 1 && oneOfSelectedWordsHasNoBaseWord)
-                "Ignore no base words [${englishBaseWords(selectedCards[0].from, controller.dictionary).joinToString("|")}]"
+                 "Ignore no base words [${englishBaseWords(selectedCards[0].from, controller.dictionary).joinToString("|")}]"
             else "Ignore 'No base word'"
         menuItem.text = menuItemText
     }
@@ -77,22 +77,11 @@ class ContextMenuController (val controller: LearnWordsController) {
 
         val selectedCards = currentWordsList.selectionModel.selectedItems
         val menuItemText =
-            if (selectedCards.size == 1 && oneOfSelectedWordsHasNoBaseWord) {
-                val baseWords = englishBaseWords(selectedCards[0].from, controller.dictionary)
-                val notPresentBaseWords = baseWords.filterNot { currentWordsContain(it.from) }
-
-                log.debug { "updateAddMissedBaseWordsMenuItem for '${selectedCards.first().from}'," +
-                        " baseWords: $baseWords, notPresentBaseWords: $notPresentBaseWords" }
-
-                "Add base word(s) '${notPresentBaseWords.joinToString("|") { it.from } }'"
-            }
+            if (selectedCards.size == 1 && oneOfSelectedWordsHasNoBaseWord)
+                 "Add base word(s) '${selectedCards[0].missedBaseWords.joinToString("|") }'"
             else "Add missed base word"
         menuItem.text = menuItemText
     }
-
-    // TODO: optimize
-    private fun currentWordsContain(word: String): Boolean =
-        currentWordsList.items.any { it.from.equals(word, ignoreCase = true) }
 
     private fun updateTranslateMenuItem(menuItem: MenuItem) {
         val oneOfSelectedIsNotTranslated = currentWordsList.selectionModel.selectedItems.any { it.to.isBlank() }
@@ -101,7 +90,7 @@ class ContextMenuController (val controller: LearnWordsController) {
         val selectedCards = currentWordsList.selectionModel.selectedItems
         val menuItemText =
             if (selectedCards.size == 1 && oneOfSelectedIsNotTranslated)
-                "Translate '${selectedCards[0].from}'"
+                 "Translate '${selectedCards[0].from}'"
             else "Translate selected"
         menuItem.text = menuItemText
     }

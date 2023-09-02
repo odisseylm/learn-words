@@ -42,7 +42,6 @@ class LearnWordsController (
     internal val dictionary = CachedDictionary(DictionaryComposition(allDictionaries))
 
     private val currentWords: ObservableList<CardWordEntry> = FXCollections.observableArrayList()
-    //private val currentWordsSorted: SortedList<CardWordEntry> = SortedList(currentWords, cardWordEntryComparator)
 
     private val ignoredWords: ObservableList<String> = FXCollections.observableArrayList()
     private val ignoredWordsSorted: ObservableList<String> = SortedList(ignoredWords, String.CASE_INSENSITIVE_ORDER)

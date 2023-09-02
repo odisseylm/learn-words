@@ -1,6 +1,5 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.javafx.AroundReadOnlyIntegerProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -43,6 +42,10 @@ class CardWordEntry {
             wordCardStatusesProperty.set(value)
         }
 
+    // for showing in tooltip. It is filled during word cards analysis.
+    @Transient
+    var missedBaseWords: List<String> = emptyList()
+
     constructor(from: String, to: String) {
         toProperty.addListener { _, _, newValue -> translationCount = newValue?.translationCount ?: 0 }
 
@@ -50,9 +53,10 @@ class CardWordEntry {
         this.to = to
     }
 
-    override fun toString(): String {
-        return "CardWordEntry(from='$from', to='${to.take(20)}...', wordCardStatuses=$wordCardStatuses, translationCount=$translationCount, transcription='$transcription', examples='${examples.take(10)}...')"
-    }
+    override fun toString(): String =
+        "CardWordEntry(from='$from', to='${to.take(20)}...', wordCardStatuses=$wordCardStatuses," +
+                " translationCount=$translationCount, transcription='$transcription', examples='${examples.take(10)}...')"
+
 }
 
 
@@ -91,10 +95,10 @@ val Int.toTranslationCountStatus: TranslationCountStatus get() = when (this) {
 
 
 enum class WordCardStatus (
-    val toolTipF: (CardWordEntry,Dictionary)->String,
+    val toolTipF: (CardWordEntry)->String,
     ) {
 
-    Ok({_,_ ->""}),
+    Ok({""}),
 
     /**
      * If current word has ending/suffix 'ed', 'ing', 'es', 's' does not have
@@ -102,18 +106,18 @@ enum class WordCardStatus (
      *
      * It is not comfortable to learn such word if you do not know base word.
      */
-    NoBaseWordInSet({ card, dictionary ->
-        "Words set does not have base word(s) '${englishBaseWords(card.from, dictionary).joinToString("|") { it.from }}'.\n" +
+    NoBaseWordInSet({
+        "Words set does not have base word(s) '${it.missedBaseWords.joinToString("|")}'.\n" +
         "It is advised to add these base word(s) to the set." }),
 
     /**
      * Marker to stop validation on NoBaseWordInSet.
      */
-    BaseWordDoesNotExist({_,_ ->""}),
+    BaseWordDoesNotExist({""}),
 
-    NoTranslation({ card, _ -> "No translation for '${card.from}'."}),
+    NoTranslation({"No translation for '${it.from}'."}),
 
-    TranslationIsNotPrepared({ card, _ -> "The translation for '${card.from}' is not prepared for learning. " +
+    TranslationIsNotPrepared({"The translation for '${it.from}' is not prepared for learning. " +
             "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on)."}),
     ;
 
