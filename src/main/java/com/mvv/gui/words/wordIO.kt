@@ -1,6 +1,7 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.util.removeSuffixCaseInsensitive
+import com.mvv.gui.util.userHome
 import java.nio.file.Path
 import kotlin.io.path.extension
 import kotlin.io.path.name
@@ -8,7 +9,7 @@ import kotlin.io.path.name
 
 enum class CsvFormat { Internal, MemoWord }
 
-val dictDirectory: Path = Path.of(System.getProperty("user.home") + "/english/words")
+val dictDirectory: Path = userHome.resolve("english/words")
 
 const val internalWordCardsFileExt = ".csv"
 const val memoWordFileExt = "-RuEn-MemoWord.csv" //

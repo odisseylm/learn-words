@@ -49,10 +49,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     init {
 
-        this.stylesheets.add("dark-theme.css")
-        //this.style = "-fx-base:black"; // standard JavaFX dark theme
-        this.stylesheets.add("spreadsheet.css")
-
         val contentPane = GridPane()
 
         contentPane.alignment = Pos.CENTER

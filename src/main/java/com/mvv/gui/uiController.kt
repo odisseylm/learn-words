@@ -51,6 +51,11 @@ class LearnWordsController (
 
     init {
 
+        initTheme()
+        // after possible adding theme CSS
+        pane.stylesheets.add("spreadsheet.css")
+
+
         log.info("Used dictionaries\n" +
                 allDictionaries.mapIndexed { i, d -> "${i + 1} $d" }.joinToString("\n") +
                 "\n---------------------------------------------------\n\n"
@@ -127,6 +132,13 @@ class LearnWordsController (
         newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT4, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingRemarks() }
     }
 
+    private fun initTheme() {
+        when (settings.theme) {
+            Theme.System -> { }
+            Theme.SystemDark -> pane.style = "-fx-base:black" // standard JavaFX dark theme
+            Theme.Dark -> pane.stylesheets.add("dark-theme.css")
+        }
+    }
 
     fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =
         currentWordsList.selectionModel.selectedItems.isOneOfSelectedWordsHasNoBaseWord
@@ -165,7 +177,7 @@ class LearnWordsController (
             currentWordsList.items.removeAll(selectedSafeCopy) }
     }
 
-    @Suppress("unused")
+    @Suppress("unused", "MemberVisibilityCanBePrivate")
     internal fun reanalyzeWords() {
         analyzeWordCards(currentWordsList.items)
         //currentWordsList.refresh()
@@ -388,7 +400,7 @@ class LearnWordsController (
         val df = SimpleDateFormat("yyyyMMdd-HHmmss")
         val splitFilesDir = filePath.parent.resolve("split-${df.format(Date())}")
 
-        val defaultSplitWordCountPerFile = 40
+        val defaultSplitWordCountPerFile = settings.splitWordCountPerFile
         val strSplitWordCountPerFile = showTextInputDialog(pane,
             "Current words will be split into several files and put into directory $splitFilesDir.\n" +
                     "Please, enter word count for every file.", "Splitting current words",
