@@ -102,7 +102,7 @@ class LearnWordsController (
         // Platform.runLater is used to perform analysis AFTER word card changing
         // It would be nice to find better/proper event (with already changed underlying model after edit commit)
         val reanalyzeChangedWord: (card: CardWordEntry)->Unit = { Platform.runLater {
-            analyzeWordCards(listOf(it), currentWordsList.items, dictionary) } }
+            analyzeWordCards(listOf(it), currentWords, dictionary) } }
 
         pane.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { reanalyzeChangedWord(it.rowValue) }
         pane.toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { reanalyzeChangedWord(it.rowValue) }
@@ -124,6 +124,8 @@ class LearnWordsController (
     }
 
     internal val currentWordsList: TableView<CardWordEntry> get() = pane.currentWordsList
+    //internal val currentWords: ObservableList<CardWordEntry> get() = pane.currentWordsList.items
+    private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
 
 
     private fun addKeyBindings(newScene: Scene) {
@@ -147,45 +149,45 @@ class LearnWordsController (
     }
 
     fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =
-        currentWordsList.selectionModel.selectedItems.isOneOfSelectedWordsHasNoBaseWord
+        currentWordsSelection.selectedItems.isOneOfSelectedWordsHasNoBaseWord
 
-    fun ignoreNoBaseWordInSet() = ignoreNoBaseWordInSet(currentWordsList.selectionModel.selectedItems)
+    fun ignoreNoBaseWordInSet() = ignoreNoBaseWordInSet(currentWordsSelection.selectedItems)
 
-    fun addAllBaseWordsInSet() = addAllBaseWordsInSetImpl(currentWordsList.items)
-    fun addBaseWordsInSetForSelected() = addAllBaseWordsInSetImpl(currentWordsList.selectionModel.selectedItems)
+    fun addAllBaseWordsInSet() = addAllBaseWordsInSetImpl(currentWords)
+    fun addBaseWordsInSetForSelected() = addAllBaseWordsInSetImpl(currentWordsSelection.selectedItems)
 
     private fun addAllBaseWordsInSetImpl(wordCards: Iterable<CardWordEntry>) {
 
         currentWordsList.runWithScrollKeeping {
 
-            val addedWordsMapping = addBaseWordsInSet(wordCards, currentWordsList.items, dictionary)
+            val addedWordsMapping = addBaseWordsInSet(wordCards, currentWords, dictionary)
 
             if (addedWordsMapping.size == 1) {
                 val newBaseWordCard = addedWordsMapping.values.asSequence().flatten().first()
 
                 // select new base word to edit it immediately
-                if (currentWordsList.selectionModel.selectedItems.size <= 1) {
-                    currentWordsList.selectionModel.clearSelection()
-                    currentWordsList.selectionModel.select(newBaseWordCard)
+                if (currentWordsSelection.selectedItems.size <= 1) {
+                    currentWordsSelection.clearSelection()
+                    currentWordsSelection.select(newBaseWordCard)
                 }
             }
         }
     }
 
     fun addTranscriptions() {
-        addTranscriptions(currentWordsList.items, dictionary)
+        addTranscriptions(currentWords, dictionary)
     }
 
     fun removeSelected() {
-        val selectedSafeCopy = currentWordsList.selectionModel.selectedItems.toList()
-        currentWordsList.selectionModel.clearSelection()
+        val selectedSafeCopy = currentWordsSelection.selectedItems.toList()
+        currentWordsSelection.clearSelection()
         currentWordsList.runWithScrollKeeping {
-            currentWordsList.items.removeAll(selectedSafeCopy) }
+            currentWords.removeAll(selectedSafeCopy) }
     }
 
     @Suppress("unused", "MemberVisibilityCanBePrivate")
     internal fun reanalyzeWords() {
-        analyzeWordCards(currentWordsList.items, dictionary)
+        analyzeWordCards(currentWords, dictionary)
         //currentWordsList.refresh()
     }
 
@@ -195,24 +197,24 @@ class LearnWordsController (
     private fun startEditingRemarks() = startEditingColumnCell(pane.examplesColumn)
 
     private fun startEditingColumnCell(column: TableColumn<CardWordEntry, String>) {
-        val selectedIndex = currentWordsList.selectionModel.selectedIndex
+        val selectedIndex = currentWordsSelection.selectedIndex
         if (selectedIndex != -1) currentWordsList.edit(selectedIndex, column)
     }
 
     fun toLowerCaseRow() {
         if (currentWordsList.isEditing) return
 
-        wordCardsToLowerCaseRow(currentWordsList.selectionModel.selectedItems)
+        wordCardsToLowerCaseRow(currentWordsSelection.selectedItems)
 
         //currentWordsList.sort()
         //currentWordsList.refresh()
     }
 
-    private fun copySelectedWord() = copyWordsToClipboard(currentWordsList.selectionModel.selectedItems)
+    private fun copySelectedWord() = copyWordsToClipboard(currentWordsSelection.selectedItems)
 
 
     fun translateSelected() {
-        dictionary.translateWords(currentWordsList.selectionModel.selectedItems)
+        dictionary.translateWords(currentWordsSelection.selectedItems)
         currentWordsList.refresh()
     }
 
@@ -226,11 +228,11 @@ class LearnWordsController (
         val toRemove = currentWords.asSequence()
             .filter { word -> ignoredWordsSorted.contains(word.from) }
             .toList()
-        currentWordsList.runWithScrollKeeping { currentWordsList.items.removeAll(toRemove) }
+        currentWordsList.runWithScrollKeeping { currentWords.removeAll(toRemove) }
     }
 
     fun removeWordsFromOtherSetsFromCurrentWords() =
-        removeWordsFromOtherSetsFromCurrentWords(currentWordsList.items, this.currentWordsFile)
+        removeWordsFromOtherSetsFromCurrentWords(currentWords, this.currentWordsFile)
 
     enum class LoadType {
         /** In case of open action this file will/can/should be overwritten.  */
@@ -301,7 +303,7 @@ class LearnWordsController (
 
     fun moveToIgnored() {
 
-        val selectedWords = currentWordsList.selectionModel.selectedItems.toList()
+        val selectedWords = currentWordsSelection.selectedItems.toList()
 
         log.debug("selectedWords: {} moved to IGNORED.", selectedWords)
 
@@ -311,8 +313,8 @@ class LearnWordsController (
         ignoredWords.addAll(newIgnoredWords)
 
         currentWordsList.runWithScrollKeeping {
-            currentWordsList.selectionModel.clearSelection()
-            currentWordsList.items.removeAll(selectedWords)
+            currentWordsSelection.clearSelection()
+            currentWords.removeAll(selectedWords)
         }
     }
 
@@ -329,8 +331,8 @@ class LearnWordsController (
     enum class InsertPosition { Above, Below }
 
     fun insertWordCard(insertPosition: InsertPosition) {
-        val isWordCardsSetEmpty = currentWordsList.items.isEmpty()
-        val currentlySelectedIndex = currentWordsList.selectionModel.selectedIndex
+        val isWordCardsSetEmpty = currentWords.isEmpty()
+        val currentlySelectedIndex = currentWordsSelection.selectedIndex
 
         val positionToInsert = when {
             isWordCardsSetEmpty -> 0
@@ -351,8 +353,8 @@ class LearnWordsController (
 
             currentWordsList.runWithScrollKeeping( {
 
-                currentWordsList.items.add(positionToInsert, newCardWordEntry)
-                currentWordsList.selectionModel.clearAndSelect(positionToInsert, pane.fromColumn)
+                currentWords.add(positionToInsert, newCardWordEntry)
+                currentWordsSelection.clearAndSelect(positionToInsert, pane.fromColumn)
             },
                 {
                     // JavaFX bug.
@@ -376,7 +378,7 @@ class LearnWordsController (
     // enum class WordsOrder { ORIGINAL, SORTED }
 
     private fun saveCurrentWords() = doSaveCurrentWords { filePath ->
-        val words = currentWordsList.items
+        val words = currentWords
         saveWordCards(filePath.useFilenameSuffix(internalWordCardsFileExt), CsvFormat.Internal, words)
         saveWordCards(filePath.useFilenameSuffix(memoWordFileExt), CsvFormat.MemoWord, words)
     }
@@ -402,7 +404,7 @@ class LearnWordsController (
     }
 
     fun splitCurrentWords(): Unit = doSaveCurrentWords { filePath ->
-        val words = currentWordsList.items
+        val words = currentWords
         val df = SimpleDateFormat("yyyyMMdd-HHmmss")
         val splitFilesDir = filePath.parent.resolve("split-${df.format(Date())}")
 
@@ -458,7 +460,7 @@ class LearnWordsController (
         }
 
         updateCurrentWordsFile(null)
-        currentWordsList.items.setAll(words)
+        currentWords.setAll(words)
     }
 
     private fun saveIgnored() {
