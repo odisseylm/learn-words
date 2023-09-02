@@ -14,7 +14,7 @@ class ToolBarController (val controller: LearnWordsController) {
         val controls = listOf(
             newButton("Load file", "Open internal or memo-word csv, or srt file",
                 buttonIcon("/icons/open16x16.gif")) { controller.loadWordsFromFile() },
-            newButton("From clipboard", "Parse text from clipboard", buttonIcon("/icons/paste.gif" /*paste-3388622.png"*/, -1.0)) {
+            newButton("From clipboard", "Parse text from clipboard", buttonIcon("/icons/paste.gif")) {
                 controller.loadFromClipboard() },
             newButton("Save All", "Save current file in internal and memo-word csv format and save ignored words",
                 buttonIcon("/icons/disks.png", -1.0)) { controller.saveAll() },
@@ -47,12 +47,6 @@ class ToolBarController (val controller: LearnWordsController) {
                 controller.addAllBaseWordsInSet() },
             newButton("Add transcriptions", "Add missed transcription.", buttonIcon("/icons/transcription-1.png")) {
                 controller.addTranscriptions() },
-
-            // For testing
-            //
-            //Label("  "),
-            //newButton("Reanalyze") { reanalyzeWords() },
-            //newButton("Refresh table") { currentWordsList.refresh() },
         )
 
         toolBar.items.addAll(controls)

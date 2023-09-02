@@ -9,9 +9,12 @@ import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.ColumnConstraints
 import javafx.scene.layout.Priority
+import javafx.scene.paint.Color
+import javafx.scene.shape.Rectangle
 import javafx.stage.Modality
 import javafx.stage.Stage
 import javafx.util.Duration
@@ -64,70 +67,68 @@ fun columnConstraints(priority: Priority? = null, hAlignment: HPos? = null, fill
 }
 
 
-fun newButton(label: String, action: ()->Unit): Button {
-    val button = Button(label)
-    button.onAction = EventHandler { action() }
-    return button
-}
+@Suppress("unused")
+fun newButton(label: String, action: ()->Unit): Button = newButtonImpl(label, null, null, action)
 
-fun newButton(label: String, icon: ImageView, action: ()->Unit): Button {
-    val button = Button(label, icon)
-    button.onAction = EventHandler { action() }
-    return button
-}
+fun newButton(label: String, icon: ImageView, action: ()->Unit): Button =
+    newButtonImpl(label, null, icon, action)
 
-fun newButton(label: String, toolTip: String, icon: ImageView, action: ()->Unit): Button {
-    val button = Button(label, icon)
-    button.onAction = EventHandler { action() }
-    button.tooltip = Tooltip(toolTip)
-    return button
-}
+fun newButton(label: String, toolTip: String, icon: ImageView, action: ()->Unit): Button =
+    newButtonImpl(label, toolTip, icon, action)
 
 @Suppress("unused")
-fun newButton(label: String, toolTip: String, action: ()->Unit): Button {
-    val button = Button(label)
-    button.onAction = EventHandler { action() }
-    button.tooltip = Tooltip(toolTip)
-    return button
-}
+fun newButton(label: String, toolTip: String, action: ()->Unit): Button =
+    newButtonImpl(label, toolTip, null, action)
+
+private fun newButtonImpl(label: String, toolTip: String?, icon: ImageView?, action: (()->Unit)?): Button =
+    Button(label).also { btn ->
+        toolTip?.let { btn.tooltip  = Tooltip(toolTip) }
+        icon?.   let { btn.graphic  = icon }
+        action?. let { btn.onAction = EventHandler { action() } }
+    }
 
 
-@Suppress("unused")
-fun newMenuItem(label: String, action: ()->Unit): MenuItem {
-    val menuItem = MenuItem(label)
-    menuItem.onAction = EventHandler { action() }
-    return menuItem
-}
+private fun emptyIcon16x16() = Rectangle(16.0, 16.0, Color(0.0, 0.0, 0.0, 0.0))
 
 @Suppress("unused")
-fun newMenuItem(label: String, icon: ImageView, action: ()->Unit): MenuItem {
-    val menuItem = MenuItem(label, icon)
-    menuItem.onAction = EventHandler { action() }
-    return menuItem
-}
+fun newMenuItem(label: String, action: ()->Unit): MenuItem =
+    newMenuItemImpl(label = label, action = action)
 
 @Suppress("unused")
-fun newMenuItem(label: String, keyCombination: KeyCombination, action: ()->Unit): MenuItem {
-    val menuItem = MenuItem(label)
-    menuItem.onAction = EventHandler { action() }
-    menuItem.accelerator = keyCombination // MnemonicInfo.MnemonicKeyCombination()
-    return menuItem
-}
+fun newMenuItem(label: String, icon: ImageView, action: ()->Unit): MenuItem =
+    newMenuItemImpl(label = label, icon = icon, action = action)
 
-fun newMenuItem(label: String, icon: ImageView, keyCombination: KeyCombination, action: ()->Unit): MenuItem {
-    val menuItem = MenuItem(label, icon)
-    menuItem.onAction = EventHandler { action() }
-    menuItem.accelerator = keyCombination // MnemonicInfo.MnemonicKeyCombination()
-    return menuItem
-}
+fun newMenuItem(label: String, tooltip: String, action: ()->Unit): MenuItem =
+    newMenuItemImpl(label = label, tooltip = tooltip, action = action)
 
-fun newMenuItem(label: String, tooltip: String, icon: ImageView, action: ()->Unit): MenuItem {
-    // Standard MenuItem class does not support tooltips.
-    val menuItem = CustomMenuItem(Label(label, icon))
-    Tooltip.install(menuItem.content, Tooltip(tooltip))
-    menuItem.onAction = EventHandler { action() }
-    return menuItem
-}
+@Suppress("unused")
+fun newMenuItem(label: String, keyCombination: KeyCombination, action: ()->Unit): MenuItem =
+    newMenuItemImpl(label, null, null, keyCombination, action)
+
+fun newMenuItem(label: String, icon: ImageView, keyCombination: KeyCombination, action: ()->Unit): MenuItem =
+    newMenuItemImpl(label, null, icon, keyCombination, action)
+
+fun newMenuItem(label: String, tooltip: String, icon: ImageView, action: ()->Unit): MenuItem =
+    newMenuItemImpl(label, tooltip, icon, null, action)
+
+fun newMenuItem(label: String, tooltip: String, icon: ImageView, keyCombination: KeyCodeCombination, action: ()->Unit): MenuItem =
+    newMenuItemImpl(label, tooltip, icon, keyCombination, action)
+
+
+private fun newMenuItemImpl(label: String, tooltip: String? = null, icon: ImageView? = null, keyCombination: KeyCombination? = null, action: (()->Unit)? = null): MenuItem =
+    if (tooltip == null) MenuItem(label, icon ?: emptyIcon16x16())
+    else {
+        // Standard MenuItem class does not support tooltips.
+        // but CustomMenuItem does not show accelerator TODO: fix showing accelerator and tooltip together
+        CustomMenuItem(Label(label, icon ?: emptyIcon16x16()).also {
+            it.styleClass.add("custom-menu-item-content")
+            Tooltip.install(it, Tooltip(tooltip))
+        })
+    }
+    .also {
+        if (keyCombination != null) it.accelerator = keyCombination
+        if (action != null) it.onAction = EventHandler { action() }
+    }
 
 
 fun showTextInputDialog(parent: Node, msg: String, title: String = "", defaultValue: String = ""): Optional<String> {

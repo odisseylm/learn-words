@@ -32,6 +32,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     internal val ignoredWordsLabel = Text("Ignored words")
     internal val allProcessedWordsLabel = Text("All processed words")
 
+    internal val topPane = VBox()
     internal val toolBar = ToolBar()
 
     internal val currentWordsList = TableView<CardWordEntry>()
@@ -63,7 +64,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         currentWordsList.selectionModel.selectionMode = SelectionMode.MULTIPLE
 
 
-        this.top = toolBar
+        this.top = topPane
+        topPane.children.add(toolBar)
 
         val buttonsMiddleBar = VBox(5.0)
         buttonsMiddleBar.isFillWidth = true

@@ -111,8 +111,8 @@ class LearnWordsController (
 
         ToolBarController(this).fillToolBar(pane.toolBar)
 
-        currentWordsList.contextMenu = ContextMenu()
-        ContextMenuController(this).fillContextMenu(currentWordsList.contextMenu)
+        pane.topPane.children.add(0, MenuController(this).fillMenu())
+        currentWordsList.contextMenu = ContextMenuController(this).fillContextMenu()
 
 
         loadExistentWords()
@@ -122,8 +122,9 @@ class LearnWordsController (
 
 
     private fun addKeyBindings(newScene: Scene) {
-        newScene.accelerators[KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN)] = Runnable { saveAll() }
-        newScene.accelerators[KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN)] = Runnable { loadWordsFromFile() }
+        newScene.accelerators[openKeyCodeCombination] = Runnable { loadWordsFromFile() }
+        newScene.accelerators[saveKeyCodeCombination] = Runnable { saveAll() }
+
         newScene.accelerators[lowerCaseKeyCombination] = Runnable { toLowerCaseRow() }
 
         newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT1, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingFrom() }

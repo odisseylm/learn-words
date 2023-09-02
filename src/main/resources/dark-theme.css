@@ -412,6 +412,15 @@
     -fx-cursor: HAND;
     cursor: HAND;
 }
+.menu > .menu-item {
+    -fx-padding: 5 20 5 10;
+}
+.menu-item > .menu {
+    -fx-padding: 5 30 5 10;
+}
+.menu {
+    -fx-padding: 5 40 5 10;
+}
 .menu-item{
     -fx-background-radius: 0;
     -fx-border-width: 0;
@@ -419,7 +428,15 @@
     -fx-text-fill: #AFB1B3;
     -fx-background-color: #1A1A1A;
     background-color: #1A1A1A;
+    -fx-padding: 5 10 5 10;
 }
+.menu-item > .graphic-container {
+    -fx-padding: 0 10 0 0;
+}
+.custom-menu-item-content {
+    -fx-graphic-text-gap: 10;
+}
+
 .menu-item:hover {
     -fx-background-color: #3E3E40;
     background-color: #3E3E40;
