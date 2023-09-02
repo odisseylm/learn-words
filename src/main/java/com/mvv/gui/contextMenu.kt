@@ -4,12 +4,14 @@ import com.mvv.gui.LearnWordsController.InsertPosition
 import com.mvv.gui.javafx.buttonIcon
 import com.mvv.gui.javafx.newMenuItem
 import com.mvv.gui.words.CardWordEntry
-import com.mvv.gui.words.possibleBestEnglishBaseWord
-import com.mvv.gui.words.possibleEnglishBaseWords
+import com.mvv.gui.words.englishBaseWords
 import javafx.event.EventHandler
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.MenuItem
 import javafx.scene.control.TableView
+
+
+private val log = mu.KotlinLogging.logger {}
 
 
 class ContextMenuController (val controller: LearnWordsController) {
@@ -64,7 +66,7 @@ class ContextMenuController (val controller: LearnWordsController) {
         val selectedCards = currentWordsList.selectionModel.selectedItems
         val menuItemText =
             if (selectedCards.size == 1 && oneOfSelectedWordsHasNoBaseWord)
-                "Ignore no base words [${possibleEnglishBaseWords(selectedCards[0].from).joinToString("|")}]"
+                "Ignore no base words [${englishBaseWords(selectedCards[0].from, controller.dictionary).joinToString("|")}]"
             else "Ignore 'No base word'"
         menuItem.text = menuItemText
     }
@@ -76,14 +78,21 @@ class ContextMenuController (val controller: LearnWordsController) {
         val selectedCards = currentWordsList.selectionModel.selectedItems
         val menuItemText =
             if (selectedCards.size == 1 && oneOfSelectedWordsHasNoBaseWord) {
-                val possibleBaseWord = possibleBestEnglishBaseWord(selectedCards[0].from)
-                val showBaseWord = if (possibleBaseWord != null && !possibleBaseWord.endsWith('e'))
-                    "${possibleBaseWord}(e)" else possibleBaseWord
-                "Add base word '$showBaseWord'"
+                val baseWords = englishBaseWords(selectedCards[0].from, controller.dictionary)
+                val notPresentBaseWords = baseWords.filterNot { currentWordsContain(it.from) }
+
+                log.debug { "updateAddMissedBaseWordsMenuItem for '${selectedCards.first().from}'," +
+                        " baseWords: $baseWords, notPresentBaseWords: $notPresentBaseWords" }
+
+                "Add base word(s) '${notPresentBaseWords.joinToString("|") { it.from } }'"
             }
             else "Add missed base word"
         menuItem.text = menuItemText
     }
+
+    // TODO: optimize
+    private fun currentWordsContain(word: String): Boolean =
+        currentWordsList.items.any { it.from.equals(word, ignoreCase = true) }
 
     private fun updateTranslateMenuItem(menuItem: MenuItem) {
         val oneOfSelectedIsNotTranslated = currentWordsList.selectionModel.selectedItems.any { it.to.isBlank() }

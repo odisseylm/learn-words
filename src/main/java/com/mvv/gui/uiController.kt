@@ -19,6 +19,7 @@ import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
 import javafx.stage.FileChooser
+import java.io.File
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
@@ -37,7 +38,7 @@ class LearnWordsController (
     //private val projectDirectory = getProjectDirectory(this.javaClass)
 
     private val allDictionaries: List<Dictionary> = AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
-    private val dictionary = DictionaryComposition(allDictionaries)
+    internal val dictionary = DictionaryComposition(allDictionaries)
 
     private val currentWords: ObservableList<CardWordEntry> = FXCollections.observableArrayList()
     //private val currentWordsSorted: SortedList<CardWordEntry> = SortedList(currentWords, cardWordEntryComparator)
@@ -61,10 +62,12 @@ class LearnWordsController (
                 "\n---------------------------------------------------\n\n"
         )
 
+        pane.dictionary = dictionary
+
         val currentWordsLabelText = "File/Clipboard (%d words)"
         currentWords.addListener(ListChangeListener { pane.currentWordsLabel.text = currentWordsLabelText.format(it.list.size) })
 
-        currentWords.addListener(ListChangeListener { analyzeWordCards(currentWords) })
+        currentWords.addListener(ListChangeListener { analyzeWordCards(currentWords, dictionary) })
 
         val ignoredWordsLabelText = "Ignored words (%d)"
         ignoredWords.addListener(ListChangeListener { pane.ignoredWordsLabel.text = ignoredWordsLabelText.format(it.list.size) })
@@ -97,7 +100,8 @@ class LearnWordsController (
 
         // Platform.runLater is used to perform analysis AFTER word card changing
         // It would be nice to find better/proper event (with already changed underlying model after edit commit)
-        val reanalyzeChangedWord: (card: CardWordEntry)->Unit = { Platform.runLater { analyzeWordCards(listOf(it), currentWordsList.items) } }
+        val reanalyzeChangedWord: (card: CardWordEntry)->Unit = { Platform.runLater {
+            analyzeWordCards(listOf(it), currentWordsList.items, dictionary) } }
 
         pane.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { reanalyzeChangedWord(it.rowValue) }
         pane.toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { reanalyzeChangedWord(it.rowValue) }
@@ -180,7 +184,7 @@ class LearnWordsController (
 
     @Suppress("unused", "MemberVisibilityCanBePrivate")
     internal fun reanalyzeWords() {
-        analyzeWordCards(currentWordsList.items)
+        analyzeWordCards(currentWordsList.items, dictionary)
         //currentWordsList.refresh()
     }
 
@@ -276,7 +280,7 @@ class LearnWordsController (
                 "srt"          -> extractWordsFromFile(filePath, ignoredWords)
                 else           -> throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
-                .also { analyzeWordCards(it) }
+                .also { analyzeWordCards(it, dictionary) }
 
             currentWords.setAll(words)
             currentWordsList.sort()
@@ -423,6 +427,37 @@ class LearnWordsController (
                 showErrorAlert(pane, ex.message ?: "Unknown error", "Error of splitting.")
             }
         }
+    }
+
+    internal fun joinWords() {
+
+        val fc = FileChooser()
+        fc.title = "Select words files"
+        fc.initialDirectory = dictDirectory.toFile()
+        fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", "*.csv"))
+        val selectedFiles: List<File>? = fc.showOpenMultipleDialog(pane.scene.window)?.sorted()
+
+        if (selectedFiles.isNullOrEmpty()) {
+            showInfoAlert(pane, "No files to join.")
+            return
+        }
+
+        if (selectedFiles.size == 1) {
+            showInfoAlert(pane, "No sense to use join only one file. Just use load/open action.")
+            return
+        }
+
+        val words: List<CardWordEntry> = selectedFiles
+            .flatMap { loadWordCards(it.toPath()) }
+            .also { analyzeWordCards(it, dictionary) }
+
+        if (words.isEmpty()) {
+            showInfoAlert(pane, "Files ${selectedFiles.map { it.name }} do not contain words.")
+            return
+        }
+
+        updateCurrentWordsFile(null)
+        currentWordsList.items.setAll(words)
     }
 
     private fun saveIgnored() {

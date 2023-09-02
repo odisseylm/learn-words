@@ -48,7 +48,7 @@ internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
                 allWordCards.add(index + i, baseWordCard)
             }
         }
-        analyzeWordCards(withoutBaseWord, allWordCards)
+        analyzeWordCards(withoutBaseWord, allWordCards, dictionary)
 
 
         //if (baseWordsToAddMap.size == 1) {

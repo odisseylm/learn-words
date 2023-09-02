@@ -2,6 +2,7 @@ package com.mvv.gui
 
 import com.mvv.gui.javafx.UpdateSet
 import com.mvv.gui.javafx.updateSetProperty
+import com.mvv.gui.util.containsAllKeys
 import com.mvv.gui.util.containsOneOfKeys
 import com.mvv.gui.util.filterNotNullPairValue
 import javafx.beans.value.WritableObjectValue
@@ -131,6 +132,28 @@ class CollectionsTest {
     }
 
 
+    @Test
+    @DisplayName("containsAllKeys")
+    fun test_containsAllKeys() {
+        val map = mapOf("1" to 1, "2" to 2, "3" to 3)
+
+        assertThat(map.containsAllKeys("1")).isTrue()
+        assertThat(map.containsAllKeys("1", "2")).isTrue()
+        assertThat(map.containsAllKeys("1", "2", "3")).isTrue()
+
+        assertThat(map.containsAllKeys("1", "2", "3", "4")).isFalse()
+        assertThat(map.containsAllKeys("2", "3", "4")).isFalse()
+    }
+
+
+    @Test
+    @DisplayName("containsAllKeys for empty keys")
+    fun test_containsAllKeys_forEmpty() {
+        val map = mapOf("1" to 1, "2" to 2, "3" to 3)
+
+        assertThat(map.containsAllKeys()).isFalse()
+        assertThat(map.containsAllKeys(emptyList())).isFalse()
+    }
 }
 
 

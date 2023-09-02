@@ -1,7 +1,9 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.javafx.UpdateSet
 import com.mvv.gui.javafx.updateSetProperty
+import com.mvv.gui.util.containsAllKeys
 import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.containsOneOfKeys
 import com.mvv.gui.words.WordCardStatus.*
@@ -30,11 +32,12 @@ private val unneededPartsForLearning = listOf(
 )
 
 
-fun analyzeWordCards(allWordCards: Iterable<CardWordEntry>) = analyzeWordCards(allWordCards, allWordCards)
+fun analyzeWordCards(allWordCards: Iterable<CardWordEntry>, dictionary: Dictionary) = analyzeWordCards(allWordCards, allWordCards, dictionary)
 
-fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>, allWordCards: Iterable<CardWordEntry>) {
+fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>, allWordCards: Iterable<CardWordEntry>, dictionary: Dictionary) {
 
-    log.info("### analyzeWordCards")
+    val started = System.currentTimeMillis()
+    log.debug("### analyzeWordCards")
 
     val allWordCardsMap: Map<String, CardWordEntry> = allWordCards.associateBy { it.from.trim().lowercase() }
 
@@ -51,13 +54,24 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>, allWordCards: I
         updateSetProperty(card.wordCardStatusesProperty, TranslationIsNotPrepared, translationIsNotPreparedStatusUpdateAction)
 
         val englishWord = from.trim().lowercase()
-        if (!card.ignoreNoBaseWordInSet && englishWord.mayBeDerivedWord) {
+        if (!card.ignoreNoBaseWordInSet) {
 
-            val baseWords = possibleEnglishBaseWords(englishWord)
-            val cardsSetContainsBaseWord = allWordCardsMap.containsOneOfKeys(baseWords)
+            val baseWordCards = englishBaseWords(englishWord, dictionary)
+            val baseWords = baseWordCards.map { it.from }
 
-            val noBaseWordStatusUpdateAction = if (cardsSetContainsBaseWord) UpdateSet.Remove else UpdateSet.Set
+            //val baseWords = possibleEnglishBaseWords(englishWord)
+            val cardsSetContainsOneOfBaseWords = allWordCardsMap.containsOneOfKeys(baseWords)
+            val cardsSetContainsAllBaseWords = allWordCardsMap.containsAllKeys(baseWords)
+            val showWarningAboutMissedBaseWord = baseWords.isNotEmpty() && !cardsSetContainsOneOfBaseWords
+
+
+            log.debug("analyzeWordCards => '{}', cardsSetContainsOneOfBaseWords: {}, cardsSetContainsAllBaseWords: {}, baseWords: {}",
+                englishWord, cardsSetContainsOneOfBaseWords, cardsSetContainsAllBaseWords, baseWords)
+
+            val noBaseWordStatusUpdateAction = if (showWarningAboutMissedBaseWord) UpdateSet.Set else UpdateSet.Remove
             updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, noBaseWordStatusUpdateAction)
         }
+
+        log.info("### analyzeWordCards took ${System.currentTimeMillis() - started}ms")
     }
 }

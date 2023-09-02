@@ -15,6 +15,8 @@ class MenuController (val controller: LearnWordsController) {
             newMenuItem("Load file", "Open internal or memo-word csv, or srt file",
                 buttonIcon("/icons/open16x16.gif"), openKeyCodeCombination) {
                 controller.loadWordsFromFile() },
+            newMenuItem("Join files", buttonIcon("/icons/join.png")) {
+                controller.joinWords() },
             newMenuItem("Save All", "Save current file in internal and memo-word csv format and save ignored words",
                 buttonIcon("/icons/disks.png"), saveKeyCodeCombination) {
                 controller.saveAll() },
@@ -57,7 +59,7 @@ class MenuController (val controller: LearnWordsController) {
 
             SeparatorMenuItem(),
             newMenuItem("Reanalyze") { controller.reanalyzeWords() },
-            newMenuItem("Refresh table") { controller.currentWordsList.refresh() },
+            newMenuItem("Refresh table", buttonIcon("/icons/iu_update_obj.png")) { controller.currentWordsList.refresh() },
         )
 
         return MenuBar(fileMenu, editMenu, wordsMenu)

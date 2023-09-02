@@ -1,5 +1,6 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.javafx.AroundReadOnlyIntegerProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -90,10 +91,10 @@ val Int.toTranslationCountStatus: TranslationCountStatus get() = when (this) {
 
 
 enum class WordCardStatus (
-    val toolTipF: (CardWordEntry)->String,
+    val toolTipF: (CardWordEntry,Dictionary)->String,
     ) {
 
-    Ok({""}),
+    Ok({_,_ ->""}),
 
     /**
      * If current word has ending/suffix 'ed', 'ing', 'es', 's' does not have
@@ -101,18 +102,18 @@ enum class WordCardStatus (
      *
      * It is not comfortable to learn such word if you do not know base word.
      */
-    NoBaseWordInSet({
-        "Words set does not have base word ${possibleEnglishBaseWords(it.from).joinToString("|")}.\n" +
-        "It is advised to add card for this word." }),
+    NoBaseWordInSet({ card, dictionary ->
+        "Words set does not have base word(s) '${englishBaseWords(card.from, dictionary).joinToString("|") { it.from }}'.\n" +
+        "It is advised to add these base word(s) to the set." }),
 
     /**
      * Marker to stop validation on NoBaseWordInSet.
      */
-    BaseWordDoesNotExist({""}),
+    BaseWordDoesNotExist({_,_ ->""}),
 
-    NoTranslation({"No translation for '${it.from}'."}),
+    NoTranslation({ card, _ -> "No translation for '${card.from}'."}),
 
-    TranslationIsNotPrepared({"The translation for '${it.from}' is not prepared for learning. " +
+    TranslationIsNotPrepared({ card, _ -> "The translation for '${card.from}' is not prepared for learning. " +
             "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on)."}),
     ;
 

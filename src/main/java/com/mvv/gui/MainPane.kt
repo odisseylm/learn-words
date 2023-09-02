@@ -1,5 +1,6 @@
 package com.mvv.gui
 
+import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.javafx.EmptyTextStringConverter
 import com.mvv.gui.javafx.ExTextFieldTableCell
 import com.mvv.gui.javafx.LabelStatusTableCell
@@ -47,6 +48,8 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     internal val allProcessedWordsList = ListView<String>()
 
     internal val removeIgnoredButton = Button("Remove ignored")
+
+    internal lateinit var dictionary: Dictionary // TODO: refactor to avoid this logic inside pane
 
     init {
 
@@ -154,7 +157,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             val toolTips = mutableListOf<String>()
 
             if (card.showNoBaseWordInSet) {
-                toolTips.add(NoBaseWordInSet.toolTipF(card))
+                toolTips.add(NoBaseWordInSet.toolTipF(card, dictionary))
                 cell.styleClass.add(NoBaseWordInSet.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.
@@ -162,7 +165,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             }
 
             if (NoTranslation in card.wordCardStatuses) {
-                toolTips.add(NoTranslation.toolTipF(card))
+                toolTips.add(NoTranslation.toolTipF(card, dictionary))
                 cell.styleClass.add(NoTranslation.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.
@@ -170,7 +173,7 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
             }
 
             if (TranslationIsNotPrepared in card.wordCardStatuses) {
-                toolTips.add(TranslationIsNotPrepared.toolTipF(card))
+                toolTips.add(TranslationIsNotPrepared.toolTipF(card, dictionary))
                 cell.styleClass.add(TranslationIsNotPrepared.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.
