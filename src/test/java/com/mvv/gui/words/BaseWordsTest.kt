@@ -149,12 +149,14 @@ class BaseWordsTest {
 
         assertions.assertThat(englishBaseWords("hooves", dictionary).map { it.from })
             .containsExactlyInAnyOrder(
+                "hoe",
+                "hoo",
                 "hoof",
                 "hoove", // seems it also has translation, but should not
             )
 
         assertions.assertThat(englishBaseWords("mummies", dictionary).map { it.from })
-            .containsExactlyInAnyOrder("mummy")
+            .containsExactlyInAnyOrder("mum", "mummy")
 
         assertions.assertThat(englishBaseWords("obvious", dictionary).map { it.from })
             .isEmpty()
@@ -186,7 +188,7 @@ class BaseWordsTest {
             .isEmpty()
 
         assertions.assertThat(englishBaseWords("flatness", dictionary).map { it.from })
-            .isEmpty()
+            .containsExactlyInAnyOrder("flat")
 
         assertions.assertThat(englishBaseWords("folks", dictionary).map { it.from })
             .containsExactlyInAnyOrder("folk")
@@ -207,7 +209,7 @@ class BaseWordsTest {
             .isEmpty()
 
         assertions.assertThat(englishBaseWords("possess", dictionary).map { it.from })
-            .isEmpty()
+            .containsExactlyInAnyOrder("pose", "posse")
 
         assertions.assertThat(englishBaseWords("tedious", dictionary).map { it.from })
             .isEmpty()
@@ -217,49 +219,6 @@ class BaseWordsTest {
 
         assertions.assertThat(englishBaseWords("flies", dictionary).map { it.from })
             .containsExactlyInAnyOrder("fly")
-
-        assertions.assertAll()
-    }
-
-
-    @Test
-    @DisplayName("englishBaseWords a-")
-    fun test_englishBaseWords_startsWithA() {
-        val dictionary = dictionary()
-
-        val assertions = SoftAssertions()
-
-        assertions.assertThat(englishBaseWords("amass", dictionary).map { it.from })
-            .containsExactlyInAnyOrder("mass")
-
-        assertions.assertThat(englishBaseWords("aside", dictionary).map { it.from })
-            .containsExactlyInAnyOrder("side")
-
-        assertions.assertThat(englishBaseWords("abide", dictionary).map { it.from })
-            .containsExactlyInAnyOrder("bide")
-
-        assertions.assertAll()
-    }
-
-
-    @Test
-    @DisplayName("englishBaseWords re-")
-    fun test_englishBaseWords_startsWithRe() {
-        val dictionary = dictionary()
-
-        val assertions = SoftAssertions()
-
-        assertions.assertThat(englishBaseWords("replace", dictionary).map { it.from })
-            .containsExactlyInAnyOrder("place")
-
-        assertions.assertThat(englishBaseWords("regain", dictionary).map { it.from })
-            .containsExactlyInAnyOrder("gain")
-
-        assertions.assertThat(englishBaseWords("redress", dictionary).map { it.from })
-            .containsExactlyInAnyOrder(
-                "dress",
-                "red", // unexpected word, but it would be difficult to filter it out :-)
-            )
 
         assertions.assertAll()
     }
@@ -383,10 +342,229 @@ class BaseWordsTest {
             .containsExactlyInAnyOrder("confer")
 
         assertions.assertThat(englishBaseWords("dependence", dictionary).map { it.from })
-            .containsExactlyInAnyOrder("depend", "dependent")
+            .containsExactlyInAnyOrder("depend", "dependant", "dependent")
 
         assertions.assertThat(englishBaseWords("difference", dictionary).map { it.from })
             .containsExactlyInAnyOrder("differ", "different")
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -ance")
+    fun test_englishBaseWords_endsWithAnce() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("importance", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("import", "important")
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -ancy")
+    fun test_englishBaseWords_endsWithAncy() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("inhabitancy", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("inhabit", "inhabitant")
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -ance")
+    fun test_englishBaseWords_endsWithEncy() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("urgency", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("urge", "urgent")
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -ant")
+    fun test_englishBaseWords_endsWithAnt() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("inhabitant", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("habitant", "inhabit")
+
+        assertions.assertThat(englishBaseWords("important", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("import")
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -ant")
+    fun test_englishBaseWords_endsWithEnt() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("urgent", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("urge")
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -age")
+    fun test_englishBaseWords_endsWithAge() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("vintage", dictionary).map { it.from })
+            .isEmpty()
+
+        assertions.assertThat(englishBaseWords("accurate", dictionary).map { it.from })
+            .isEmpty()
+
+        assertions.assertThat(englishBaseWords("percentage", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("percent")
+
+        assertions.assertThat(englishBaseWords("breakage", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("break")
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -age")
+    fun test_englishBaseWords_endsWithAl() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("arrival", dictionary).map { it.from })
+            .isEmpty()
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -an")
+    fun test_englishBaseWords_endsWithAn() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("???", dictionary).map { it.from })
+            .isEmpty()
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -ian")
+    fun test_englishBaseWords_endsWithIan() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("Ukrainian", dictionary).map { it.from })
+            .isEmpty()
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -ry")
+    fun test_englishBaseWords_endsWithRy() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("snobbery", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("snob")
+
+        assertions.assertThat(englishBaseWords("bakery", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("bake")
+
+        assertions.assertAll()
+    }
+
+    // --------------------------------------------------------------------------------------
+    //                                 Prefixes
+    // --------------------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("englishBaseWords a-")
+    fun test_englishBaseWords_startsWithA() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("amass", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("mass")
+
+        assertions.assertThat(englishBaseWords("aside", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("side")
+
+        assertions.assertThat(englishBaseWords("abide", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("bide")
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords re-")
+    fun test_englishBaseWords_startsWithRe() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("replace", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("place")
+
+        assertions.assertThat(englishBaseWords("regain", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("gain")
+
+        assertions.assertThat(englishBaseWords("redress", dictionary).map { it.from })
+            .containsExactlyInAnyOrder(
+                "dress",
+                "rede", // unexpected word, but it would be difficult to filter it out :-)
+            )
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords un-")
+    fun test_englishBaseWords_startsWithUn() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("uncanny", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("canny")
+
+        assertions.assertThat(englishBaseWords("unmentionable", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("mentionable")
+
 
         assertions.assertAll()
     }
