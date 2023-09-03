@@ -6,6 +6,8 @@ import com.mvv.gui.javafx.updateSetProperty
 import com.mvv.gui.util.containsAllKeys
 import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.containsOneOfKeys
+import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WhenSomeBaseWordsMissed
+import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WhenAllBaseWordsMissed
 import com.mvv.gui.words.WordCardStatus.*
 
 
@@ -31,9 +33,20 @@ private val unneededPartsForLearning = listOf(
 )
 
 
-fun analyzeWordCards(allWordCards: Iterable<CardWordEntry>, dictionary: Dictionary) = analyzeWordCards(allWordCards, allWordCards, dictionary)
+enum class WarnAboutMissedBaseWordsMode {
+    WhenSomeBaseWordsMissed,
+    WhenAllBaseWordsMissed,
+}
 
-fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>, allWordCards: Iterable<CardWordEntry>, dictionary: Dictionary) {
+
+@Suppress("unused")
+fun analyzeWordCards(allWordCards: Iterable<CardWordEntry>, warnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode, dictionary: Dictionary) =
+    analyzeWordCards(allWordCards, warnAboutMissedBaseWordsMode, allWordCards, dictionary)
+
+fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
+                     warnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode,
+                     allWordCards: Iterable<CardWordEntry>,
+                     dictionary: Dictionary) {
 
     val started = System.currentTimeMillis()
     log.debug("### analyzeWordCards")
@@ -60,8 +73,11 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>, allWordCards: I
 
             val cardsSetContainsOneOfBaseWords = allWordCardsMap.containsOneOfKeys(baseWords)
             val cardsSetContainsAllBaseWords = allWordCardsMap.containsAllKeys(baseWords)
-            // TODO: move to UI to use cardsSetContainsOneOfBaseWords or cardsSetContainsAllBaseWords
-            val showWarningAboutMissedBaseWord = baseWords.isNotEmpty() && !cardsSetContainsOneOfBaseWords
+
+            val showWarningAboutMissedBaseWord = when (warnAboutMissedBaseWordsMode) {
+                WhenSomeBaseWordsMissed -> baseWords.isNotEmpty() && !cardsSetContainsOneOfBaseWords
+                WhenAllBaseWordsMissed  -> baseWords.isNotEmpty() && !cardsSetContainsAllBaseWords
+            }
 
             val missedBaseWords = baseWords.filterNot { allWordCardsMap.containsKey(it) }
             card.missedBaseWords = missedBaseWords

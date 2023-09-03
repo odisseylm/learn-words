@@ -20,7 +20,11 @@ private val log = mu.KotlinLogging.logger {}
 
 
 internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
-                               allWordCards: ObservableList<CardWordEntry>, dictionary: Dictionary): Map<CardWordEntry, List<CardWordEntry>> {
+                               warnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode,
+                               allWordCards: ObservableList<CardWordEntry>,
+                               dictionary: Dictionary): Map<CardWordEntry, List<CardWordEntry>> {
+
+    val allWordCardsMap: Map<String, CardWordEntry> = allWordCards.associateBy { it.from.trim().lowercase() }
 
     val withoutBaseWord = wordCardsToProcess
         .asSequence()
@@ -44,11 +48,13 @@ internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
         baseWordsToAddMap.forEach { (currentWordCard, baseWordCards) ->
             // TODO: optimize this n*n
             val index = allWordCards.indexOf(currentWordCard)
-            baseWordCards.forEachIndexed { i, baseWordCard ->
-                allWordCards.add(index + i, baseWordCard)
+            baseWordCards
+                .filterNot { allWordCardsMap.containsKey(it.from) }
+                .forEachIndexed { i, baseWordCard ->
+                    allWordCards.add(index + i, baseWordCard)
             }
         }
-        analyzeWordCards(withoutBaseWord, allWordCards, dictionary)
+        analyzeWordCards(withoutBaseWord, warnAboutMissedBaseWordsMode, allWordCards, dictionary)
 
 
         //if (baseWordsToAddMap.size == 1) {

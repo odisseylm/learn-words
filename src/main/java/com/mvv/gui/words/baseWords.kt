@@ -62,6 +62,7 @@ private val baseWordRules: List<BaseWordRule> = listOf(
     SuffixBaseWordRule("ied", "y"),
     SuffixBaseWordRule("ed", listOf("", "e")),
 
+    SuffixBaseWordRule("ingly", listOf("", "e")),
     SuffixBaseWordRule("ly", listOf("", "e")),
 
     SuffixBaseWordRule("ing", listOf("", "e", "y")),

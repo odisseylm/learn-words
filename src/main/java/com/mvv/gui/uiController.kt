@@ -50,6 +50,8 @@ class LearnWordsController (
 
     private var currentWordsFile: Path? = null
 
+    private val toolBarController = ToolBarController(this)
+
     init {
 
         initTheme()
@@ -67,7 +69,7 @@ class LearnWordsController (
         val currentWordsLabelText = "File/Clipboard (%d words)"
         currentWords.addListener(ListChangeListener { pane.currentWordsLabel.text = currentWordsLabelText.format(it.list.size) })
 
-        currentWords.addListener(ListChangeListener { analyzeWordCards(currentWords, dictionary) })
+        currentWords.addListener(ListChangeListener { reanalyzeAllWords() })
 
         val ignoredWordsLabelText = "Ignored words (%d)"
         ignoredWords.addListener(ListChangeListener { pane.ignoredWordsLabel.text = ignoredWordsLabelText.format(it.list.size) })
@@ -100,8 +102,7 @@ class LearnWordsController (
 
         // Platform.runLater is used to perform analysis AFTER word card changing
         // It would be nice to find better/proper event (with already changed underlying model after edit commit)
-        val reanalyzeChangedWord: (card: CardWordEntry)->Unit = { Platform.runLater {
-            analyzeWordCards(listOf(it), currentWords, dictionary) } }
+        val reanalyzeChangedWord: (card: CardWordEntry)->Unit = { Platform.runLater { reanalyzeOnlyWords(listOf(it)) } }
 
         pane.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { reanalyzeChangedWord(it.rowValue) }
         pane.toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { reanalyzeChangedWord(it.rowValue) }
@@ -113,7 +114,7 @@ class LearnWordsController (
         fixSortingAfterCellEditCommit(pane.fromColumn)
 
 
-        ToolBarController(this).fillToolBar(pane.toolBar)
+        toolBarController.fillToolBar(pane.toolBar)
 
         pane.topPane.children.add(0, MenuController(this).fillMenu())
         currentWordsList.contextMenu = ContextMenuController(this).fillContextMenu()
@@ -125,6 +126,7 @@ class LearnWordsController (
     internal val currentWordsList: TableView<CardWordEntry> get() = pane.currentWordsList
     //internal val currentWords: ObservableList<CardWordEntry> get() = pane.currentWordsList.items
     private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
+    private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = toolBarController.warnAboutMissedBaseWordsMode
 
 
     private fun addKeyBindings(newScene: Scene) {
@@ -155,11 +157,10 @@ class LearnWordsController (
     fun addAllBaseWordsInSet() = addAllBaseWordsInSetImpl(currentWords)
     fun addBaseWordsInSetForSelected() = addAllBaseWordsInSetImpl(currentWordsSelection.selectedItems)
 
-    private fun addAllBaseWordsInSetImpl(wordCards: Iterable<CardWordEntry>) {
-
+    private fun addAllBaseWordsInSetImpl(wordCards: Iterable<CardWordEntry>) =
         currentWordsList.runWithScrollKeeping {
 
-            val addedWordsMapping = addBaseWordsInSet(wordCards, currentWords, dictionary)
+            val addedWordsMapping = addBaseWordsInSet(wordCards, currentWarnAboutMissedBaseWordsMode, currentWords, dictionary)
 
             if (addedWordsMapping.size == 1) {
                 val newBaseWordCard = addedWordsMapping.values.asSequence().flatten().first()
@@ -171,11 +172,10 @@ class LearnWordsController (
                 }
             }
         }
-    }
 
-    fun addTranscriptions() {
+    fun addTranscriptions() =
         addTranscriptions(currentWords, dictionary)
-    }
+
 
     fun removeSelected() {
         val selectedSafeCopy = currentWordsSelection.selectedItems.toList()
@@ -184,11 +184,11 @@ class LearnWordsController (
             currentWords.removeAll(selectedSafeCopy) }
     }
 
-    @Suppress("unused", "MemberVisibilityCanBePrivate")
-    internal fun reanalyzeWords() {
-        analyzeWordCards(currentWords, dictionary)
-        //currentWordsList.refresh()
-    }
+    private fun analyzeAllWords(allWords: Iterable<CardWordEntry>) =
+        analyzeWordCards(allWords, currentWarnAboutMissedBaseWordsMode, allWords, dictionary)
+    internal fun reanalyzeAllWords() = analyzeAllWords(currentWords)
+    private fun reanalyzeOnlyWords(words: Iterable<CardWordEntry>) =
+        analyzeWordCards(words, currentWarnAboutMissedBaseWordsMode, currentWords, dictionary)
 
     private fun startEditingFrom() = startEditingColumnCell(pane.fromColumn)
     private fun startEditingTo() = startEditingColumnCell(pane.toColumn)
@@ -282,7 +282,7 @@ class LearnWordsController (
                 "srt"          -> extractWordsFromFile(filePath, ignoredWords)
                 else           -> throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
-                .also { analyzeWordCards(it, dictionary) }
+            .also { analyzeAllWords(it) }
 
             currentWords.setAll(words)
             currentWordsList.sort()
@@ -295,7 +295,7 @@ class LearnWordsController (
         val words = extractWordsFromClipboard(Clipboard.getSystemClipboard(), ignoredWords)
 
         currentWords.setAll(words) // or add all ??
-        reanalyzeWords()
+        reanalyzeAllWords()
         updateCurrentWordsFile(null)
     }
 
@@ -451,7 +451,7 @@ class LearnWordsController (
 
         val words: List<CardWordEntry> = selectedFiles
             .flatMap { loadWordCards(it.toPath()) }
-            .also { analyzeWordCards(it, dictionary) }
+            .also { analyzeAllWords(it) }
 
         if (words.isEmpty()) {
             showInfoAlert(pane, "Files ${selectedFiles.map { it.name }} do not contain words.")

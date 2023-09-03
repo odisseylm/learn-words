@@ -58,7 +58,7 @@ class MenuController (val controller: LearnWordsController) {
                 controller.addTranscriptions() },
 
             SeparatorMenuItem(),
-            newMenuItem("Reanalyze") { controller.reanalyzeWords() },
+            newMenuItem("Reanalyze") { controller.reanalyzeAllWords() },
             newMenuItem("Refresh table", buttonIcon("/icons/iu_update_obj.png")) { controller.currentWordsList.refresh() },
         )
 
