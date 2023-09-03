@@ -2,6 +2,7 @@ package com.mvv.gui
 
 import javafx.application.Application
 import javafx.scene.Scene
+import javafx.stage.Screen
 import javafx.stage.Stage
 
 
@@ -19,6 +20,18 @@ class LearnWordsEditorApp : Application() {
         primaryStage.title = appTitle
 
         primaryStage.scene = scene
+
+        val screens = Screen.getScreens()
+        val minScreenWidth = screens.minOf { it.bounds.width }
+        val minScreenHeight = screens.minOf { it.bounds.height }
+
+        mainWordsPane.prefWidth = minScreenWidth * 0.8
+        mainWordsPane.prefHeight = minScreenHeight * 0.8
+
+        primaryStage.isMaximized = settings.isMaximized
+        if (!primaryStage.isMaximized)
+            primaryStage.centerOnScreen()
+
         primaryStage.show()
     }
 

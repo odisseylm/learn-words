@@ -17,6 +17,7 @@ enum class Theme {
 class Settings (
     val splitWordCountPerFile: Int = defaultSplitWordCountPerFile,
     val theme: Theme = defaultTheme,
+    val isMaximized: Boolean = false,
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -41,5 +42,6 @@ private fun loadSettings(): Settings {
     return Settings(
         splitWordCountPerFile = props.getProperty("splitWordCountPerFile", defaultSplitWordCountPerFile.toString()).toInt(),
         theme = Theme.valueOf(props.getProperty("theme", defaultTheme.name)),
+        isMaximized = props.getProperty("isWindowMaximized", "false").toBoolean(),
     )
 }
