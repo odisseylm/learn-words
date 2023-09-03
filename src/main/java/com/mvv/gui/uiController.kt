@@ -24,9 +24,7 @@ import java.io.File
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.io.path.exists
-import kotlin.io.path.extension
-import kotlin.io.path.name
+import kotlin.io.path.*
 
 
 private val log = mu.KotlinLogging.logger {}
@@ -380,6 +378,17 @@ class LearnWordsController (
         val words = currentWords
         saveWordCards(filePath.useFilenameSuffix(internalWordCardsFileExt), CsvFormat.Internal, words)
         saveWordCards(filePath.useFilenameSuffix(memoWordFileExt), CsvFormat.MemoWord, words)
+
+        val splitFilesDir = filePath.parent.resolve(filePath.baseWordsFilename)
+        if (splitFilesDir.exists()) {
+            val oldSplitFiles: List<Path> = splitFilesDir.listDirectoryEntries("*${filePath.baseWordsFilename}*.csv").sorted()
+            if (oldSplitFiles.isNotEmpty())
+                log.debug { "### Removing old split files: \n  ${oldSplitFiles.joinToString("\n  ")}" }
+            oldSplitFiles.forEach { it.deleteIfExists() }
+        }
+
+        splitFilesDir.createDirectories()
+        saveSplitWordCards(filePath, currentWords, splitFilesDir, settings.splitWordCountPerFile)
     }
 
     private fun doSaveCurrentWords(saveAction:(Path)->Unit) {
