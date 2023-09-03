@@ -21,7 +21,7 @@ private class SuffixBaseWordRule (val suffix: String, val excludeSuffixes: List<
         : this(suffix, listOf(replaceSuffixBy))
 
     override fun possibleBaseWords(word: String): List<String> {
-        val suitableWord = word.length > suffix.length + minBaseWordLength
+        val suitableWord = word.length > suffix.length + minBaseWordLength - 2
                 && word.endsWith(suffix) && !word.endsWithOneOf(excludeSuffixes)
 
         return if (suitableWord) {
@@ -31,7 +31,7 @@ private class SuffixBaseWordRule (val suffix: String, val excludeSuffixes: List<
                 listOf(wordWithoutSuffix, wordWithoutSuffix.substring(0, wordWithoutSuffix.length - 1))
                 else listOf(wordWithoutSuffix)
 
-            replaceSuffixBy.flatMap { newSuffix -> wordsWithoutSuffix.map { it + newSuffix } }
+            replaceSuffixBy.flatMap { newSuffix -> wordsWithoutSuffix.map { it + newSuffix } }.filter { it.length >= minBaseWordLength }
         }
         else emptyList()
     }
@@ -69,7 +69,7 @@ private val baseWordRules: List<BaseWordRule> = listOf(
     SuffixBaseWordRule("ion", listOf("", "e", "y")),
 
     SuffixBaseWordRule("able", listOf("", "e", "l", "le")),
-    SuffixBaseWordRule("ible", listOf("", "io")),
+    SuffixBaseWordRule("ible", listOf("", "io", "e")),
 
     SuffixBaseWordRule("ence", listOf("", "e", "ent")),
 

@@ -9,14 +9,26 @@ import javafx.scene.control.ContentDisplay
 import javafx.scene.control.Control
 import javafx.scene.control.Label
 import javafx.scene.control.ToolBar
+import javafx.util.StringConverter
+import org.apache.commons.lang3.NotImplementedException
 
 
 class ToolBarController (val controller: LearnWordsController) {
 
+    // TODO: Move it from toolbar to at left-top above currentWordsList
     private val warnAboutMissedBaseWordsModeDropDown = ComboBox<WarnAboutMissedBaseWordsMode>().also {
         it.items.setAll(com.mvv.gui.words.WarnAboutMissedBaseWordsMode.values().toList())
         it.value = WarnAboutMissedBaseWordsMode.WhenAllBaseWordsMissed
         it.onAction = EventHandler { controller.reanalyzeAllWords() }
+
+        it.converter = object : StringConverter<WarnAboutMissedBaseWordsMode>() {
+            override fun toString(v: WarnAboutMissedBaseWordsMode): String = when (v) {
+                WarnAboutMissedBaseWordsMode.WhenSomeBaseWordsMissed -> "Do not warn when at least one base word is present"
+                WarnAboutMissedBaseWordsMode.WhenAllBaseWordsMissed  -> "Warn when at least one base word missed"
+            }
+
+            override fun fromString(string: String?): WarnAboutMissedBaseWordsMode = throw NotImplementedException("Should not be used!")
+        }
     }
 
     private val controls: List<Control> = listOf(

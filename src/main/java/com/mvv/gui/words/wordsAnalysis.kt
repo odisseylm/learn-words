@@ -89,6 +89,6 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
             updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, noBaseWordStatusUpdateAction)
         }
 
-        log.info("### analyzeWordCards took ${System.currentTimeMillis() - started}ms")
     }
+    log.info("### analyzeWordCards took ${System.currentTimeMillis() - started}ms")
 }

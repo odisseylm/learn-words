@@ -145,10 +145,7 @@ class BaseWordsTest {
             .containsExactlyInAnyOrder("stare", "star")
 
         assertions.assertThat(englishBaseWords("toes", dictionary).map { it.from })
-            .containsExactlyInAnyOrder(
-                "toe",
-                "to", // probably should be ignored
-            )
+            .containsExactlyInAnyOrder("toe")
 
         assertions.assertThat(englishBaseWords("hooves", dictionary).map { it.from })
             .containsExactlyInAnyOrder(
@@ -277,6 +274,20 @@ class BaseWordsTest {
 
         assertions.assertThat(englishBaseWords("directly", dictionary).map { it.from })
             .containsExactlyInAnyOrder("direct")
+
+        assertions.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("englishBaseWords -ingly")
+    fun test_englishBaseWords_endsWithIngly() {
+        val dictionary = dictionary()
+
+        val assertions = SoftAssertions()
+
+        assertions.assertThat(englishBaseWords("boringly", dictionary).map { it.from })
+            .containsExactlyInAnyOrder("boring", "bore")
 
         assertions.assertAll()
     }
