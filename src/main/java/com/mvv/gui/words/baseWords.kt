@@ -12,6 +12,16 @@ private interface BaseWordRule {
 
 private const val minBaseWordLength = 3
 
+// actually make sense to put there only words with length >= 3
+val excludeBaseWords = setOf(
+    "a", "an", "the",
+    "adv", "alt",
+    "to", "out", "off", "like", "for", "via", "with", "near", "with",
+    "red", "black",
+    "self",
+)
+
+
 private class SuffixBaseWordRule (suffix: String, excludeSuffixes: List<String>, replaceSuffixBy: List<String>) : BaseWordRule {
 
     val suffix: String = suffix.removePrefix("-")
@@ -32,9 +42,14 @@ private class SuffixBaseWordRule (suffix: String, excludeSuffixes: List<String>,
                 listOf(wordWithoutSuffix, wordWithoutSuffix.substring(0, wordWithoutSuffix.length - 1))
                 else listOf(wordWithoutSuffix)
 
-            replaceSuffixBy.flatMap { newSuffix -> wordsWithoutSuffix.map { it + newSuffix } }
+            replaceSuffixBy
+                .asSequence()
+                .flatMap { newSuffix -> wordsWithoutSuffix.map { it + newSuffix } }
+                .map { it.removePrefix("-").removeSuffix("-") }
                 .filter { it.length >= minBaseWordLength }
                 .filter { it !in excludeBaseWords }
+                .distinct()
+                .toList()
         }
         else emptyList()
     }
@@ -56,21 +71,17 @@ private class PrefixBaseWordRule (prefix: String, excludePrefixes: List<String>,
         return if (suitableWord) {
             val wordWithoutPrefix = word.removePrefix(prefix)
             replacePrefixBy
+                .asSequence()
                 .map { newPrefix -> newPrefix + wordWithoutPrefix }
+                .map { it.removePrefix("-").removeSuffix("-") }
                 .filter { it.length >= minBaseWordLength }
                 .filter { it !in excludeBaseWords }
+                .distinct()
+                .toList()
         }
         else emptyList()
     }
 }
-
-
-// actually make sense to put there only words with length >= 3
-val excludeBaseWords = setOf(
-    "a", "an", "the",
-    "to", "out", "off", "like", "for", "via", "with", "near", "with",
-    "red", "black",
-)
 
 
 private val baseWordRules: List<BaseWordRule> = listOf(
@@ -87,6 +98,8 @@ private val baseWordRules: List<BaseWordRule> = listOf(
     rule("-ish", "y"),
     rule("-ity", "y"),
     rule("-ty", "y"),
+
+    rule("-ian", "y"),
 
     rule("-ment", "y"),
     rule("-ness", "y"),
