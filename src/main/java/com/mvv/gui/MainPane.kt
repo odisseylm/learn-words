@@ -7,6 +7,8 @@ import com.mvv.gui.javafx.LabelStatusTableCell
 import com.mvv.gui.javafx.toolTipText
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.*
+import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
+import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WarnWhenSomeBaseWordsMissed
 import com.mvv.gui.words.WordCardStatus.*
 import javafx.geometry.Insets
 import javafx.geometry.Pos
@@ -20,6 +22,8 @@ import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.scene.text.Text
 import javafx.util.Callback
+import javafx.util.StringConverter
+import org.apache.commons.lang3.NotImplementedException
 
 
 const val appTitle = "Words"
@@ -49,6 +53,21 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     internal val removeIgnoredButton = Button("Remove ignored")
 
+    internal val warnAboutMissedBaseWordsModeDropDown = ComboBox<WarnAboutMissedBaseWordsMode>().also {
+        it.items.setAll(com.mvv.gui.words.WarnAboutMissedBaseWordsMode.values().toList())
+        it.value = WarnWhenSomeBaseWordsMissed
+
+        it.converter = object : StringConverter<WarnAboutMissedBaseWordsMode>() {
+            override fun toString(v: WarnAboutMissedBaseWordsMode): String = when (v) {
+                WarnWhenSomeBaseWordsMissed     -> "Warn when at least one base word missed"
+                NotWarnWhenSomeBaseWordsPresent -> "Do not warn when at least one base word is present"
+            }
+
+            override fun fromString(string: String?): WarnAboutMissedBaseWordsMode = throw NotImplementedException("Should not be used!")
+        }
+    }
+
+
     internal lateinit var dictionary: Dictionary // TODO: refactor to avoid this logic inside pane
 
     init {
@@ -59,7 +78,13 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         contentPane.hgap = 10.0; contentPane.vgap = 10.0
         contentPane.padding = Insets(10.0, 10.0, 10.0, 10.0)
 
-        contentPane.add(currentWordsLabel, 0, 0)
+        val currentWordsListLabels = BorderPane()
+
+        currentWordsListLabels.left = currentWordsLabel
+        setAlignment(currentWordsLabel, Pos.BOTTOM_LEFT)
+
+        currentWordsListLabels.right = warnAboutMissedBaseWordsModeDropDown
+        contentPane.add(currentWordsListLabels, 0, 0)
 
         contentPane.add(currentWordsList, 0, 1, 1, 3)
         GridPane.setFillWidth(currentWordsList, true)

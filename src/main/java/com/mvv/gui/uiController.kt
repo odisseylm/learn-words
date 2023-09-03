@@ -105,6 +105,8 @@ class LearnWordsController (
         pane.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { reanalyzeChangedWord(it.rowValue) }
         pane.toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { reanalyzeChangedWord(it.rowValue) }
 
+        pane.warnAboutMissedBaseWordsModeDropDown.onAction = EventHandler { reanalyzeAllWords() }
+
         // It is needed if SortedList is used as TableView items
         // ??? just needed :-) (otherwise warning in console)
         //currentWordsSorted.comparatorProperty().bind(currentWordsList.comparatorProperty());
@@ -124,7 +126,7 @@ class LearnWordsController (
     internal val currentWordsList: TableView<CardWordEntry> get() = pane.currentWordsList
     //internal val currentWords: ObservableList<CardWordEntry> get() = pane.currentWordsList.items
     private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
-    private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = toolBarController.warnAboutMissedBaseWordsMode
+    private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = pane.warnAboutMissedBaseWordsModeDropDown.value
 
 
     private fun addKeyBindings(newScene: Scene) {

@@ -6,8 +6,8 @@ import com.mvv.gui.javafx.updateSetProperty
 import com.mvv.gui.util.containsAllKeys
 import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.containsOneOfKeys
-import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WhenSomeBaseWordsMissed
-import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WhenAllBaseWordsMissed
+import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
+import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WarnWhenSomeBaseWordsMissed
 import com.mvv.gui.words.WordCardStatus.*
 
 
@@ -33,9 +33,9 @@ private val unneededPartsForLearning = listOf(
 )
 
 
-enum class WarnAboutMissedBaseWordsMode {
-    WhenSomeBaseWordsMissed,
-    WhenAllBaseWordsMissed,
+enum class WarnAboutMissedBaseWordsMode { // WarnWhenSomeWordsMissed NotWarnWhenSomeBaseWordsPresent
+    WarnWhenSomeBaseWordsMissed,
+    NotWarnWhenSomeBaseWordsPresent,
 }
 
 
@@ -75,8 +75,8 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
             val cardsSetContainsAllBaseWords = allWordCardsMap.containsAllKeys(baseWords)
 
             val showWarningAboutMissedBaseWord = when (warnAboutMissedBaseWordsMode) {
-                WhenSomeBaseWordsMissed -> baseWords.isNotEmpty() && !cardsSetContainsOneOfBaseWords
-                WhenAllBaseWordsMissed  -> baseWords.isNotEmpty() && !cardsSetContainsAllBaseWords
+                NotWarnWhenSomeBaseWordsPresent -> baseWords.isNotEmpty() && !cardsSetContainsOneOfBaseWords
+                WarnWhenSomeBaseWordsMissed     -> baseWords.isNotEmpty() && !cardsSetContainsAllBaseWords
             }
 
             val missedBaseWords = baseWords.filterNot { allWordCardsMap.containsKey(it) }
