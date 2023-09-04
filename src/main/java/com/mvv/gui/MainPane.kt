@@ -58,7 +58,7 @@ class MainWordsPane : BorderPane() {
 
     internal fun updateWarnWordCount(wordCountWithWarning: Int) {
         val shouldBeVisible = (wordCountWithWarning != 0)
-        warnWordCountsTextItems.map { it.isVisible = shouldBeVisible }
+        warnWordCountsTextItems.map { it.isVisible = shouldBeVisible; it.isManaged = shouldBeVisible }
         warnWordCountsText.text = warnWordCountsTextFormat.format(wordCountWithWarning)
     }
 
@@ -87,15 +87,21 @@ class MainWordsPane : BorderPane() {
         contentPane.hgap = 10.0; contentPane.vgap = 10.0
         contentPane.padding = Insets(10.0, 10.0, 10.0, 10.0)
 
-        val currentWordsListLabels = BorderPane()
-        val textFlow = TextFlow(*(listOf(currentWordsLabel) + warnWordCountsTextItems).toTypedArray())
-        updateWarnWordCount(0) // hide by default
+        val currentWordsTopHeader = BorderPane()
 
-        currentWordsListLabels.left = textFlow
-        setAlignment(currentWordsLabel, Pos.BOTTOM_LEFT)
+        val currentWordsLabelsTextFlow = TextFlow(
+            *(listOf(currentWordsLabel) + warnWordCountsTextItems).toTypedArray())
 
-        currentWordsListLabels.right = warnAboutMissedBaseWordsModeDropDown
-        contentPane.add(currentWordsListLabels, 0, 0)
+        currentWordsTopHeader.center = BorderPane().also {
+            // Workaround with using BorderPane as container/wrapper over TextFlow
+            // since TextFlow does not have possibility to vertically align content to the bottom.
+            it.bottom = currentWordsLabelsTextFlow }
+
+        updateWarnWordCount(0) // hide WarnWordCount by default
+
+
+        currentWordsTopHeader.right = warnAboutMissedBaseWordsModeDropDown
+        contentPane.add(currentWordsTopHeader, 0, 0)
 
         contentPane.add(currentWordsList, 0, 1, 1, 3)
         GridPane.setFillWidth(currentWordsList, true)

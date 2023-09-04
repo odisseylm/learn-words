@@ -235,16 +235,19 @@ class LearnWordsController (
     private fun copySelectedWord() = copyWordsToClipboard(currentWordsSelection.selectedItems)
 
 
-    fun translateSelected() {
-        dictionary.translateWords(currentWordsSelection.selectedItems)
-        markDocumentIsDirty()
-        currentWordsList.refresh()
-    }
+    fun translateSelected() =
+        currentWordsSelection.selectedItems.doIfNotEmpty {
+            dictionary.translateWords(it)
+            markDocumentIsDirty()
+            reanalyzeOnlyWords(it)
+            currentWordsList.refresh()
+        }
 
 
     fun translateAll() {
         dictionary.translateWords(currentWords)
         markDocumentIsDirty()
+        reanalyzeAllWords()
         currentWordsList.refresh()
     }
 
