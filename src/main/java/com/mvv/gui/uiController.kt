@@ -5,7 +5,10 @@ import com.mvv.gui.dictionary.CachedDictionary
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.DictionaryComposition
 import com.mvv.gui.javafx.*
-import com.mvv.gui.util.useFileExt
+import com.mvv.gui.util.ActionCanceledException
+import com.mvv.gui.util.doIfNotEmpty
+import com.mvv.gui.util.doIfTrue
+import com.mvv.gui.util.withFileExt
 import com.mvv.gui.words.*
 import javafx.application.Platform
 import javafx.collections.FXCollections
@@ -40,6 +43,7 @@ class LearnWordsController (
     internal val dictionary = CachedDictionary(DictionaryComposition(allDictionaries))
 
     private val currentWords: ObservableList<CardWordEntry> = FXCollections.observableArrayList()
+    private var documentIsDirty: Boolean = false
 
     private val ignoredWords: ObservableList<String> = FXCollections.observableArrayList()
     private val ignoredWordsSorted: ObservableList<String> = SortedList(ignoredWords, String.CASE_INSENSITIVE_ORDER)
@@ -67,7 +71,7 @@ class LearnWordsController (
         val currentWordsLabelText = "File/Clipboard (%d words)"
         currentWords.addListener(ListChangeListener { pane.currentWordsLabel.text = currentWordsLabelText.format(it.list.size) })
 
-        currentWords.addListener(ListChangeListener { reanalyzeAllWords() })
+        currentWords.addListener(ListChangeListener { markDocumentIsDirty(); reanalyzeAllWords() })
 
         val ignoredWordsLabelText = "Ignored words (%d)"
         ignoredWords.addListener(ListChangeListener { pane.ignoredWordsLabel.text = ignoredWordsLabelText.format(it.list.size) })
@@ -100,10 +104,10 @@ class LearnWordsController (
 
         // Platform.runLater is used to perform analysis AFTER word card changing
         // It would be nice to find better/proper event (with already changed underlying model after edit commit)
-        val reanalyzeChangedWord: (card: CardWordEntry)->Unit = { Platform.runLater { reanalyzeOnlyWords(listOf(it)) } }
+        val doOnWordChanging: (card: CardWordEntry)->Unit = { markDocumentIsDirty(); Platform.runLater { reanalyzeOnlyWords(listOf(it)) } }
 
-        pane.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { reanalyzeChangedWord(it.rowValue) }
-        pane.toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { reanalyzeChangedWord(it.rowValue) }
+        pane.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { doOnWordChanging(it.rowValue) }
+        pane.toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { doOnWordChanging(it.rowValue) }
 
         pane.warnAboutMissedBaseWordsModeDropDown.onAction = EventHandler { reanalyzeAllWords() }
 
@@ -128,10 +132,12 @@ class LearnWordsController (
     private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
     private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = pane.warnAboutMissedBaseWordsModeDropDown.value
 
+    private fun markDocumentIsDirty() { this.documentIsDirty = true }
+
 
     private fun addKeyBindings(newScene: Scene) {
-        newScene.accelerators[openKeyCodeCombination] = Runnable { loadWordsFromFile() }
-        newScene.accelerators[saveKeyCodeCombination] = Runnable { saveAll() }
+        newScene.accelerators[openDocumentKeyCodeCombination] = Runnable { loadWordsFromFile() }
+        newScene.accelerators[saveDocumentKeyCodeCombination] = Runnable { saveAll() }
 
         newScene.accelerators[lowerCaseKeyCombination] = Runnable { toLowerCaseRow() }
 
@@ -152,7 +158,12 @@ class LearnWordsController (
     fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =
         currentWordsSelection.selectedItems.isOneOfSelectedWordsHasNoBaseWord
 
-    fun ignoreNoBaseWordInSet() = ignoreNoBaseWordInSet(currentWordsSelection.selectedItems)
+    fun ignoreNoBaseWordInSet() =
+        currentWordsSelection.selectedItems
+            .doIfNotEmpty { cards ->
+                ignoreNoBaseWordInSet(cards)
+                markDocumentIsDirty()
+            }
 
     fun addAllBaseWordsInSet() = addAllBaseWordsInSetImpl(currentWords)
     fun addBaseWordsInSetForSelected() = addAllBaseWordsInSetImpl(currentWordsSelection.selectedItems)
@@ -175,6 +186,7 @@ class LearnWordsController (
 
     fun addTranscriptions() =
         addTranscriptions(currentWords, dictionary)
+            .doIfTrue { markDocumentIsDirty() }
 
 
     fun removeSelected() {
@@ -204,6 +216,7 @@ class LearnWordsController (
         if (currentWordsList.isEditing) return
 
         wordCardsToLowerCaseRow(currentWordsSelection.selectedItems)
+        markDocumentIsDirty()
 
         //currentWordsList.sort()
         //currentWordsList.refresh()
@@ -214,12 +227,14 @@ class LearnWordsController (
 
     fun translateSelected() {
         dictionary.translateWords(currentWordsSelection.selectedItems)
+        markDocumentIsDirty()
         currentWordsList.refresh()
     }
 
 
     fun translateAll() {
         dictionary.translateWords(currentWords)
+        markDocumentIsDirty()
         currentWordsList.refresh()
     }
 
@@ -242,6 +257,8 @@ class LearnWordsController (
 
     private fun doLoadAction(loadAction: (Path)->LoadType) {
 
+        validateCurrentDocumentIsSaved("Open file")
+
         val fc = FileChooser()
         fc.title = "Select words file"
         fc.initialDirectory = dictDirectory.toFile()
@@ -259,11 +276,53 @@ class LearnWordsController (
             val loadType = loadAction(filePath)
 
             when (loadType) {
-                LoadType.Import -> { } // or reset current words file ??
-                LoadType.Open   ->
+                LoadType.Import -> markDocumentIsDirty()
+                LoadType.Open   -> {
                     // !!! Only if success !!!
                     updateCurrentWordsFile(filePath)
+                    this.documentIsDirty = false
+                }
             }
+        }
+    }
+
+    internal fun doIsCurrentDocumentIsSaved(currentAction: String = ""): Boolean =
+        try { validateCurrentDocumentIsSaved(currentAction); true } catch (_: Exception) { false }
+
+
+    /**
+     * Throws exception if document is not saved and user would cancel saving.
+     *
+     * Actually there exception is used for (less/more) flow what is an anti-pattern...
+     * but in this case it is make sense in my opinion because you do not need to write 'if'-s
+     * and can use it as assert/require flows.
+     * If you want to use boolean function you just can use doIsCurrentDocumentIsSaved().
+     */
+    private fun validateCurrentDocumentIsSaved(currentAction: String = "") {
+
+        fun throwCanceled(msg: String = "Action [$currentAction] was cancelled."): Nothing { throw ActionCanceledException(currentAction, msg)}
+
+        if (documentIsDirty) {
+            val selectedButton = showConfirmation(pane,
+                "Current words are not saved and last changes can be lost.\n" +
+                    "Do you want save current words?",
+                currentAction, ButtonType.YES, ButtonType.NO, ButtonType.CANCEL)
+
+            selectedButton.ifPresentOrElse(
+                { btn ->
+                    when (btn) {
+                        ButtonType.NO  -> { /* Nothing to do */ }
+                        ButtonType.YES -> {
+                            saveCurrentWords()
+                            if (documentIsDirty) throwCanceled("Seems save action was cancelled.")
+                        }
+                        ButtonType.CANCEL -> throwCanceled()
+                        ButtonType.CLOSE  -> throwCanceled()
+                        else -> throw IllegalStateException("Unexpected user choice [$btn].")
+                    }
+                },
+                { throwCanceled() }
+            )
         }
     }
 
@@ -271,6 +330,11 @@ class LearnWordsController (
         this.currentWordsFile = filePath
         val windowTitle = if (filePath == null) appTitle else "$appTitle - ${filePath.name}"
         setWindowTitle(pane, windowTitle)
+    }
+
+    fun newDocument() {
+        validateCurrentDocumentIsSaved("New document")
+        currentWords.clear()
     }
 
     fun loadWordsFromFile() {
@@ -282,6 +346,8 @@ class LearnWordsController (
                 "srt"          -> extractWordsFromFile(filePath, ignoredWords)
                 else           -> throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
+            // T O D O: make it async, but it is not easy because there are change listeners which also call analyzeAllWords()
+            // We need to do ANY/EVERY call to analyzeAllWords() async
             .also { analyzeAllWords(it) }
 
             currentWords.setAll(words)
@@ -391,6 +457,8 @@ class LearnWordsController (
 
         splitFilesDir.createDirectories()
         saveSplitWordCards(filePath, currentWords, splitFilesDir, settings.splitWordCountPerFile)
+
+        this.documentIsDirty = false
     }
 
     private fun doSaveCurrentWords(saveAction:(Path)->Unit) {
@@ -398,12 +466,12 @@ class LearnWordsController (
         var filePath: Path? = this.currentWordsFile
         if (filePath == null) {
             filePath = showTextInputDialog(pane, "Enter new words filename")
-                .map { dictDirectory.resolve(useFileExt(it, internalWordCardsFileExt)) }
+                .map { wordsFilename -> dictDirectory.resolve(wordsFilename.withFileExt(internalWordCardsFileExt)) }
                 .orElse(null)
         }
 
         if (filePath == null) {
-            showErrorAlert(pane, "Filename is not specified.")
+            //showErrorAlert(pane, "Filename is not specified.")
             return
         }
 
@@ -451,7 +519,7 @@ class LearnWordsController (
         val selectedFiles: List<File>? = fc.showOpenMultipleDialog(pane.scene.window)?.sorted()
 
         if (selectedFiles.isNullOrEmpty()) {
-            showInfoAlert(pane, "No files to join.")
+            //showInfoAlert(pane, "No files to join.")
             return
         }
 

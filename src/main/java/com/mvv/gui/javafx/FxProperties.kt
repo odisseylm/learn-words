@@ -54,16 +54,17 @@ enum class UpdateSet { Set, Remove }
 
 
 // optimized setter/updater helper to avoid unneeded changes and unneeded FxJava possible value change notifications
-fun <T> updateSetProperty(setProperty: KMutableProperty0<Set<T>>, value: T, action: UpdateSet) =
+fun <T> updateSetProperty(setProperty: KMutableProperty0<Set<T>>, value: T, action: UpdateSet): Boolean =
     updateSetPropertyImpl({ setProperty.get() }, { setProperty.set(it) }, value, action)
 
-fun <T> updateSetProperty(setProperty: WritableObjectValue<Set<T>>, value: T, action: UpdateSet) =
+fun <T> updateSetProperty(setProperty: WritableObjectValue<Set<T>>, value: T, action: UpdateSet): Boolean =
     updateSetPropertyImpl({ setProperty.get() }, { setProperty.set(it) }, value, action)
 
-private fun <T> updateSetPropertyImpl(get: ()->Set<T>, set: (Set<T>)->Unit, value: T, action: UpdateSet) {
+private fun <T> updateSetPropertyImpl(get: ()->Set<T>, set: (Set<T>)->Unit, value: T, action: UpdateSet): Boolean {
     val currentSetValue = get()
-    when {
-        action == UpdateSet.Set    && !currentSetValue.contains(value) -> set(currentSetValue + value)
-        action == UpdateSet.Remove &&  currentSetValue.contains(value) -> set(currentSetValue - value)
+    return when {
+        action == UpdateSet.Set    && !currentSetValue.contains(value) -> { set(currentSetValue + value); true }
+        action == UpdateSet.Remove &&  currentSetValue.contains(value) -> { set(currentSetValue - value); true }
+        else -> false
     }
 }

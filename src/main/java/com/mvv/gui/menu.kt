@@ -12,13 +12,16 @@ class MenuController (val controller: LearnWordsController) {
     fun fillMenu(): MenuBar {
 
         val fileMenu = Menu("_File", null,
+            newMenuItem("New", // new-01.png new-02.png new-03.png new-04.png new-05.png new16x16.gif new-05.gif
+                buttonIcon("/icons/new-03.png"), newDocumentKeyCodeCombination) {
+                controller.newDocument() },
             newMenuItem("Load file", "Open internal or memo-word csv, or srt file",
-                buttonIcon("/icons/open16x16.gif"), openKeyCodeCombination) {
+                buttonIcon("/icons/open16x16.gif"), openDocumentKeyCodeCombination) {
                 controller.loadWordsFromFile() },
             newMenuItem("Join files", buttonIcon("/icons/join.png")) {
                 controller.joinWords() },
             newMenuItem("Save All", "Save current file in internal and memo-word csv format and save ignored words",
-                buttonIcon("/icons/disks.png"), saveKeyCodeCombination) {
+                buttonIcon("/icons/disks.png"), saveDocumentKeyCodeCombination) {
                 controller.saveAll() },
 
             SeparatorMenuItem(),
@@ -58,6 +61,7 @@ class MenuController (val controller: LearnWordsController) {
                 controller.addTranscriptions() },
 
             SeparatorMenuItem(),
+            newMenuItem("Sort") { controller.currentWordsList.sort() },
             newMenuItem("Reanalyze") { controller.reanalyzeAllWords() },
             newMenuItem("Refresh table", buttonIcon("/icons/iu_update_obj.png")) { controller.currentWordsList.refresh() },
         )

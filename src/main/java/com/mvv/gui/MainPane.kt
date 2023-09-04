@@ -1,10 +1,7 @@
 package com.mvv.gui
 
 import com.mvv.gui.dictionary.Dictionary
-import com.mvv.gui.javafx.EmptyTextStringConverter
-import com.mvv.gui.javafx.ExTextFieldTableCell
-import com.mvv.gui.javafx.LabelStatusTableCell
-import com.mvv.gui.javafx.toolTipText
+import com.mvv.gui.javafx.*
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.*
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
@@ -16,10 +13,7 @@ import javafx.scene.control.*
 import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
-import javafx.scene.layout.BorderPane
-import javafx.scene.layout.GridPane
-import javafx.scene.layout.Priority
-import javafx.scene.layout.VBox
+import javafx.scene.layout.*
 import javafx.scene.text.Text
 import javafx.util.Callback
 import javafx.util.StringConverter
@@ -42,11 +36,11 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
     internal val currentWordsList = TableView<CardWordEntry>()
     internal val fromColumn = TableColumn<CardWordEntry, String>("English")
-    private val wordCardStatusesColumn = TableColumn<CardWordEntry, Set<WordCardStatus>>("St")
+    private val wordCardStatusesColumn = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
     internal val toColumn = TableColumn<CardWordEntry, String>("Russian")
-    private val translationCountColumn = TableColumn<CardWordEntry, Int>("n")
-    internal val transcriptionColumn = TableColumn<CardWordEntry, String>("transcription")
-    internal val examplesColumn = TableColumn<CardWordEntry, String>("examples")
+    private val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
+    internal val transcriptionColumn = TableColumn<CardWordEntry, String>("Transcription")
+    internal val examplesColumn = TableColumn<CardWordEntry, String>("Examples")
 
     internal val ignoredWordsList = ListView<String>()
     internal val allProcessedWordsList = ListView<String>()
@@ -89,7 +83,6 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         contentPane.add(currentWordsList, 0, 1, 1, 3)
         GridPane.setFillWidth(currentWordsList, true)
         GridPane.setHgrow(currentWordsList, Priority.ALWAYS)
-        currentWordsList.selectionModel.selectionMode = SelectionMode.MULTIPLE
 
 
         this.top = topPane
@@ -121,6 +114,11 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
 
         currentWordsList.id = "currentWords"
         currentWordsList.isEditable = true
+        currentWordsList.selectionModel.selectionMode = SelectionMode.MULTIPLE
+
+        GridPane.setFillWidth(currentWordsList, true)
+        GridPane.setHgrow(currentWordsList, Priority.ALWAYS)
+        currentWordsList.prefWidth = 10_000.0
 
         fromColumn.id = "fromColumn"
         fromColumn.isEditable = true
@@ -140,6 +138,9 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         translationCountColumn.id = "translationCountColumn"
         translationCountColumn.isEditable = false
         translationCountColumn.cellValueFactory = Callback { p -> p.value.translationCountProperty }
+
+        translationCountColumn.graphic = Label("N").also { it.tooltip = Tooltip("Translation count") }
+        translationCountColumn.styleClass.add("translationCountColumn")
 
         translationCountColumn.cellFactory = LabelStatusTableCell.forTableColumn { cell, _, translationCount ->
             val translationCountStatus = translationCount?.toTranslationCountStatus ?: TranslationCountStatus.Ok
@@ -173,6 +174,9 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         wordCardStatusesColumn.isEditable = false
         wordCardStatusesColumn.cellValueFactory = PropertyValueFactory("wordCardStatuses")
         wordCardStatusesColumn.cellValueFactory = Callback { p -> p.value.wordCardStatusesProperty }
+
+        wordCardStatusesColumn.graphic = Label("S").also { it.tooltip = Tooltip("Status") }
+        wordCardStatusesColumn.styleClass.add("wordCardStatusesColumn")
 
         wordCardStatusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
 

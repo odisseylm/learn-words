@@ -4,6 +4,7 @@ import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.extractExamples
 import com.mvv.gui.javafx.UpdateSet
 import com.mvv.gui.javafx.updateSetProperty
+import com.mvv.gui.util.trimToNull
 import javafx.collections.ObservableList
 import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
@@ -11,6 +12,7 @@ import javafx.scene.input.DataFormat
 import java.io.FileReader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Optional
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.notExists
 import kotlin.streams.asSequence
@@ -77,13 +79,25 @@ internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
 }
 
 
-internal fun addTranscriptions(wordCards: MutableList<CardWordEntry>, dictionary: Dictionary) {
-    val cardsWithoutTranscription = wordCards.filter { it.transcription.isEmpty() }
-    cardsWithoutTranscription.forEach {
-        try { it.transcription = dictionary.translateWord(it.from).transcription }
-        catch (ex: Exception) { log.warn("Error of getting transcription for [${it.from}].", ex) }
+/** Returns true if any transcription is added. */
+internal fun addTranscriptions(wordCards: MutableList<CardWordEntry>, dictionary: Dictionary): Boolean {
+    val cardsWithoutTranscription = wordCards.filter { it.transcription.isBlank() }
+
+    cardsWithoutTranscription.forEach { card ->
+        getTranscription(card.from, dictionary)
+            .ifPresent { card.transcription = it }
     }
+
+    return cardsWithoutTranscription.any { it.transcription.isNotBlank() }
 }
+
+
+private fun getTranscription(word: String, dictionary: Dictionary): Optional<String> =
+    try { Optional.ofNullable(
+        dictionary.translateWord(word).transcription.trimToNull()) }
+    catch (ex: Exception) {
+        log.warn("Error of getting transcription for [${word}].", ex)
+        Optional.empty() }
 
 
 internal fun Dictionary.translateWord(word: String): CardWordEntry =

@@ -48,6 +48,14 @@ private fun showAlert(parent: Node, msg: String, title: String) {
     alert.showAndWait()
 }
 
+fun showConfirmation(parent: Node, msg: String, title: String, vararg buttonTypes: ButtonType): Optional<ButtonType> {
+    val alert = Alert(Alert.AlertType.CONFIRMATION, msg, *buttonTypes)
+    alert.title = title
+
+    initDialogParentAndModality(alert, parent)
+    return alert.showAndWait()
+}
+
 
 @Suppress("unused")
 fun columnConstraints(priority: Priority? = null, hAlignment: HPos? = null, fillWidth: Boolean? = null): ColumnConstraints {

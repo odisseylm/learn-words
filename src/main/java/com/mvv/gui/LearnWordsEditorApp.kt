@@ -1,6 +1,8 @@
 package com.mvv.gui
 
+import com.mvv.gui.javafx.installJavaFxLogger
 import javafx.application.Application
+import javafx.event.EventHandler
 import javafx.scene.Scene
 import javafx.stage.Screen
 import javafx.stage.Stage
@@ -12,8 +14,10 @@ class LearnWordsEditorApp : Application() {
 
     private fun showMain(primaryStage: Stage) {
 
+        installJavaFxLogger()
+
         val mainWordsPane = MainWordsPane()
-        LearnWordsController(mainWordsPane)
+        val controller = LearnWordsController(mainWordsPane)
 
         val scene = Scene(mainWordsPane)
         primaryStage.setScene(scene)
@@ -31,6 +35,10 @@ class LearnWordsEditorApp : Application() {
         primaryStage.isMaximized = settings.isMaximized
         if (!primaryStage.isMaximized)
             primaryStage.centerOnScreen()
+
+        primaryStage.onCloseRequest = EventHandler { closeRequestEvent ->
+            if (!controller.doIsCurrentDocumentIsSaved("Close application")) closeRequestEvent.consume()
+        }
 
         primaryStage.show()
     }

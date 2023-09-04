@@ -30,3 +30,8 @@ fun Array<String>.getOrEmpty(index: Int) = this.getOrElse(index) { "" }
 @Suppress("UNCHECKED_CAST")
 fun <K, V> Sequence<Pair<K?,V?>>.filterNotNullPairValue(): Sequence<Pair<K,V>> =
     this.filter { it.first != null && it.second != null } as Sequence<Pair<K,V>>
+
+
+fun <T> Iterable<T>.doIfNotEmpty(action: (Iterable<T>)->Unit) {
+    if (this.iterator().hasNext()) action(this)
+}

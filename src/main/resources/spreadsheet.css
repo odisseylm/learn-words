@@ -74,6 +74,21 @@
     /*-fx-graphic: url("icons/exclamation-4.png");*/
 }
 
+#currentWords .column-header > .label {
+    -fx-padding: 0 0 0 5;
+}
+
+#currentWords .wordCardStatusesColumn .label {
+    -fx-alignment: CENTER;
+    -fx-padding: 0 15 0 15;
+}
+
+#currentWords .translationCountColumn .label {
+    -fx-alignment: CENTER;
+    -fx-padding: 0 15 0 15;
+}
+
+
 /* That all does NOT work properly. Table column will have required width, */
 /* but it become un-sizable and looks strange and total table width is not calculated properly. */
 /* See https://stackoverflow.com/questions/54214655/problems-with-setting-tablecolumn-width-in-fxml-using-css */

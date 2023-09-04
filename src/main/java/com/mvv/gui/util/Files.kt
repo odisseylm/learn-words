@@ -15,5 +15,7 @@ fun useFileExt(filename: String, fileExt: String): String {
     return if (filename.lowercase().endsWith(fileExtFixed)) filename else filename + fileExtFixed
 }
 
+fun String.withFileExt(fileExt: String): String = useFileExt(this, fileExt)
+
 
 val userHome: Path get() = Path.of(System.getProperty("user.home"))
