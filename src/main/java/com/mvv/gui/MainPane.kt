@@ -15,6 +15,7 @@ import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.*
 import javafx.scene.text.Text
+import javafx.scene.text.TextFlow
 import javafx.util.Callback
 import javafx.util.StringConverter
 import org.apache.commons.lang3.NotImplementedException
@@ -25,7 +26,7 @@ const val appTitle = "Words"
 //private val log = mu.KotlinLogging.logger {}
 
 
-class MainWordsPane : BorderPane() /*GridPane()*/ {
+class MainWordsPane : BorderPane() {
 
     internal val currentWordsLabel = Text("File/Clipboard")
     internal val ignoredWordsLabel = Text("Ignored words")
@@ -46,6 +47,20 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
     internal val allProcessedWordsList = ListView<String>()
 
     internal val removeIgnoredButton = Button("Remove ignored")
+
+    private val warnWordCountsTextFormat = " (%d words with warning)"
+    private val warnWordCountsText = Text(warnWordCountsTextFormat)
+    private val warnWordCountsTextItems = listOf(
+        Text("      "),
+        ImageView("/icons/warning_obj.gif").also { it.translateY = 3.0 },
+        warnWordCountsText,
+    )
+
+    internal fun updateWarnWordCount(wordCountWithWarning: Int) {
+        val shouldBeVisible = (wordCountWithWarning != 0)
+        warnWordCountsTextItems.map { it.isVisible = shouldBeVisible }
+        warnWordCountsText.text = warnWordCountsTextFormat.format(wordCountWithWarning)
+    }
 
     internal val warnAboutMissedBaseWordsModeDropDown = ComboBox<WarnAboutMissedBaseWordsMode>().also {
         it.items.setAll(com.mvv.gui.words.WarnAboutMissedBaseWordsMode.values().toList())
@@ -73,8 +88,10 @@ class MainWordsPane : BorderPane() /*GridPane()*/ {
         contentPane.padding = Insets(10.0, 10.0, 10.0, 10.0)
 
         val currentWordsListLabels = BorderPane()
+        val textFlow = TextFlow(*(listOf(currentWordsLabel) + warnWordCountsTextItems).toTypedArray())
+        updateWarnWordCount(0) // hide by default
 
-        currentWordsListLabels.left = currentWordsLabel
+        currentWordsListLabels.left = textFlow
         setAlignment(currentWordsLabel, Pos.BOTTOM_LEFT)
 
         currentWordsListLabels.right = warnAboutMissedBaseWordsModeDropDown

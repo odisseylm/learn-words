@@ -162,6 +162,7 @@ class LearnWordsController (
         currentWordsSelection.selectedItems
             .doIfNotEmpty { cards ->
                 ignoreNoBaseWordInSet(cards)
+                recalculateWarnedWordsCount()
                 markDocumentIsDirty()
             }
 
@@ -198,9 +199,18 @@ class LearnWordsController (
 
     private fun analyzeAllWords(allWords: Iterable<CardWordEntry>) =
         analyzeWordCards(allWords, currentWarnAboutMissedBaseWordsMode, allWords, dictionary)
-    internal fun reanalyzeAllWords() = analyzeAllWords(currentWords)
+            .also { recalculateWarnedWordsCount() }
+    internal fun reanalyzeAllWords() =
+        analyzeAllWords(currentWords)
+            .also { recalculateWarnedWordsCount() }
     private fun reanalyzeOnlyWords(words: Iterable<CardWordEntry>) =
         analyzeWordCards(words, currentWarnAboutMissedBaseWordsMode, currentWords, dictionary)
+            .also { recalculateWarnedWordsCount() }
+
+    private fun recalculateWarnedWordsCount() {
+        val wordCountWithWarning = currentWords.count { it.hasWarning }
+        pane.updateWarnWordCount(wordCountWithWarning)
+    }
 
     private fun startEditingFrom() = startEditingColumnCell(pane.fromColumn)
     private fun startEditingTo() = startEditingColumnCell(pane.toColumn)

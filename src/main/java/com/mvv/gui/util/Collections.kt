@@ -9,6 +9,13 @@ fun <K, V> Map<K, V>.containsOneOfKeys(vararg keys: K): Boolean =
     this.containsOneOfKeys(keys.asIterable())
 
 
+fun <V> Collection<V>.containsOneOf(values: Iterable<V>): Boolean =
+    values.any { this.contains(it) }
+
+fun <V> Collection<V>.containsOneOf(vararg values: V): Boolean =
+    values.any { this.contains(it) }
+
+
 /**
  * Use it carefully with empty keys!
  * It returns false for empty keys, but it may be a bit of arguable behavior (for you).

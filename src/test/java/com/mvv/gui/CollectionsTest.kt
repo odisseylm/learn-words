@@ -3,6 +3,7 @@ package com.mvv.gui
 import com.mvv.gui.javafx.UpdateSet
 import com.mvv.gui.javafx.updateSetProperty
 import com.mvv.gui.util.containsAllKeys
+import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.containsOneOfKeys
 import com.mvv.gui.util.filterNotNullPairValue
 import javafx.beans.value.WritableObjectValue
@@ -19,6 +20,7 @@ class CollectionsTest {
 
         val map = mapOf(1 to 1, 2 to 2, 3 to 3)
 
+        assertThat(map.containsOneOfKeys()).isFalse()
         assertThat(map.containsOneOfKeys(1)).isTrue()
         assertThat(map.containsOneOfKeys(1, 4)).isTrue()
         assertThat(map.containsOneOfKeys(4, 2)).isTrue()
@@ -29,6 +31,26 @@ class CollectionsTest {
         assertThat(map.containsOneOfKeys(4, 5)).isFalse()
 
         assertThat(map.containsOneOfKeys(listOf(1, 2))).isTrue()
+    }
+
+    @Test
+    @DisplayName("containsOneOf")
+    fun test_containsOneOf() {
+
+        val map = setOf(1, 2, 3)
+
+        assertThat(map.containsOneOf()).isFalse()
+        assertThat(map.containsOneOf(1)).isTrue()
+        assertThat(map.containsOneOf(1, 4)).isTrue()
+        assertThat(map.containsOneOf(4, 2)).isTrue()
+        assertThat(map.containsOneOf(1, 2)).isTrue()
+        assertThat(map.containsOneOf(2, 1)).isTrue()
+
+        assertThat(map.containsOneOf(4)).isFalse()
+        assertThat(map.containsOneOf(4, 5)).isFalse()
+
+        assertThat(map.containsOneOf(listOf())).isFalse()
+        assertThat(map.containsOneOf(listOf(1, 2))).isTrue()
     }
 
     @Test

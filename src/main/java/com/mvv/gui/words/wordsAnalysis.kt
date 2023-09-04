@@ -18,6 +18,8 @@ val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contain
 val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(BaseWordDoesNotExist)
 val CardWordEntry.showNoBaseWordInSet: Boolean get() = !this.ignoreNoBaseWordInSet && this.noBaseWordInSet
 
+val CardWordEntry.hasWarning: Boolean get() = this.showNoBaseWordInSet ||
+        this.wordCardStatuses.containsOneOf(NoTranslation, TranslationIsNotPrepared)
 
 // These parts are usually present after getting translation from dictionary
 // but them are useless (even boring/garbage) during learning,
