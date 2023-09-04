@@ -549,7 +549,7 @@ class LearnWordsController (
 
     private fun loadExistentWords() {
         loadIgnored()
-        allProcessedWords.setAll(loadWordsFromAllExistentDictionaries())
+        allProcessedWords.setAll(loadWordsFromAllExistentDictionaries(null))
     }
 
 

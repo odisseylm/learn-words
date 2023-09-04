@@ -14,6 +14,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Optional
 import kotlin.io.path.isRegularFile
+import kotlin.io.path.name
 import kotlin.io.path.notExists
 import kotlin.streams.asSequence
 
@@ -183,15 +184,17 @@ internal fun extractWordsFromClipboard(clipboard: Clipboard, ignoredWords: Colle
 
 
 
-internal fun loadWordsFromAllExistentDictionaries(skipFiles: Collection<Path> = emptyList()): List<String> {
+internal fun loadWordsFromAllExistentDictionaries(baseWordsFilename: String?): List<String> {
 
     if (dictDirectory.notExists()) return emptyList()
 
     val allWordsFilesExceptIgnored = Files.list(dictDirectory)
         .asSequence()
         .filter { it.isRegularFile() }
-        .filter { it !in skipFiles && it != ignoredWordsFile }
+        //.filter { it !in skipFiles && it != ignoredWordsFile }
+        .filter { it != ignoredWordsFile }
         .filter { it.isInternalCsvFormat || it.isMemoWordFile }
+        .filter { baseWordsFilename.isNullOrBlank() || !it.name.contains(baseWordsFilename) }
         .sorted()
         .toList()
 
@@ -207,15 +210,7 @@ internal fun loadWordsFromAllExistentDictionaries(skipFiles: Collection<Path> = 
 
 fun removeWordsFromOtherSetsFromCurrentWords(currentWords: MutableList<CardWordEntry>, currentWordsFile: Path?) {
 
-    val skipFiles: Collection<Path> = currentWordsFile?.let { listOf(
-        it,
-        it.useFilenameSuffix(memoWordFileExt),
-        it.useFilenameSuffix(internalWordCardsFileExt),
-        it.useFilenameSuffix(plainWordsFileExt),
-    ) }
-        ?: emptyList()
-
-    val toRemove = loadWordsFromAllExistentDictionaries(skipFiles)
+    val toRemove = loadWordsFromAllExistentDictionaries(currentWordsFile?.baseWordsFilename)
     val toRemoveAsSet = toRemove.asSequence()
         .map { it.trim() }
         .filter { it.isNotEmpty() }
