@@ -406,9 +406,11 @@
     -fx-text-fill: #AFB1B3;
     -fx-min-height: 20;
     min-height: 20;
-    -fx-pref-height: 20;
-    -fx-padding: 0 5 0 5;
-    padding: 0 5 0 5;
+    /*-fx-pref-height: 20;*/
+    /*-fx-padding: 0 5 0 5;*/
+    /*padding: 0 5 0 5;*/
+    -fx-padding: 2 12 2 12;
+    padding: 2 12 2 12;
     -fx-cursor: HAND;
     cursor: HAND;
 }

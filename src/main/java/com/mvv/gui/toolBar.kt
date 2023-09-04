@@ -23,7 +23,7 @@ class ToolBarController (val controller: LearnWordsController) {
         Label("  "),
 
         newButton("To ignore >>", "Move selected words to ignored",
-            buttonIcon("icons/rem_all_co.png")) { controller.moveToIgnored() }
+            buttonIcon("icons/rem_all_co.png")) { controller.moveSelectedToIgnored() }
             .also { it.styleClass.add("middleBarButton") },
         newButton("Translate", "Translate all words", buttonIcon("/icons/forward_nav.png")) {
             controller.translateAll() },

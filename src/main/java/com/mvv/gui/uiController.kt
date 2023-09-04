@@ -238,7 +238,7 @@ class LearnWordsController (
         currentWordsList.refresh()
     }
 
-    private fun removeIgnoredFromCurrentWords() {
+    internal fun removeIgnoredFromCurrentWords() {
         val toRemove = currentWords.asSequence()
             .filter { word -> ignoredWordsSorted.contains(word.from) }
             .toList()
@@ -366,7 +366,7 @@ class LearnWordsController (
     }
 
 
-    fun moveToIgnored() {
+    fun moveSelectedToIgnored() {
 
         val selectedWords = currentWordsSelection.selectedItems.toList()
 

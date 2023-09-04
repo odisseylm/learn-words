@@ -42,7 +42,7 @@ class ContextMenuController (val controller: LearnWordsController) {
             newMenuItem("Lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
                 controller.toLowerCaseRow() },
             newMenuItem("To ignore >>", buttonIcon("icons/rem_all_co.png")) {
-                controller.moveToIgnored() },
+                controller.moveSelectedToIgnored() },
             newMenuItem("Remove", buttonIcon("icons/cross-1.png")) {
                 controller.removeSelected() },
             translateMenuItem,

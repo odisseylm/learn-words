@@ -42,9 +42,9 @@ class MenuController (val controller: LearnWordsController) {
         )
 
         val wordsMenu = Menu("_Words", null,
-            newMenuItem("To ignore >>", "Move selected words to ignored",
-                buttonIcon("icons/rem_all_co.png")) { controller.moveToIgnored() }
-                .also { it.styleClass.add("middleBarButton") },
+            newMenuItem("Move to ignored", "Move selected words to ignored.",
+                buttonIcon("icons/rem_all_co.png")) { controller.moveSelectedToIgnored() },
+            newMenuItem("Remove ignored", "Removed ignored words from current words.") { controller.removeIgnoredFromCurrentWords() },
             newMenuItem("Translate Selected", buttonIcon("/icons/forward_nav.png"), translateSelectedKeyCombination) {
                 controller.translateSelected() },
             newMenuItem("Translate All", "Translate all words", buttonIcon("/icons/forward_nav.png")) {
