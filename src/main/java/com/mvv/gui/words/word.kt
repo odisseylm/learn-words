@@ -12,16 +12,23 @@ import javafx.scene.paint.Color
 
 class CardWordEntry {
     val fromProperty = SimpleStringProperty(this, "from", "")
+    val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")
     val toProperty = SimpleStringProperty(this, "to", "")
     val transcriptionProperty = SimpleStringProperty(this, "transcription", "")
     val translationCountProperty = AroundReadOnlyIntegerProperty<String>(this, "translationCount", toProperty) {
         to -> to?.translationCount ?: 0 }
     val examplesProperty = SimpleStringProperty(this, "examples", "")
     val wordCardStatusesProperty = SimpleObjectProperty<Set<WordCardStatus>>(this, "wordCardStatuses", emptySet())
+    val predefinedSetsProperty = SimpleObjectProperty<Set<PredefinedSets>>(this, "predefinedSets", emptySet())
+    val sourcePositionsProperty = SimpleObjectProperty<List<Int>>(this, "sourcePositions", emptyList())
+    val sourceSentencesProperty = SimpleObjectProperty<List<String>>(this, "sourceSentences", emptyList())
 
     var from: String
         get() = fromProperty.get()
         set(value) = fromProperty.set(value)
+    var fromWithPreposition: String
+        get() = fromWithPrepositionProperty.get()
+        set(value) = fromWithPrepositionProperty.set(value)
     var to: String
         get() = toProperty.get()
         set(value) = toProperty.set(value)
@@ -41,6 +48,18 @@ class CardWordEntry {
         set(value) {
             wordCardStatusesProperty.set(value)
         }
+
+    var predefinedSets: Set<PredefinedSets>
+        get() = predefinedSetsProperty.get()
+        set(value) = predefinedSetsProperty.set(value)
+
+    var sourcePositions: List<Int>
+        get() = sourcePositionsProperty.get()
+        set(value) = sourcePositionsProperty.set(value)
+
+    var sourceSentences: List<String>
+        get() = sourceSentencesProperty.get()
+        set(value) = sourceSentencesProperty.set(value)
 
     // for showing in tooltip. It is filled during word cards analysis.
     @Transient
@@ -126,4 +145,10 @@ enum class WordCardStatus (
     companion object {
         val allCssClasses = WordCardStatus.values().map { it.cssClass }
     }
+}
+
+
+enum class PredefinedSets {
+    DifficultToListen,
+    DifficultSense,
 }

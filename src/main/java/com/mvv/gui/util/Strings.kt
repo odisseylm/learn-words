@@ -2,13 +2,14 @@ package com.mvv.gui.util
 
 
 
-fun String.endsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.endsWith(it) }
+fun <S: CharSequence> S.endsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.endsWith(it) }
+fun <S: CharSequence> S.endsWithOneOf(vararg suffixes: String): Boolean = endsWithOneOf(suffixes.asIterable())
 
-fun String.startsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.startsWith(it) }
-fun String.startsWithOneOf(vararg suffixes: String): Boolean = this.startsWithOneOf(suffixes.asIterable())
+fun <S: CharSequence> S.startsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.startsWith(it) }
+fun <S: CharSequence> S.startsWithOneOf(vararg suffixes: String): Boolean = this.startsWithOneOf(suffixes.asIterable())
 
-fun String.containsOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.contains(it) }
-fun String.containsOneOf(vararg suffixes: String): Boolean = this.containsOneOf(suffixes.asIterable())
+fun <S: CharSequence> S.containsOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.contains(it) }
+fun <S: CharSequence> S.containsOneOf(vararg suffixes: String): Boolean = this.containsOneOf(suffixes.asIterable())
 
 
 fun String.removeSuffixCaseInsensitive(suffix: String): String =
@@ -17,6 +18,20 @@ fun String.removeSuffixCaseInsensitive(suffix: String): String =
         this.lowercase().endsWith(suffix.lowercase()) -> this.substring(0, this.length - suffix.length)
         else -> this
     }
+
+
+fun CharSequence.removeSuffixesRepeatably(vararg suffixes: String): CharSequence {
+    var s = this
+
+    do {
+        val changed = suffixes
+            .find { s.endsWith(it) }
+            ?.let { s.removeSuffix(it) }
+            ?: return s
+
+        s = changed
+    } while (true)
+}
 
 
 fun <S: CharSequence> S.ifNotBlank(action: (S)->S): S = if (this.isBlank()) this else action(this)

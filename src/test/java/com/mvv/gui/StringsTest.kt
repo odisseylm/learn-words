@@ -31,6 +31,7 @@ class StringsTest {
     fun test_endsWithOneOf() {
         assertThat("qwerty.txt".endsWithOneOf(listOf(".txt", ".csv"))).isTrue()
         assertThat("qwerty.csv".endsWithOneOf(listOf(".txt", ".csv"))).isTrue()
+        assertThat("qwerty.csv".endsWithOneOf(".txt", ".csv")).isTrue()
 
         assertThat("qwerty.csv".endsWithOneOf(listOf("qwerty"))).isFalse()
 

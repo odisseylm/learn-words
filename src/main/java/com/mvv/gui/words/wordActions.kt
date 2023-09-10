@@ -164,6 +164,67 @@ internal fun extractWordsFromText(content: CharSequence, ignoredWords: Collectio
         .toList()
 
 
+internal fun extractWordsFromText_New(content: CharSequence, ignoredWords: Collection<String>): List<CardWordEntry> =
+    TextParserEx()
+        .parse(content)
+        .asSequence()
+        .flatMap { extractNeededWords(it) }
+        .flatMap { it.toCardWordEntries() }
+        .filter { !ignoredWords.contains(it.from) }
+        .toList()
+
+
+private data class WordInternal (
+    val word: WordEntry,
+    val wordWithPreposition: WordEntry?,
+) {
+    fun toCardWordEntries(): List<CardWordEntry> =
+        listOfNotNull(fillCardFrom(word), wordWithPreposition?.let { fillCardFrom(it) })
+}
+
+private fun fillCardFrom(word: WordEntry): CardWordEntry =
+    CardWordEntry(word.word, "").also {
+        it.sourcePositions = listOf(word.position)
+        it.sourceSentences = listOf(word.sentence.text.toString()) // TODO: make sure that the same String instance is used
+    }
+
+
+private fun extractNeededWords(sentence: Sentence): List<WordInternal> {
+
+    val result = mutableListOf<WordInternal>()
+
+    sentence.allWords.forEachIndexed { index, wordEntry ->
+        if (wordEntry.word.isTranslatable) {
+            val preposition: String? = extractPreposition(sentence.allWords, index + 1)
+
+            result.add(WordInternal(
+                wordEntry,
+                preposition?.let { WordEntry(wordEntry.word + " " + preposition, wordEntry.position, wordEntry.sentence) }
+            ))
+        }
+    }
+
+    return result
+}
+
+fun extractPreposition(words: List<WordEntry>, index: Int): String? {
+    val possiblePrepositions: List<WordSequence> = prepositions
+    val preposition: WordSequence? = possiblePrepositions.find { words.containsWordSequence(index, it) }
+    return preposition?.asText
+}
+
+private fun List<WordEntry>.containsWordSequence(sequenceIndex: Int, wordSequence: WordSequence): Boolean {
+
+    if (this.lastIndex < sequenceIndex + wordSequence.size) return false
+
+    for (i in wordSequence.indices) {
+        if (this[sequenceIndex + i].word != wordSequence[i]) return false
+    }
+
+    return true
+}
+
+
 internal fun extractWordsFromFile(filePath: Path, ignoredWords: Collection<String>): List<CardWordEntry> =
     FileReader(filePath.toFile(), Charsets.UTF_8)
         .use { r -> extractWordsFromText(r.readText(), ignoredWords) } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
