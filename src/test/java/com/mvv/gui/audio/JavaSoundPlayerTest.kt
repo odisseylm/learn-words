@@ -17,16 +17,25 @@ private val log = mu.KotlinLogging.logger {}
 @Disabled("for manual testing")
 class JavaSoundPlayerTest {
     // codec: WAV, Channels: Mono, Sample rate: 48000 Hz, Bit rate: 768 kbps
-    private val difficultWavPath = "/home/vmelnykov/projects/words/learn-words/src/test/resources/goodQualityButInterrupted.wav"
+    private val difficultWavPath  = "/home/vmelnykov/projects/words/learn-words/src/test/resources/goodQualityButInterrupted.wav"
+    private val difficultWav2Path = "/home/vmelnykov/projects/words/learn-words/src/test/resources/cmu-bdl-hsmm - cmu-bdl-hsmm en_US male hmm.wav"
 
     // codec: WAV, Channels: Mono, Sample rate: 16000 Hz, Bit rate: 256 kbps
     private val easyWavPath = "/home/vmelnykov/projects/words/learn-words/src/test/resources/badQualityButNonInterrupted.wav"
 
     @Test
-    fun play_byFilePath_Sync() {
+    fun playDifficult01_byFilePath_Sync() {
         JavaSoundPlayer(PlayingMode.Sync).play(AudioSource(Path.of(difficultWavPath)))
 
         JavaSoundPlayer(PlayingMode.Sync).play(AudioSource(Path.of(difficultWavPath)))
+        Thread.sleep(2000) // to hear artifacts of unexpected sound
+    }
+
+    @Test
+    fun playDifficult02_byFilePath_Sync() {
+        JavaSoundPlayer(PlayingMode.Sync).play(AudioSource(Path.of(difficultWav2Path)))
+
+        JavaSoundPlayer(PlayingMode.Sync).play(AudioSource(Path.of(difficultWav2Path)))
         Thread.sleep(2000) // to hear artifacts of unexpected sound
     }
 

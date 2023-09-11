@@ -53,7 +53,7 @@ class MidDictionary(val source: MidDictionarySource) : Dictionary {
 
     override fun find(word: String): DictionaryEntry = findImpl(word.trim().lowercase())
 
-    // T O D O: add 'S' support ot at least test/play with it ))
+    // T O D O: add 'S' (now 'B' used) support or at least test/play with it ))
 
     private fun findImpl(word: String): DictionaryEntry {
 

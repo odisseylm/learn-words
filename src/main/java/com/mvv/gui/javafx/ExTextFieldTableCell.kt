@@ -82,7 +82,6 @@ class ExTextFieldTableCell<S, T>
 
     init {
         styleClass.add("text-field-table-cell")
-        // !!! after 'private val converter' TODO: refactor this strange behavior/dependency
         setConverter(converter)
     }
 

@@ -68,6 +68,23 @@ Run application
  - `mvn exec:java`
 
 
+***
+
+Speech synthesizers
+ - synesthesiam/marytts
+   - https://hub.docker.com/r/synesthesiam/marytts
+   - `docker pull synesthesiam/marytts`
+   - `docker run -it -p 59125:59125 synesthesiam/marytts:5.2 --voice cmu-slt-hsmm`
+ - MaryTTS 5.2 with unit selection and HSMM Voices
+   - `docker pull andreibosco/marytts`
+   - https://hub.docker.com/r/andreibosco/marytts 
+   - To run: `docker run -it -p 59125:59125 synesthesiam/marytts:5.2`
+   - To run: `docker run -it -p 59125:59125 synesthesiam/marytts:5.2 --voice cmu-slt-hsmm --voice cmu-bdl-hsmm --voice cmu-rms-hsmm --voice dfki-obadiah-hsmm --voice dfki-poppy-hsmm --voice dfki-prudence-hsmm --voice dfki-spike-hsmm`
+   - A list of voices can be obtained with: `docker run -it synesthesiam/marytts:5.2 --voices`
+ - Mary-TTS Server
+   - https://hub.docker.com/r/sepia/marytts
+   - `docker pull sepia/marytts`
+   - `?sudo? docker run --rm --name=marytts -p 59125:80 -it sepia/marytts:latest`
 
 ***
 

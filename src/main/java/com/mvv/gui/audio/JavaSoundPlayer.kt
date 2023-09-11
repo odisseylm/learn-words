@@ -44,14 +44,15 @@ class JavaSoundPlayer (val playingMode: PlayingMode) : AudioPlayer /*, AutoClose
 
         clip.open(audioStream)
 
-        if (audioStream.format.sampleRate <= 16000.0)
-            playByStart(clip)
-        else {
+        // I cannot understand where it works properly using just Clip.start()
+        //if (audioStream.format.sampleRate <= 16000.0)
+        //    clip.start()
+        //else {
             // JavaSound bug!
             // Standard approach does not work for such 'wav' files: Sample rate: 48000 Hz, Bit rate: 768 kbps
             playByLoopAndManualStopOnSecondPlaying(clip)
             //playByLoopPoints(clip)
-        }
+        //}
 
         if (playingMode == PlayingMode.Sync)
             syncLatch.await()
@@ -61,12 +62,10 @@ class JavaSoundPlayer (val playingMode: PlayingMode) : AudioPlayer /*, AutoClose
         // !!! thread-safe java forEach !!!
         clips.forEach(Consumer { it.stop(); it.close() })
 
-    // This public official approach does not work for audio
-    // codec: WAV, Channels: Mono, Sample rate: 48000 Hz, Bit rate: 768 kbps
+    // The public official standard Clip.start() approach does not work for audio some audios.
+    //  * codec: WAV, Channels: Mono, Sample rate: 48000 Hz, Bit rate: 768 kbps
+    //  * and some others...
     //
-    private fun playByStart(clip: Clip) = clip.start()
-
-    // See the comment for playByStart()
     // Reliable workaround but if CPU is busy user can hear beginning of audio clip again.
     private fun playByLoopAndManualStopOnSecondPlaying(clip: Clip) {
         val lengthMs = clip.microsecondLength / 1000
@@ -80,11 +79,14 @@ class JavaSoundPlayer (val playingMode: PlayingMode) : AudioPlayer /*, AutoClose
         }
     }
 
-    // See the comment for playByStart()
-    // Workaround not reliable... Clip can be interrupted in 0.5 sec.
+    // The public official standard Clip.start() approach does not work for audio some audios.
+    //  * codec: WAV, Channels: Mono, Sample rate: 48000 Hz, Bit rate: 768 kbps
+    //  * and some others...
+    //
+    // This simple workaround not reliable... Clip can be interrupted in 0.5 sec.
     @Suppress("unused")
     private fun playByLoopPoints(clip: Clip) {
-        clip.setLoopPoints((clip.frameLength / 500) * 500, clip.frameLength - 1) // audioClip.frameLength - 50)
+        clip.setLoopPoints((clip.frameLength / 500) * 500, clip.frameLength - 1)
         clip.loop(1)
     }
 

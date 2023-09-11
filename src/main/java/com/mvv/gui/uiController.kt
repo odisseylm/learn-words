@@ -66,7 +66,6 @@ class LearnWordsController (
                 "\n---------------------------------------------------\n\n"
         )
 
-        pane.dictionary = dictionary
 
         val currentWordsLabelText = "File/Clipboard (%d words)"
         currentWords.addListener(ListChangeListener { pane.currentWordsLabel.text = currentWordsLabelText.format(it.list.size) })

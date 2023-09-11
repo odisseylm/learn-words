@@ -1,4 +1,4 @@
-package com.mvv.gui.words
+package com.mvv.gui.audio
 
 
 interface SpeechSynthesizer {

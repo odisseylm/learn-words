@@ -215,16 +215,20 @@ private val abbreviations: List<AbbreviationRule> = sequenceOf(
 
 private const val possibleSentenceEndChars = ".?!"
 
-private fun isSentenceEnd(text: CharSequence, position: Int): Boolean {
+private fun isSentenceEnd(text: CharSequence, position: Int, sentenceEndRule: SentenceEndRule): Boolean {
     val char = text[position]
-    if (char == '.')
-        Math.random()
-    if (!possibleSentenceEndChars.contains(char)) return false
 
-    if (isPartOfAbbreviation(text, position)) return false
-    if (isPartOfNumber(text, position)) return false
+    if (sentenceEndRule.byLineBreak && char == '\n') return true
 
-    return nextCharsAreSentenceBeginning(text, position)
+    if (sentenceEndRule.byDot) {
+        if (!possibleSentenceEndChars.contains(char)) return false
+
+        if (isPartOfAbbreviation(text, position)) return false
+        if (isPartOfNumber(text, position)) return false
+
+        return nextCharsAreSentenceBeginning(text, position, sentenceEndRule)
+    }
+    return false
 }
 
 
@@ -234,17 +238,26 @@ private fun CharSequence.prevChar(currentPosition: Int): Char = this[currentPosi
 private fun CharSequence.hasNextChar(currentPosition: Int): Boolean = currentPosition < this.length - 1
 private fun CharSequence.nextChar(currentPosition: Int): Char = this[currentPosition + 1]
 
-fun nextCharsAreSentenceBeginning(text: CharSequence, position: Int): Boolean {
+
+/** 'byDot' means also '!' or '?'. */
+enum class SentenceEndRule (val byDot: Boolean, val byLineBreak: Boolean) {
+    ByEndingDot(true, false),
+    ByLineBreak(false, true),
+    ByEndingDotOrLineBreak(true, true),
+}
+
+fun nextCharsAreSentenceBeginning(text: CharSequence, position: Int, sentenceEndRule: SentenceEndRule): Boolean {
 
     if (text.hasNextChar(position) && text.nextChar(position) in possibleSentenceEndChars) return false
 
     for (charIndex in position + 1 until text.length) {
         val ch = text[charIndex]
         when {
-            ch == '\n' -> return true // TODO: make it configured to use '\n' or not
+            ch == '\n' && sentenceEndRule.byLineBreak -> return true
             Character.isSpaceChar(ch) -> continue
-            ch.isDigit() -> return true
-            ch.isUpperCase() -> return true
+            ch.isDigit()     -> return true
+            ch.isLetter() && ch.isUpperCase() -> return true
+            ch.isLetter() && ch.isLowerCase() -> return false
         }
     }
 
@@ -298,17 +311,17 @@ private fun isPartOfAbbreviation(text: CharSequence, position: Int) =
 //fun main() { logTime("TextParserEx.main()") { TextParserEx().parse("Mama washed rama.") } }
 
 
-class TextParserEx {
+class TextParserEx (private val sentenceEndRule: SentenceEndRule = SentenceEndRule.ByEndingDot) {
 
     fun parse(text: CharSequence): List<Sentence> = logTime(log, "TextParserEx.parse($text)") {
         var wordsCount = 0
-        parseSentences(text)
+        parseSentences(text, sentenceEndRule)
             .map { logTime(log, "TextParserEx.parseSentence([$it])") {  parseSentence(it, wordsCount) } }
             .onEach { wordsCount += it.allWords.size }
             .toList()
     }
 
-    private fun parseSentences(text: CharSequence): Sequence<CharSequence> {
+    private fun parseSentences(text: CharSequence, sentenceEndRule: SentenceEndRule): Sequence<CharSequence> {
         var prevSentenceEnd = -1
 
         // We can optimize it to avoid using list
@@ -321,10 +334,11 @@ class TextParserEx {
         val sentences = mutableListOf<CharSequence>()
 
         text.forEachIndexed { index, _ ->
-            if (isSentenceEnd(text, index)) {
+            if (isSentenceEnd(text, index, sentenceEndRule)) {
                 val currentSentence = text.subSequence(prevSentenceEnd + 1, index + 1).trim()
                 prevSentenceEnd = index
-                sentences.add(currentSentence)
+                if (currentSentence.isNotBlank())
+                    sentences.add(currentSentence)
             }
         }
 
@@ -384,5 +398,5 @@ private val String.isNumber: Boolean get() {
     }
 }
 
-// TODO: probably can be removed or moved to CardWordEntry file
+// T O D O: probably can be removed or moved to other file (to CardWordEntry file)
 val String.isTranslatable: Boolean get() = !this.isNumber

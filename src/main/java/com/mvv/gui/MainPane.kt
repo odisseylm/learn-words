@@ -1,6 +1,5 @@
 package com.mvv.gui
 
-import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.javafx.*
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.*
@@ -76,8 +75,6 @@ class MainWordsPane : BorderPane() {
         }
     }
 
-
-    internal lateinit var dictionary: Dictionary // TODO: refactor to avoid this logic inside pane
 
     init {
 

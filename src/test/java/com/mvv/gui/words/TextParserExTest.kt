@@ -79,7 +79,7 @@ class TextParserExTest {
 
         val assertions = SoftAssertions()
 
-        val sentences = TextParserEx().parse("Mrs. Mama washed rama.  But Mr. Papa didn't.")
+        val sentences = TextParserEx(SentenceEndRule.ByEndingDot).parse("Mrs. Mama washed rama.  But Mr. Papa \n didn't. ")
 
         assertions.assertThat(sentences).hasSize(2)
 
@@ -92,6 +92,90 @@ class TextParserExTest {
             wordEntry("mama", 1, "Mrs. Mama washed rama."),
             wordEntry("washed", 2, "Mrs. Mama washed rama."),
             wordEntry("rama", 3, "Mrs. Mama washed rama."),
+        )
+
+        assertions.assertThat(sentences[1].text).isEqualTo("But Mr. Papa \n didn't.")
+
+        assertions.assertThat(sentences[1].allWords).containsExactly(
+            wordEntry("but", 4, "But Mr. Papa \n didn't."),
+            wordEntry("mr.", 5, "But Mr. Papa \n didn't."),
+            wordEntry("papa", 6, "But Mr. Papa \n didn't."),
+            wordEntry("didn't", 7, "But Mr. Papa \n didn't."),
+        )
+
+        assertions.assertAll()
+    }
+
+    @Test
+    fun parseWithShortens_byLineBreak() {
+
+        val assertions = SoftAssertions()
+
+        val sentences = TextParserEx(SentenceEndRule.ByLineBreak).parse("Mrs. Mama washed rama\n\nBut Mr. Papa didn't\n")
+
+        assertions.assertThat(sentences.map { it.text }).containsExactly(
+            "Mrs. Mama washed rama",
+            "But Mr. Papa didn't",
+        )
+
+        assertions.assertThat(sentences[0].text).isEqualTo("Mrs. Mama washed rama")
+
+        assertions.assertThat(sentences[0].allWords).containsExactly(
+            wordEntry("mrs.", 0, "Mrs. Mama washed rama"),
+            wordEntry("mama", 1, "Mrs. Mama washed rama"),
+            wordEntry("washed", 2, "Mrs. Mama washed rama"),
+            wordEntry("rama", 3, "Mrs. Mama washed rama"),
+        )
+
+        assertions.assertThat(sentences[1].text).isEqualTo("But Mr. Papa didn't")
+
+        assertions.assertThat(sentences[1].allWords).containsExactly(
+            wordEntry("but", 4, "But Mr. Papa didn't"),
+            wordEntry("mr.", 5, "But Mr. Papa didn't"),
+            wordEntry("papa", 6, "But Mr. Papa didn't"),
+            wordEntry("didn't", 7, "But Mr. Papa didn't"),
+        )
+
+        assertions.assertAll()
+    }
+
+    @Test
+    fun parseWithShortens_byEndingDotOrLineBreak() {
+
+        val assertions = SoftAssertions()
+
+        val sentences = TextParserEx(SentenceEndRule.ByEndingDotOrLineBreak).parse("Mrs. Mama washed rama. But Mr. Papa didn't\nWhat about grandpa?")
+
+        assertions.assertThat(sentences.map { it.text }).containsExactly(
+            "Mrs. Mama washed rama.",
+            "But Mr. Papa didn't",
+            "What about grandpa?",
+        )
+
+        assertions.assertThat(sentences[0].text).isEqualTo("Mrs. Mama washed rama.")
+
+        assertions.assertThat(sentences[0].allWords).containsExactly(
+            wordEntry("mrs.", 0, "Mrs. Mama washed rama."),
+            wordEntry("mama", 1, "Mrs. Mama washed rama."),
+            wordEntry("washed", 2, "Mrs. Mama washed rama."),
+            wordEntry("rama", 3, "Mrs. Mama washed rama."),
+        )
+
+        assertions.assertThat(sentences[1].text).isEqualTo("But Mr. Papa didn't")
+
+        assertions.assertThat(sentences[1].allWords).containsExactly(
+            wordEntry("but", 4, "But Mr. Papa didn't"),
+            wordEntry("mr.", 5, "But Mr. Papa didn't"),
+            wordEntry("papa", 6, "But Mr. Papa didn't"),
+            wordEntry("didn't", 7, "But Mr. Papa didn't"),
+        )
+
+        assertions.assertThat(sentences[2].text).isEqualTo("What about grandpa?")
+
+        assertions.assertThat(sentences[2].allWords).containsExactly(
+            wordEntry("what", 8, "What about grandpa?"),
+            wordEntry("about", 9, "What about grandpa?"),
+            wordEntry("grandpa", 10, "What about grandpa?"),
         )
 
         assertions.assertAll()

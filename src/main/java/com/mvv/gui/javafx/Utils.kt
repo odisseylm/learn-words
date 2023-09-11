@@ -18,10 +18,14 @@ import javafx.scene.shape.Rectangle
 import javafx.stage.Modality
 import javafx.stage.Stage
 import javafx.util.Duration
-import java.io.FileInputStream
+import java.io.ByteArrayInputStream
 import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.exists
+import kotlin.io.path.readBytes
+
+
+private val log = mu.KotlinLogging.logger {}
 
 
 @Suppress("unused")
@@ -126,16 +130,20 @@ fun newMenuItem(label: String, tooltip: String, icon: ImageView, keyCombination:
 private fun newMenuItemImpl(label: String, tooltip: String? = null, icon: ImageView? = null, keyCombination: KeyCombination? = null, action: (()->Unit)? = null): MenuItem =
     if (tooltip == null) MenuItem(label, icon ?: emptyIcon16x16())
     else {
-        // Standard MenuItem class does not support tooltips.
-        // but CustomMenuItem does not show accelerator TODO: fix showing accelerator and tooltip together
+        // Standard MenuItem class does not support tooltips,
+        // but CustomMenuItem does not show accelerator :-)
+        // T O D O: fix showing accelerator and tooltip together
+
+        keyCombination?.also { log.warn { "Menu item key-combination [$keyCombination] most probably will not be shown." } }
+
         CustomMenuItem(Label(label, icon ?: emptyIcon16x16()).also {
             it.styleClass.add("custom-menu-item-content")
             Tooltip.install(it, Tooltip(tooltip))
         })
     }
-    .also {
-        if (keyCombination != null) it.accelerator = keyCombination
-        if (action != null) it.onAction = EventHandler { action() }
+    .also { menuItem ->
+        keyCombination?.let { menuItem.accelerator = it }
+        action?.let         { menuItem.onAction = EventHandler { it() } }
     }
 
 
@@ -181,23 +189,10 @@ var Control.toolTipText: String?
 
 fun buttonIcon(path: String, iconSize: Double = 16.0): ImageView {
 
-    // TODO: play with params
-    val image = if (Path.of(path).exists()) {
-        Image(FileInputStream(path), iconSize, iconSize, true, true)
-    } else {
+    val image = if (Path.of(path).exists())
+        Image(ByteArrayInputStream(Path.of(path).readBytes()), iconSize, iconSize, true, true)
+    else
         Image(path, iconSize, iconSize, true, true)
-    }
-
-    //@Suppress("UnnecessaryVariable")
-    //val imageView = ImageView(image)
-    //
-    //val image = Image(input)
-    //if (iconSize > 0) {
-    //    imageView.fitWidth = iconSize
-    //    imageView.fitHeight = iconSize
-    //}
-    //
-    //return imageView
 
     return ImageView(image)
 }
