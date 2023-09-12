@@ -103,6 +103,14 @@ fun audioSourceToJavaSoundAudioInput(source: AudioSource): AudioInputStream = wh
 }
 
 
+@Suppress("unused")
+fun audioSourceToJavaSoundAudioFormat(source: AudioSource): AudioFileFormat = when (source) {
+    is AudioSource.BytesAudioSource -> AudioSystem.getAudioFileFormat(ByteArrayInputStream(source.source))
+    is AudioSource.PathAudioSource  -> AudioSystem.getAudioFileFormat(source.source.toFile())
+    is AudioSource.UriAudioSource   -> AudioSystem.getAudioFileFormat(source.source.toURL())
+}
+
+
 private val logListener: LineListener = object : LineListener {
     @Volatile var started = 0L
     override fun update(event: LineEvent) =

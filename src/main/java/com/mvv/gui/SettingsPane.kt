@@ -13,6 +13,7 @@ import javafx.util.StringConverter
 
 enum class PredefSpeechSynthesizer {
     MarryTTS,
+    Web,
 }
 
 data class VoiceChoice (
@@ -68,9 +69,12 @@ class SettingsPane : ToolBar() {
             .map { voiceConf -> VoiceChoice(voiceConf) }
             .toList()
 
+        val howjsayVoice = VoiceChoice(PredefSpeechSynthesizer.Web, "howjsay.com")
+
         val toSelect: VoiceChoice = goodVoices.firstOrNull() ?: allMarryTtsVoices.first()
 
-        voiceChoicesDropDown.items.setAll(allMarryTtsVoices)
+        voiceChoicesDropDown.items.add(howjsayVoice)
+        voiceChoicesDropDown.items.addAll(allMarryTtsVoices)
         voiceChoicesDropDown.selectionModel.select(toSelect)
 
         voiceChoicesDropDown.converter = object : StringConverter<VoiceChoice>() {

@@ -1,5 +1,7 @@
 package com.mvv.gui.audio
 
+import com.mpatric.mp3agic.Mp3File
+import com.mvv.gui.util.downloadUrl
 import com.mvv.gui.util.timerTask
 import javafx.scene.media.AudioClip
 import java.nio.file.Files
@@ -8,6 +10,11 @@ import java.util.Timer
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.function.Consumer
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.toPath
+
+
+//private val log = mu.KotlinLogging.logger {}
 
 
 class JavaFxSoundPlayer(val playingMode: PlayingMode) : AudioPlayer {
@@ -63,11 +70,42 @@ class JavaFxSoundPlayer(val playingMode: PlayingMode) : AudioPlayer {
 }
 
 
-private fun getClipLengthMs(audioSource: AudioSource): Long =
-    javax.sound.sampled.AudioSystem.getClip().use {
-        it.open(audioSourceToJavaSoundAudioInput(audioSource))
-        it.microsecondLength / 1000
+private fun getClipLengthMs(audioSource: AudioSource): Long {
+    return try {
+        //val format = audioSourceToJavaSoundAudioFormat(audioSource)
+        //log.debug("getClipLengthMs audio-format {}", format)
+
+        javax.sound.sampled.AudioSystem.getClip().use {
+            it.open(audioSourceToJavaSoundAudioInput(audioSource))
+            it.microsecondLength / 1000
+        }
     }
+    catch (_: Exception) {
+        val mp3File = mp3File(audioSource)
+        mp3File.lengthInMilliseconds
+    }
+}
+
+private fun mp3File(audioSource: AudioSource): Mp3File =
+    when (audioSource) {
+        is AudioSource.PathAudioSource  -> Mp3File(audioSource.source)
+        is AudioSource.UriAudioSource   -> {
+            if (audioSource.source.scheme == "file") Mp3File(audioSource.source.toPath())
+            else mp3File(AudioSource(downloadUrl(audioSource.source.toString())))
+        }
+        is AudioSource.BytesAudioSource -> {
+            // This is bad approach with saving bytes to file but now this approach (with mp3) is not used.
+            val tempFile = Files.createTempFile("~temp.mp3.javafxsoundplayer~", ".mp3")
+            try {
+                Files.write(tempFile, audioSource.source)
+                Mp3File(tempFile)
+            }
+            finally {
+                tempFile.deleteIfExists()
+            }
+        }
+    }
+
 
 private fun writeToTempFile(bytes: ByteArray): Path {
     val file = Files.createTempFile("~javaFxSound-", ".tmp.wav")

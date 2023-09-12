@@ -161,6 +161,13 @@
       <version>${javafx.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.mpatric</groupId>
+      <artifactId>mp3agic</artifactId>
+      <version>0.9.1</version>
+    </dependency>
+
+
     <!-- Deprecated :-( -->
     <!--<dependency>-->
     <!--  <groupId>de.codecentric.centerdevice</groupId>-->

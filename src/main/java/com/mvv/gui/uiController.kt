@@ -25,6 +25,7 @@ import java.io.File
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import kotlin.io.path.*
 
 
@@ -144,20 +145,33 @@ class LearnWordsController (
     }
 
     private val audioPlayer = JavaFxSoundPlayer(PlayingMode.Async)
+    private val howJSayWebDownloadSpeechSynthesizer: HowJSayWebDownloadSpeechSynthesizer by lazy { HowJSayWebDownloadSpeechSynthesizer(audioPlayer) }
 
     internal fun playSelectedWord() = currentWordsList.singleSelection?.let { playFrom(it) }
 
     private fun playFrom(card: CardWordEntry) {
         val voice = settingsPane.voice
-        if (voice.synthesizer == PredefSpeechSynthesizer.MarryTTS) {
+        CompletableFuture.runAsync { playWord(card.from.trim(), voice) }
+    }
 
-            val config: MarryTtsSpeechConfig? = PredefinedMarryTtsSpeechConfig.values()
-                .find { it.config.voice_Selections == voice.voice || it.config.voice == voice.voice }
-                ?.config
+    private fun playWord(text: String, voice: VoiceChoice) {
+        when (voice.synthesizer) {
+            PredefSpeechSynthesizer.MarryTTS -> {
 
-            requireNotNull(config) { "MarryTTS config for $voice is not found." }
+                val config: MarryTtsSpeechConfig? = PredefinedMarryTtsSpeechConfig.values()
+                    .find { it.config.voice_Selections == voice.voice || it.config.voice == voice.voice }
+                    ?.config
 
-            MarryTtsSpeechSynthesizer(config, audioPlayer).speak(card.from.trim())
+                requireNotNull(config) { "MarryTTS config for $voice is not found." }
+
+                MarryTtsSpeechSynthesizer(config, audioPlayer).speak(text.trim())
+            }
+            PredefSpeechSynthesizer.Web -> {
+                when (voice.voice) {
+                    // TODO: refactor, use some Players list/map
+                    "howjsay.com" -> howJSayWebDownloadSpeechSynthesizer.speak(text.trim())
+                }
+            }
         }
     }
 

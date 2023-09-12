@@ -47,3 +47,7 @@ val String.lastChar: Char get() {
 }
 
 val String.lastCharOrNull: Char? get() = if (this.isNotEmpty()) this[this.length - 1] else null
+
+
+fun String.safeSubstring(start: Int, end: Int) =
+    if (end >= this.length) this.substring(start) else this.substring(start, end)

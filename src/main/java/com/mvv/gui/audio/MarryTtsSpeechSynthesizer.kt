@@ -1,6 +1,6 @@
 package com.mvv.gui.audio
 
-import java.net.URL
+import com.mvv.gui.util.downloadUrl
 import java.net.URLEncoder
 
 
@@ -253,13 +253,7 @@ class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val a
                 "&AUDIO=WAVE_FILE"
         */
 
-        val soundBytes = URL(url)
-            .openConnection()
-            .also {
-                it.connectTimeout = 10_000
-                it.readTimeout = 10_000
-            }
-            .getInputStream().use { it.readAllBytes() }
+        val soundBytes = downloadUrl(url)
         log.debug { "MarryTTS $url for [$text]" }
 
         //val dir = java.nio.file.Path.of("temp/sounds")
