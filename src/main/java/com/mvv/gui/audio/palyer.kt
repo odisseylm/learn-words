@@ -9,7 +9,9 @@ import java.nio.file.Path
 sealed class AudioSource {
     data class PathAudioSource (val source: Path) : AudioSource()
     data class UriAudioSource (val source: URI) : AudioSource()
-    class BytesAudioSource (val source: ByteArray) : AudioSource()
+    class BytesAudioSource (val source: ByteArray) : AudioSource() {
+        override fun toString(): String = "BytesAudioSource { ${source.size} bytes }"
+    }
 
     companion object {
         operator fun invoke(source: Path): PathAudioSource = PathAudioSource(source)

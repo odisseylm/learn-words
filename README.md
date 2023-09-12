@@ -73,6 +73,7 @@ Run application
 Speech synthesizers
  - synesthesiam/marytts
    - https://hub.docker.com/r/synesthesiam/marytts
+   - https://github.com/synesthesiam/docker-marytts
    - `docker pull synesthesiam/marytts`
    - `docker run -it -p 59125:59125 synesthesiam/marytts:5.2 --voice cmu-slt-hsmm`
  - MaryTTS 5.2 with unit selection and HSMM Voices

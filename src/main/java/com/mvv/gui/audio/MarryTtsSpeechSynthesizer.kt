@@ -253,7 +253,13 @@ class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val a
                 "&AUDIO=WAVE_FILE"
         */
 
-        val soundBytes = URL(url).openStream().readAllBytes()
+        val soundBytes = URL(url)
+            .openConnection()
+            .also {
+                it.connectTimeout = 10_000
+                it.readTimeout = 10_000
+            }
+            .getInputStream().use { it.readAllBytes() }
         log.debug { "MarryTTS $url for [$text]" }
 
         //val dir = java.nio.file.Path.of("temp/sounds")

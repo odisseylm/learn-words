@@ -1,6 +1,11 @@
 package com.mvv.gui
 
 import com.mvv.gui.audio.PredefinedMarryTtsSpeechConfig
+import javafx.collections.FXCollections
+import javafx.collections.ListChangeListener
+import javafx.collections.ObservableList
+import javafx.collections.ObservableSet
+import javafx.collections.SetChangeListener
 import javafx.geometry.NodeOrientation
 import javafx.scene.control.*
 import javafx.util.StringConverter
@@ -20,6 +25,9 @@ data class VoiceChoice (
 
 class SettingsPane : ToolBar() {
 
+    internal val goodVoices: ObservableList<VoiceChoice> = FXCollections.observableArrayList()
+    internal val deadVoices: ObservableSet<VoiceChoice> = FXCollections.observableSet()
+
     private val splitWordCountPerFileTextField = TextField("${settings.splitWordCountPerFile}")
         .also { it.prefColumnCount = 3 }
     private val playWordOnSelectCheckBox = CheckBox("Auto play word")
@@ -36,18 +44,23 @@ class SettingsPane : ToolBar() {
             Label(" Voice"),
             voiceChoicesDropDown
         )
+
+        fun <T> refreshDropDown(comboBox: ComboBox<T>) {
+
+            // If you know better way, please replace this peace of shi... with proper solution :-)
+            val items = comboBox.items.toList()
+            val selected = comboBox.selectionModel.selectedItem
+
+            comboBox.items.clear()
+            comboBox.items.setAll(items)
+            comboBox.selectionModel.select(selected)
+        }
+
+        goodVoices.addListener( ListChangeListener { _ -> refreshDropDown(voiceChoicesDropDown) } )
+        deadVoices.addListener( SetChangeListener  { _ -> refreshDropDown(voiceChoicesDropDown) } )
     }
 
     private fun fillVoices(voiceChoicesDropDown: ComboBox<VoiceChoice>) {
-        val goodOnes = listOf(
-            // This voice is really the best for sentences, but sounds of single words are extremely ugly (too low).
-            //VoiceChoice(VoiceConfigs.cmu_slt_hsmm_en_US_female_hmm),
-            //
-            VoiceChoice(PredefinedMarryTtsSpeechConfig.cmu_rms_hsmm_en_US_male_hmm),
-            VoiceChoice(PredefinedMarryTtsSpeechConfig.cmu_bdl_hsmm_en_US_male_hmm),
-            VoiceChoice(PredefinedMarryTtsSpeechConfig.dfki_spike_hsmm_en_GB_male_hmm),
-            VoiceChoice(PredefinedMarryTtsSpeechConfig.dfki_obadiah_hsmm_en_GB_male_hmm),
-        )
 
         val allMarryTtsVoices = PredefinedMarryTtsSpeechConfig.values().asSequence()
             .sortedBy { it.config.voice_Selections.lowercase() }
@@ -55,12 +68,18 @@ class SettingsPane : ToolBar() {
             .map { voiceConf -> VoiceChoice(voiceConf) }
             .toList()
 
+        val toSelect: VoiceChoice = goodVoices.firstOrNull() ?: allMarryTtsVoices.first()
+
         voiceChoicesDropDown.items.setAll(allMarryTtsVoices)
-        voiceChoicesDropDown.selectionModel.select(goodOnes.first())
+        voiceChoicesDropDown.selectionModel.select(toSelect)
 
         voiceChoicesDropDown.converter = object : StringConverter<VoiceChoice>() {
             override fun toString(value: VoiceChoice?): String {
-                val prefix = if (goodOnes.contains(value)) "+" else "  "
+                val prefix = when (value) {
+                    in deadVoices -> "-"
+                    in goodVoices -> "+"
+                    else -> "  "
+                }
                 return if (value == null) "" else "$prefix${value.synthesizer.name} - ${value.voice}"
             }
             override fun fromString(string: String?): VoiceChoice = throw IllegalStateException("fromString should not be used.")

@@ -6,10 +6,7 @@ import com.mvv.gui.dictionary.CachedDictionary
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.DictionaryComposition
 import com.mvv.gui.javafx.*
-import com.mvv.gui.util.ActionCanceledException
-import com.mvv.gui.util.doIfNotEmpty
-import com.mvv.gui.util.doIfTrue
-import com.mvv.gui.util.withFileExt
+import com.mvv.gui.util.*
 import com.mvv.gui.words.*
 import javafx.application.Platform
 import javafx.collections.FXCollections
@@ -55,6 +52,11 @@ class LearnWordsController (
 
     private val toolBarController = ToolBarController(this)
     private val settingsPane = SettingsPane()
+
+    init {
+        Timer("updateSpeechSynthesizersAvailabilityTimer", true)
+            .also { it.schedule(timerTask { updateSpeechSynthesizerAvailability() }, 15000, 15000) }
+    }
 
     init {
 
@@ -128,6 +130,15 @@ class LearnWordsController (
         currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             Platform.runLater { if (settingsPane.playWordOnSelect) playSelectedWord() } }
 
+        settingsPane.goodVoices.setAll(
+            // This voice is really the best for sentences, but sounds of single words are extremely ugly (too low).
+            //VoiceChoice(VoiceConfigs.cmu_slt_hsmm_en_US_female_hmm),
+            //
+            VoiceChoice(PredefinedMarryTtsSpeechConfig.cmu_rms_hsmm_en_US_male_hmm),
+            VoiceChoice(PredefinedMarryTtsSpeechConfig.cmu_bdl_hsmm_en_US_male_hmm),
+            VoiceChoice(PredefinedMarryTtsSpeechConfig.dfki_spike_hsmm_en_GB_male_hmm),
+            VoiceChoice(PredefinedMarryTtsSpeechConfig.dfki_obadiah_hsmm_en_GB_male_hmm),
+        )
 
         loadExistentWords()
     }
@@ -147,6 +158,31 @@ class LearnWordsController (
             requireNotNull(config) { "MarryTTS config for $voice is not found." }
 
             MarryTtsSpeechSynthesizer(config, audioPlayer).speak(card.from.trim())
+        }
+    }
+
+    private fun updateSpeechSynthesizerAvailability() {
+
+        val deadMarryVoices: List<VoiceChoice> = PredefinedMarryTtsSpeechConfig.values()
+            .filter { it.config.locale.startsWith("en") }
+            .filterNot { testSpeechSynthesizer(it) }
+            .map { VoiceChoice(it) }
+
+        log.debug { "updateSpeechSynthesizerAvailability deadMarryVoices: $deadMarryVoices" }
+
+        Platform.runLater { settingsPane.deadVoices.clear(); settingsPane.deadVoices.addAll(deadMarryVoices) }
+    }
+
+    private fun testSpeechSynthesizer(voiceConfig: PredefinedMarryTtsSpeechConfig): Boolean {
+        val playerStub = object : AudioPlayer { override fun play(audioSource: AudioSource) { } }
+        return try {
+            MarryTtsSpeechSynthesizer(voiceConfig, playerStub).speak("apple")
+            log.debug { "MarryTTS ${voiceConfig.config.voice_Selections} is OK" }
+            true
+        }
+        catch (ex: Exception) {
+            log.debug("MarryTTS {} is failed", voiceConfig.config.voice_Selections, ex)
+            false
         }
     }
 
