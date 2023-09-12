@@ -2,10 +2,7 @@ package com.mvv.gui
 
 import com.mvv.gui.javafx.UpdateSet
 import com.mvv.gui.javafx.updateSetProperty
-import com.mvv.gui.util.containsAllKeys
-import com.mvv.gui.util.containsOneOf
-import com.mvv.gui.util.containsOneOfKeys
-import com.mvv.gui.util.filterNotNullPairValue
+import com.mvv.gui.util.*
 import javafx.beans.value.WritableObjectValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -175,6 +172,17 @@ class CollectionsTest {
 
         assertThat(map.containsAllKeys()).isFalse()
         assertThat(map.containsAllKeys(emptyList())).isFalse()
+    }
+
+
+    @Test
+    @DisplayName("firstOr")
+    fun test_firstOr() {
+        assertThat(listOf(1, 2, 3).firstOr { 11 }).isEqualTo(1)
+        assertThat(emptyList<Int>().firstOr { 11 }).isEqualTo(11)
+
+        assertThat(sequenceOf(1, 2, 3).firstOr { 11 }).isEqualTo(1)
+        assertThat(emptySequence<Int>().firstOr { 11 }).isEqualTo(11)
     }
 }
 

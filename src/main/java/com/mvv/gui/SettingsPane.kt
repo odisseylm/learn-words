@@ -1,6 +1,7 @@
 package com.mvv.gui
 
 import com.mvv.gui.audio.PredefinedMarryTtsSpeechConfig
+import com.mvv.gui.util.firstOr
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
@@ -71,7 +72,7 @@ class SettingsPane : ToolBar() {
 
         val howjsayVoice = VoiceChoice(PredefSpeechSynthesizer.Web, "howjsay.com")
 
-        val toSelect: VoiceChoice = goodVoices.firstOrNull() ?: allMarryTtsVoices.first()
+        val toSelect: VoiceChoice = goodVoices.firstOr { allMarryTtsVoices.first() }
 
         voiceChoicesDropDown.items.add(howjsayVoice)
         voiceChoicesDropDown.items.addAll(allMarryTtsVoices)

@@ -1,6 +1,7 @@
 package com.mvv.gui.audio
 
 import com.mvv.gui.util.downloadUrl
+import com.mvv.gui.util.firstOrThrow
 import com.mvv.gui.util.safeSubstring
 import com.mvv.gui.util.userHome
 import java.io.IOException
@@ -23,7 +24,7 @@ private val log = mu.KotlinLogging.logger {}
 class HowJSayWebDownloadSpeechSynthesizer(private val audioPlayer: AudioPlayer) : SpeechSynthesizer {
 
     private val soundWordUrlTemplates: List<String> by lazy { collectSoundWordUrlTemplates() }
-    private val cacheDir = userHome.resolve("english/.cache")
+    private val cacheDir = userHome.resolve("english/.cache/web/howjsay.com")
 
     private fun cachedAudioFilePath(word: String): Path = cacheDir.resolve("${word}.mp3")
 
@@ -35,26 +36,27 @@ class HowJSayWebDownloadSpeechSynthesizer(private val audioPlayer: AudioPlayer) 
         if (text.isBlank()) return
 
         val word = text.trim()
-        require(word.wordCount < 3) { "${this.javaClass.simpleName} does not support long text." }
+        require(word.wordCount <= 3) { "${this.javaClass.simpleName} does not support long text." }
 
         val cachedAudioFilePath = cachedAudioFilePath(word)
         if (!cachedAudioFilePath.exists()) {
-            val audioBytes: ByteArray = soundWordUrlTemplates.asSequence()
-                .mapNotNull { urlTemplate ->
-                    val url = urlTemplate.replace("\${word}", word)
-                    try { downloadUrl(url) }
-                    catch (ex: Exception) { log.debug("Error of loading [$url]", ex); null }
-                }
-                .filter { it.isNotEmpty() }
-                .firstOrNull()
-                ?: throw IOException("Audio file for word [$word] is not loaded.")
-
             cachedAudioFilePath.parent.createDirectories()
-            Files.write(cachedAudioFilePath, audioBytes)
+            Files.write(cachedAudioFilePath, downloadAudioFile(word))
         }
 
         audioPlayer.play(AudioSource(cachedAudioFilePath))
     }
+
+    private fun downloadAudioFile(word: String): ByteArray =
+        soundWordUrlTemplates
+            .asSequence()
+            .mapNotNull { urlTemplate ->
+                val url = urlTemplate.replace("\${word}", word)
+                try { downloadUrl(url) }
+                catch (ex: Exception) { log.debug("Error of loading [$url]", ex); null }
+            }
+            .filter { it.isNotEmpty() }
+            .firstOrThrow { IOException("Audio file for word [$word] is not loaded.") }
 }
 
 
@@ -109,7 +111,3 @@ private fun String.indexesOf(subString: String): List<Int> {
 
     return indexes
 }
-
-
-// from script-min.js
-// $("#audioQuick").attr({src:"https://d1qx7pbj0dvboc.cloudfront.net/"+e+".mp3"}

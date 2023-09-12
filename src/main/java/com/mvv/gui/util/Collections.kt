@@ -42,3 +42,14 @@ fun <K, V> Sequence<Pair<K?,V?>>.filterNotNullPairValue(): Sequence<Pair<K,V>> =
 fun <T> Iterable<T>.doIfNotEmpty(action: (Iterable<T>)->Unit) {
     if (this.iterator().hasNext()) action(this)
 }
+
+
+fun <T, E: Exception> Sequence<T>.firstOrThrow(ex: ()->E): T =
+    this.firstOrNull() ?: throw ex()
+
+
+fun <T> Sequence<T>.firstOr(other: ()->T): T =
+    this.firstOrNull() ?: other()
+
+fun <T> Iterable<T>.firstOr(other: ()->T): T =
+    this.firstOrNull() ?: other()
