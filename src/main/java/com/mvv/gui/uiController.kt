@@ -1,5 +1,6 @@
 package com.mvv.gui
 
+import com.mvv.gui.audio.*
 import com.mvv.gui.dictionary.AutoDictionariesLoader
 import com.mvv.gui.dictionary.CachedDictionary
 import com.mvv.gui.dictionary.Dictionary
@@ -53,6 +54,7 @@ class LearnWordsController (
     private var currentWordsFile: Path? = null
 
     private val toolBarController = ToolBarController(this)
+    private val settingsPane = SettingsPane()
 
     init {
 
@@ -120,10 +122,32 @@ class LearnWordsController (
         toolBarController.fillToolBar(pane.toolBar)
 
         pane.topPane.children.add(0, MenuController(this).fillMenu())
+        pane.topPane.children.add(settingsPane)
         currentWordsList.contextMenu = ContextMenuController(this).fillContextMenu()
+
+        currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, _ ->
+            Platform.runLater { if (settingsPane.playWordOnSelect) playSelectedWord() } }
 
 
         loadExistentWords()
+    }
+
+    private val audioPlayer = JavaFxSoundPlayer(PlayingMode.Async)
+
+    internal fun playSelectedWord() = currentWordsList.singleSelection?.let { playFrom(it) }
+
+    private fun playFrom(card: CardWordEntry) {
+        val voice = settingsPane.voice
+        if (voice.synthesizer == PredefSpeechSynthesizer.MarryTTS) {
+
+            val config: MarryTtsSpeechConfig? = PredefinedMarryTtsSpeechConfig.values()
+                .find { it.config.voice_Selections == voice.voice || it.config.voice == voice.voice }
+                ?.config
+
+            requireNotNull(config) { "MarryTTS config for $voice is not found." }
+
+            MarryTtsSpeechSynthesizer(config, audioPlayer).speak(card.from.trim())
+        }
     }
 
     internal val currentWordsList: TableView<CardWordEntry> get() = pane.currentWordsList
@@ -468,7 +492,7 @@ class LearnWordsController (
         }
 
         splitFilesDir.createDirectories()
-        saveSplitWordCards(filePath, currentWords, splitFilesDir, settings.splitWordCountPerFile)
+        saveSplitWordCards(filePath, currentWords, splitFilesDir, settingsPane.splitWordCountPerFile)
 
         this.documentIsDirty = false
     }
@@ -498,7 +522,7 @@ class LearnWordsController (
         val df = SimpleDateFormat("yyyyMMdd-HHmmss")
         val splitFilesDir = filePath.parent.resolve("split-${df.format(Date())}")
 
-        val defaultSplitWordCountPerFile = settings.splitWordCountPerFile
+        val defaultSplitWordCountPerFile = settingsPane.splitWordCountPerFile
         val strSplitWordCountPerFile = showTextInputDialog(pane,
             "Current words will be split into several files and put into directory $splitFilesDir.\n" +
                     "Please, enter word count for every file.", "Splitting current words",

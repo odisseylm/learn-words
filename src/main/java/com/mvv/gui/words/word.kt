@@ -19,7 +19,7 @@ class CardWordEntry {
         to -> to?.translationCount ?: 0 }
     val examplesProperty = SimpleStringProperty(this, "examples", "")
     val wordCardStatusesProperty = SimpleObjectProperty<Set<WordCardStatus>>(this, "wordCardStatuses", emptySet())
-    val predefinedSetsProperty = SimpleObjectProperty<Set<PredefinedSets>>(this, "predefinedSets", emptySet())
+    val predefinedSetsProperty = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())
     val sourcePositionsProperty = SimpleObjectProperty<List<Int>>(this, "sourcePositions", emptyList())
     val sourceSentencesProperty = SimpleObjectProperty<List<String>>(this, "sourceSentences", emptyList())
 
@@ -49,7 +49,7 @@ class CardWordEntry {
             wordCardStatusesProperty.set(value)
         }
 
-    var predefinedSets: Set<PredefinedSets>
+    var predefinedSets: Set<PredefinedSet>
         get() = predefinedSetsProperty.get()
         set(value) = predefinedSetsProperty.set(value)
 
@@ -148,7 +148,7 @@ enum class WordCardStatus (
 }
 
 
-enum class PredefinedSets {
+enum class PredefinedSet {
     DifficultToListen,
     DifficultSense,
 }

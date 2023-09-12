@@ -48,6 +48,7 @@ class ContextMenuController (val controller: LearnWordsController) {
             translateMenuItem,
             ignoreNoBaseWordMenuItem,
             addMissedBaseWordsMenuItem,
+            newMenuItem("Play", buttonIcon("icons/ear.png")) { controller.playSelectedWord() },
         )
 
         contextMenu.items.addAll(menuItems)

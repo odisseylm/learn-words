@@ -4,13 +4,15 @@ import java.net.URL
 import java.net.URLEncoder
 
 
+private val log = mu.KotlinLogging.logger {}
+
 
 @Suppress("PropertyName")
 data class MarryTtsSpeechConfig (
     val port: Int = 59125,
-    val voice: String = "cmu-slt-hsmm",
-    val voice_Selections: String = "cmu-slt-hsmm en_US female hmm",
-    val locale: String = "en_US",
+    val voice: String, // = "cmu-slt-hsmm",
+    val voice_Selections: String, // = "cmu-slt-hsmm en_US female hmm",
+    val locale: String, // = "en_US",
 
     val effect_Volume_parameters: String = "amount:2.0;",
 
@@ -42,73 +44,59 @@ data class MarryTtsSpeechConfig (
 
 
 @Suppress("unused", "EnumEntryName")
-enum class VoiceConfigs (val config: MarryTtsSpeechConfig) {
+enum class PredefinedMarryTtsSpeechConfig (val config: MarryTtsSpeechConfig) {
 
-    dfki_spike_hsmm_en_GB_male_hmm(
-        MarryTtsSpeechConfig(
+    // ++ works good enough
+    dfki_spike_hsmm_en_GB_male_hmm (MarryTtsSpeechConfig(
         voice = "dfki-spike-hsmm",
         voice_Selections = "dfki-spike-hsmm en_GB male hmm",
         locale = "en_GB",
-    )
-    ),
+    )),
 
-    dfki_spike_en_GB_male_unitselection_general (
-        MarryTtsSpeechConfig(
+    dfki_spike_en_GB_male_unitselection_general (MarryTtsSpeechConfig(
         voice = "dfki-spike",
         voice_Selections = "dfki-spike en_GB male unitselection general",
         locale = "en_GB",
         effect_Volume_parameters = "amount:3.0;",
-    )
-    ),
+    )),
 
-    cmu_bdl_hsmm_en_US_male_hmm (
-        MarryTtsSpeechConfig(
+    cmu_bdl_hsmm_en_US_male_hmm (MarryTtsSpeechConfig(
         voice = "cmu-bdl-hsmm",
         voice_Selections = "cmu-bdl-hsmm en_US male hmm",
         locale = "en_US",
-    )
-    ),
+    )),
 
-    dfki_spike_en_GB_male_unitselection (
-        MarryTtsSpeechConfig(
+    dfki_spike_en_GB_male_unitselection (MarryTtsSpeechConfig(
         voice = "dfki-spike",
         voice_Selections = "dfki-spike en_GB male unitselection",
         locale = "en_us",
         effect_Volume_parameters = "amount:3.0;",
-    )
-    ),
+    )),
 
-    dfki_prudence_en_GB_female_unitselection_general (
-        MarryTtsSpeechConfig(
+    dfki_prudence_en_GB_female_unitselection_general (MarryTtsSpeechConfig(
         voice = "dfki-prudence",
         voice_Selections = "dfki-prudence en_GB female unitselection general",
         locale = "en_GB",
-    )
-    ),
+    )),
 
-    cmu_slt_hsmm_en_US_female_hmm (
-        MarryTtsSpeechConfig(
+    // +++ The best voice +++
+    cmu_slt_hsmm_en_US_female_hmm (MarryTtsSpeechConfig(
         voice = "cmu-slt-hsmm",
         voice_Selections = "cmu-slt-hsmm en_US female hmm",
         locale = "en_US",
-    )
-    ),
+    )),
 
-    dfki_obadiah_hsmm_en_GB_male_hmm (
-        MarryTtsSpeechConfig(
+    dfki_obadiah_hsmm_en_GB_male_hmm (MarryTtsSpeechConfig(
         voice = "dfki-obadiah-hsmm",
         voice_Selections = "dfki-obadiah-hsmm en_GB male hmm",
         locale = "en_GB",
-    )
-    ),
+    )),
 
-    dfki_obadiah_en_GB_male_unitselection_general (
-        MarryTtsSpeechConfig(
+    dfki_obadiah_en_GB_male_unitselection_general (MarryTtsSpeechConfig(
         voice = "dfki-obadiah",
         voice_Selections = "dfki-obadiah en_GB male unitselection general",
         locale = "en_GB",
-    )
-    ),
+    )),
 
 
     // From docker synesthesiam/marytts:5.2
@@ -119,13 +107,11 @@ enum class VoiceConfigs (val config: MarryTtsSpeechConfig) {
     //    locale = "en_GB",
     //)),
 
-    dfki_poppy_hsmm_en_GB_female_hmm (
-        MarryTtsSpeechConfig(
+    dfki_poppy_hsmm_en_GB_female_hmm (MarryTtsSpeechConfig(
         voice = "dfki-poppy-hsmm",
         voice_Selections = "dfki-poppy-hsmm en_GB female hmm",
         locale = "en_GB",
-    )
-    ),
+    )),
 
     // Duplicate ))
     //dfki_obadiah_hsmm_en_GB_male_hmm (MarryTtsSpeechConfig(
@@ -139,16 +125,14 @@ enum class VoiceConfigs (val config: MarryTtsSpeechConfig) {
     //    voice = "cmu-slt-hsmm",
     //    voice_Selections = "cmu-slt-hsmm en_US female hmm",
     //    locale = "en_GB",
-    //)
+    //)),
 
     // Bad voice
-    cmu_rms_hsmm_en_US_male_hmm (
-        MarryTtsSpeechConfig(
+    cmu_rms_hsmm_en_US_male_hmm (MarryTtsSpeechConfig(
         voice = "cmu-rms-hsmm",
         voice_Selections = "cmu-rms-hsmm en_US male hmm",
         locale = "en_US",
-    )
-    ),
+    )),
 
     // Duplicate
     //cmu_bdl_hsmm_en_US_male_hmm (MarryTtsSpeechConfig(
@@ -158,19 +142,17 @@ enum class VoiceConfigs (val config: MarryTtsSpeechConfig) {
     //)),
 
     // Russian, very bad - works properly only for first several words
-    ac_irina_hsmm_ru_female_hmm (
-        MarryTtsSpeechConfig(
+    ac_irina_hsmm_ru_female_hmm (MarryTtsSpeechConfig(
         voice = "ac-irina-hsmm",
         voice_Selections = "ac-irina-hsmm ru female hmm",
         locale = "ru",
-    )
-    ),
+    )),
 }
 
 
 class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val audioPlayer: AudioPlayer) : SpeechSynthesizer {
 
-    constructor(config: VoiceConfigs, audioPlayer: AudioPlayer) : this(config.config, audioPlayer)
+    constructor(config: PredefinedMarryTtsSpeechConfig, audioPlayer: AudioPlayer) : this(config.config, audioPlayer)
 
     override fun speak(text: String) {
 
@@ -197,6 +179,8 @@ class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val a
                 "&effect_F0Add_parameters=${encode(config.effect_F0Add_parameters)}" +
                 "&effect_Rate_selected=${encode(config.effect_Rate_selected)}" +
                 "&effect_Rate_parameters=${encode(config.effect_Rate_parameters)}" +
+                //"&effect_Rate_default=Default" +
+                //"&effect_Rate_help=Help" +
                 "&effect_Robot_selected=${encode(config.effect_Robot_selected)}" +
                 "&effect_Robot_parameters=${encode(config.effect_Robot_parameters)}" +
                 "&effect_Whisper_selected=${encode(config.effect_Whisper_selected)}" +
@@ -233,7 +217,7 @@ class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val a
                 "&effect_F0Add_default=Default" +
                 "&effect_F0Add_help=Help" +
                 "&effect_Rate_selected=" +
-                "&effect_Rate_parameters=durScale%3A1.5%3B" +
+                "&effect_Rate_parameters=durScale:1.5;" +
                 "&effect_Rate_default=Default" +
                 "&effect_Rate_help=Help" +
                 "&effect_Robot_selected=" +
@@ -270,6 +254,7 @@ class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val a
         */
 
         val soundBytes = URL(url).openStream().readAllBytes()
+        log.debug { "MarryTTS $url for [$text]" }
 
         //val dir = java.nio.file.Path.of("temp/sounds")
         //java.nio.file.Files.createDirectories(dir)

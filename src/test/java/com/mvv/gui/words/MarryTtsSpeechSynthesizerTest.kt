@@ -3,7 +3,7 @@ package com.mvv.gui.words
 import com.mvv.gui.audio.JavaSoundPlayer
 import com.mvv.gui.audio.MarryTtsSpeechSynthesizer
 import com.mvv.gui.audio.PlayingMode
-import com.mvv.gui.audio.VoiceConfigs
+import com.mvv.gui.audio.PredefinedMarryTtsSpeechConfig
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -20,7 +20,7 @@ class MarryTtsSpeechSynthesizerTest {
         // good:
         //  * VoiceConfigs.cmu_slt_hsmm_en_US_female_hmm, // ++
 
-        VoiceConfigs.values().filter { it.config.locale.startsWith("en") }.forEach {
+        PredefinedMarryTtsSpeechConfig.values().filter { it.config.locale.startsWith("en") }.forEach {
             val started = System.currentTimeMillis()
             try {
                 log.info { "Testing voice ${it.name}" }
@@ -41,19 +41,19 @@ class MarryTtsSpeechSynthesizerTest {
 
     @Test
     fun speakRussian() {
-        val speechSynthesizer = MarryTtsSpeechSynthesizer(VoiceConfigs.ac_irina_hsmm_ru_female_hmm, audioPlayer())
+        val speechSynthesizer = MarryTtsSpeechSynthesizer(PredefinedMarryTtsSpeechConfig.ac_irina_hsmm_ru_female_hmm, audioPlayer())
         speechSynthesizer.speak("Привет, моя сладкая!")
     }
 
     @Test
     fun speak_working() {
-        val speechSynthesizer = MarryTtsSpeechSynthesizer(VoiceConfigs.dfki_spike_hsmm_en_GB_male_hmm, audioPlayer())
+        val speechSynthesizer = MarryTtsSpeechSynthesizer(PredefinedMarryTtsSpeechConfig.dfki_spike_hsmm_en_GB_male_hmm, audioPlayer())
         speechSynthesizer.speak("Hello and goodbye my sweetie!")
     }
 
     @Test
     fun speak_theBestVoice() {
-        val speechSynthesizer = MarryTtsSpeechSynthesizer(VoiceConfigs.cmu_slt_hsmm_en_US_female_hmm, audioPlayer())
+        val speechSynthesizer = MarryTtsSpeechSynthesizer(PredefinedMarryTtsSpeechConfig.cmu_slt_hsmm_en_US_female_hmm, audioPlayer())
         speechSynthesizer.speak("Hello and goodbye my sweetie!")
     }
 

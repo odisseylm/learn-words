@@ -204,6 +204,12 @@ val TableView<*>.isEditing: Boolean get() {
 }
 
 
+val <T> TableView<T>.singleSelection: T? get() {
+    val selected = this.selectionModel.selectedItems
+    return if (selected.size == 1) selected.first() else null
+}
+
+
 fun runLaterWithDelay(delayMillis: Long, action: ()->Unit) {
     val timeline = Timeline(KeyFrame(Duration.millis(delayMillis.toDouble()), { Platform.runLater(action) }))
     timeline.cycleCount = 1
