@@ -20,7 +20,9 @@ import javafx.scene.input.Clipboard
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
+import javafx.scene.input.MouseEvent
 import javafx.stage.FileChooser
+import org.apache.commons.text.StringEscapeUtils.escapeHtml4
 import java.io.File
 import java.nio.file.Path
 import java.text.SimpleDateFormat
@@ -130,6 +132,22 @@ class LearnWordsController (
 
         currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             Platform.runLater { if (settingsPane.playWordOnSelect) playSelectedWord() } }
+
+        currentWordsList.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
+            val card = currentWordsSelection.selectedItem
+            val clickedOnSourceSentence = currentWordsSelection.selectedCells?.get(0)?.tableColumn == pane.sourceSentencesColumn
+
+            if (ev.clickCount >= 2 && card != null && clickedOnSourceSentence) {
+                //showTextAreaPreviewDialog(pane, "Source sentences of '${card.from}'", card.sourceSentences)
+
+                val htmlWithHighlighting =
+                    escapeHtml4(card.sourceSentences.trim())
+                    .highlightWords(escapeHtml4(card.from.trim()), "red")
+                    .replace("\n", "<br/>")
+
+                showHtmlTextPreviewDialog(pane, "Source sentences of '${card.from}'", htmlWithHighlighting)
+            }
+        }
 
         settingsPane.goodVoices.setAll(
             // This voice is really the best for sentences, but sounds of single words are extremely ugly (too low).
@@ -420,7 +438,10 @@ class LearnWordsController (
 
     fun newDocument() {
         validateCurrentDocumentIsSaved("New document")
+
         currentWords.clear()
+        updateCurrentWordsFile(null)
+        this.documentIsDirty = false
     }
 
     fun loadWordsFromFile() {
@@ -668,4 +689,30 @@ fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S,T>) {
             }
         }
     }
+}
+
+
+internal fun String.highlightWords(word: String, color: String): String {
+
+    val startTag = "<span style=\"color:$color; font-weight: bold;\"><strong><b><font color=\"$color\">"
+    val endTag = "</font></b></strong></span>"
+
+    val wordTrimmed = word.trim()
+    var result = this
+    var wordIndex = -1
+
+    // T O D O: would be nice to rewrite using StringBuilder, but not now :-) (it is not used very often)
+    do {
+        wordIndex = result.indexOf(wordTrimmed, wordIndex + 1, true)
+        if (wordIndex != -1) {
+            result = result.substring(0, wordIndex) +
+                    startTag +
+                    result.substring(wordIndex, wordIndex + wordTrimmed.length) +
+                    endTag +
+                    result.substring(wordIndex + wordTrimmed.length)
+            wordIndex += startTag.length + endTag.length
+        }
+    } while (wordIndex != -1)
+
+    return result
 }

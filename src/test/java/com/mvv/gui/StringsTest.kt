@@ -69,4 +69,32 @@ class StringsTest {
         assertThat("qwerty".containsOneOf("ab", "TY")).isFalse()
     }
 
+
+    @Test
+    fun removePrefixesRepeatably() {
+        assertThat("” Human Resources have teeth".removePrefixesRepeatably("\"", "”", "“", " ", "\n", "\t"))
+            .isEqualTo("Human Resources have teeth")
+    }
+
+
+    @Test
+    fun removeSuffixesRepeatably() {
+        assertThat("Human Resources have teeth.!!??!!".removeSuffixesRepeatably("!", "?", " "))
+            .isEqualTo("Human Resources have teeth.")
+    }
+
+
+    @Test
+    fun removeCharPrefixesRepeatably() {
+        assertThat("” Human Resources have teeth".removeCharPrefixesRepeatably("\"”“ \n\t"))
+            .isEqualTo("Human Resources have teeth")
+    }
+
+
+    @Test
+    fun removeCharSuffixesRepeatably() {
+        assertThat("Human Resources have teeth.!!??!!".removeCharSuffixesRepeatably("!? "))
+            .isEqualTo("Human Resources have teeth.")
+    }
+
 }

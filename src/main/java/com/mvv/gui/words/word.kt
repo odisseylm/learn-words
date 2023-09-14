@@ -21,7 +21,7 @@ class CardWordEntry {
     val wordCardStatusesProperty = SimpleObjectProperty<Set<WordCardStatus>>(this, "wordCardStatuses", emptySet())
     val predefinedSetsProperty = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())
     val sourcePositionsProperty = SimpleObjectProperty<List<Int>>(this, "sourcePositions", emptyList())
-    val sourceSentencesProperty = SimpleObjectProperty<List<String>>(this, "sourceSentences", emptyList())
+    val sourceSentencesProperty = SimpleStringProperty(this, "sourceSentences", "")
 
     var from: String
         get() = fromProperty.get()
@@ -57,7 +57,7 @@ class CardWordEntry {
         get() = sourcePositionsProperty.get()
         set(value) = sourcePositionsProperty.set(value)
 
-    var sourceSentences: List<String>
+    var sourceSentences: String
         get() = sourceSentencesProperty.get()
         set(value) = sourceSentencesProperty.set(value)
 

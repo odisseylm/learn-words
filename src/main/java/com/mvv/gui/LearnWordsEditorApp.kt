@@ -25,6 +25,8 @@ class LearnWordsEditorApp : Application() {
 
         primaryStage.scene = scene
 
+        scene.stylesheets.addAll(mainWordsPane.stylesheets)
+
         val screens = Screen.getScreens()
         val minScreenWidth = screens.minOf { it.bounds.width }
         val minScreenHeight = screens.minOf { it.bounds.height }

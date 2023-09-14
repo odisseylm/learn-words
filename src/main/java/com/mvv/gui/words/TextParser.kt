@@ -1,7 +1,6 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.util.logTime
-import com.mvv.gui.util.removeSuffixesRepeatably
+import com.mvv.gui.util.*
 
 
 private val log = mu.KotlinLogging.logger {}
@@ -214,6 +213,7 @@ private val abbreviations: List<AbbreviationRule> = sequenceOf(
 
 
 private const val possibleSentenceEndChars = ".?!"
+private const val closingQuotesChars = "”" // TODO: add other possible quotes
 
 private fun isSentenceEnd(text: CharSequence, position: Int, sentenceEndRule: SentenceEndRule): Boolean {
     val char = text[position]
@@ -221,6 +221,9 @@ private fun isSentenceEnd(text: CharSequence, position: Int, sentenceEndRule: Se
     if (sentenceEndRule.byLineBreak && char == '\n') return true
 
     if (sentenceEndRule.byDot) {
+        if (char in closingQuotesChars && position > 0 && text.prevChar(position) in possibleSentenceEndChars)
+            return true
+
         if (!possibleSentenceEndChars.contains(char)) return false
 
         if (isPartOfAbbreviation(text, position)) return false
@@ -258,6 +261,7 @@ fun nextCharsAreSentenceBeginning(text: CharSequence, position: Int, sentenceEnd
             ch.isDigit()     -> return true
             ch.isLetter() && ch.isUpperCase() -> return true
             ch.isLetter() && ch.isLowerCase() -> return false
+            ch in closingQuotesChars -> return false
         }
     }
 
@@ -337,19 +341,82 @@ class TextParserEx (private val sentenceEndRule: SentenceEndRule = SentenceEndRu
             if (isSentenceEnd(text, index, sentenceEndRule)) {
                 val currentSentence = text.subSequence(prevSentenceEnd + 1, index + 1).trim()
                 prevSentenceEnd = index
-                if (currentSentence.isNotBlank())
-                    sentences.add(currentSentence)
+                addSentence(currentSentence, sentences)
             }
         }
 
         if (prevSentenceEnd != text.length - 1) {
             val lastSentence = text.subSequence(prevSentenceEnd + 1, text.length).trim()
-            sentences.add(lastSentence)
+            addSentence(lastSentence, sentences)
         }
 
         return sentences.asSequence()
     }
 
+    private fun addSentence(sentence: CharSequence, sentences: MutableList<CharSequence>) {
+        var fixed = sentence.trim()
+
+        fixed = removeUnpairedStartingQuote(fixed)
+        fixed = removeUnpairedEndingQuote(fixed)
+
+        if (fixed.isNotBlank()) {
+            fixed = fixed
+                .removeCharPrefixesRepeatably("” \n\t") // It is hack :-( need to fix finding proper sentence end.
+                .removeCharSuffixesRepeatably("“ \n\t") // It is hack :-( need to fix finding proper sentence end.
+
+            fixed = addMissedEndingQuote(fixed)
+
+            if (fixed.isNotEmpty())
+                sentences.add(fixed)
+        }
+    }
+
+}
+
+
+private fun removeUnpairedStartingQuote(sentence: CharSequence): CharSequence {
+    var fixed = sentence
+    if (fixed.startsWith('“')) {
+        val indexOfClosingQuote = fixed.indexOf('”')
+        val indexOfNextOpenQuote = fixed.indexOf('“', 1)
+
+        val openQuoteHasClosingQuote = (indexOfClosingQuote != -1) && (indexOfClosingQuote < indexOfNextOpenQuote || indexOfNextOpenQuote == -1)
+
+        if (!openQuoteHasClosingQuote)
+            fixed = fixed.substring(1).removeCharPrefixesRepeatably(" \n\t")
+    }
+    return fixed
+}
+
+
+private fun removeUnpairedEndingQuote(sentence: CharSequence): CharSequence {
+    var fixed = sentence
+    if (fixed.endsWith('”')) {
+        val lastIndexOfOpenQuote = fixed.lastIndexOf('“')
+        val lastIndexOfPrevCloseQuote = fixed.indexOf('”', 1)
+
+        val closeQuoteHasOpenQuote = (lastIndexOfOpenQuote != -1) && (lastIndexOfOpenQuote > lastIndexOfPrevCloseQuote || lastIndexOfPrevCloseQuote == -1)
+
+        if (!closeQuoteHasOpenQuote)
+            fixed = fixed.substring(0, fixed.length - 1).removeCharSuffixesRepeatably(" \n\t")
+    }
+    return fixed
+}
+
+
+private fun addMissedEndingQuote(sentence: CharSequence): CharSequence {
+    var fixed = sentence
+
+    val lastIndexOfOpenQuote = fixed.lastIndexOf("“")
+    val lastIndexOfCloseQuote = fixed.lastIndexOf("”")
+
+    val lastOpenQuoteDoesNotHavePairedClosingQuote =
+        (lastIndexOfOpenQuote != -1) && (lastIndexOfOpenQuote > lastIndexOfCloseQuote || lastIndexOfCloseQuote == -1)
+
+    if (lastOpenQuoteDoesNotHavePairedClosingQuote)
+        fixed = "$fixed”"
+
+    return fixed
 }
 
 
@@ -371,15 +438,16 @@ private val wordDelimiters = arrayOf(
 
 private fun parseSentence(sentence: CharSequence, prevWordCount: Int): Sentence {
     val tempSentenceStuff = Sentence(sentence, emptyList())
+    val unneeded = "-—\"!?“”"
     return sentence
-        .removeSuffixesRepeatably(".", "!", "?")
+        .removeCharSuffixesRepeatably(".!?")
         .splitToSequence(delimiters = wordDelimiters)
         .filter { it.isNotBlank() }
         //.filter { it.length > 1 }
-        .map { it.removePrefix("\"").removeSuffix("\"") }
-        .map { it.removePrefix("-").removeSuffix("-") }
+        .map { it.removeCharPrefixesRepeatably(unneeded) }
+        .map { it.removeCharSuffixesRepeatably(unneeded) }
         .filter { it.isNotBlank() }
-        .mapIndexed { index, s -> WordEntry(s.lowercase(), prevWordCount + index, tempSentenceStuff) }
+        .mapIndexed { index, s -> WordEntry(s.toString().lowercase(), prevWordCount + index, tempSentenceStuff) }
         .toList()
         .let { Sentence(sentence, it) }
 

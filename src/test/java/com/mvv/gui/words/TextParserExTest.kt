@@ -299,6 +299,41 @@ class TextParserExTest {
         assertions.assertAll()
     }
 
+    @Test
+    fun parseRealText() {
+        val text =
+            """
+            Charles Stross
+            EQUOID
+            “Bob! Are you busy right now? I’d like a moment of your time.”
+            Those thirteen words never bode well—although coming from my new manager, Iris, they’re less doom-laden than if they were falling from the lips of some others I could name. In the two months I’ve been working for her Iris has turned out to be the sanest and most sensible manager I’ve had in the past five years. Which is saying quite a lot, really, and I’m eager to keep her happy while I’ve got her.
+            “Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.” Human Resources have teeth, here in the secretive branch of the British government known to its inmates as the Laundry; so when HR ask you to do their homework—ahem, provide one’s opinion of an applicant’s suitability for a job opening—you give them priority over your regular work load. Even when it’s pretty obvious that they’re taking the piss. 
+            """
+
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDotOrLineBreak).parse(text)
+
+        assertThat(sentences.map { it.text }).containsExactly(
+            "Charles Stross",
+            "EQUOID",
+            "Bob!",
+            "Are you busy right now?",
+            "I’d like a moment of your time.",
+            "Those thirteen words never bode well—although coming from my new manager, Iris," +
+                    " they’re less doom-laden than if they were falling from the lips of some others I could name.",
+            "In the two months I’ve been working for her Iris has turned out to be the sanest" +
+                    " and most sensible manager I’ve had in the past five years.",
+            "Which is saying quite a lot, really, and I’m eager to keep her happy while I’ve got her.",
+            // T O D O: remove [”][“]["] only if they do not have corresponding pair.
+            // should be
+            "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”",
+            //"Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.",
+            "Human Resources have teeth, here in the secretive branch of the British government known to its inmates" +
+                    " as the Laundry; so when HR ask you to do their homework—ahem, provide one’s opinion" +
+                    " of an applicant’s suitability for a job opening—you give them priority over your regular work load.",
+            "Even when it’s pretty obvious that they’re taking the piss."
+        )
+    }
+
 
     @Test
     @DisplayName("isAbbreviation")

@@ -88,6 +88,22 @@
     -fx-padding: 0 15 0 15;
 }
 
+#currentWords .predefinedSetsColumn .label {
+    -fx-alignment: CENTER;
+    /*-fx-padding: 0 15 0 15;*/
+}
+
+#currentWords .sourcePositionsColumn .label {
+    -fx-alignment: CENTER;
+    -fx-padding: 0 5 0 5;
+}
+
+
+/*.htmlTextPreview {*/
+.htmlTextPreviewDialogPane {
+    -fx-pref-width: 420;
+    -fx-pref-height: 270;
+}
 
 /* That all does NOT work properly. Table column will have required width, */
 /* but it become un-sizable and looks strange and total table width is not calculated properly. */

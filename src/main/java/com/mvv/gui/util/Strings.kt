@@ -34,6 +34,50 @@ fun CharSequence.removeSuffixesRepeatably(vararg suffixes: String): CharSequence
 }
 
 
+fun CharSequence.removePrefixesRepeatably(vararg prefixes: String): CharSequence {
+    var s = this
+
+    do {
+        val changed = prefixes
+            .find { s.startsWith(it) }
+            ?.let { s.removePrefix(it) }
+            ?: return s
+
+        s = changed
+    } while (true)
+}
+
+
+fun CharSequence.removeCharSuffixesRepeatably(suffixes: String): CharSequence {
+    var s = this
+
+    do {
+        val prefix = suffixes.chars()
+            .filter { s.endsWith(it.toChar()) }
+            .findFirst()
+
+        if (prefix.isEmpty) return s
+
+        s = s.substring(0, s.length - 1)
+    } while (true)
+}
+
+
+fun CharSequence.removeCharPrefixesRepeatably(prefixes: String): CharSequence {
+    var s = this
+
+    do {
+        val prefix = prefixes.chars()
+            .filter { s.startsWith(it.toChar()) }
+            .findFirst()
+
+        if (prefix.isEmpty) return s
+
+        s = s.substring(1)
+    } while (true)
+}
+
+
 fun <S: CharSequence> S.ifNotBlank(action: (S)->S): S = if (this.isBlank()) this else action(this)
 
 

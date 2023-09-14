@@ -160,6 +160,11 @@
       <artifactId>javafx-media</artifactId>
       <version>${javafx.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-web</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>com.mpatric</groupId>
@@ -222,6 +227,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>3.12.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.10.0</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

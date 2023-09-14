@@ -1,20 +1,31 @@
 package com.mvv.gui.javafx
 
+import com.mvv.gui.util.containsOneOf
 import javafx.animation.KeyFrame
 import javafx.animation.Timeline
 import javafx.application.Platform
+import javafx.concurrent.Worker
+import javafx.css.CssParser
+import javafx.css.ParsedValue
+import javafx.css.Rule
+import javafx.css.Selector
 import javafx.event.EventHandler
 import javafx.geometry.HPos
+import javafx.geometry.Insets
 import javafx.scene.Node
+import javafx.scene.Parent
 import javafx.scene.control.*
+import javafx.scene.control.ButtonBar.ButtonData
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
+import javafx.scene.layout.BorderPane
 import javafx.scene.layout.ColumnConstraints
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
+import javafx.scene.web.WebView
 import javafx.stage.Modality
 import javafx.stage.Stage
 import javafx.util.Duration
@@ -23,6 +34,7 @@ import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.exists
 import kotlin.io.path.readBytes
+import kotlin.math.roundToInt
 
 
 private val log = mu.KotlinLogging.logger {}
@@ -52,12 +64,77 @@ private fun showAlert(parent: Node, msg: String, title: String) {
     alert.showAndWait()
 }
 
+
 fun showConfirmation(parent: Node, msg: String, title: String, vararg buttonTypes: ButtonType): Optional<ButtonType> {
     val alert = Alert(Alert.AlertType.CONFIRMATION, msg, *buttonTypes)
     alert.title = title
 
     initDialogParentAndModality(alert, parent)
     return alert.showAndWait()
+}
+
+
+@Suppress("unused")
+fun showTextAreaPreviewDialog(parent: Node, title: String, textAreaContent: String, wrapText: Boolean = true) {
+    val dialog = Dialog<Unit>()
+    dialog.title = title
+    val type = ButtonType("Ok", ButtonData.OK_DONE)
+
+    dialog.dialogPane.content = BorderPane(
+            TextArea(textAreaContent).also { it.isWrapText = wrapText }
+        )
+        .also { it.padding = Insets(0.0, 4.0, 0.0, 4.0) }
+    dialog.dialogPane.buttonTypes.add(type)
+
+    dialog.isResizable = true
+    initDialogParentAndModality(dialog, parent)
+
+    dialog.showAndWait()
+}
+
+
+private class TempResourceLocator()
+
+fun showHtmlTextPreviewDialog(parent: Node, title: String, html: String) {
+    val dialog = Dialog<Unit>()
+    dialog.title = title
+    val type = ButtonType("Ok", ButtonData.OK_DONE)
+
+    val rootStylesheets = (parent.scene.stylesheets +
+            if (parent is Parent) parent.stylesheets else emptyList())
+        .distinct()
+
+    val htmlTextPreviewCssStyle = getStyles("htmlTextPreview", rootStylesheets).asCssText
+
+    dialog.dialogPane.content = BorderPane(
+            WebView().also { webView ->
+                webView.styleClass.add("htmlTextPreview")
+
+                val webEngine = webView.engine
+                webEngine.isJavaScriptEnabled = false
+
+                webEngine.loadWorker.stateProperty().addListener { obs, oldState, newState ->
+                    if (newState == Worker.State.SUCCEEDED) {
+                        val doc = webEngine.document
+                        val styleNode = doc.createElement("style")
+                        styleNode.appendChild(doc.createTextNode("body { $htmlTextPreviewCssStyle } "))
+                        doc.documentElement.getElementsByTagName("head").item(0).appendChild(styleNode)
+                    }
+                }
+
+                webEngine.loadContent(html)
+            }
+        )
+        .also { it.padding = Insets(0.0, 4.0, 0.0, 4.0); }
+
+    dialog.dialogPane.buttonTypes.add(type)
+
+    dialog.isResizable = true
+    initDialogParentAndModality(dialog, parent)
+
+    dialog.dialogPane.styleClass.add("htmlTextPreviewDialogPane")
+
+    dialog.showAndWait()
 }
 
 
@@ -159,6 +236,12 @@ fun showTextInputDialog(parent: Node, msg: String, title: String = "", defaultVa
 
 
 fun <T> initDialogParentAndModality(dialog: Dialog<T>, parent: Node): Dialog<T> {
+
+    // It can be needed if stylesheets are not set to parent.scene (but only to some panel),
+    // otherwise stylesheets will be inherited automatically.
+    //
+    //if (parent is Parent) dialog.dialogPane.stylesheets.addAll(parent.stylesheets)
+
     dialog.initModality(Modality.WINDOW_MODAL)
     dialog.initOwner(parent.scene.window)
     return dialog
@@ -229,3 +312,62 @@ fun toLowerCase(textInput: TextInputControl) {
     textInput.text = currentText.lowercase()
     textInput.selectRange(anchor, caretPosition)
 }
+
+
+@Suppress("SameParameterValue")
+private fun getStyles(selector: String, cssFiles: Iterable<String>): List<Rule> {
+
+    val cssRules: List<Rule> = cssFiles.flatMap { cssFile ->
+        val cssParser = CssParser()
+        val r = cssParser.parse(
+            TempResourceLocator::class.java.getResource(cssFile)
+                ?: TempResourceLocator::class.java.getResource("/$cssFile")
+        )
+        r.rules
+    }
+
+    val ruleSelectors = listOf(selector, ".$selector", "*.$selector").map { Selector.createSelector(it) }
+    return cssRules.filter { it.selectors.containsOneOf(ruleSelectors) } // .also { println("asCssText: ${it.asCssText}") }
+}
+
+private val List<Rule>.asCssText: String get() {
+    val aa: List<String> = this
+        .asReversed()
+        .flatMap { it.declarations }
+        .map { it.property + ": " + it.parsedValue.toCssStringValue() }
+
+    return aa.joinToString("; ")
+}
+
+
+private fun Any?.toCssStringValue(): String =
+    when (this) {
+        null -> ""
+        is ParsedValue<*,*> ->
+            when (val value = this.value) {
+                is ParsedValue<*,*> -> value.toCssStringValue()
+
+                is Array<*> -> value.joinToString(" ") {
+                    if (it is ParsedValue<*, *>) it.toCssStringValue() else it.toCssStringValue() }
+
+                is Iterable<*> -> value.joinToString(" ") {
+                    if (it is ParsedValue<*, *>) it.toCssStringValue() else it.toCssStringValue()
+                }
+
+                else -> value.toCssStringValue()
+            }
+        is Color -> this.toCssColor()
+        is String -> this
+        else -> {
+            log.warn { "${this.javaClass.simpleName} probably is converted to CCS improperly." }
+            this.toString()
+        }
+    }
+
+fun Color.toCssColor(): String =
+    "#%02x%02x%02x%02x".format(
+        (this.red * 255).roundToInt(),
+        (this.green * 255).roundToInt(),
+        (this.blue * 255).roundToInt(),
+        (this.opacity * 255).roundToInt(),
+    )

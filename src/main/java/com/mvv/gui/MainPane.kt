@@ -41,6 +41,9 @@ class MainWordsPane : BorderPane() {
     private val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
     internal val transcriptionColumn = TableColumn<CardWordEntry, String>("Transcription")
     internal val examplesColumn = TableColumn<CardWordEntry, String>("Examples")
+    internal val predefinedSetsColumn = TableColumn<CardWordEntry, Set<PredefinedSet>>() // "predefinedSets")
+    internal val sourcePositionsColumn = TableColumn<CardWordEntry, List<Int>>() // "Source Positions")
+    internal val sourceSentencesColumn = TableColumn<CardWordEntry, String>("Source Sentences")
 
     internal val ignoredWordsList = ListView<String>()
     internal val allProcessedWordsList = ListView<String>()
@@ -179,6 +182,30 @@ class MainWordsPane : BorderPane() {
         examplesColumn.cellValueFactory = PropertyValueFactory("examples")
         examplesColumn.cellValueFactory = Callback { p -> p.value.examplesProperty }
         examplesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+        examplesColumn.styleClass.add("examplesColumn")
+
+        predefinedSetsColumn.id = "predefinedSetsColumn"
+        predefinedSetsColumn.isEditable = true
+        predefinedSetsColumn.graphic = Label("Pr Sets").also { it.tooltip = Tooltip("Predefined Sets") }
+        predefinedSetsColumn.cellValueFactory = PropertyValueFactory("Predefined Sets")
+        predefinedSetsColumn.cellValueFactory = Callback { p -> p.value.predefinedSetsProperty }
+        //predefinedSetsColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+        predefinedSetsColumn.styleClass.add("predefinedSetsColumn")
+
+        sourcePositionsColumn.id = "sourcePositionsColumn"
+        sourcePositionsColumn.isEditable = true
+        sourcePositionsColumn.graphic = Label("Src").also { it.tooltip = Tooltip("Source Positions") }
+        sourcePositionsColumn.cellValueFactory = PropertyValueFactory("examples")
+        sourcePositionsColumn.cellValueFactory = Callback { p -> p.value.sourcePositionsProperty }
+        //sourcePositionsColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+        sourcePositionsColumn.styleClass.add("sourcePositionsColumn")
+
+        sourceSentencesColumn.id = "sourceSentencesColumn"
+        sourceSentencesColumn.isEditable = true
+        sourceSentencesColumn.cellValueFactory = PropertyValueFactory("examples")
+        sourceSentencesColumn.cellValueFactory = Callback { p -> p.value.sourceSentencesProperty }
+        //sourceSentencesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+        sourceSentencesColumn.styleClass.add("sourceSentencesColumn")
 
 
         val iconLowPriority = Image("icons/exclamation-1.png")
@@ -240,9 +267,16 @@ class MainWordsPane : BorderPane() {
         translationCountColumn.prefWidth = 50.0
         transcriptionColumn.prefWidth = 150.0
         examplesColumn.prefWidth = 400.0
+        predefinedSetsColumn.prefWidth = 70.0
+        sourcePositionsColumn.prefWidth = 70.0
+        sourceSentencesColumn.prefWidth = 300.0
 
 
-        currentWordsList.columns.setAll(fromColumn, wordCardStatusesColumn, toColumn, translationCountColumn, transcriptionColumn, examplesColumn)
+        currentWordsList.columns.setAll(
+            fromColumn, wordCardStatusesColumn, toColumn, translationCountColumn,
+            transcriptionColumn, examplesColumn,
+            predefinedSetsColumn, sourcePositionsColumn, sourceSentencesColumn,
+        )
 
 
         this.center = contentPane

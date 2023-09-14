@@ -170,8 +170,45 @@ internal fun extractWordsFromText_New(content: CharSequence, ignoredWords: Colle
         .asSequence()
         .flatMap { extractNeededWords(it) }
         .flatMap { it.toCardWordEntries() }
-        .filter { !ignoredWords.contains(it.from) }
+        //.filter { !ignoredWords.contains(it.from) } // TODO: make it configurable
         .toList()
+
+
+fun mergeDuplicates(cards: Iterable<CardWordEntry>): List<CardWordEntry> {
+    val grouped = cards.groupByTo(LinkedHashMap()) { it.from }
+    return grouped.entries.asSequence().map { mergeCards(it.value) }.toList()
+}
+
+fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
+
+    if (cards.size == 1) return cards.first()
+
+    fun Iterable<CardWordEntry>.merge(delimiter: String, getter: (CardWordEntry)->String): String =
+        this.map(getter).distinct().filter { it.isNotBlank() }.joinToString(delimiter)
+
+    fun <T> Iterable<CardWordEntry>.mergeList(getter: (CardWordEntry)->List<T>): List<T> =
+        this.flatMap(getter).distinct().toList()
+
+    fun <T> Iterable<CardWordEntry>.mergeSet(getter: (CardWordEntry)->Set<T>): Set<T> =
+        this.flatMap(getter).toSet()
+
+
+    val card = CardWordEntry(
+        cards.first().from,
+        cards.merge("\n") { it.to },
+    )
+
+    card.fromWithPreposition = cards.merge("\n") { it.fromWithPreposition }
+    card.transcription = cards.merge("\n") { it.transcription }
+    card.examples = cards.merge("\n") { it.examples }
+    card.wordCardStatuses = cards.mergeSet { it.wordCardStatuses }
+    card.predefinedSets   = cards.mergeSet { it.predefinedSets }
+    card.sourcePositions = cards.mergeList { it.sourcePositions }
+    card.sourceSentences = cards.merge("\n") { it.sourceSentences }
+    card.missedBaseWords = cards.mergeList { it.missedBaseWords }
+
+    return card
+}
 
 
 private data class WordInternal (
@@ -179,13 +216,17 @@ private data class WordInternal (
     val wordWithPreposition: WordEntry?,
 ) {
     fun toCardWordEntries(): List<CardWordEntry> =
-        listOfNotNull(fillCardFrom(word), wordWithPreposition?.let { fillCardFrom(it) })
+        if (wordWithPreposition == null)
+            listOf(fillCardFrom(word))
+        else
+            listOf(fillCardFrom(word), fillCardFrom(wordWithPreposition))
+                .onEach { it.fromWithPreposition = wordWithPreposition.word }
 }
 
 private fun fillCardFrom(word: WordEntry): CardWordEntry =
     CardWordEntry(word.word, "").also {
         it.sourcePositions = listOf(word.position)
-        it.sourceSentences = listOf(word.sentence.text.toString()) // TODO: make sure that the same String instance is used
+        it.sourceSentences = word.sentence.text.toString().replace('\n', ' ').replace("  ", " ") // TODO: make sure that the same String instance is used
     }
 
 
@@ -237,7 +278,9 @@ internal fun extractWordsFromClipboard(clipboard: Clipboard, ignoredWords: Colle
     log.info("clipboard content: [${content}]")
     if (content == null) return emptyList()
 
-    val words = extractWordsFromText(content.toString(), ignoredWords)
+    //val words = extractWordsFromText(content.toString(), ignoredWords)
+    val words = mergeDuplicates(
+        extractWordsFromText_New(content.toString(), ignoredWords))
 
     log.info("clipboard content as words: $words")
     return words
