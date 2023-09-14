@@ -216,6 +216,7 @@ private const val spaceChars = " \n\t"
 private const val possibleSentenceEndChars = ".?!"
 
 // We do not use there universal "'\""' because they are not 'paired'
+private const val openCloseQuotesChars = "\"'"
 private const val openQuotesChars = "“‘«‚"
 private const val closingQuotesChars = "”’»’"
 
@@ -391,6 +392,19 @@ internal fun removeUnpairedStartingQuote(sentence: CharSequence): CharSequence {
         if (openQuoteHasNoClosingQuote)
             fixed = fixed.substring(1).removeCharPrefixesRepeatably(spaceChars)
     }
+    else {
+        for (openCloseQuotesChar in openCloseQuotesChars) {
+            if (fixed.startsWith(openCloseQuotesChar)) {
+                val openCloseQuotesCharCount = fixed.count { it == openCloseQuotesChar }
+
+                if (openCloseQuotesCharCount %2 == 1) {
+                    fixed = fixed.substring(1).removeCharPrefixesRepeatably(spaceChars)
+                }
+                break
+            }
+        }
+    }
+
     return fixed
 }
 
@@ -407,6 +421,19 @@ internal fun removeUnpairedEndingQuote(sentence: CharSequence): CharSequence {
             fixed = fixed.substring(0, fixed.length - 1)
             fixed = fixed.removeCharSuffixesRepeatably(spaceChars)
     }
+    else {
+        for (openCloseQuotesChar in openCloseQuotesChars) {
+            if (fixed.endsWith(openCloseQuotesChar)) {
+                val openCloseQuotesCharCount = fixed.count { it == openCloseQuotesChar }
+
+                if (openCloseQuotesCharCount %2 == 1) {
+                    fixed = fixed.substring(0, fixed.length - 1).removeCharPrefixesRepeatably(spaceChars)
+                }
+                break
+            }
+        }
+    }
+
     return fixed
 }
 

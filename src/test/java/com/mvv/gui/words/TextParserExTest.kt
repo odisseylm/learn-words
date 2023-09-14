@@ -431,9 +431,13 @@ class TextParserExTest {
     fun test_removeUnpairedStartingQuote() {
         assertThat(removeUnpairedStartingQuote("“Bob!")).isEqualTo("Bob!")
         assertThat(removeUnpairedStartingQuote("«Bob!")).isEqualTo("Bob!")
+        assertThat(removeUnpairedStartingQuote("\"Bob!")).isEqualTo("Bob!")
+        assertThat(removeUnpairedStartingQuote("'Bob!")).isEqualTo("Bob!")
 
         assertThat(removeUnpairedStartingQuote("Bob!”")).isEqualTo("Bob!”")
         assertThat(removeUnpairedStartingQuote("Bob!»")).isEqualTo("Bob!»")
+        assertThat(removeUnpairedStartingQuote("Bob!\"")).isEqualTo("Bob!\"")
+        assertThat(removeUnpairedStartingQuote("Bob!'")).isEqualTo("Bob!'")
     }
 
 
@@ -442,9 +446,13 @@ class TextParserExTest {
     fun test_removeUnpairedEndingQuote() {
         assertThat(removeUnpairedEndingQuote("“Bob!")).isEqualTo("“Bob!")
         assertThat(removeUnpairedEndingQuote("«Bob!")).isEqualTo("«Bob!")
+        assertThat(removeUnpairedEndingQuote("\"Bob!")).isEqualTo("\"Bob!")
+        assertThat(removeUnpairedEndingQuote("'Bob!")).isEqualTo("'Bob!")
 
         assertThat(removeUnpairedEndingQuote("Bob!”")).isEqualTo("Bob!")
         assertThat(removeUnpairedEndingQuote("Bob!»")).isEqualTo("Bob!")
+        assertThat(removeUnpairedEndingQuote("Bob!\"")).isEqualTo("Bob!")
+        assertThat(removeUnpairedEndingQuote("Bob!'")).isEqualTo("Bob!")
     }
 
 }
