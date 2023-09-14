@@ -257,17 +257,22 @@ fun setWindowTitle(node: Node, title: String) {
 
 var Control.toolTipText: String?
     get() = this.tooltip?.text
-    set(value) {
-        if (value.isNullOrBlank()) {
-            // We need set the whole ToolTip object to null!
-            // Just setting text to ""/null for existent ToolTip instance does not prevent showing empty tooltip.
-            this.tooltip = null
-        }
-        else {
-            if (this.tooltip == null) this.tooltip = Tooltip()
-            this.tooltip.text = value
-        }
+    set(value) { setToolTip(value, null) }
+
+fun Control.setToolTip(text: String?, maxWidth: Double?) {
+    if (text.isNullOrBlank()) {
+        // We need set the whole ToolTip object to null!
+        // Just setting text to ""/null for existent ToolTip instance does not prevent showing empty tooltip.
+        this.tooltip = null
     }
+    else {
+        if (this.tooltip == null) this.tooltip = Tooltip()
+        this.tooltip.text = text
+
+        this.tooltip.isWrapText = true
+        maxWidth?.let  { this.tooltip.maxWidth  = it }
+    }
+}
 
 
 fun buttonIcon(path: String, iconSize: Double = 16.0): ImageView {

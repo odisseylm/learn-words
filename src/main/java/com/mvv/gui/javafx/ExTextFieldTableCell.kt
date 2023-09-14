@@ -59,6 +59,7 @@ class ExTextFieldTableCell<S, T>
         private val textFieldType: TextFieldType,
         converter: StringConverter<T>,
         private val customValueSetter: BeanPropertySetter<S,T>? = null,
+        private val toolTipMode: ToolTipMode = ToolTipMode.Default,
     )
 
     : TableCell<S, T>() {
@@ -138,7 +139,7 @@ class ExTextFieldTableCell<S, T>
     /** {@inheritDoc}  */
     public override fun updateItem(item: T, empty: Boolean) {
         super.updateItem(item, empty)
-        TextFieldTableCellUtils.updateItem(this, getConverter(), null, null, textField)
+        TextFieldTableCellUtils.updateItem(this, getConverter(), null, null, textField, toolTipMode)
     }
 
 
@@ -161,12 +162,12 @@ class ExTextFieldTableCell<S, T>
          * [cell factory property][TableColumn.cellFactoryProperty] of a
          * TableColumn, that enables textual editing of the content.
         </S> */
-        fun <S> forStringTableColumn(textFieldType: TextFieldType): Callback<TableColumn<S, String>, TableCell<S, String>> =
-            forTableColumn<S,String>(textFieldType, DefaultStringConverter())
+        fun <S> forStringTableColumn(textFieldType: TextFieldType, toolTipMode: ToolTipMode = ToolTipMode.Default): Callback<TableColumn<S, String>, TableCell<S, String>> =
+            forTableColumn<S,String>(textFieldType, DefaultStringConverter(), toolTipMode)
 
         @Suppress("unused")
-        fun <S> forStringTableColumn(textFieldType: TextFieldType, customValueSetter: (String, S) -> Unit): Callback<TableColumn<S, String>, TableCell<S, String>> =
-            forTableColumn<S,String>(textFieldType, DefaultStringConverter(), customValueSetter)
+        fun <S> forStringTableColumn(textFieldType: TextFieldType, customValueSetter: (String, S) -> Unit, toolTipMode: ToolTipMode = ToolTipMode.Default): Callback<TableColumn<S, String>, TableCell<S, String>> =
+            forTableColumn<S,String>(textFieldType, DefaultStringConverter(), customValueSetter, toolTipMode)
 
         /**
          * Provides a [TextField] that allows editing of the cell content when
@@ -187,12 +188,12 @@ class ExTextFieldTableCell<S, T>
          * TableColumn, that enables textual editing of the content.
         </T></S> */
         @Suppress("MemberVisibilityCanBePrivate")
-        fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter) }
+        fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>, toolTipMode: ToolTipMode = ToolTipMode.Default): Callback<TableColumn<S, T>, TableCell<S, T>> =
+            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, null, toolTipMode) }
 
         @Suppress("MemberVisibilityCanBePrivate")
-        fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>, customValueSetter: BeanPropertySetter<S,T>): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, customValueSetter) }
+        fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>, customValueSetter: BeanPropertySetter<S,T>, toolTipMode: ToolTipMode = ToolTipMode.Default): Callback<TableColumn<S, T>, TableCell<S, T>> =
+            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, customValueSetter, toolTipMode) }
 
     } // companion end
 }
@@ -215,7 +216,7 @@ internal class TextFieldTableCellUtils {
             else converter.toString(cell.item)
 
 
-        fun <T> updateItem(cell: Cell<T>, converter: StringConverter<T>?, hbox: HBox?, graphic: Node?, textField: TextInputControl?) {
+        fun <T> updateItem(cell: Cell<T>, converter: StringConverter<T>?, hbox: HBox?, graphic: Node?, textField: TextInputControl?, toolTipMode: ToolTipMode?) {
 
             if (cell.isEmpty) {
                 cell.text = null
@@ -233,8 +234,11 @@ internal class TextFieldTableCellUtils {
                         cell.setGraphic(textField)
                     }
                 } else {
-                    cell.text = getItemText(cell, converter)
-                    cell.setGraphic(graphic)
+                    val itemText = getItemText(cell, converter)
+                    cell.text = itemText
+                    cell.graphic = graphic
+                    if (toolTipMode == ToolTipMode.ShowAllContent)
+                        cell.setToolTip(itemText, 400.0)
                 }
             }
         }
@@ -360,6 +364,13 @@ internal class TextFieldTableCellUtils {
 }
 
 
+enum class ToolTipMode {
+    Default, // no tooltip
+    ShowAllContent
+}
+
+
+// TODO: move to another file
 fun <C: Control> addKeyBinding(control: C, keyBinding: KeyCombination, action: (C)-> Unit) =
     addKeyBinding(control, KeyEvent.KEY_RELEASED, keyBinding, action)
 

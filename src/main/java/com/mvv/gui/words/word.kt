@@ -148,7 +148,7 @@ enum class WordCardStatus (
 }
 
 
-enum class PredefinedSet {
-    DifficultToListen,
-    DifficultSense,
+enum class PredefinedSet (val humanName: String) {
+    DifficultToListen("Difficult To Listen"),
+    DifficultSense("Difficult Sense"),
 }

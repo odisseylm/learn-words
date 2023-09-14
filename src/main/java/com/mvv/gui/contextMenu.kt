@@ -8,6 +8,7 @@ import com.mvv.gui.words.englishBaseWords
 import javafx.event.EventHandler
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.MenuItem
+import javafx.scene.control.SeparatorMenuItem
 import javafx.scene.control.TableView
 
 
@@ -49,6 +50,10 @@ class ContextMenuController (val controller: LearnWordsController) {
             ignoreNoBaseWordMenuItem,
             addMissedBaseWordsMenuItem,
             newMenuItem("Play", buttonIcon("icons/ear.png")) { controller.playSelectedWord() },
+
+            SeparatorMenuItem(),
+            newMenuItem("Add to 'Difficult' Set") { controller.addToDifficultSet() },
+            newMenuItem("Add to 'Listen' Set") { controller.addToListenSet() },
         )
 
         contextMenu.items.addAll(menuItems)

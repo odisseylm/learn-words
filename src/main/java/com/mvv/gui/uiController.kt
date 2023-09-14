@@ -667,6 +667,12 @@ class LearnWordsController (
         }
     }
 
+    fun addToDifficultSet() =
+        currentWordsSelection.selectedItems.forEach { it.predefinedSets += PredefinedSet.DifficultSense }
+
+    fun addToListenSet() =
+        currentWordsSelection.selectedItems.forEach { it.predefinedSets += PredefinedSet.DifficultToListen }
+
 }
 
 

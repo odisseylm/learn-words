@@ -150,7 +150,6 @@ class MainWordsPane : BorderPane() {
 
         toColumn.id = "toColumn"
         toColumn.isEditable = true
-        toColumn.cellValueFactory = PropertyValueFactory("to")
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
         toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
 
@@ -173,13 +172,11 @@ class MainWordsPane : BorderPane() {
 
         transcriptionColumn.id = "transcriptionColumn"
         transcriptionColumn.isEditable = true
-        transcriptionColumn.cellValueFactory = PropertyValueFactory("transcription")
         transcriptionColumn.cellValueFactory = Callback { p -> p.value.transcriptionProperty }
         transcriptionColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextField)
 
         examplesColumn.id = "examplesColumn"
         examplesColumn.isEditable = true
-        examplesColumn.cellValueFactory = PropertyValueFactory("examples")
         examplesColumn.cellValueFactory = Callback { p -> p.value.examplesProperty }
         examplesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
         examplesColumn.styleClass.add("examplesColumn")
@@ -187,24 +184,21 @@ class MainWordsPane : BorderPane() {
         predefinedSetsColumn.id = "predefinedSetsColumn"
         predefinedSetsColumn.isEditable = true
         predefinedSetsColumn.graphic = Label("Pr Sets").also { it.tooltip = Tooltip("Predefined Sets") }
-        predefinedSetsColumn.cellValueFactory = PropertyValueFactory("Predefined Sets")
         predefinedSetsColumn.cellValueFactory = Callback { p -> p.value.predefinedSetsProperty }
-        //predefinedSetsColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+        predefinedSetsColumn.cellFactory = PredefinedSetsCell.forTableColumn()
         predefinedSetsColumn.styleClass.add("predefinedSetsColumn")
 
         sourcePositionsColumn.id = "sourcePositionsColumn"
         sourcePositionsColumn.isEditable = true
         sourcePositionsColumn.graphic = Label("Src").also { it.tooltip = Tooltip("Source Positions") }
-        sourcePositionsColumn.cellValueFactory = PropertyValueFactory("examples")
         sourcePositionsColumn.cellValueFactory = Callback { p -> p.value.sourcePositionsProperty }
-        //sourcePositionsColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+        sourcePositionsColumn.cellFactory = ExTextFieldTableCell.forTableColumn(ExTextFieldTableCell.TextFieldType.TextField, ListStringConverter(), ToolTipMode.ShowAllContent)
         sourcePositionsColumn.styleClass.add("sourcePositionsColumn")
 
         sourceSentencesColumn.id = "sourceSentencesColumn"
-        sourceSentencesColumn.isEditable = true
-        sourceSentencesColumn.cellValueFactory = PropertyValueFactory("examples")
+        sourceSentencesColumn.isEditable = false
         sourceSentencesColumn.cellValueFactory = Callback { p -> p.value.sourceSentencesProperty }
-        //sourceSentencesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+        sourceSentencesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea, ToolTipMode.ShowAllContent)
         sourceSentencesColumn.styleClass.add("sourceSentencesColumn")
 
 
@@ -282,4 +276,50 @@ class MainWordsPane : BorderPane() {
         this.center = contentPane
     }
 
+}
+
+
+internal class ListStringConverter<T> : StringConverter<List<T>>() {
+    override fun toString(value: List<T>?): String = value?.joinToString(", ") ?: ""
+
+    override fun fromString(string: String?): List<T> = throw IllegalStateException("Unsupported.")
+}
+
+
+private class PredefinedSetsCell : TableCell<CardWordEntry, Set<PredefinedSet>>() {
+
+    init {
+        styleClass.add("predefined-sets-table-cell")
+    }
+
+    public override fun updateItem(item: Set<PredefinedSet>?, empty: Boolean) {
+        super.updateItem(item, empty)
+        val cell = this
+
+        if (cell.isEmpty) {
+            cell.text = null
+            cell.graphic = null
+        } else {
+            val itemText = item?.sorted()?.joinToString(", ") { it.humanName } ?: ""
+            val itemIcons = item?.sorted()?.map { iconFor(it) } ?: emptyList()
+            cell.text = null
+            cell.graphic = FlowPane( *itemIcons.map { Label(null, ImageView(it)) }.toTypedArray() )
+                .also { it.alignment = Pos.CENTER; it.hgap = 4.0 }
+            cell.toolTipText = itemText
+            cell.requestLayout()
+        }
+    }
+
+    companion object {
+        private val difficultToListen: Image by lazy { Image("icons/ear.png") }
+        private val difficultSense: Image by lazy { Image("icons/sad.png") }
+
+        private fun iconFor(predefinedSet: PredefinedSet): Image = when (predefinedSet) {
+            PredefinedSet.DifficultToListen -> difficultToListen
+            PredefinedSet.DifficultSense    -> difficultSense
+        }
+
+        fun forTableColumn(): Callback<TableColumn<CardWordEntry, Set<PredefinedSet>>, TableCell<CardWordEntry, Set<PredefinedSet>>> =
+            Callback { _: TableColumn<CardWordEntry, Set<PredefinedSet>>? -> PredefinedSetsCell() }
+    }
 }
