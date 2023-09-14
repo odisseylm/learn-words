@@ -97,4 +97,73 @@ class StringsTest {
             .isEqualTo("Human Resources have teeth.")
     }
 
+
+    @Test
+    fun startsWithOneOfChars() {
+        assertThat("".startsWithOneOfChars("321")).isFalse()
+
+        assertThat("1word".startsWithOneOfChars("321")).isTrue()
+        assertThat("2word".startsWithOneOfChars("321")).isTrue()
+        assertThat("3word".startsWithOneOfChars("321")).isTrue()
+
+        assertThat("word1".startsWithOneOfChars("321")).isTrue()
+        assertThat("word1".startsWithOneOfChars("321")).isTrue()
+        assertThat("word1".startsWithOneOfChars("321")).isTrue()
+    }
+
+
+    @Test
+    fun endsWithOneOfChars() {
+        assertThat("".endsWithOneOfChars("321")).isFalse()
+
+        assertThat("word1".endsWithOneOfChars("321")).isTrue()
+        assertThat("word2".endsWithOneOfChars("321")).isTrue()
+        assertThat("word3".endsWithOneOfChars("321")).isTrue()
+
+        assertThat("1word".endsWithOneOfChars("321")).isFalse()
+        assertThat("1word".endsWithOneOfChars("321")).isFalse()
+        assertThat("1word".endsWithOneOfChars("321")).isFalse()
+
+        assertThat("“Bob!".endsWithOneOfChars("”’»’")).isFalse()
+    }
+
+
+    @Test
+    fun indexOfOneOfChars() {
+        assertThat("".indexOfOneOfChars("321")).isEqualTo(-1)
+
+        assertThat("word1".indexOfOneOfChars("321")).isEqualTo(4)
+        assertThat("word2word".indexOfOneOfChars("321")).isEqualTo(4)
+        assertThat("3word".indexOfOneOfChars("321")).isEqualTo(0)
+
+        assertThat("1word".indexOfOneOfChars("321")).isEqualTo(0)
+        assertThat("1word".indexOfOneOfChars("321")).isEqualTo(0)
+        assertThat("1word".indexOfOneOfChars("321")).isEqualTo(0)
+    }
+
+
+    @Test
+    fun indexOfOneOfChars_2() {
+        assertThat("".indexOfOneOfChars("321", 999)).isEqualTo(-1)
+        assertThat("".indexOfOneOfChars("321", 0)).isEqualTo(-1)
+
+        assertThat("word1".indexOfOneOfChars("321", 0)).isEqualTo(4)
+        assertThat("word1".indexOfOneOfChars("321", 1)).isEqualTo(4)
+        assertThat("word1".indexOfOneOfChars("321", 2)).isEqualTo(4)
+        assertThat("word1".indexOfOneOfChars("321", 3)).isEqualTo(4)
+        assertThat("word1".indexOfOneOfChars("321", 4)).isEqualTo(4)
+        assertThat("word1word".indexOfOneOfChars("321", 4)).isEqualTo(4)
+        assertThat("word1".indexOfOneOfChars("321", 5)).isEqualTo(-1)
+        assertThat("1word".indexOfOneOfChars("321", 0)).isEqualTo(0)
+    }
+
+
+    @Test
+    fun lastIndexOfOneOfChars() {
+        assertThat("".lastIndexOfOneOfChars("321", 999)).isEqualTo(-1)
+        assertThat("".lastIndexOfOneOfChars("321", 0)).isEqualTo(-1)
+
+        assertThat("word1word3".lastIndexOfOneOfChars("321", 0)).isEqualTo(9)
+    }
+
 }

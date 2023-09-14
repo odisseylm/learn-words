@@ -212,11 +212,17 @@ private val abbreviations: List<AbbreviationRule> = sequenceOf(
     .toList()
 
 
+private const val spaceChars = " \n\t"
 private const val possibleSentenceEndChars = ".?!"
-private const val closingQuotesChars = "”" // TODO: add other possible quotes
+
+// We do not use there universal "'\""' because they are not 'paired'
+private const val openQuotesChars = "“‘«‚"
+private const val closingQuotesChars = "”’»’"
 
 private fun isSentenceEnd(text: CharSequence, position: Int, sentenceEndRule: SentenceEndRule): Boolean {
     val char = text[position]
+    if (char == 'C')
+        Math.random()
 
     if (sentenceEndRule.byLineBreak && char == '\n') return true
 
@@ -361,8 +367,8 @@ class TextParserEx (private val sentenceEndRule: SentenceEndRule = SentenceEndRu
 
         if (fixed.isNotBlank()) {
             fixed = fixed
-                .removeCharPrefixesRepeatably("” \n\t") // It is hack :-( need to fix finding proper sentence end.
-                .removeCharSuffixesRepeatably("“ \n\t") // It is hack :-( need to fix finding proper sentence end.
+                .removeCharPrefixesRepeatably(spaceChars) // It is hack :-( need to fix finding proper sentence end.
+                .removeCharSuffixesRepeatably(spaceChars) // It is hack :-( need to fix finding proper sentence end.
 
             fixed = addMissedEndingQuote(fixed)
 
@@ -374,31 +380,32 @@ class TextParserEx (private val sentenceEndRule: SentenceEndRule = SentenceEndRu
 }
 
 
-private fun removeUnpairedStartingQuote(sentence: CharSequence): CharSequence {
+internal fun removeUnpairedStartingQuote(sentence: CharSequence): CharSequence {
     var fixed = sentence
-    if (fixed.startsWith('“')) {
-        val indexOfClosingQuote = fixed.indexOf('”')
-        val indexOfNextOpenQuote = fixed.indexOf('“', 1)
+    if (fixed.startsWithOneOfChars(openQuotesChars)) {
+        val indexOfClosingQuote = fixed.indexOfOneOfChars(closingQuotesChars, 1)
+        val indexOfNextOpenQuote = fixed.indexOfOneOfChars(openQuotesChars, 1)
 
-        val openQuoteHasClosingQuote = (indexOfClosingQuote != -1) && (indexOfClosingQuote < indexOfNextOpenQuote || indexOfNextOpenQuote == -1)
+        val openQuoteHasNoClosingQuote = (indexOfClosingQuote == -1) && (indexOfClosingQuote < indexOfNextOpenQuote || indexOfNextOpenQuote == -1)
 
-        if (!openQuoteHasClosingQuote)
-            fixed = fixed.substring(1).removeCharPrefixesRepeatably(" \n\t")
+        if (openQuoteHasNoClosingQuote)
+            fixed = fixed.substring(1).removeCharPrefixesRepeatably(spaceChars)
     }
     return fixed
 }
 
 
-private fun removeUnpairedEndingQuote(sentence: CharSequence): CharSequence {
+internal fun removeUnpairedEndingQuote(sentence: CharSequence): CharSequence {
     var fixed = sentence
-    if (fixed.endsWith('”')) {
-        val lastIndexOfOpenQuote = fixed.lastIndexOf('“')
-        val lastIndexOfPrevCloseQuote = fixed.indexOf('”', 1)
+    if (fixed.endsWithOneOfChars(closingQuotesChars)) {
+        val lastIndexOfOpenQuote = fixed.lastIndexOfOneOfChars(openQuotesChars)
+        val lastIndexOfPrevCloseQuote = fixed.lastIndexOfOneOfChars(closingQuotesChars, 0, fixed.length - 2)
 
-        val closeQuoteHasOpenQuote = (lastIndexOfOpenQuote != -1) && (lastIndexOfOpenQuote > lastIndexOfPrevCloseQuote || lastIndexOfPrevCloseQuote == -1)
+        val closeQuoteHasNoOpenQuote = (lastIndexOfOpenQuote == -1) && (lastIndexOfOpenQuote < lastIndexOfPrevCloseQuote || lastIndexOfPrevCloseQuote == -1)
 
-        if (!closeQuoteHasOpenQuote)
-            fixed = fixed.substring(0, fixed.length - 1).removeCharSuffixesRepeatably(" \n\t")
+        if (closeQuoteHasNoOpenQuote)
+            fixed = fixed.substring(0, fixed.length - 1)
+            fixed = fixed.removeCharSuffixesRepeatably(spaceChars)
     }
     return fixed
 }
@@ -407,8 +414,8 @@ private fun removeUnpairedEndingQuote(sentence: CharSequence): CharSequence {
 private fun addMissedEndingQuote(sentence: CharSequence): CharSequence {
     var fixed = sentence
 
-    val lastIndexOfOpenQuote = fixed.lastIndexOf("“")
-    val lastIndexOfCloseQuote = fixed.lastIndexOf("”")
+    val lastIndexOfOpenQuote = fixed.lastIndexOfOneOfChars(openQuotesChars)
+    val lastIndexOfCloseQuote = fixed.lastIndexOfOneOfChars(closingQuotesChars)
 
     val lastOpenQuoteDoesNotHavePairedClosingQuote =
         (lastIndexOfOpenQuote != -1) && (lastIndexOfOpenQuote > lastIndexOfCloseQuote || lastIndexOfCloseQuote == -1)

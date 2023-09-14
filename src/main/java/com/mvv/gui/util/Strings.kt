@@ -78,6 +78,45 @@ fun CharSequence.removeCharPrefixesRepeatably(prefixes: String): CharSequence {
 }
 
 
+fun CharSequence.startsWithOneOfChars(chars: String) =
+    if (this.isEmpty()) false else this[0] in chars
+
+fun CharSequence.endsWithOneOfChars(chars: String) =
+    if (this.isEmpty()) false else this[this.length - 1] in chars
+
+
+// T O D O: compare with manuals loops
+fun CharSequence.indexOfOneOfChars(chars: String): Int {
+    for (charIndex in this.indices) {
+        if (this[charIndex] in chars) return charIndex
+    }
+    return -1
+}
+fun CharSequence.indexOfOneOfChars(chars: String, index: Int): Int {
+    for (charIndex in index until this.length) {
+        if (this[charIndex] in chars) return charIndex
+    }
+    return -1
+}
+
+fun CharSequence.lastIndexOfOneOfChars(chars: String): Int {
+    for (charIndex in this.indices.reversed()) {
+        if (this[charIndex] in chars) return charIndex
+    }
+    return -1
+}
+
+fun CharSequence.lastIndexOfOneOfChars(chars: String, startingFrom: Int): Int =
+    lastIndexOfOneOfChars(chars, startingFrom, this.length - 1)
+
+fun CharSequence.lastIndexOfOneOfChars(chars: String, startingFrom: Int, end: Int): Int {
+    for (charIndex in end downTo startingFrom) {
+        if (this[charIndex] in chars) return charIndex
+    }
+    return -1
+}
+
+
 fun <S: CharSequence> S.ifNotBlank(action: (S)->S): S = if (this.isBlank()) this else action(this)
 
 
