@@ -1,6 +1,7 @@
 package com.mvv.gui.audio
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.text.Charsets.UTF_8
 
@@ -28,6 +29,7 @@ class HowJSayWebDownloadSpeechSynthesizerTest {
 
 
     @Test
+    @Disabled("for manual testing")
     fun speak() {
         val speechSynthesizer = HowJSayWebDownloadSpeechSynthesizer(JavaFxSoundPlayer(PlayingMode.Sync))
         speechSynthesizer.speak(" door \n ")

@@ -1,0 +1,76 @@
+
+https://www.nuance.com/omni-channel-customer-engagement/voice-and-ivr/text-to-speech.html
+
+
+Disable Cache
+29 requests
+1.28 MB / 795.50 kB transferred
+Finish: 5.35 min
+
+POST https://tts.api.nuance.com/api/v1/synthesize
+Status
+200
+OK
+VersionHTTP/2
+Transferred708.69 kB (708.36 kB size)
+Referrer Policystrict-origin-when-cross-origin
+Request PriorityHighest
+DNS ResolutionSystem
+
+----------------------------------------------------------------------------------
+
+access-control-allow-origin
+	https://www.nuance.com
+cache-control
+	no-cache, no-store, must-revalidate, private, max-age=0
+content-length
+	708356
+content-type
+	application/json
+date
+	Fri, 15 Sep 2023 20:29:27 GMT
+expires
+	0
+pragma
+	no-cache
+server
+	envoy
+x-envoy-upstream-service-time
+	2451
+X-Firefox-Spdy
+	h2
+
+
+-----------------------------------------------------------------
+
+Accept
+	*/*
+Accept-Encoding
+	gzip, deflate, br
+Accept-Language
+	en-US,en;q=0.5
+Authorization
+	Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6InB1YmxpYzo4MzQ3Zjc3OS1hMDIxLTRlMzEtYTQ4ZC1iNWU1NjdjMzg2ZmMiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOltdLCJjbGllbnRfaWQiOiJhcHBJRDpOTURQVFJJQUxfd2VicmVxdWVzdHNfbnVhbmNlX2NvbV8yMDIxMDkyOFQwMTQ3NTA3MjA2NzA6Z2VvOnVzOmNsaWVudE5hbWU6dHRzLWRlbW8iLCJleHAiOjE2OTQ4MDk3NzksImV4dCI6e30sImlhdCI6MTY5NDgwODg3OSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmNydC5udWFuY2UuY29tLyIsImp0aSI6ImY5OWViYTA1LTQwNTQtNGZjYS04YTM4LTU0NTJkZTgxN2NhYyIsIm5iZiI6MTY5NDgwODg3OSwic2NwIjpbInR0cyJdLCJzdWIiOiJhcHBJRDpOTURQVFJJQUxfd2VicmVxdW…WxLLiYo1PDCBgy3IYmKw3PIVjkc9aemRFumMcLCXLPquTzKYkTa8c3NgzM2suLI06jaAWG-a5dJPT6fFSxTeYgwkeFjL4KXD4Q0_h3GDNRgMRnoAIyt2hHQCoVwcvBBDMWi4bgMqQQj1BS2LwyUsc5R5vat2k0vLGvbRKD3KboRfmzXsBaRo_oYYPD9dt9cN3GZUPlTuy2djMDMNClxpUHNrW5ouuZgq2ZDhZgtPvb0s4VUyc_GDRNgfsvfvL_Vjgq0_3HjXTQxHrY2qlqLcqzbCr0xOAqlpAXp1_6PHnLDB_9gaegoh5iWjxux3G4vJWlhTHGK_SkR-ps6Mwto8GZPtKMWM2FA7fLZ1wAXh-uFvVSHmxQjnDxnuCWla8Jp2z5h89X9t09KW42SfCxQtbN-yejzCYv5Y_ZH8kNWl6CALgEYz0x9vRx5yof0NT6GpxnjI5O16IPOrfxS2KhcSv1SJ5Zmf5YQvLnrRtyWo0QysQQjTDS_dq4YLSEIbMYQ
+Connection
+	keep-alive
+Content-Length
+	244
+Content-type
+	application/JSON; charset=utf-8
+Host
+	tts.api.nuance.com
+Origin
+	https://www.nuance.com
+Referer
+	https://www.nuance.com/
+Sec-Fetch-Dest
+	empty
+Sec-Fetch-Mode
+	cors
+Sec-Fetch-Site
+	same-site
+TE
+	trailers
+User-Agent
+	Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0
+

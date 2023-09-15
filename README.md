@@ -71,29 +71,64 @@ Run application
 ***
 
 Speech synthesizers
- - synesthesiam/marytts
-   - https://hub.docker.com/r/synesthesiam/marytts
-   - https://github.com/synesthesiam/docker-marytts
-   - `docker pull synesthesiam/marytts`
-   - `docker run -it -p 59125:59125 synesthesiam/marytts:5.2 --voice cmu-slt-hsmm`
- - MaryTTS 5.2 with unit selection and HSMM Voices
-   - `docker pull andreibosco/marytts`
-   - https://hub.docker.com/r/andreibosco/marytts 
-   - To run: `docker run -it -p 59125:59125 synesthesiam/marytts:5.2`
-   - To run: `docker run -it -p 59125:59125 synesthesiam/marytts:5.2 --voice cmu-slt-hsmm --voice cmu-bdl-hsmm --voice cmu-rms-hsmm --voice dfki-obadiah-hsmm --voice dfki-poppy-hsmm --voice dfki-prudence-hsmm --voice dfki-spike-hsmm`
-   - A list of voices can be obtained with: `docker run -it synesthesiam/marytts:5.2 --voices`
- - Mary-TTS Server
-   - https://hub.docker.com/r/sepia/marytts
-   - `docker pull sepia/marytts`
-   - `?sudo? docker run --rm --name=marytts -p 59125:80 -it sepia/marytts:latest`
+ - MaryTTS
+   - https://github.com/marytts/marytts
+   - http://mary.dfki.de/
+   - Configuration
+     - https://projectnaomi.com/plugins/ttss/marytts/
+   - Forks
+     - synesthesiam/marytts
+       - https://hub.docker.com/r/synesthesiam/marytts
+       - https://github.com/synesthesiam/docker-marytts
+       - `docker pull synesthesiam/marytts`
+       - `docker run -it -p 59125:59125 synesthesiam/marytts:5.2 --voice cmu-slt-hsmm`
+     - MaryTTS 5.2 with unit selection and HSMM Voices
+       - `docker pull andreibosco/marytts`
+       - https://hub.docker.com/r/andreibosco/marytts 
+       - To run: `docker run -it -p 59125:59125 synesthesiam/marytts:5.2`
+       - To run: `docker run -it -p 59125:59125 synesthesiam/marytts:5.2 --voice cmu-slt-hsmm --voice cmu-bdl-hsmm --voice cmu-rms-hsmm --voice dfki-obadiah-hsmm --voice dfki-poppy-hsmm --voice dfki-prudence-hsmm --voice dfki-spike-hsmm`
+       - A list of voices can be obtained with: `docker run -it synesthesiam/marytts:5.2 --voices`
+     - Mary-TTS Server
+       - https://hub.docker.com/r/sepia/marytts
+       - `docker pull sepia/marytts`
+       - `?sudo? docker run --rm --name=marytts -p 59125:80 -it sepia/marytts:latest`
+ - eSpeak
+   - https://espeak.sourceforge.net/
+   - https://espeak.sourceforge.net/commands.html
+ - ?? kaldi
+   - https://github.com/kaldi-asr/kaldi
+ - Mozilla TTS
+   - https://github.com/mozilla/TTS
+ - ?? https://github.com/therealvasanth/online-tts
+ - ?? FestVox / Festival
+   - http://festvox.org/festival/index.html
+   - http://festvox.org/packed/festival/2.5/voices/
+   - http://festvox.org/cmu_arctic/
+     - http://festvox.org/cmu_arctic/dbs_bdl.html
+     - http://festvox.org/cmu_arctic/dbs_slt.html
+ - Coqui TTS
+   - https://github.com/coqui-ai/TTS
+   - http://erogol.com/ddc-samples/
+ - Ila
+   - https://sourceforge.net/projects/ila-voice-assistant/
+ - FreeTTS
+   - https://freetts.sourceforge.io
+   - https://freetts.sourceforge.io/docs/index.php
+
+
+***
+
+Links:
+ - 15 Open-source Text To Speech TTS Apps and Libraries[https://medevel.com/14-os-text-to-speech/]
+
 
 ***
 
 Licenses:
 
 Some icons can have [Attribution 3.0 Unported] license(https://creativecommons.org/licenses/by/3.0/)
-- Yusuke Kamiyamane
-    - https://iconbird.com/search/?q=iconset:Fugue%20Icons
+ - Yusuke Kamiyamane
+   - https://iconbird.com/search/?q=iconset:Fugue%20Icons
 
 Dark theme
 - [JavaFX-Dark-Theme](https://github.com/antoniopelusi/JavaFX-Dark-Theme) - Creative Commons Legal Code (CC0 1.0 Universal) license
