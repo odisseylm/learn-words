@@ -5,11 +5,13 @@ import com.opencsv.CSVReader
 import com.opencsv.CSVWriter
 import com.opencsv.ICSVWriter
 import mu.KotlinLogging
+import org.apache.commons.lang3.EnumUtils
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.EnumSet
 
 
 private val log = KotlinLogging.logger {}
@@ -62,7 +64,11 @@ fun loadWordCardsFromInternalCsv(file: Path): List<CardWordEntry> =
                     card.to = it.getOrEmpty(index++)
                     card.transcription = it.getOrEmpty(index++)
                     card.examples = it.getOrEmpty(index++)
-                    card.wordCardStatuses = wordCardStatusesFromString(it.getOrEmpty(index))
+                    card.wordCardStatuses = stringToEnums(it.getOrEmpty(index++))
+                    card.fromWithPreposition = it.getOrEmpty(index++)
+                    card.predefinedSets = stringToEnums(it.getOrEmpty(index++))
+                    card.sourcePositions = stringToInts(it.getOrEmpty(index++))
+                    card.sourceSentences = it.getOrEmpty(index)
                     card
                 }
                 .toList()
@@ -76,23 +82,44 @@ fun saveWordCardsIntoInternalCsv(file: Path, words: Iterable<CardWordEntry>) {
     FileWriter(file.toFile(), Charsets.UTF_8)
         .use { fw ->
             val csvWriter = internalFormatCsvWriter(fw)
-            words.forEach {
-                csvWriter.writeNext(arrayOf(it.from, it.to, it.transcription, it.examples,
-                    wordCardStatusesToString(it.wordCardStatuses)))
+            words.forEach { card ->
+                csvWriter.writeNext(arrayOf(
+                    card.from,
+                    card.to,
+                    card.transcription,
+                    card.examples,
+                    card.wordCardStatuses.joinToString(",") { it.name },
+                    card.fromWithPreposition,
+                    card.predefinedSets.joinToString(",") { it.name },
+                    card.sourcePositions.joinToString(",") { it.toString() },
+                    card.sourceSentences, // TODO: optimize it in some way to avoid having huge files
+                ))
             }
         }
 }
 
 
-private fun wordCardStatusesToString(statuses: Iterable<WordCardStatus>) =
-    statuses.asSequence().map { it.name }.joinToString(",")
+private fun stringToInts(string: String): List<Int> =
+    stringToCollectionImpl(string, mutableListOf<Int>()) { it.toInt() }
 
-private fun wordCardStatusesFromString(statuses: String): Set<WordCardStatus> =
-    statuses.splitToSequence(",")
+private inline fun <reified T: Enum<T>> stringToEnums(string: String): Set<T> =
+    stringToCollectionImpl(string, EnumSet.noneOf(T::class.java)) { EnumUtils.getEnum(T::class.java, it) }
+
+
+private fun <T, C: MutableCollection<T>> stringToCollectionImpl(string: String, collection: C, converter: (String)->T): C {
+    string
+        .splitToSequence(",")
         .map { it.trim() }
         .filter { it.isNotEmpty() }
         .map {
-            try { WordCardStatus.valueOf(it) }
-            catch (ex: Exception) { log.warn("Error of parsing WordCardStatus from [{}].", it); null } }
+            try {
+                converter(it)
+            } catch (ex: Exception) {
+                log.warn("Error of parsing [{}].", it); null
+            }
+        }
         .filterNotNull()
         .toSet()
+
+    return collection
+}
