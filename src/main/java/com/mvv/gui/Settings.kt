@@ -2,6 +2,7 @@ package com.mvv.gui
 
 import com.mvv.gui.dictionary.getProjectDirectory
 import com.mvv.gui.util.userHome
+import com.mvv.gui.words.SentenceEndRule
 import java.io.FileReader
 import java.util.Properties
 import kotlin.io.path.exists
@@ -18,6 +19,8 @@ class Settings (
     val splitWordCountPerFile: Int = defaultSplitWordCountPerFile,
     val theme: Theme = defaultTheme,
     val isMaximized: Boolean = false,
+    val sentenceEndRule: SentenceEndRule = SentenceEndRule.ByEndingDotOrLineBreak,
+    val toAutoRemoveIgnored: Boolean = true,
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -43,5 +46,8 @@ private fun loadSettings(): Settings {
         splitWordCountPerFile = props.getProperty("splitWordCountPerFile", defaultSplitWordCountPerFile.toString()).toInt(),
         theme = Theme.valueOf(props.getProperty("theme", defaultTheme.name)),
         isMaximized = props.getProperty("isWindowMaximized", "false").toBoolean(),
+        sentenceEndRule = props.getProperty("sentenceEndRule", "ByEndingDotOrLineBreak")
+            .let { SentenceEndRule.valueOf(it) },
+        toAutoRemoveIgnored = props.getProperty("toAutoRemoveIgnored", "true").toBoolean(),
     )
 }

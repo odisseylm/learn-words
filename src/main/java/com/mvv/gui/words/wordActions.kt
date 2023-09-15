@@ -37,44 +37,19 @@ internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
     val baseWordsToAddMap: Map<CardWordEntry, List<CardWordEntry>> = withoutBaseWord
         .asSequence()
         .map { card -> Pair(card, englishBaseWords(card.from, dictionary)) }
-        //.filterNotNullPairValue()
         .filter { it.second.isNotEmpty() }
-        //.map { Pair(it.first, CardWordEntry(it.second, "")) }
         .associate { it }
 
-    // Need to do it manually due to JavaFX bug (if a table has rows with different height)
-    // This JavaFX bug appears if rows have different height.
-    // See my comments in TableView.setViewPortAbsoluteOffsetImpl()
-    //currentWordsList.runWithScrollKeeping { // restoreScrollPosition ->
-
-        // Ideally this approach should keep less/more scrolling (without any hacks) but...
-        baseWordsToAddMap.forEach { (currentWordCard, baseWordCards) ->
-            // TODO: optimize this n*n
-            val index = allWordCards.indexOf(currentWordCard)
-            baseWordCards
-                .filterNot { allWordCardsMap.containsKey(it.from) }
-                .forEachIndexed { i, baseWordCard ->
-                    allWordCards.add(index + i, baseWordCard)
-            }
+    baseWordsToAddMap.forEach { (currentWordCard, baseWordCards) ->
+        // TODO: optimize this n*n
+        val index = allWordCards.indexOf(currentWordCard)
+        baseWordCards
+            .filterNot { allWordCardsMap.containsKey(it.from) }
+            .forEachIndexed { i, baseWordCard ->
+                allWordCards.add(index + i, baseWordCard)
         }
-        analyzeWordCards(withoutBaseWord, warnAboutMissedBaseWordsMode, allWordCards, dictionary)
-
-
-        //if (baseWordsToAddMap.size == 1) {
-        //
-        //    // Need to do it manually due to JavaFX bug (if a table has rows with different height)
-        //    // !!! both call currentWordsList.viewPortAbsoluteOffset are needed !!!
-        //    // restoreScrollPosition(SetViewPortAbsoluteOffsetMode.Immediately)
-        //
-        //    val newBaseWordCard = baseWordsToAddMap.values.asSequence().flatten().first()
-        //
-        //    // select new base word to edit it immediately
-        //    if (currentWordsList.selectionModel.selectedItems.size <= 1) {
-        //        currentWordsList.selectionModel.clearSelection()
-        //        currentWordsList.selectionModel.select(newBaseWordCard)
-        //    }
-        //}
-    //}
+    }
+    analyzeWordCards(withoutBaseWord, warnAboutMissedBaseWordsMode, allWordCards, dictionary)
 
     return baseWordsToAddMap
 }
@@ -135,7 +110,6 @@ internal fun copyWordsToClipboard(words: Iterable<CardWordEntry>) {
 
 internal fun wordCardsToLowerCaseRow(wordCards: Iterable<CardWordEntry>) {
     val it = wordCards.iterator()
-    //if (currentWordsList.isEditing) return
 
     it.forEach {
         it.from = it.from.lowercase()
@@ -164,13 +138,13 @@ internal fun extractWordsFromText(content: CharSequence, ignoredWords: Collectio
         .toList()
 
 
-internal fun extractWordsFromText_New(content: CharSequence, ignoredWords: Collection<String>): List<CardWordEntry> =
-    TextParserEx()
+internal fun extractWordsFromText_New(content: CharSequence, sentenceEndRule: SentenceEndRule, ignoredWords: Collection<String>): List<CardWordEntry> =
+    TextParserEx(sentenceEndRule)
         .parse(content)
         .asSequence()
         .flatMap { extractNeededWords(it) }
         .flatMap { it.toCardWordEntries() }
-        //.filter { !ignoredWords.contains(it.from) } // TODO: make it configurable
+        .filter { !ignoredWords.contains(it.from) }
         .toList()
 
 
@@ -199,7 +173,7 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
     )
 
     card.fromWithPreposition = cards.merge("\n") { it.fromWithPreposition }
-    card.transcription = cards.merge("\n") { it.transcription }
+    card.transcription = cards.merge(" ") { it.transcription }
     card.examples = cards.merge("\n") { it.examples }
     card.wordCardStatuses = cards.mergeSet { it.wordCardStatuses }
     card.predefinedSets   = cards.mergeSet { it.predefinedSets }
@@ -271,7 +245,7 @@ internal fun extractWordsFromFile(filePath: Path, ignoredWords: Collection<Strin
         .use { r -> extractWordsFromText(r.readText(), ignoredWords) } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
 
 
-internal fun extractWordsFromClipboard(clipboard: Clipboard, ignoredWords: Collection<String>): List<CardWordEntry> {
+internal fun extractWordsFromClipboard(clipboard: Clipboard, sentenceEndRule: SentenceEndRule, ignoredWords: Collection<String>): List<CardWordEntry> {
 
     val content = clipboard.getContent(DataFormat.PLAIN_TEXT)
 
@@ -280,7 +254,7 @@ internal fun extractWordsFromClipboard(clipboard: Clipboard, ignoredWords: Colle
 
     //val words = extractWordsFromText(content.toString(), ignoredWords)
     val words = mergeDuplicates(
-        extractWordsFromText_New(content.toString(), ignoredWords))
+        extractWordsFromText_New(content.toString(), sentenceEndRule, ignoredWords))
 
     log.info("clipboard content as words: $words")
     return words
@@ -295,7 +269,6 @@ internal fun loadWordsFromAllExistentDictionaries(baseWordsFilename: String?): L
     val allWordsFilesExceptIgnored = Files.list(dictDirectory)
         .asSequence()
         .filter { it.isRegularFile() }
-        //.filter { it !in skipFiles && it != ignoredWordsFile }
         .filter { it != ignoredWordsFile }
         .filter { it.isInternalCsvFormat || it.isMemoWordFile }
         .filter { baseWordsFilename.isNullOrBlank() || !it.name.contains(baseWordsFilename) }

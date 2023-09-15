@@ -257,10 +257,10 @@ class MainWordsPane : BorderPane() {
         // Impossible to move it to CSS ?!
         fromColumn.prefWidth = 200.0
         wordCardStatusesColumn.prefWidth = 50.0
-        toColumn.prefWidth = 400.0
+        toColumn.prefWidth = 350.0
         translationCountColumn.prefWidth = 50.0
         transcriptionColumn.prefWidth = 150.0
-        examplesColumn.prefWidth = 400.0
+        examplesColumn.prefWidth = 300.0
         predefinedSetsColumn.prefWidth = 70.0
         sourcePositionsColumn.prefWidth = 70.0
         sourceSentencesColumn.prefWidth = 300.0
@@ -300,12 +300,14 @@ private class PredefinedSetsCell : TableCell<CardWordEntry, Set<PredefinedSet>>(
             cell.text = null
             cell.graphic = null
         } else {
-            val itemText = item?.sorted()?.joinToString(", ") { it.humanName } ?: ""
+            val toolTipText = item?.sorted()?.joinToString(", ") { it.humanName } ?: ""
             val itemIcons = item?.sorted()?.map { iconFor(it) } ?: emptyList()
+
             cell.text = null
             cell.graphic = FlowPane( *itemIcons.map { Label(null, ImageView(it)) }.toTypedArray() )
                 .also { it.alignment = Pos.CENTER; it.hgap = 4.0 }
-            cell.toolTipText = itemText
+            cell.toolTipText = toolTipText
+
             cell.requestLayout()
         }
     }

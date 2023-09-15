@@ -465,7 +465,8 @@ class LearnWordsController (
     }
 
     fun loadFromClipboard() {
-        val words = extractWordsFromClipboard(Clipboard.getSystemClipboard(), ignoredWords)
+        val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) ignoredWords else emptySet()
+        val words = extractWordsFromClipboard(Clipboard.getSystemClipboard(), settingsPane.sentenceEndRule, toIgnoreWords)
 
         currentWords.setAll(words) // or add all ??
         reanalyzeAllWords()
