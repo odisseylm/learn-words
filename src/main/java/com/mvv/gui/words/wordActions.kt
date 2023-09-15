@@ -129,7 +129,8 @@ internal fun ignoreNoBaseWordInSet(cards: Iterable<CardWordEntry>) =
         updateSetProperty(it.wordCardStatusesProperty, WordCardStatus.BaseWordDoesNotExist, UpdateSet.Set) }
 
 
-internal fun extractWordsFromText(content: CharSequence, ignoredWords: Collection<String>): List<CardWordEntry> =
+@Suppress("unused")
+internal fun extractWordsFromText_Old(content: CharSequence, ignoredWords: Collection<String>): List<CardWordEntry> =
     TextParser()
         .parse(content)
         .asSequence()
@@ -240,9 +241,9 @@ private fun List<WordEntry>.containsWordSequence(sequenceIndex: Int, wordSequenc
 }
 
 
-internal fun extractWordsFromFile(filePath: Path, ignoredWords: Collection<String>): List<CardWordEntry> =
+internal fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule, ignoredWords: Collection<String>): List<CardWordEntry> =
     FileReader(filePath.toFile(), Charsets.UTF_8)
-        .use { r -> extractWordsFromText(r.readText(), ignoredWords) } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
+        .use { r -> extractWordsFromText_New(r.readText(), sentenceEndRule, ignoredWords) } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
 
 
 internal fun extractWordsFromClipboard(clipboard: Clipboard, sentenceEndRule: SentenceEndRule, ignoredWords: Collection<String>): List<CardWordEntry> {

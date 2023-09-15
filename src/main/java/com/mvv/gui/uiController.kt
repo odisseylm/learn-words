@@ -450,7 +450,7 @@ class LearnWordsController (
             val words: List<CardWordEntry> = when (fileExt) {
                 "txt"          -> loadWords(filePath).map { CardWordEntry(it, "") }
                 "csv", "words" -> loadWordCards(filePath)
-                "srt"          -> extractWordsFromFile(filePath, ignoredWords)
+                "srt"          -> extractWordsFromFile(filePath, SentenceEndRule.ByEndingDot)
                 else           -> throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
             // T O D O: make it async, but it is not easy because there are change listeners which also call analyzeAllWords()
@@ -462,6 +462,12 @@ class LearnWordsController (
 
             if (filePath.isInternalCsvFormat) LoadType.Open else LoadType.Import
         }
+    }
+
+    @Suppress("SameParameterValue")
+    private fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule): List<CardWordEntry> {
+        val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) this.ignoredWords else emptySet()
+        return mergeDuplicates(extractWordsFromFile(filePath, sentenceEndRule, toIgnoreWords))
     }
 
     fun loadFromClipboard() {

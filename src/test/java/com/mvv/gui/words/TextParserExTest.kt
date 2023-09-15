@@ -366,6 +366,52 @@ class TextParserExTest {
 
 
     @Test
+    fun parseSrt() {
+        val text =
+            """
+            305
+            00:23:03,281 --> 00:23:05,681
+            What are we supposed to be
+            seeing here?
+            """
+
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDotOrLineBreak).parse(text)
+
+        assertThat(sentences.map { it.text }).containsExactly(
+            "305",
+            "00:23:03,281 --> 00:23:05,681",
+            "What are we supposed to be",
+            "seeing here?",
+        )
+    }
+
+
+    @Test
+    fun parseSrt_2() {
+        val text =
+            """
+            305
+            00:23:03,281 --> 00:23:05,681
+            What are we supposed to be
+            seeing here?
+            """
+
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDot).parse(text)
+
+        // TODO: we need to remove these leading from srt before parsing it
+        //   305
+        //   00:23:03,281 --> 00:23:05,681
+        //
+        assertThat(sentences.map { it.text }).containsExactly(
+            """305
+            00:23:03,281 --> 00:23:05,681
+            What are we supposed to be
+            seeing here?""",
+        )
+    }
+
+
+    @Test
     @DisplayName("isAbbreviation")
     fun test_isAbbreviation() {
         val assertions = SoftAssertions()

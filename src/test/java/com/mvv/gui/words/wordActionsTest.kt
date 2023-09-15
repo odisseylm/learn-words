@@ -9,7 +9,7 @@ class WordActionsTest {
 
     @Test
     fun extractWordsFromText() {
-        val cards = extractWordsFromText_New("John has come in the room.", emptySet())
+        val cards = extractWordsFromText_New("John has come in the room.", SentenceEndRule.ByEndingDot, emptySet())
 
         assertThat(cards.map { it.from }).containsExactly(
             "john", "has",
@@ -22,7 +22,7 @@ class WordActionsTest {
     @Test
     fun extractWordsFromText_withMultiWordsPreposition() {
 
-        val cards = extractWordsFromText_New("Businesses have costs to cover in addition to your salary.", emptySet())
+        val cards = extractWordsFromText_New("Businesses have costs to cover in addition to your salary.", SentenceEndRule.ByEndingDot, emptySet())
         assertThat(cards.map { it.from }).containsExactly(
             "businesses", "have",
             "costs",
@@ -77,7 +77,7 @@ class WordActionsTest {
              John promised to cover trade code with tests.
             """
 
-        val cards = extractWordsFromText_New(content, emptySet())
+        val cards = extractWordsFromText_New(content, SentenceEndRule.ByEndingDot, emptySet())
         assertThat(cards.map { it.from }).containsExactly(
             "businesses", "have",
             "costs",
@@ -100,7 +100,7 @@ class WordActionsTest {
              John promised to cover trade code with tests.
             """
 
-        val cards = extractWordsFromText_New(content, emptySet())
+        val cards = extractWordsFromText_New(content, SentenceEndRule.ByEndingDot, emptySet())
         assertThat(cards.map { it.from }).containsExactly(
             "businesses", "have",
             "costs",
