@@ -10,6 +10,7 @@ import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.input.DataFormat
 import java.io.FileReader
+import java.io.Reader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Optional
@@ -241,8 +242,8 @@ private fun List<WordEntry>.containsWordSequence(sequenceIndex: Int, wordSequenc
 }
 
 
-internal fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule, ignoredWords: Collection<String>): List<CardWordEntry> =
-    FileReader(filePath.toFile(), Charsets.UTF_8)
+internal fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule, ignoredWords: Collection<String>, preProcessor: (Reader)-> Reader): List<CardWordEntry> =
+    preProcessor(FileReader(filePath.toFile(), Charsets.UTF_8))
         .use { r -> extractWordsFromText_New(r.readText(), sentenceEndRule, ignoredWords) } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
 
 

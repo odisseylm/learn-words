@@ -24,6 +24,8 @@ import javafx.scene.input.MouseEvent
 import javafx.stage.FileChooser
 import org.apache.commons.text.StringEscapeUtils.escapeHtml4
 import java.io.File
+import java.io.Reader
+import java.io.StringReader
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
@@ -450,7 +452,7 @@ class LearnWordsController (
             val words: List<CardWordEntry> = when (fileExt) {
                 "txt"          -> loadWords(filePath).map { CardWordEntry(it, "") }
                 "csv", "words" -> loadWordCards(filePath)
-                "srt"          -> extractWordsFromFile(filePath, SentenceEndRule.ByEndingDot)
+                "srt"          -> loadFromSrt(filePath)
                 else           -> throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
             // T O D O: make it async, but it is not easy because there are change listeners which also call analyzeAllWords()
@@ -464,10 +466,13 @@ class LearnWordsController (
         }
     }
 
+    private fun loadFromSrt(filePath: Path) =
+        extractWordsFromFile(filePath, SentenceEndRule.ByEndingDot) { StringReader(loadOnlyTextFromSrt(it)) }
+
     @Suppress("SameParameterValue")
-    private fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule): List<CardWordEntry> {
+    private fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule, preProcessor: (Reader)->Reader = { it }): List<CardWordEntry> {
         val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) this.ignoredWords else emptySet()
-        return mergeDuplicates(extractWordsFromFile(filePath, sentenceEndRule, toIgnoreWords))
+        return mergeDuplicates(extractWordsFromFile(filePath, sentenceEndRule, toIgnoreWords, preProcessor))
     }
 
     fun loadFromClipboard() {

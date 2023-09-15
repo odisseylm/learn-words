@@ -132,5 +132,17 @@ val String.lastChar: Char get() {
 val String.lastCharOrNull: Char? get() = if (this.isNotEmpty()) this[this.length - 1] else null
 
 
-fun String.safeSubstring(start: Int, end: Int) =
-    if (end >= this.length) this.substring(start) else this.substring(start, end)
+fun String.safeSubstring(start: Int): String = when {
+    start >= this.length -> ""
+    else -> safeSubstring(start, this.length)
+}
+
+fun String.safeSubstring(start: Int, end: Int): String {
+    require(start <= end) { " start($start) > end ($end)"}
+
+    return when {
+        start >= length -> ""
+        end >= this.length -> this.substring(start)
+        else -> this.substring(start, end)
+    }
+}

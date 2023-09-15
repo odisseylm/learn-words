@@ -106,9 +106,9 @@ class StringsTest {
         assertThat("2word".startsWithOneOfChars("321")).isTrue()
         assertThat("3word".startsWithOneOfChars("321")).isTrue()
 
-        assertThat("word1".startsWithOneOfChars("321")).isTrue()
-        assertThat("word1".startsWithOneOfChars("321")).isTrue()
-        assertThat("word1".startsWithOneOfChars("321")).isTrue()
+        assertThat("word1".startsWithOneOfChars("321")).isFalse()
+        assertThat("word1".startsWithOneOfChars("321")).isFalse()
+        assertThat("word1".startsWithOneOfChars("321")).isFalse()
     }
 
 

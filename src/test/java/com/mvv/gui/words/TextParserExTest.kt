@@ -387,26 +387,20 @@ class TextParserExTest {
 
 
     @Test
-    fun parseSrt_2() {
+    fun parseSrt_expectedFlow() {
+
         val text =
             """
             305
             00:23:03,281 --> 00:23:05,681
             What are we supposed to be
             seeing here?
-            """
+            """.trimIndent()
 
-        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDot).parse(text)
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDot).parse(loadOnlyTextFromSrt(text))
 
-        // TODO: we need to remove these leading from srt before parsing it
-        //   305
-        //   00:23:03,281 --> 00:23:05,681
-        //
         assertThat(sentences.map { it.text }).containsExactly(
-            """305
-            00:23:03,281 --> 00:23:05,681
-            What are we supposed to be
-            seeing here?""",
+            "What are we supposed to be\nseeing here?"
         )
     }
 
