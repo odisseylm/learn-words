@@ -99,7 +99,12 @@
 }
 
 
-/*.htmlTextPreview {*/
+.htmlTextPreview {
+    -fx-context-menu-enabled: false;
+    /*-fx-font-smoothing-type: ;*/
+    /*-fx-font-scale: 1.0;*/
+}
+
 .htmlTextPreviewDialogPane {
     -fx-pref-width: 420;
     -fx-pref-height: 270;

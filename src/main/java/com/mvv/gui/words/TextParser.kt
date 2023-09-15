@@ -472,7 +472,7 @@ private val wordDelimiters = arrayOf(
 
 private fun parseSentence(sentence: CharSequence, prevWordCount: Int): Sentence {
     val tempSentenceStuff = Sentence(sentence, emptyList())
-    val unneeded = "-—\"!?“”"
+    val unneeded = "-—\"!?“”'"
     return sentence
         .removeCharSuffixesRepeatably(".!?")
         .splitToSequence(delimiters = wordDelimiters)
