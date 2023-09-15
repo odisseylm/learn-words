@@ -11,6 +11,10 @@ fun Boolean.doIfTrue(action: ()->Unit) {
 }
 
 
+//fun <T> List<T>.addIf(predicate: Boolean, additional: ()->Iterable<T>): List<T> =
+//    if (predicate) this + additional() else this
+
+
 fun timerTask(action: ()->Unit): TimerTask =
     object : TimerTask() {
         override fun run() {
