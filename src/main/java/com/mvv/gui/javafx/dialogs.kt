@@ -108,7 +108,7 @@ fun showHtmlTextPreviewDialog(parent: Node, title: String, html: String) {
             val webEngine = webView.engine
             webEngine.isJavaScriptEnabled = false
 
-            webEngine.loadWorker.stateProperty().addListener { obs, oldState, newState ->
+            webEngine.loadWorker.stateProperty().addListener { _, _, newState ->
                 if (newState == Worker.State.SUCCEEDED) {
                     val doc = webEngine.document
                     val styleNode = doc.createElement("style")

@@ -107,13 +107,40 @@ Speech synthesizers
      - http://festvox.org/cmu_arctic/dbs_bdl.html
      - http://festvox.org/cmu_arctic/dbs_slt.html
  - Coqui TTS
+   - ?? Can be used in free software ??
    - https://github.com/coqui-ai/TTS
    - http://erogol.com/ddc-samples/
+   - https://docs.coqui.ai/docs
+   - Docker
+     - docker run --rm -it -p 5002:5002 --entrypoint /bin/bash ghcr.io/coqui-ai/tts-cpu
+     - python3 TTS/server/server.py --list_models #To get the list of available models
+     - python3 TTS/server/server.py --model_name tts_models/en/vctk/vits # To start a server
  - Ila
    - https://sourceforge.net/projects/ila-voice-assistant/
  - FreeTTS
    - https://freetts.sourceforge.io
    - https://freetts.sourceforge.io/docs/index.php
+   - https://freetts.sourceforge.io/mbrola/README.html
+   - Mbrola
+     - MBROLA binaries and voice databases can be downloaded free for non-commercial, non-military
+     - https://github.com/numediart/MBROLA
+     - https://espeak.sourceforge.net/mbrola.html
+     - https://chromium.googlesource.com/chromiumos/third_party/espeak-ng/+/HEAD/docs/mbrola.md
+     - https://espeak.sourceforge.net/mbrola.html
+     - Install on Ubuntu (https://robots.uc3m.es/installation-guides/install-espeak-mbrola.html)
+       - `sudo apt install mbrola-en1`
+       - `sudo apt install mbrola-us1`
+       - `sudo apt install mbrola-us2`
+       - `sudo apt install mbrola-us3`
+     - Arch linux (you can as separate files)
+       - https://wiki.archlinux.org/title/Mbrola
+       - https://aur.archlinux.org/packages?K=mbrola-voices
+ - Google Speech
+   - Not free
+   - https://cloud.google.com/text-to-speech/docs/libraries
+ - Owner avatar
+ - jAdapterForNativeTTS
+   - https://github.com/jonelo/jAdapterForNativeTTS
 
 
 ***
