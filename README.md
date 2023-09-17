@@ -121,6 +121,7 @@ Speech synthesizers
    - https://freetts.sourceforge.io
    - https://freetts.sourceforge.io/docs/index.php
    - https://freetts.sourceforge.io/mbrola/README.html
+   - https://sourceforge.net/projects/freetts/
    - Mbrola
      - MBROLA binaries and voice databases can be downloaded free for non-commercial, non-military
      - https://github.com/numediart/MBROLA
