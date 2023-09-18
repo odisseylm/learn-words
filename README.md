@@ -95,6 +95,8 @@ Speech synthesizers
  - eSpeak
    - https://espeak.sourceforge.net/
    - https://espeak.sourceforge.net/commands.html
+   - Use Mbrola voices
+     - https://robots.uc3m.es/installation-guides/install-espeak-mbrola.html
  - ?? kaldi
    - https://github.com/kaldi-asr/kaldi
  - Mozilla TTS
@@ -117,22 +119,9 @@ Speech synthesizers
    - https://freetts.sourceforge.io/docs/index.php
    - https://freetts.sourceforge.io/mbrola/README.html
    - https://sourceforge.net/projects/freetts/
-   - Mbrola
-     - MBROLA binaries and voice databases can be downloaded free for non-commercial, non-military
-     - https://github.com/numediart/MBROLA
-     - https://github.com/numediart/MBROLA-voices/
-     - https://espeak.sourceforge.net/mbrola.html
-     - https://chromium.googlesource.com/chromiumos/third_party/espeak-ng/+/HEAD/docs/mbrola.md
-     - https://espeak.sourceforge.net/mbrola.html
-     - Install on Ubuntu (https://robots.uc3m.es/installation-guides/install-espeak-mbrola.html)
-       - `sudo apt install mbrola-en1`
-       - `sudo apt install mbrola-us1`
-       - `sudo apt install mbrola-us2`
-       - `sudo apt install mbrola-us3`
-       - `sudo apt install mbrola-de{1..7}`
-     - Arch linux (you can as separate files)
-       - https://wiki.archlinux.org/title/Mbrola
-       - https://aur.archlinux.org/packages?K=mbrola-voices
+   - !!! use mbrola voices with FreeTTS !!!
+ - Mbrola
+   - see [mbrola.md](docs/mbrola.md)
  - Google Speech
    - Not free
    - https://cloud.google.com/text-to-speech/docs/libraries
