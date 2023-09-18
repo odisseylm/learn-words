@@ -33,9 +33,6 @@ class FreeTtsTest {
     }
 
 
-    // TODO: add tests (and probably impl) for alternative directories like
-    //   * /usr/lib/x86_64-linux-gnu/espeak-ng-data/mbrola_ph
-    //   * /usr/lib/x86_64-linux-gnu/espeak-data/mbrola_ph
     @Test
     fun getMbrolaVoices() {
         System.setProperty("mbrola.base", "/usr/share/mbrola")

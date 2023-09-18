@@ -100,12 +100,6 @@ Speech synthesizers
  - Mozilla TTS
    - https://github.com/mozilla/TTS
  - ?? https://github.com/therealvasanth/online-tts
- - ?? FestVox / Festival
-   - http://festvox.org/festival/index.html
-   - http://festvox.org/packed/festival/2.5/voices/
-   - http://festvox.org/cmu_arctic/
-     - http://festvox.org/cmu_arctic/dbs_bdl.html
-     - http://festvox.org/cmu_arctic/dbs_slt.html
  - Coqui TTS
    - ?? Can be used in free software ??
    - https://github.com/coqui-ai/TTS
@@ -117,14 +111,16 @@ Speech synthesizers
      - python3 TTS/server/server.py --model_name tts_models/en/vctk/vits # To start a server
  - Ila
    - https://sourceforge.net/projects/ila-voice-assistant/
- - FreeTTS
+ - Java FreeTTS (old but working)
    - https://freetts.sourceforge.io
+   - https://github.com/JVoiceXML/FreeTTS/
    - https://freetts.sourceforge.io/docs/index.php
    - https://freetts.sourceforge.io/mbrola/README.html
    - https://sourceforge.net/projects/freetts/
    - Mbrola
      - MBROLA binaries and voice databases can be downloaded free for non-commercial, non-military
      - https://github.com/numediart/MBROLA
+     - https://github.com/numediart/MBROLA-voices/
      - https://espeak.sourceforge.net/mbrola.html
      - https://chromium.googlesource.com/chromiumos/third_party/espeak-ng/+/HEAD/docs/mbrola.md
      - https://espeak.sourceforge.net/mbrola.html
@@ -133,6 +129,7 @@ Speech synthesizers
        - `sudo apt install mbrola-us1`
        - `sudo apt install mbrola-us2`
        - `sudo apt install mbrola-us3`
+       - `sudo apt install mbrola-de{1..7}`
      - Arch linux (you can as separate files)
        - https://wiki.archlinux.org/title/Mbrola
        - https://aur.archlinux.org/packages?K=mbrola-voices
@@ -142,12 +139,15 @@ Speech synthesizers
  - Owner avatar
  - jAdapterForNativeTTS
    - https://github.com/jonelo/jAdapterForNativeTTS
+ - Festival
+   - See separate file docs/festival.md 
 
 
 ***
 
 Links:
  - 15 Open-source Text To Speech TTS Apps and Libraries[https://medevel.com/14-os-text-to-speech/]
+ - https://qa.yodo.im/t/kak-preobrazovat-tekst-v-rech-s-pomoshhyu-komandnoj-stroki/3123/4
 
 
 ***

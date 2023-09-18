@@ -3,8 +3,6 @@
 package com.mvv.gui.audio
 
 import com.sun.speech.freetts.*
-import com.sun.speech.freetts.jsapi.FreeTTSEngineCentral
-import com.sun.speech.freetts.jsapi.FreeTTSVoice
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
@@ -51,7 +49,7 @@ private fun test1() {
 
         log.info { "voice: $voice" }
 
-        if (voice is FreeTTSVoice) {
+        if (voice is com.sun.speech.freetts.jsapi.FreeTTSVoice) {
             voice.voice.waveDumpFile = "temp/freeTts.wav"
             voice.voice.audioPlayer = com.sun.speech.freetts.audio.SingleFileAudioPlayer()
         }
@@ -101,7 +99,7 @@ fun createSynthesizer(): Synthesizer {
 
     val desc = SynthesizerModeDesc(Locale.US)
 
-    val central = FreeTTSEngineCentral()
+    val central = com.sun.speech.freetts.jsapi.FreeTTSEngineCentral()
     val list = central.createEngineList(desc)
 
     val synthesizer: Synthesizer? = if (list.size > 0)

@@ -252,19 +252,323 @@
     </dependency>
 
 
+    <!-- This artifact includes ALL sub-packages/sub-jars                                -->
+    <!--   This artifact contains also packages for using freeTts by java-speech API     -->
+    <!--     freetts-jsapi10.jar                                                         -->
+    <!--     packages: com.sun.speech.engine.synthesis.text                              -->
+    <!--               com.sun.speech.freetts.jsapi                                      -->
+    <!--                                                                                 -->
+    <!--   However it does not contain jsapi-base-1.0.jar classes for speech recognition -->
+    <!--     package com.sun.speech.engine.recognition (SphinxEngineCentral, etc)        -->
+
     <dependency>
       <groupId>net.sf.sociaal</groupId>
       <artifactId>freetts</artifactId>
       <version>1.2.2</version>
     </dependency>
+
+
+    <!-- Alternative jars, BUT there is no desired (but not mandatory) freetts-jsapi10.jar at org.mobicents.external.freetts -->
+    <!-- https://repo.denkbares.com/repo-des/ -->
+    <!--
+    <dependency>
+      <groupId>java-speech</groupId>
+      <artifactId>jsapi</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>java-speech</groupId>
+      <artifactId>jsapi-base</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>java-speech</groupId>
+      <artifactId>tags</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>java-speech</groupId>
+      <artifactId>js</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.freetts</groupId>
+      <artifactId>freetts</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.freetts</groupId>
+      <artifactId>freetts-jsapi10</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.freetts</groupId>
+      <artifactId>cmu_us_kal</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.freetts</groupId>
+      <artifactId>cmulex</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.freetts</groupId>
+      <artifactId>en_us</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.freetts</groupId>
+      <artifactId>cmu_time_awb</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.freetts</groupId>
+      <artifactId>cmutimelex</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.freetts</groupId>
+      <artifactId>cmudict04</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.freetts</groupId>
+      <artifactId>mbrola</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    -->
+
+    <!--
+    <dependency>
+      <groupId>com.ibm.watson</groupId>
+      <artifactId>speech-to-text</artifactId>
+      <version>11.0.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.vsct.tock</groupId>
+      <artifactId>tock-stt-google-speech</artifactId>
+      <version>19.3.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-texttospeech</artifactId>
+      <version>2.25.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.oracle.oci.sdk</groupId>
+      <artifactId>oci-java-sdk-aispeech</artifactId>
+      <version>3.25.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>ua.net.nlp</groupId>
+      <artifactId>morfologik-ukrainian-search</artifactId>
+      <version>4.9.1</version>
+    </dependency>
+    <dependency>
+      <groupId>ua.net.nlp</groupId>
+      <artifactId>morfologik-ukrainian-lt</artifactId>
+      <version>6.1.5</version>
+    </dependency>
+    -->
+
+    <!--&lt;!&ndash; Speech recognition library &ndash;&gt;-->
     <!--<dependency>-->
-    <!--  <groupId>org.mobicents.external.freetts</groupId>-->
-    <!--  <artifactId>mbrola</artifactId>-->
-    <!--  <version>1.2.2</version>-->
+    <!--  <groupId>com.alphacephei</groupId>-->
+    <!--  <artifactId>vosk</artifactId>-->
+    <!--  <version>0.3.45</version>-->
+    <!--</dependency>-->
+
+    <!--<dependency>-->
+    <!--  <groupId>com.alphacephei</groupId>-->
+    <!--  <artifactId>vosk-model-en</artifactId>-->
+    <!--  <version>0.3.47</version>-->
+    <!--</dependency>-->
+
+    <!-- in https://nexus.velocitypowered.com/repository/maven-public/ -->
+    <!--<dependency>-->
+    <!--  <groupId>com.mojang</groupId>-->
+    <!--  <artifactId>text2speech</artifactId>-->
+    <!--  <version>1.13.9</version>-->
+    <!--</dependency>-->
+
+    <!-- Java SDK for Picovoice's Rhino Speech-to-Intent engine -->
+    <!-- https://picovoice.ai/docs/rhino/ -->
+    <!-- https://medium.com/@alirezakenarsarianhari/picovoices-speech-to-intent-engine-a731775994c5 -->
+    <!--<dependency>-->
+    <!--  <groupId>ai.picovoice</groupId>-->
+    <!--  <artifactId>rhino-java</artifactId>-->
+    <!--  <version>2.2.1</version>-->
+    <!--  <scope>runtime</scope>-->
+    <!--</dependency>-->
+
+    <!--<dependency>-->
+    <!--  <groupId>org.mobicents.external.jspeex</groupId>-->
+    <!--  <artifactId>jspeex</artifactId>-->
+    <!--  <version>0.9.7</version>-->
+    <!--</dependency>-->
+
+    <!--
+    <dependency>
+      <groupId>edu.cmu.sphinx</groupId>
+      <artifactId>sphinx4</artifactId>
+      <version>1.0-beta6</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.cmu.sphinx.models</groupId>
+      <artifactId>sphinx4-wsj</artifactId>
+      <version>1.0.0-beta6</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.cmu.sphinx.models</groupId>
+      <artifactId>zipcity</artifactId>
+      <version>1.0-beta6</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.cmu.sphinx.models</groupId>
+      <artifactId>sphinx4-hub4</artifactId>
+      <version>1.0.0-beta6</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.cmu.sphinx.models</groupId>
+      <artifactId>TIDIGITS_8gau_13dCep_16k_40mel_130Hz_6800Hz</artifactId>
+      <version>1.0</version>
+    </dependency>
+    -->
+
+
+    <!-- This SDK allows you to use the Microsoft Cognitive Speech Service. See https://aka.ms/csspeech for more information. -->
+    <!--<dependency>-->
+    <!--  <groupId>com.microsoft.cognitiveservices.speech</groupId>-->
+    <!--  <artifactId>client-sdk</artifactId>-->
+    <!--  <version>1.32.1</version>-->
     <!--</dependency>-->
 
 
-      <!-- https://opencast.org/ -->
+    <!--<dependency>-->
+    <!--  <groupId>ai.tock</groupId>-->
+    <!--  <artifactId>tock-stt-google-speech</artifactId>-->
+    <!--  <version>23.3.4</version>-->
+    <!--  <scope>test</scope>-->
+    <!--</dependency>-->
+
+
+    <!--<dependency>-->
+    <!--  <groupId>io.github.akang943578</groupId>-->
+    <!--  <artifactId>java-google-speech</artifactId>-->
+    <!--  <version>1.0.3</version>-->
+    <!--</dependency>-->
+
+
+    <!--<dependency>-->
+    <!--  <groupId>org.mobicents.external.jspeex</groupId>-->
+    <!--  <artifactId>jspeex</artifactId>-->
+    <!--  <version>0.9.7</version>-->
+    <!--</dependency>-->
+
+    <!--<dependency>-->
+    <!--  <groupId>org.mobicents.external.jspeex</groupId>-->
+    <!--  <artifactId>jspeex</artifactId>-->
+    <!--  <version>0.9.7</version>-->
+    <!--</dependency>-->
+
+    <!-- From http://nexus.emergya.es/nexus/content/repositories/public/ -->
+    <!--<dependency>-->
+    <!--  <groupId>com.sun.speech.freetts</groupId>-->
+    <!--  <artifactId>freetts</artifactId>-->
+    <!--  <version>1.2.2</version>-->
+    <!--</dependency>-->
+
+    <!-- OpenHAB Multimedia FreeTTS -->
+    <!--<dependency>-->
+    <!--  <groupId>org.openhab.io</groupId>-->
+    <!--  <artifactId>org.openhab.io.multimedia.tts.freetts</artifactId>-->
+    <!--  <version>1.14.0</version>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+    <!--  <groupId>org.openhab.io</groupId>-->
+    <!--  <artifactId>org.openhab.io.multimedia.tts.marytts</artifactId>-->
+    <!--  <version>1.14.0</version>-->
+    <!--</dependency>-->
+
+    <!--<dependency>-->
+    <!--  <groupId>org.openhab.io</groupId>-->
+    <!--  <artifactId>org.openhab.io.multimedia.tts.speechdispatcher</artifactId>-->
+    <!--  <version>1.14.0</version>-->
+    <!--</dependency>-->
+
+    <!--<dependency>-->
+    <!--  <groupId>org.openhab.io</groupId>-->
+    <!--  <artifactId>org.openhab.io.multimedia</artifactId>-->
+    <!--  <version>1.8.3</version>-->
+    <!--</dependency>-->
+
+    <!--<dependency>-->
+    <!--  <groupId>com.sun.mail</groupId>-->
+    <!--  <artifactId>dsn</artifactId>-->
+    <!--  <version>2.0.1</version>-->
+    <!--</dependency>-->
+
+
+    <!-- Last Release on Sep 16, 2022 -->
+    <!--<dependency>-->
+    <!--  <groupId>freetts</groupId>-->
+    <!--  <artifactId>jsapi</artifactId>-->
+    <!--  <version>1.2.1</version>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+    <!--  <groupId>freetts</groupId>-->
+    <!--  <artifactId>cmulex</artifactId>-->
+    <!--  <version>1.2.1</version>-->
+    <!--</dependency>-->
+
+    <!-- From http://maven.icm.edu.pl/artifactory/repo/ -->
+    <!--<dependency>-->
+    <!--  <groupId>cmulex</groupId>-->
+    <!--  <artifactId>cmulex</artifactId>-->
+    <!--  <version>1.0</version>-->
+    <!--</dependency>-->
+
+    <!--
+    <dependency>
+      <groupId>org.mobicents.external.jsr309</groupId>
+      <artifactId>jsr309</artifactId>
+      <version>0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.jsr309</groupId>
+      <artifactId>mscontrol</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.external.tritonus</groupId>
+      <artifactId>tritonus_gsm</artifactId>
+      <version>0.3.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.tritonus</groupId>
+      <artifactId>tritonus_share</artifactId>
+      <version>0.3.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.external.appframework</groupId>
+      <artifactId>swing-layout</artifactId>
+      <version>1.0.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.external.appframework</groupId>
+      <artifactId>appframework</artifactId>
+      <version>1.0.3</version>
+    </dependency>
+    -->
+
+
+    <!-- https://opencast.org/ -->
     <!--<dependency>-->
     <!--  <groupId>org.opencastproject</groupId>-->
     <!--  <artifactId>opencast-speech-to-text-api</artifactId>-->
@@ -659,9 +963,30 @@
       <!--    <id>nexus.velocitypowered.com</id>-->
       <!--    <url>https://nexus.velocitypowered.com/repository/maven-public/</url>-->
       <!--</repository>-->
+      <repository>
+          <id>jboss</id>
+          <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
+      </repository>
+      <!-- For com.sun.speech.freetts » freetts » 1.2.2 -->
       <!--<repository>-->
-      <!--    <id>jboss</id>-->
-      <!--    <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>-->
+      <!--    <id>emergya.es</id>-->
+      <!--    <url>http://nexus.emergya.es/nexus/content/repositories/public/</url>-->
       <!--</repository>-->
+      <repository>
+          <id>dl.bintray.com</id>
+          <url>https://dl.bintray.com/openhab/mvn/</url>
+      </repository>
+      <repository>
+          <id>repo.spring.io</id>
+          <url>https://repo.spring.io/plugins-release/</url>
+      </repository>
+      <repository>
+          <id>repo.denkbares.com</id>
+          <url>https://repo.denkbares.com/repo-des/</url>
+      </repository>
+      <repository>
+          <id>software.rescarta.org</id>
+          <url>https://software.rescarta.org/nexus/content/repositories/thirdparty/</url>
+      </repository>
   </repositories>
 </project>

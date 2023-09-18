@@ -7,7 +7,6 @@ import com.sun.speech.freetts.ValidationException
 import com.sun.speech.freetts.Validator
 import com.sun.speech.freetts.VoiceDirectory
 import com.sun.speech.freetts.en.us.CMULexicon
-import com.sun.speech.freetts.jsapi.FreeTTSVoice
 import com.sun.speech.freetts.util.Utilities
 import org.apache.commons.lang3.SystemUtils
 import java.nio.file.Path
@@ -34,6 +33,7 @@ fun initFreeTts() {
     System.setProperty("freetts.voices", voiceDirectoryClasses.joinToString(",") { it.name })
 
     Central.registerEngineCentral(com.sun.speech.freetts.jsapi.FreeTTSEngineCentral::class.java.name)
+    //Central.registerEngineCentral(edu.cmu.sphinx.jsapi.SphinxEngineCentral::class.java.name)
 }
 
 
@@ -62,6 +62,7 @@ class JavaSpeechSpeechSynthesizer(
         val modeDesc = SynthesizerModeDesc(null, null, locale, null, arrayOf(voice))
 
         val synthesizer = Central.createSynthesizer(modeDesc)
+        requireNotNull(synthesizer) { "java.speech.Synthesizer is not created." }
         cleanLastSynthesizerRef()
 
         synthesizer.allocate()
@@ -84,15 +85,6 @@ class JavaSpeechSpeechSynthesizer(
     private fun cleanLastSynthesizerRef() =
         Central::class.java.getDeclaredField("lastSynthesizer")
             .also { lastSynthesizer -> lastSynthesizer.trySetAccessible(); lastSynthesizer.set(null, null) }
-}
-
-
-fun com.sun.speech.freetts.Voice.toJavaxSpeechVoice(): javax.speech.synthesis.Voice =
-    FreeTTSVoice(this, NoValidator::class.java.name)
-
-
-class NoValidator : Validator {
-    override fun validate() { }
 }
 
 
@@ -203,3 +195,35 @@ class MbrolaVoice(
     override fun getMbrolaBinary(): String =
         this.mbrolaBinary ?: super.getMbrolaBinary()
 }
+
+class NoValidator : Validator { override fun validate() { } }
+
+fun com.sun.speech.freetts.Voice.toJavaxSpeechVoice(): javax.speech.synthesis.Voice =
+    com.sun.speech.freetts.jsapi.FreeTTSVoice(this, NoValidator::class.java.name)
+
+/*
+fun com.sun.speech.freetts.Voice.toJavaxSpeechVoice(): javax.speech.synthesis.Voice =
+    javax.speech.synthesis.Voice(this.name, this.gender.toJavaSpeechVoiceGender(),
+                                 this.age.toJavaSpeechVoiceAge(), this.style)
+
+private fun Gender?.toJavaSpeechVoiceGender(): Int = when (this) {
+    null -> javax.speech.synthesis.Voice.GENDER_DONT_CARE
+    Gender.FEMALE    -> javax.speech.synthesis.Voice.GENDER_FEMALE
+    Gender.MALE      -> javax.speech.synthesis.Voice.GENDER_MALE
+    Gender.NEUTRAL   -> javax.speech.synthesis.Voice.GENDER_NEUTRAL
+    Gender.DONT_CARE -> javax.speech.synthesis.Voice.GENDER_DONT_CARE
+    else -> javax.speech.synthesis.Voice.GENDER_DONT_CARE
+}
+
+private fun Age?.toJavaSpeechVoiceAge(): Int = when (this) {
+    null -> javax.speech.synthesis.Voice.AGE_DONT_CARE
+    Age.CHILD         -> javax.speech.synthesis.Voice.AGE_CHILD
+    Age.TEENAGER      -> javax.speech.synthesis.Voice.AGE_TEENAGER
+    Age.YOUNGER_ADULT -> javax.speech.synthesis.Voice.AGE_YOUNGER_ADULT
+    Age.MIDDLE_ADULT  -> javax.speech.synthesis.Voice.AGE_MIDDLE_ADULT
+    Age.OLDER_ADULT   -> javax.speech.synthesis.Voice.AGE_OLDER_ADULT
+    Age.NEUTRAL       -> javax.speech.synthesis.Voice.AGE_NEUTRAL
+    Age.DONT_CARE     -> javax.speech.synthesis.Voice.AGE_DONT_CARE
+    else -> javax.speech.synthesis.Voice.AGE_DONT_CARE
+}
+*/
