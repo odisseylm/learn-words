@@ -101,6 +101,11 @@ Speech synthesizers
    - https://github.com/kaldi-asr/kaldi
  - Mozilla TTS
    - https://github.com/mozilla/TTS
+   - https://github.com/mozilla/DeepSpeech
+     - https://github.com/mozilla/DeepSpeech/releases/
+       - https://github.com/mozilla/DeepSpeech/releases/tag/v0.9.3
+     - https://github.com/mozilla/DeepSpeech-examples
+     - Java client https://github.com/mozilla/androidspeech/
  - ?? https://github.com/therealvasanth/online-tts
  - Coqui TTS
    - ?? Can be used in free software ??
@@ -111,6 +116,9 @@ Speech synthesizers
      - docker run --rm -it -p 5002:5002 --entrypoint /bin/bash ghcr.io/coqui-ai/tts-cpu
      - python3 TTS/server/server.py --list_models #To get the list of available models
      - python3 TTS/server/server.py --model_name tts_models/en/vctk/vits # To start a server
+   - SST
+     - https://github.com/coqui-ai/STT
+     - https://github.com/coqui-ai/STT-models/
  - Ila
    - https://sourceforge.net/projects/ila-voice-assistant/
  - Java FreeTTS (old but working)
@@ -129,7 +137,18 @@ Speech synthesizers
  - jAdapterForNativeTTS
    - https://github.com/jonelo/jAdapterForNativeTTS
  - Festival
-   - See separate file docs/festival.md 
+   - ++ Very good TTS with non-default voices
+   - See separate file docs/festival.md
+ - Speech Dispatcher (spd)
+   - so-so, it is just wrapper, and it does not allow to choose real TTC engine voice (you need to change default voice) 
+   - https://devicetests.com/speech-dispatcher-ubuntu
+   - It is just wrapper over real TTS impl (`spd-say --list-output-modules`)
+     - espeak-generic
+     - mary-generic
+     - espeak-ng
+     - etc
+   - spd-say "Hello"
+   - spd-con
 
 
 ***
