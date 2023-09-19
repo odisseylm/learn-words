@@ -94,9 +94,24 @@ Speech synthesizers
        - `?sudo? docker run --rm --name=marytts -p 59125:80 -it sepia/marytts:latest`
  - eSpeak
    - https://espeak.sourceforge.net/
+   - Your version of espeak can be just symlink to espeak-ng because they have compatible arguments
+     - https://github.com/espeak-ng/espeak-ng
    - https://espeak.sourceforge.net/commands.html
    - Use Mbrola voices
+     - Actually they should be present by default but not visible by `espeak --voices` and have wrong default parameters (you need to set 'sped' manually) ??
+     - `espeak -v mb-us1 -p 20 -s 130 "Hello Marina!"`
      - https://robots.uc3m.es/installation-guides/install-espeak-mbrola.html
+ - eSpeak-ng
+   - https://github.com/espeak-ng/espeak-ng
+   - Commands
+     - `espeak-ng "Hello John!"`
+     - `espeak-ng --voices`
+     - `espeak-ng --voices`
+     - `espeak-ng -v mb-us1 -p 20 -s 130 "Hello Marina!"`
+   - Use Mbrola voices
+     - Actually they should be present by default but not visible by `espeak-ng --voices` and have wrong default parameters (you need to set 'sped' manually) ??
+     - `espeak -v mb-us1 -p 20 -s 130 "Hello Marina!"`
+     - eSpeak NG will look for mbrola voices firstly in espeak-ng-data/mbrola and then in /usr/share/mbrola
  - ?? kaldi
    - https://github.com/kaldi-asr/kaldi
  - Mozilla TTS
@@ -139,16 +154,40 @@ Speech synthesizers
  - Festival
    - ++ Very good TTS with non-default voices
    - See separate file docs/festival.md
+ - Flite
+   - 
  - Speech Dispatcher (spd)
    - so-so, it is just wrapper, and it does not allow to choose real TTC engine voice (you need to change default voice) 
    - https://devicetests.com/speech-dispatcher-ubuntu
+   - https://manpages.ubuntu.com/manpages/trusty/man1/spd-say.1.html
    - It is just wrapper over real TTS impl (`spd-say --list-output-modules`)
      - espeak-generic
      - mary-generic
      - espeak-ng
      - etc
-   - spd-say "Hello"
-   - spd-con
+   - Commands
+     - `spd-say --list-synthesis-voices` hm... does not work on Ubuntu 20
+     - `spd-say "Hello"`
+     - `spd-conf`
+ - Windows
+   - ???
+   - unlock-win-tts-voices[https://manpages.ubuntu.com/manpages/trusty/man1/spd-say.1.html]
+   - https://pbaumgarten.com/java/speech.md
+   - https://github.com/jonelo/jAdapterForNativeTTS
+   - Commands
+     - `PowerShell -Command "Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('hello');"`
+     - `mshta vbscript:Execute("CreateObject(""SAPI.SpVoice"").Speak(""Hello"")(window.close)")`
+ - MacOS
+   - `say "hello"`
+ - ?? Verbify-TTS https://github.com/MattePalte/Verbify-TTS
+   - https://github.com/TensorSpeech
+
+
+
+***
+
+SST
+ - ??? to play with https://mvnrepository.com/artifact/edu.cmu.sphinx
 
 
 ***

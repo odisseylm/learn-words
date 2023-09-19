@@ -216,9 +216,13 @@ private const val spaceChars = " \n\t"
 private const val possibleSentenceEndChars = ".?!"
 
 // We do not use there universal "'\""' because they are not 'paired'
-private const val openCloseQuotesChars = "\"'"
-private const val openQuotesChars = "“‘«‚"
-private const val closingQuotesChars = "”’»’"
+private const val openCloseQuotesChars = "\"'＂"
+// It is mainly for English and Russian
+// For other languages the sameq quote chars can be used in reversed order
+// See https://symbl.cc/en/collections/quotation-marks/
+// Ideally it should be language dependent (but now I support only English)
+private const val openQuotesChars = "“‘«‚❮‹❛"    //«"
+private const val closingQuotesChars = "”’»’❯›❜" //»"
 
 private fun isSentenceEnd(text: CharSequence, position: Int, sentenceEndRule: SentenceEndRule): Boolean {
     val char = text[position]

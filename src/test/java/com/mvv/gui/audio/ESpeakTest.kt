@@ -118,4 +118,46 @@ class ESpeakTest {
 
         ESpeakSpeechSynthesizer(someMbrolaVoiceCustomizedToBeSlow!!).speak("Hello John!")
     }
+
+
+    @Test
+    @Disabled("for manual testing")
+    fun play_usingMbrolaVoice() {
+        val mbrolaEnVoices = listOf(
+            ESpeakVoice(-1, "en1", Gender.Male, "mb-en1", "unknown", null,
+               pitch = 20, wordsPerMinute = 140),
+            // ??? mbrola-us1 should be woman ???
+            ESpeakVoice(-1, "us", Gender.Male, "mb-us1", "unknown", null,
+               pitch = 20, wordsPerMinute = 130),
+            ESpeakVoice(-1, "us", Gender.Male, "mb-us2", "unknown", null,
+               pitch = 20, wordsPerMinute = 130),
+            ESpeakVoice(-1, "us", Gender.Male, "mb-us3", "unknown", null,
+               pitch = 20, wordsPerMinute = 130),
+        )
+
+        mbrolaEnVoices.forEach { voice ->
+            ESpeakSpeechSynthesizer(voice).speak("Hello Marina!")
+            ESpeakSpeechSynthesizer(voice).speak("Hello John!")
+            ESpeakSpeechSynthesizer(voice).speak("6 new wireless networks found")
+        }
+    }
+
+
+    @Test
+    @Disabled("for manual testing")
+    fun play_usingMbrolaVoices() {
+        val mbrolaVoices = ESpeakVoiceManager().availableVoices
+            .filter {
+                it.name.contains("mbrola", ignoreCase = false) ||
+                it.name.startsWith("mb-", ignoreCase = false) ||
+                it.file.contains("mbrola", ignoreCase = false) ||
+                it.file.startsWith("mb-", ignoreCase = false)
+            }
+        assertThat(mbrolaVoices).describedAs("No mbrola voices.").isNotEmpty
+
+        mbrolaVoices.forEach { someVoice ->
+            ESpeakSpeechSynthesizer(someVoice).speak("Hello Marina!")
+            ESpeakSpeechSynthesizer(someVoice).speak("Hello John!")
+        }
+    }
 }

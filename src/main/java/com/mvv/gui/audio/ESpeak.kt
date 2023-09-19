@@ -1,10 +1,14 @@
 package com.mvv.gui.audio
 
+import com.mvv.gui.util.addParam
+import com.mvv.gui.util.executeCommand
 import com.mvv.gui.util.trimToNull
-import org.apache.commons.exec.*
+import org.apache.commons.exec.CommandLine
+import org.apache.commons.exec.DefaultExecutor
+import org.apache.commons.exec.ExecuteException
+import org.apache.commons.exec.PumpStreamHandler
 import java.io.ByteArrayOutputStream
 import java.util.regex.Pattern
-
 
 
 data class ESpeakVoice(
@@ -127,30 +131,15 @@ class ESpeakSpeechSynthesizer(private val voice: ESpeakVoice) : SpeechSynthesize
 
     override fun speak(text: String) {
         val args = mutableListOf("espeak")
+            .addParam("-v", voice.name)
+            .addParam("-p", voice.pitch)
+            .addParam("-s", voice.wordsPerMinute)
+            .addParam("-a", voice.amplitude)
+            .addParam("-g", voice.wordGap)
+            .addParam("-k", voice.indicateCapitalLetters)
+            .addParam("-l", voice.lineLength)
+            .addParam(text)
 
-        args.addParam("-p", voice.pitch)
-        args.addParam("-s", voice.wordsPerMinute)
-        args.addParam("-a", voice.amplitude)
-        args.addParam("-g", voice.wordGap)
-        args.addParam("-k", voice.indicateCapitalLetters)
-        args.addParam("-l", voice.lineLength)
-
-        args.add(text)
-
-        execute(args)
+        executeCommand(args)
     }
 }
-
-
-private fun MutableList<String>.addParam(param: String, paramValue: Any?) {
-    if (paramValue == null || (paramValue is String && paramValue.isBlank())) return
-
-    this.add(param); this.add(paramValue.toString())
-}
-
-private fun execute(args: Iterable<String>) =
-    DefaultExecutor()
-        .execute(
-            CommandLine(args.first())
-                .also { cl -> args.asSequence().drop(1).forEach { cl.addArgument(it) } }
-        )
