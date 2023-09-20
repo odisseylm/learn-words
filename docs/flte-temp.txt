@@ -1,0 +1,62 @@
+
+flite --version
+  Carnegie Mellon University, Copyright (c) 1999-2016, all rights reserved
+  version: flite-2.1-release Dec 2017 (http://cmuflite.org)
+
+flite -lv
+Voices available: kal awb_time kal16 awb rms slt
+
+-- flite -voice kal -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+-- kal16
+- awb_time broken voice
+- awb
+
++ rms
++ flite -voice slt -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
+
+
+
+
+http://festvox.org/flite/packed/flite-2.1/voices/
+
+
+flite  -voice http://festvox.org/flite/packed/flite-2.1/voices/cmu_us_aew.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
+
++ flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_aew.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_ahw.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_aup.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_awb.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_axb.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
+- flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_bdl.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
+-- flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_clb.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++- flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_eey.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++ flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_fem.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++ with accent
+ flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_gka.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++- slow   flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_jmk.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
+-+ ударение плохое flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_ksp.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
+-+ ударение плохое flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_ljm.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
+- flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_lnh.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
+-+ flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_rms.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
+-+ flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_rxr.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++- with german accent flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_slp.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
+
++ flite  -voice /home/vmelnykov/Downloads/flite-voices/cmu_us_slt.flitevox -t "“Be with you in ten minutes,” I call through the open door of my office; “got a query from HR to answer first.”"
