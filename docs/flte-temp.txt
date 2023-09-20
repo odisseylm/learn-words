@@ -3,6 +3,10 @@ flite --version
   Carnegie Mellon University, Copyright (c) 1999-2016, all rights reserved
   version: flite-2.1-release Dec 2017 (http://cmuflite.org)
 
+however latest is 2.3
+http://festvox.org/flite/packed/flite-2.3/voices/
+
+
 flite -lv
 Voices available: kal awb_time kal16 awb rms slt
 
