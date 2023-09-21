@@ -6,4 +6,4 @@ interface SpeechSynthesizer {
 }
 
 
-enum class Gender { Female, Male }
+enum class Gender { Female, Male, Neutral /*, NotSet */ }

@@ -63,6 +63,7 @@ data class ESpeakVoice(
 private fun String.toGender(): Gender? = when (this.trim()) {
     "M", "m" -> Gender.Male
     "F", "f" -> Gender.Female
+    "N", "n" -> Gender.Neutral
     "-" -> null
     else -> throw IllegalArgumentException("Cannot parse gender from [$this].")
 }

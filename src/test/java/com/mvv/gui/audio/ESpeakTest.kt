@@ -30,6 +30,15 @@ class ESpeakTest {
             a.assertThat(it.otherLanguages).isEqualTo("(en-uk 2)(en 2)")
         }
 
+        ESpeakVoice(" 2  en-gb          N  english              en            (en-uk 2)(en 2)").also {
+            a.assertThat(it.pty).isEqualTo(2)
+            a.assertThat(it.language).isEqualTo("en-gb")
+            a.assertThat(it.gender).isEqualTo(Gender.Neutral)
+            a.assertThat(it.name).isEqualTo("english")
+            a.assertThat(it.file).isEqualTo("en")
+            a.assertThat(it.otherLanguages).isEqualTo("(en-uk 2)(en 2)")
+        }
+
         ESpeakVoice(" 5  en             M  default              default").also {
             a.assertThat(it.pty).isEqualTo(5)
             a.assertThat(it.language).isEqualTo("en")

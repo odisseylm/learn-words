@@ -125,7 +125,7 @@ class FestivalVoiceSpeechSynthesizer (private val voice: FestivalVoice) : Speech
 }
 
 
-private fun String.escapeText(): String =
+fun String.escapeText(): String =
     this
         .replace("\"", "＂") // "”")
         .replace("'", "’")

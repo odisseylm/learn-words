@@ -1,6 +1,7 @@
 package com.mvv.gui.util
 
 import java.nio.file.Path
+import kotlin.io.path.exists
 import kotlin.io.path.name
 
 
@@ -16,6 +17,9 @@ fun useFileExt(filename: String, fileExt: String): String {
 }
 
 fun String.withFileExt(fileExt: String): String = useFileExt(this, fileExt)
+
+
+val Path.nullIfNotExists: Path? get() = if (this.exists()) this else null
 
 
 val userHome: Path get() = Path.of(System.getProperty("user.home"))

@@ -155,7 +155,7 @@ Speech synthesizers
    - ++ Very good TTS with non-default voices
    - See separate file docs/festival.md
  - Flite
-   - 
+   - https://github.com/festvox/flite
  - Speech Dispatcher (spd)
    - so-so, it is just wrapper, and it does not allow to choose real TTC engine voice (you need to change default voice) 
    - https://devicetests.com/speech-dispatcher-ubuntu
@@ -170,13 +170,34 @@ Speech synthesizers
      - `spd-say "Hello"`
      - `spd-conf`
  - Windows
-   - ???
-   - unlock-win-tts-voices[https://manpages.ubuntu.com/manpages/trusty/man1/spd-say.1.html]
+   - Quality with default sound is so-so :-(
    - https://pbaumgarten.com/java/speech.md
    - https://github.com/jonelo/jAdapterForNativeTTS
    - Commands
-     - `PowerShell -Command "Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('hello');"`
-     - `mshta vbscript:Execute("CreateObject(""SAPI.SpVoice"").Speak(""Hello"")(window.close)")`
+     - Enable
+       - Manually step by step https://www.ghacks.net/2018/08/11/unlock-all-windows-10-tts-voices-system-wide-to-get-more-of-them/
+       - (unlock-win-tts-voices) https://stackoverflow.com/questions/55695930/listing-and-selecting-installed-voice-for-text-to-speech
+       - Open PowerShell with Admin rights and paste the following script
+         `
+          $sourcePath = 'HKLM:\software\Microsoft\Speech_OneCore\Voices\Tokens' #Where the OneCore voices live
+          $destinationPath = 'HKLM:\SOFTWARE\Microsoft\Speech\Voices\Tokens' #For 64-bit apps
+          $destinationPath2 = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\SPEECH\Voices\Tokens' #For 32-bit apps
+          cd $destinationPath
+          $listVoices = Get-ChildItem $sourcePath
+          foreach($voice in $listVoices)
+          {
+          $source = $voice.PSPath #Get the path of this voices key
+          copy -Path $source -Destination $destinationPath -Recurse
+          copy -Path $source -Destination $destinationPath2 -Recurse
+          }
+         ` 
+     - Say text
+       - `PowerShell -Command "Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('Hello Marina!');"`
+       - `PowerShell -Command "Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo;"`
+       - `mshta vbscript:Execute("CreateObject(""SAPI.SpVoice"").Speak(""Hello"")(window.close)")`
+     - Docs
+       - SpeechSynthesizer https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis.speechsynthesizer?view=netframework-4.8.1
+       - System.Speech.Synthesis Namespace https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis?view=netframework-4.8.1
  - MacOS
    - `say "hello"`
  - ?? Verbify-TTS https://github.com/MattePalte/Verbify-TTS

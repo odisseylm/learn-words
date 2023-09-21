@@ -23,3 +23,6 @@ fun timerTask(action: ()->Unit): TimerTask =
             catch (ex: Throwable) { log.error("Error in timer: $ex", ex) }
         }
     }
+
+
+inline val Int.isEven: Boolean get() = (this % 2) == 0

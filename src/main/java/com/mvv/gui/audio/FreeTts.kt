@@ -1,6 +1,9 @@
 package com.mvv.gui.audio
 
 import com.mvv.gui.util.containsOneOf
+import com.mvv.gui.util.isEven
+import com.mvv.gui.util.nullIfNotExists
+import com.mvv.gui.util.userHome
 import com.sun.speech.freetts.Age
 import com.sun.speech.freetts.Gender
 import com.sun.speech.freetts.ValidationException
@@ -22,8 +25,7 @@ private val log = mu.KotlinLogging.logger {}
 
 
 fun initFreeTts() {
-    // TODO: add possibility of customization outside
-    System.setProperty("mbrola.base", "/usr/share/mbrola")
+    initMbrolaBase()
 
     val voiceDirectoryClasses: List<Class<out VoiceDirectory>> = listOf(
         com.sun.speech.freetts.en.us.cmu_us_kal.KevinVoiceDirectory::class.java,
@@ -36,11 +38,94 @@ fun initFreeTts() {
     //Central.registerEngineCentral(edu.cmu.sphinx.jsapi.SphinxEngineCentral::class.java.name)
 }
 
+private fun initMbrolaBase() {
+
+    if (!System.getProperty("mbrola.base").isNullOrBlank())
+        return
+
+    val mbrolaBaseDir = findMbrolaBaseDir()
+    if (mbrolaBaseDir == null)
+        throw IllegalStateException("Mbrola is not found in predefined places." +
+                                    " Please install it or use system property 'mbrola.base'.")
+    else
+        System.setProperty("mbrola.base", mbrolaBaseDir.toString())
+}
+
+internal fun findMbrolaBaseDir(): Path? {
+    val mbrolaBase = System.getProperty("mbrola.base")
+    if (mbrolaBase != null && mbrolaBase.isNotBlank()) return Path.of(mbrolaBase)
+
+    val mbrolaBaseDir = when {
+        SystemUtils.IS_OS_LINUX ->
+            Path.of("/usr/share/mbrola").nullIfNotExists
+
+        SystemUtils.IS_OS_WINDOWS ->
+            windowsProgramFilesDirs()
+                .asSequence()
+                .map { it.resolve("mbrola") }
+                .find { it.exists() }
+
+        else -> null
+    }
+
+    return mbrolaBaseDir
+}
+
+
+private fun windowsProgramFilesDirs(): List<Path> =
+    sequenceOf(
+            System.getenv("ProgramFiles"),
+            System.getenv("ProgramFiles(x86)"),
+            System.getenv("ProgramW6432"),
+            "${userHome}/AppData/Local/Programs",
+            "${userHome}/Tools",
+            "$userHome",
+        )
+        .filterNotNull()
+        .filter { it.isNotBlank() }
+        .map { Path.of(it) }
+        .filter { it.exists() }
+        .toList()
 
 
 class FreeTtsSpeechSynthesizer(private val voice: com.sun.speech.freetts.Voice) : SpeechSynthesizer {
     //@Synchronized (need to synchronize by voice but is it safe??)
     override fun speak(text: String) {
+
+        //voice.audioPlayer = com.sun.speech.freetts.audio.JavaClipAudioPlayer()
+        //voice.audioPlayer = com.sun.speech.freetts.audio.RawFileAudioPlayer()
+
+        // It does not help
+        //voice.audioPlayer = FixedForWindowsJavaStreamingAudioPlayer()
+
+        // TODO: compare with format on Linux
+
+        /*
+        //voice.audioPlayer = JavaClipAudioPlayer()
+
+        On Windows
+        with mbrola voice error:
+          Error: illegal request to write non-integral number of frames (57 bytes, frameSize = 2 bytes)
+
+        result = {JavaStreamingAudioPlayer@3681} "JavaStreamingAudioPlayer"
+        paused = false
+        done = false
+        cancelled = false
+        line = null
+        volume = 1.0
+        timeOffset = 0
+        timer = {BulkTimer@3682}
+        defaultFormat = {AudioFormat@3683} "PCM_SIGNED 8000.0 Hz, 16 bit, mono, 2 bytes/frame, big-endian"
+        currentFormat = {AudioFormat@3683} "PCM_SIGNED 8000.0 Hz, 16 bit, mono, 2 bytes/frame, big-endian"
+        debug = false
+        audioMetrics = false
+        firstSample = true
+        cancelDelay = 0
+        drainDelay = 150
+        openFailDelayMs = 0
+        totalOpenFailDelayMs = 0
+        */
+
         voice.allocate()
         voice.speak(text)
         voice.deallocate()
@@ -155,7 +240,7 @@ class MbrolaVoiceDirectory(private val mbrolaBaseDir: Path? = null) : VoiceDirec
         )
     }
 
-    private fun getMbrolaBaseDir(): Path = Path.of(Utilities.getProperty("mbrola.base", "."))
+    private fun getMbrolaBaseDir(): Path = this.mbrolaBaseDir ?: Path.of(Utilities.getProperty("mbrola.base", "."))
 
     private fun findMbrolaBinary(): String {
         val exeFilename = if (SystemUtils.IS_OS_WINDOWS) "mbrola.exe" else "mbrola"
@@ -227,3 +312,18 @@ private fun Age?.toJavaSpeechVoiceAge(): Int = when (this) {
     else -> javax.speech.synthesis.Voice.AGE_DONT_CARE
 }
 */
+
+@Suppress("unused")
+class FixedForWindowsJavaStreamingAudioPlayer : com.sun.speech.freetts.audio.JavaStreamingAudioPlayer() {
+
+    override fun write(bytes: ByteArray?, offset: Int, size: Int): Boolean {
+        return super.write(bytes, offset, size)
+    }
+
+    override fun write(audioData: ByteArray): Boolean =
+        if (audioFormat.frameSize.isEven && !audioData.size.isEven)
+            super.write(audioData, 0, audioData.size  - 1)
+        else
+            super.write(audioData)
+
+}

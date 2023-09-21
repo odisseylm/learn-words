@@ -4,12 +4,15 @@ import com.sun.speech.freetts.VoiceDirectory
 import com.sun.speech.freetts.VoiceManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 
 
 
 // TODO: add conditional annotations for 'mbrola' tests
+// Seems Mbrola FreeTTS does not work on Windows
+// Error: illegal request to write non-integral number of frames (57 bytes, frameSize = 2 bytes)
+//
 class FreeTtsTest {
 
     @BeforeEach
@@ -35,7 +38,7 @@ class FreeTtsTest {
 
     @Test
     fun getMbrolaVoices() {
-        System.setProperty("mbrola.base", "/usr/share/mbrola")
+        System.setProperty("mbrola.base", findMbrolaBaseDir().toString())
 
         val accessibleVoices = MbrolaVoiceDirectory().voices
         assertThat(accessibleVoices).isNotEmpty
@@ -54,7 +57,8 @@ class FreeTtsTest {
     fun getMbrolaVoices_alt() {
         System.setProperty("mbrola.base", "")
 
-        val accessibleVoices = MbrolaVoiceDirectory(Path.of("/usr/share/mbrola")).voices
+        //val accessibleVoices = MbrolaVoiceDirectory(Path.of("/usr/share/mbrola")).voices
+        val accessibleVoices = MbrolaVoiceDirectory(findMbrolaBaseDir()).voices
         assertThat(accessibleVoices).isNotEmpty
 
         //System.setProperty("freetts.voices", MbrolaVoiceDirectory::class.java.name)
@@ -64,7 +68,7 @@ class FreeTtsTest {
 
     @Test
     fun getAllVoices() {
-        System.setProperty("mbrola.base", "/usr/share/mbrola")
+        System.setProperty("mbrola.base", findMbrolaBaseDir().toString())
 
         val accessibleVoices = MbrolaVoiceDirectory().voices
         assertThat(accessibleVoices).isNotEmpty
@@ -89,7 +93,7 @@ class FreeTtsTest {
 
 
     @Test
-    fun playVia_JavaSpeechSpeechSynthesizer() {
+    fun playStandardVoicesVia_JavaSpeechSpeechSynthesizer() {
         System.clearProperty("mbrola.base")
         System.clearProperty("freetts.voices")
 
@@ -105,6 +109,17 @@ class FreeTtsTest {
         // 'alan' does not work
         JavaSpeechSpeechSynthesizer(voiceManager.getVoice("alan"))
             .speak("Welcome John!")
+    }
+
+
+    @Test
+    @Disabled("hangs up on Windows")
+    fun playMbrolaVoicesVia_JavaSpeechSpeechSynthesizer() {
+        System.clearProperty("mbrola.base")
+        System.clearProperty("freetts.voices")
+
+        initFreeTts()
+        val voiceManager = VoiceManager.getInstance()
 
         // Or does not work good with java FreeTTS or need to configure properly.
         //JavaSpeechSpeechSynthesizer(voiceManager.getVoice("mbrola_en1"))
@@ -120,7 +135,7 @@ class FreeTtsTest {
 
 
     @Test
-    fun playVia_FreeTtsSpeechSynthesizer() {
+    fun playBaseVoicesVia_FreeTtsSpeechSynthesizer() {
         System.clearProperty("mbrola.base")
         System.clearProperty("freetts.voices")
 
@@ -132,6 +147,17 @@ class FreeTtsTest {
 
         // seems 'alan' quietly does not work
         //FreeTtsSpeechSynthesizer(voiceManager.getVoice("alan")).speak("Welcome John!")
+    }
+
+
+    @Test
+    @Disabled("hangs up on Windows")
+    fun playMbrolaVoicesVia_FreeTtsSpeechSynthesizer() {
+        System.clearProperty("mbrola.base")
+        System.clearProperty("freetts.voices")
+
+        initFreeTts()
+        val voiceManager = VoiceManager.getInstance()
 
         // Or does not work good with java FreeTTS or need to configure properly.
         //FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_en1")).speak("Welcome John!")
