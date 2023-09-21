@@ -126,6 +126,62 @@ class FreeTtsSpeechSynthesizer(private val voice: com.sun.speech.freetts.Voice) 
         totalOpenFailDelayMs = 0
         */
 
+        /*
+        result = {JavaStreamingAudioPlayer@3802} "JavaStreamingAudioPlayer"
+        paused = false
+        done = false
+        cancelled = false
+        line = null
+        volume = 1.0
+        timeOffset = 0
+        timer = {BulkTimer@3804}
+        defaultFormat = {AudioFormat@3805} "PCM_SIGNED 8000.0 Hz, 16 bit, mono, 2 bytes/frame, big-endian"
+        currentFormat = {AudioFormat@3805} "PCM_SIGNED 8000.0 Hz, 16 bit, mono, 2 bytes/frame, big-endian"
+        debug = false
+        audioMetrics = false
+        firstSample = true
+        cancelDelay = 0
+        drainDelay = 150
+        openFailDelayMs = 0
+        totalOpenFailDelayMs = 0
+
+        0 = "mbrola"
+        1 = "-e"
+        2 = "-R"
+        3 = "V ah i iy I ih U uh { ae @ ax r= er A aa O ao u uw E eh EI ey AI ay OI oy aU aw @U ow j y h hh N ng S sh T th Z zh D dh tS ch dZ jh _ pau"
+        4 = "/usr/share/mbrola/us1/us1"
+        5 = "-"
+        6 = "-.raw"
+
+
+        mbrola -help
+
+         USAGE: mbrola [COMMAND LINE OPTIONS] database pho_file+ output_file
+
+        A - instead of pho_file or output_file means stdin or stdout
+        Extension of output_file ( raw, au, wav, aiff ) tells the wanted audio format
+
+        Options can be any of the following:
+        -i    = display the database information if any
+        -e    = IGNORE fatal errors on unkown diphone
+        -c CC = set COMMENT char (escape sequence in pho files)
+        -F FC = set FLUSH command name
+        -v VR = VOLUME ratio, float ratio applied to ouput samples
+        -f FR = FREQ ratio, float ratio applied to pitch points
+        -t TR = TIME ratio, float ratio applied to phone durations
+        -l VF = VOICE freq, target freq for voice quality
+        -R RL = Phoneme RENAME list of the form a A b B ...
+        -C CL = Phoneme CLONE list of the form a A b B ...
+
+        -I IF = Initialization file containing one command per line
+                CLONE, RENAME, VOICE, TIME, FREQ, VOLUME, FLUSH, COMMENT,
+                and IGNORE are available
+        -W store the datbase in ROM format
+        -w the database in a ROM dump
+
+
+        */
+
         voice.allocate()
         voice.speak(text)
         voice.deallocate()
