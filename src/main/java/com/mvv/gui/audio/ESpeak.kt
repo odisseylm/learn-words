@@ -1,19 +1,24 @@
 package com.mvv.gui.audio
 
 import com.mvv.gui.util.addParam
+import com.mvv.gui.util.commandLine
 import com.mvv.gui.util.executeCommand
 import com.mvv.gui.util.trimToNull
-import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.ExecuteException
 import org.apache.commons.exec.PumpStreamHandler
 import java.io.ByteArrayOutputStream
 import java.util.regex.Pattern
+import kotlin.text.Charsets.UTF_8
 
 
 data class ESpeakVoice(
-    val pty: Int, val language: String, val gender: Gender?, val name: String, val file: String,
-    val otherLanguages: String?,
+    val pty: Int, val language: String, val gender: Gender?,
+    /** !! Name be not unique !! */
+    val name: String,
+    /** !! File seems to be unique !! */
+    val file: String,
+    val otherLanguages: String? = null,
     // -p <integer>  Pitch adjustment, 0 to 99, default is 50
     val pitch: Int? = null,
     //-s <integer>   Speed in words per minute, 80 to 450, default is 175
@@ -38,7 +43,7 @@ data class ESpeakVoice(
         //    " 5  ru             M  russian              europe/ru"
         private val pattern = Pattern.compile("\\s*(\\d+)" +
                 "[\\s\\t]+([a-zA-Z0-9\\-_]+)" +  // Ptty
-                "[\\s\\t]+([FMfm-])" +           // Gender (female/male/unknown)
+                "[\\s\\t]+([FfMmNn-])" +           // Gender (female/male/unknown)
                 "[\\s\\t]+([a-zA-Z0-9\\-_]+)" +  // Voice Name
                 "[\\s\\t]+([a-zA-Z0-9\\-/_]+)" + // File
                 "[\\s\\t]*(.*)"                  // Other Languages
@@ -67,6 +72,41 @@ private fun String.toGender(): Gender? = when (this.trim()) {
     "-" -> null
     else -> throw IllegalArgumentException("Cannot parse gender from [$this].")
 }
+
+
+internal val fixedMbrolaVoiceDefinitions: Map<String, ESpeakVoice> = listOf(
+    ESpeakVoice(3, "en-uk", Gender.Male, "english-mb-en1", "mb/mb-en1", "(en 2)",
+        /*pitch = 20,*/ wordsPerMinute = 140),
+    // ??? mbrola-us1 should be woman ???
+    ESpeakVoice(5, "en-us", Gender.Male, "us-mbrola-1", "mb/mb-us1", "(en 8)",
+        /*pitch = 20,*/ wordsPerMinute = 130),
+    ESpeakVoice(5, "en-us", Gender.Male, "us-mbrola-2", "mb/mb-us2", "(en 7)",
+        /*pitch = 20,*/ wordsPerMinute = 130),
+    ESpeakVoice(5, "en-us", Gender.Male, "us-mbrola-3", "mb/mb-us3", "(en 8)",
+        /*pitch = 20,*/ wordsPerMinute = 130),
+
+    // with German accent
+    ESpeakVoice(9, "en", Gender.Male, "en-german", "mb/mb-de4-en",
+        /*pitch = 20,*/ wordsPerMinute = 130),
+    ESpeakVoice(9, "en", Gender.Male, "en-german-5", "mb/mb-de5-en",
+        /*pitch = 20,*/ wordsPerMinute = 130),
+
+    // with French accent
+    ESpeakVoice(10, "en", Gender.Male, "en-french", "mb/mb-fr1-en",
+        /*pitch = 20,*/ wordsPerMinute = 130),
+    ESpeakVoice(10, "en", Gender.Female, "en-french", "mb/mb-fr4-en",
+        /*pitch = 20,*/ wordsPerMinute = 130),
+
+    // if you need you can properly adjust also the following ones
+    // en-afrikaans    mb/mb-af1-en
+    // en-french       mb/mb-fr1-en
+    // en-french       mb/mb-fr4-en
+    // en-hungarian    mb/mb-hu1-en
+    // en-dutch        mb/mb-nl2-en
+    // en-polish       mb/mb-pl1-en
+    // en-swedish      mb/mb-sw1-en
+    // en-swedish-f    mb/mb-sw2-en
+).associateBy { it.file }
 
 
 class ESpeakVoiceManager {
@@ -106,33 +146,44 @@ class ESpeakVoiceManager {
 
     val predefinedVoices: List<ESpeakVoice> get() = parseVoices(predefinedVoicesString)
 
-    private fun parseVoices(voicesString: String) = voicesString
-            .split("\n")
-            .filter { it.isNotBlank() }
-            .filterNot { it.startsWith("//") }
-            .filterNot { it.startsWith("Pty") } // real header
-            .map { ESpeakVoice(it) }
-
     val availableVoices: List<ESpeakVoice> get() {
-        val executor = DefaultExecutor()
-        val contentStream = ByteArrayOutputStream()
-        executor.streamHandler = PumpStreamHandler(contentStream, System.err)
-
-        val res = executor.execute(CommandLine("espeak").also { it.addArgument("--voices") })
-        if (res != 0) throw ExecuteException("[espeak --voices] failed with code $res.", res)
-
-        val voicesString: String = contentStream.toString(Charsets.UTF_8)
-        return parseVoices(voicesString)
+        val voicesString: String = executeAndReturnContent("espeak", "--voices")
+        // strange but if we specify language espeak also shows mbrola voices, otherwise it does not.
+        val enVoicesString: String = executeAndReturnContent("espeak", "--voices=en")
+        return parseVoices(voicesString + "\n" + enVoicesString)
     }
+
+    private fun parseVoices(voicesString: String) = voicesString
+        .splitToSequence("\n")
+        .distinct()
+        .filter { it.isNotBlank() }
+        .filterNot { it.startsWith("//") }
+        .filterNot { it.startsWith("Pty") } // real header
+        .map { ESpeakVoice(it) }
+        .map { fixedMbrolaVoiceDefinitions.getOrDefault(it.file, it) }
+        .sortedBy { it.name }
+        .toList()
 }
 
+
+private fun executeAndReturnContent(vararg args: String): String {
+    val executor = DefaultExecutor()
+
+    val contentStream = ByteArrayOutputStream()
+    executor.streamHandler = PumpStreamHandler(contentStream, System.err)
+
+    val res = executor.execute(commandLine(*args))
+    if (res != 0) throw ExecuteException("[espeak --voices] failed with code $res.", res)
+
+    return contentStream.toString(UTF_8)
+}
 
 
 class ESpeakSpeechSynthesizer(private val voice: ESpeakVoice) : SpeechSynthesizer {
 
     override fun speak(text: String) {
         val args = mutableListOf("espeak")
-            .addParam("-v", voice.name)
+            .addParam("-v", voice.file) // name is not unique ?!
             .addParam("-p", voice.pitch)
             .addParam("-s", voice.wordsPerMinute)
             .addParam("-a", voice.amplitude)
@@ -144,3 +195,20 @@ class ESpeakSpeechSynthesizer(private val voice: ESpeakVoice) : SpeechSynthesize
         executeCommand(args)
     }
 }
+
+/*
+Mbrola en voices:
+
+ 9  en             M  en-german            mb/mb-de4-en
+ 9  en             F  en-german-5          mb/mb-de5-en
+ 9  en             M  en-greek             mb/mb-gr2-en
+ 9  en             M  en-romanian          mb/mb-ro1-en
+10  en             M  en-dutch             mb/mb-nl2-en
+10  en             M  en-french            mb/mb-fr1-en
+10  en             F  en-french            mb/mb-fr4-en
+10  en             F  en-hungarian         mb/mb-hu1-en
+10  en             F  en-swedish-f         mb/mb-sw2-en
+11  en             M  en-afrikaans         mb/mb-af1-en
+11  en             F  en-polish            mb/mb-pl1-en
+11  en             M  en-swedish           mb/mb-sw1-en
+*/

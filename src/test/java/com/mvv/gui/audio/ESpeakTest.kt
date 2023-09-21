@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 
+private val log = mu.KotlinLogging.logger {}
+
+
 class ESpeakTest {
 
     @Test
@@ -132,18 +135,7 @@ class ESpeakTest {
     @Test
     @Disabled("for manual testing")
     fun play_usingMbrolaVoice() {
-        val mbrolaEnVoices = listOf(
-            ESpeakVoice(-1, "en1", Gender.Male, "mb-en1", "unknown", null,
-               pitch = 20, wordsPerMinute = 140),
-            // ??? mbrola-us1 should be woman ???
-            ESpeakVoice(-1, "us", Gender.Male, "mb-us1", "unknown", null,
-               pitch = 20, wordsPerMinute = 130),
-            ESpeakVoice(-1, "us", Gender.Male, "mb-us2", "unknown", null,
-               pitch = 20, wordsPerMinute = 130),
-            ESpeakVoice(-1, "us", Gender.Male, "mb-us3", "unknown", null,
-               pitch = 20, wordsPerMinute = 130),
-        )
-
+        val mbrolaEnVoices = fixedMbrolaVoiceDefinitions.values
         mbrolaEnVoices.forEach { voice ->
             ESpeakSpeechSynthesizer(voice).speak("Hello Marina!")
             ESpeakSpeechSynthesizer(voice).speak("Hello John!")
@@ -156,17 +148,32 @@ class ESpeakTest {
     @Disabled("for manual testing")
     fun play_usingMbrolaVoices() {
         val mbrolaVoices = ESpeakVoiceManager().availableVoices
-            .filter {
-                it.name.contains("mbrola", ignoreCase = false) ||
-                it.name.startsWith("mb-", ignoreCase = false) ||
-                it.file.contains("mbrola", ignoreCase = false) ||
-                it.file.startsWith("mb-", ignoreCase = false)
-            }
+            .filter { it.file.startsWith("mb/") }
+            //.filter { it.name == "en-german-5" }
+            //.filter { it.name.contains("french") }
+            //.filter { it.name.contains("english-mb-en1") }
         assertThat(mbrolaVoices).describedAs("No mbrola voices.").isNotEmpty
 
-        mbrolaVoices.forEach { someVoice ->
-            ESpeakSpeechSynthesizer(someVoice).speak("Hello Marina!")
-            ESpeakSpeechSynthesizer(someVoice).speak("Hello John!")
+        mbrolaVoices.forEach { voice ->
+            log.info("Voice: {}", voice.name)
+            ESpeakSpeechSynthesizer(voice).speak("Hello Marina!")
+            ESpeakSpeechSynthesizer(voice).speak("Hello John!")
+        }
+    }
+
+
+    @Test
+    @Disabled("for manual testing")
+    fun play_usingCoreUsMbrolaVoices() {
+        val mbrolaVoices = ESpeakVoiceManager().availableVoices
+            .filter { it.file.startsWith("mb/") }
+            .filter { it.name.startsWith("us-mbrola-") || it.name == "english-mb-en1" }
+        assertThat(mbrolaVoices).describedAs("No mbrola core US voices.").isNotEmpty
+
+        mbrolaVoices.forEach { voice ->
+            log.info("Voice: {}", voice.name)
+            ESpeakSpeechSynthesizer(voice).speak("Hello Marina!")
+            ESpeakSpeechSynthesizer(voice).speak("Hello John!")
         }
     }
 }
