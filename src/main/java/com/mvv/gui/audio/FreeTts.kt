@@ -12,6 +12,7 @@ import com.sun.speech.freetts.VoiceDirectory
 import com.sun.speech.freetts.en.us.CMULexicon
 import com.sun.speech.freetts.util.Utilities
 import org.apache.commons.lang3.SystemUtils
+import org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS
 import java.nio.file.Path
 import java.util.*
 import javax.speech.Central
@@ -51,6 +52,22 @@ private fun initMbrolaBase() {
         System.setProperty("mbrola.base", mbrolaBaseDir.toString())
 }
 
+
+internal fun findMbrolaBinary(): String = findMbrolaBinary(findMbrolaBaseDir())
+
+internal fun findMbrolaBinary(mbrolaBaseDir: Path?): String {
+    val execFile = if (IS_OS_WINDOWS) "mbrola.exe" else "mbrola"
+
+    if (mbrolaBaseDir != null) {
+        val mbrolaExecPath = mbrolaBaseDir.resolve(execFile)
+        if (mbrolaExecPath.exists())
+            return mbrolaExecPath.toString()
+    }
+
+    return execFile
+}
+
+
 internal fun findMbrolaBaseDir(): Path? {
     val mbrolaBase = System.getProperty("mbrola.base")
     if (mbrolaBase != null && mbrolaBase.isNotBlank()) return Path.of(mbrolaBase)
@@ -59,7 +76,7 @@ internal fun findMbrolaBaseDir(): Path? {
         SystemUtils.IS_OS_LINUX ->
             Path.of("/usr/share/mbrola").nullIfNotExists
 
-        SystemUtils.IS_OS_WINDOWS ->
+        IS_OS_WINDOWS ->
             windowsProgramFilesDirs()
                 .asSequence()
                 .map { it.resolve("mbrola") }
@@ -91,97 +108,6 @@ private fun windowsProgramFilesDirs(): List<Path> =
 class FreeTtsSpeechSynthesizer(private val voice: com.sun.speech.freetts.Voice) : SpeechSynthesizer {
     //@Synchronized (need to synchronize by voice but is it safe??)
     override fun speak(text: String) {
-
-        //voice.audioPlayer = com.sun.speech.freetts.audio.JavaClipAudioPlayer()
-        //voice.audioPlayer = com.sun.speech.freetts.audio.RawFileAudioPlayer()
-
-        // It does not help
-        //voice.audioPlayer = FixedForWindowsJavaStreamingAudioPlayer()
-
-        // TODO: compare with format on Linux
-
-        /*
-        //voice.audioPlayer = JavaClipAudioPlayer()
-
-        On Windows
-        with mbrola voice error:
-          Error: illegal request to write non-integral number of frames (57 bytes, frameSize = 2 bytes)
-
-        result = {JavaStreamingAudioPlayer@3681} "JavaStreamingAudioPlayer"
-        paused = false
-        done = false
-        cancelled = false
-        line = null
-        volume = 1.0
-        timeOffset = 0
-        timer = {BulkTimer@3682}
-        defaultFormat = {AudioFormat@3683} "PCM_SIGNED 8000.0 Hz, 16 bit, mono, 2 bytes/frame, big-endian"
-        currentFormat = {AudioFormat@3683} "PCM_SIGNED 8000.0 Hz, 16 bit, mono, 2 bytes/frame, big-endian"
-        debug = false
-        audioMetrics = false
-        firstSample = true
-        cancelDelay = 0
-        drainDelay = 150
-        openFailDelayMs = 0
-        totalOpenFailDelayMs = 0
-        */
-
-        /*
-        result = {JavaStreamingAudioPlayer@3802} "JavaStreamingAudioPlayer"
-        paused = false
-        done = false
-        cancelled = false
-        line = null
-        volume = 1.0
-        timeOffset = 0
-        timer = {BulkTimer@3804}
-        defaultFormat = {AudioFormat@3805} "PCM_SIGNED 8000.0 Hz, 16 bit, mono, 2 bytes/frame, big-endian"
-        currentFormat = {AudioFormat@3805} "PCM_SIGNED 8000.0 Hz, 16 bit, mono, 2 bytes/frame, big-endian"
-        debug = false
-        audioMetrics = false
-        firstSample = true
-        cancelDelay = 0
-        drainDelay = 150
-        openFailDelayMs = 0
-        totalOpenFailDelayMs = 0
-
-        0 = "mbrola"
-        1 = "-e"
-        2 = "-R"
-        3 = "V ah i iy I ih U uh { ae @ ax r= er A aa O ao u uw E eh EI ey AI ay OI oy aU aw @U ow j y h hh N ng S sh T th Z zh D dh tS ch dZ jh _ pau"
-        4 = "/usr/share/mbrola/us1/us1"
-        5 = "-"
-        6 = "-.raw"
-
-
-        mbrola -help
-
-         USAGE: mbrola [COMMAND LINE OPTIONS] database pho_file+ output_file
-
-        A - instead of pho_file or output_file means stdin or stdout
-        Extension of output_file ( raw, au, wav, aiff ) tells the wanted audio format
-
-        Options can be any of the following:
-        -i    = display the database information if any
-        -e    = IGNORE fatal errors on unkown diphone
-        -c CC = set COMMENT char (escape sequence in pho files)
-        -F FC = set FLUSH command name
-        -v VR = VOLUME ratio, float ratio applied to ouput samples
-        -f FR = FREQ ratio, float ratio applied to pitch points
-        -t TR = TIME ratio, float ratio applied to phone durations
-        -l VF = VOICE freq, target freq for voice quality
-        -R RL = Phoneme RENAME list of the form a A b B ...
-        -C CL = Phoneme CLONE list of the form a A b B ...
-
-        -I IF = Initialization file containing one command per line
-                CLONE, RENAME, VOICE, TIME, FREQ, VOLUME, FLUSH, COMMENT,
-                and IGNORE are available
-        -W store the datbase in ROM format
-        -w the database in a ROM dump
-
-
-        */
-
         voice.allocate()
         voice.speak(text)
         voice.deallocate()
@@ -298,11 +224,7 @@ class MbrolaVoiceDirectory(private val mbrolaBaseDir: Path? = null) : VoiceDirec
 
     private fun getMbrolaBaseDir(): Path = this.mbrolaBaseDir ?: Path.of(Utilities.getProperty("mbrola.base", "."))
 
-    private fun findMbrolaBinary(): String {
-        val exeFilename = if (SystemUtils.IS_OS_WINDOWS) "mbrola.exe" else "mbrola"
-        val asPath = getMbrolaBaseDir().resolve(exeFilename)
-        return if (asPath.exists()) asPath.toString() else exeFilename
-    }
+    private fun findMbrolaBinary(): String = findMbrolaBinary(this.getMbrolaBaseDir())
 
     private fun validateVoice(voice: MbrolaVoice) {
 

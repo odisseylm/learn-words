@@ -33,3 +33,36 @@
            - https://aur.archlinux.org/packages?K=mbrola-voices
      - http://kobyla.org/soft/distfiles/mbrolavox/ (!!! ancient versions !!!)
        - Files (probably very old): en1-980910.zip us1-980512.zip us2-980812.zip us3-990208.zip
+
+
+***
+
+Building mbrola on Windows
+
+Building with new Visual Studio generates non-working exe file (it executes properly but generates incorrect data).
+
+Use Cygwin or MinGW/msys64 with proper configuration
+
+Installing required packages on cygwin
+- Use UI, relaunch `cygwin-setup-x86_64.exe` again
+
+ - Run cygwin terminal `C:\cygwin64\bin\mintty.exe -i /Cygwin-Terminal.ico -` (or choose in Windows/Start menu) 
+ - `cd cygdrive/c/Users/Volod/Projects/temp/MBROLA/`
+ - `make`
+ - copy resulting 'mbrola.exe' to your mbrola.base dir (C:\Program Files (x86)\mbrola)  
+ - copy resulting 'cygwin1.dll' (from C:\cygwin64\bin\) to your mbrola.base dir (C:\Program Files (x86)\mbrola)
+   - I tried to compile mbrola.exe without dependency to cygwin1.dll (or msys-2.0.dll) but such exe files worked improperly.
+
+
+
+- https://www.mingw-w64.org/
+- https://www.msys2.org/
+- Go to project dir `cd /c/Users/Volod/Projects/temp/MBROLA`
+- Installing required packages on msys64
+    - `
+      cd /c/Users/Volod/Projects/temp/MBROLA
+      pacman -S gcc
+      pacman -S make
+      #pacman -S mingw-w64-x86_64-gcc
+      `
+- Packages https://packages.msys2.org/updates?repo=msys

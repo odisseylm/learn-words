@@ -1,18 +1,16 @@
 package com.mvv.gui.audio
 
+import com.mvv.gui.util.executeCommand
 import com.sun.speech.freetts.VoiceDirectory
 import com.sun.speech.freetts.VoiceManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledIf
+import java.io.IOException
 
 
 
-// TODO: add conditional annotations for 'mbrola' tests
-// Seems Mbrola FreeTTS does not work on Windows
-// Error: illegal request to write non-integral number of frames (57 bytes, frameSize = 2 bytes)
-//
 class FreeTtsTest {
 
     @BeforeEach
@@ -57,7 +55,6 @@ class FreeTtsTest {
     fun getMbrolaVoices_alt() {
         System.setProperty("mbrola.base", "")
 
-        //val accessibleVoices = MbrolaVoiceDirectory(Path.of("/usr/share/mbrola")).voices
         val accessibleVoices = MbrolaVoiceDirectory(findMbrolaBaseDir()).voices
         assertThat(accessibleVoices).isNotEmpty
 
@@ -67,7 +64,7 @@ class FreeTtsTest {
 
 
     @Test
-    fun getAllVoices() {
+    fun getBaseVoicesInsideAll() {
         System.setProperty("mbrola.base", findMbrolaBaseDir().toString())
 
         val accessibleVoices = MbrolaVoiceDirectory().voices
@@ -80,10 +77,30 @@ class FreeTtsTest {
         )
         System.setProperty("freetts.voices", voiceDirectoryClasses.joinToString(",") { it.name })
 
-        assertThat(VoiceManager.getInstance().voices.map { it.name }).containsExactlyInAnyOrder(
+        assertThat(VoiceManager.getInstance().voices.map { it.name }).contains(
             "kevin",
             "kevin16",
             "alan",
+        )
+    }
+
+
+    @Test
+    @EnabledIf("isMbrolaExecutablePresent")
+    fun getMbrolaVoicesInsideAll() {
+        System.setProperty("mbrola.base", findMbrolaBaseDir().toString())
+
+        val accessibleVoices = MbrolaVoiceDirectory().voices
+        assertThat(accessibleVoices).isNotEmpty
+
+        val voiceDirectoryClasses: List<Class<out VoiceDirectory>> = listOf(
+            com.sun.speech.freetts.en.us.cmu_us_kal.KevinVoiceDirectory::class.java,
+            com.sun.speech.freetts.en.us.cmu_time_awb.AlanVoiceDirectory::class.java,
+            MbrolaVoiceDirectory::class.java,
+        )
+        System.setProperty("freetts.voices", voiceDirectoryClasses.joinToString(",") { it.name })
+
+        assertThat(VoiceManager.getInstance().voices.map { it.name }).contains(
             "mbrola_en1",
             "mbrola_us1",
             "mbrola_us2",
@@ -93,15 +110,19 @@ class FreeTtsTest {
 
 
     @Test
-    fun playStandardVoicesVia_JavaSpeechSpeechSynthesizer() {
+    fun playStandardVoicesBy_JavaSpeechSpeechSynthesizer() {
         System.clearProperty("mbrola.base")
         System.clearProperty("freetts.voices")
 
         initFreeTts()
         val voiceManager = VoiceManager.getInstance()
 
+        // using alt constructor
         voiceManager.getVoice("kevin")
             .let { JavaSpeechSpeechSynthesizer(it.toJavaxSpeechVoice(), it.locale) }
+            .speak("Welcome John!")
+
+        JavaSpeechSpeechSynthesizer(voiceManager.getVoice("kevin"))
             .speak("Welcome John!")
         JavaSpeechSpeechSynthesizer(voiceManager.getVoice("kevin16"))
             .speak("Welcome John!")
@@ -113,8 +134,8 @@ class FreeTtsTest {
 
 
     @Test
-    @Disabled("hangs up on Windows")
-    fun playMbrolaVoicesVia_JavaSpeechSpeechSynthesizer() {
+    @EnabledIf("isMbrolaExecutablePresent")
+    fun playMbrolaVoicesBy_JavaSpeechSpeechSynthesizer() {
         System.clearProperty("mbrola.base")
         System.clearProperty("freetts.voices")
 
@@ -135,7 +156,7 @@ class FreeTtsTest {
 
 
     @Test
-    fun playBaseVoicesVia_FreeTtsSpeechSynthesizer() {
+    fun playBaseVoicesBy_FreeTtsSpeechSynthesizer() {
         System.clearProperty("mbrola.base")
         System.clearProperty("freetts.voices")
 
@@ -151,8 +172,8 @@ class FreeTtsTest {
 
 
     @Test
-    @Disabled("hangs up on Windows")
-    fun playMbrolaVoicesVia_FreeTtsSpeechSynthesizer() {
+    @EnabledIf("isMbrolaExecutablePresent")
+    fun playMbrolaVoicesBy_FreeTtsSpeechSynthesizer() {
         System.clearProperty("mbrola.base")
         System.clearProperty("freetts.voices")
 
@@ -165,5 +186,12 @@ class FreeTtsTest {
         FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us1")).speak("Welcome John!")
         FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us2")).speak("Welcome John!")
         FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us3")).speak("Welcome John!")
+    }
+
+    companion object {
+        @JvmStatic
+        fun isMbrolaExecutablePresent(): Boolean =
+                try { executeCommand(findMbrolaBinary(), "-help") == 0 }
+                catch (_: IOException) { false }
     }
 }
