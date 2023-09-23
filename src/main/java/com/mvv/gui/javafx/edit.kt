@@ -12,7 +12,9 @@ fun toLowerCase(textInput: TextInputControl) {
     val caretPosition = textInput.caretPosition
     val anchor = textInput.anchor
 
-    textInput.text = currentText.lowercase()
+    textInput.replaceText(0, textInput.text.length, currentText.lowercase())
+
+    //textInput.text = currentText.lowercase()
     textInput.selectRange(anchor, caretPosition)
 }
 

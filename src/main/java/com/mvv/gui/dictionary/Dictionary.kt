@@ -44,7 +44,7 @@ class DictionaryComposition (private val dictionaries: List<Dictionary>) : Dicti
         try { dictionary.find(word) }
         catch (ex: Exception) {
             if (ignoreErrors) {
-                log.error("Error of finding word [{}] in [{}]", word, dictionary, ex)
+                log.error(ex) { "Error of finding word [$word] in [$dictionary]" }
                 DictionaryEntry.empty(word)
             }
             else { throw ex }

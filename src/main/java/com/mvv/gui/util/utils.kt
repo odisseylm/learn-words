@@ -20,7 +20,7 @@ fun timerTask(action: ()->Unit): TimerTask =
         override fun run() {
             // we need to catch, otherwise java.util.Timer will stop (strange behaviour)
             try { action() }
-            catch (ex: Throwable) { log.error("Error in timer: $ex", ex) }
+            catch (ex: Throwable) { log.error(ex) { "Error in timer: $ex" } }
         }
     }
 

@@ -36,32 +36,59 @@ class ContextMenuController (val controller: LearnWordsController) {
             translateSelectedKeyCombination ) { controller.translateSelected() }
 
         val menuItems = listOf(
+            newMenuItem("Clone") { controller.cloneWordCard() },
+
+            SeparatorMenuItem(),
             newMenuItem("Insert above", buttonIcon("/icons/insertAbove-01.png")) {
                 controller.insertWordCard(InsertPosition.Above) },
             newMenuItem("Insert below", buttonIcon("/icons/insertBelow-01.png")) {
                 controller.insertWordCard(InsertPosition.Below) },
             newMenuItem("Lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
                 controller.toLowerCaseRow() },
+
+            SeparatorMenuItem(),
             newMenuItem("To ignore >>", buttonIcon("icons/rem_all_co.png")) {
                 controller.moveSelectedToIgnored() },
             newMenuItem("Remove", buttonIcon("icons/cross-1.png")) {
                 controller.removeSelected() },
             translateMenuItem,
+
+            SeparatorMenuItem(),
             ignoreNoBaseWordMenuItem,
             addMissedBaseWordsMenuItem,
+
+            SeparatorMenuItem(),
             newMenuItem("Play", buttonIcon("icons/ear.png")) { controller.playSelectedWord() },
 
             SeparatorMenuItem(),
             newMenuItem("Add to 'Difficult' Set") { controller.addToDifficultSet() },
             newMenuItem("Add to 'Listen' Set") { controller.addToListenSet() },
+
+            SeparatorMenuItem(),
+            newMenuItem("Show source sentences", buttonIcon("icons/receiptstext.png")) {
+                this.currentWordsList.selectionModel.selectedItem
+                    ?.also { controller.showSourceSentences(it) } },
         )
 
         contextMenu.items.addAll(menuItems)
 
         contextMenu.onShowing = EventHandler {
+
+            contextMenu.items.forEach { it.isVisible = true }
+
             updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
             updateAddMissedBaseWordsMenuItem(addMissedBaseWordsMenuItem)
             updateTranslateMenuItem(translateMenuItem)
+
+            val visibleMenuItems = contextMenu.items.filter { it.isVisible }
+            visibleMenuItems.forEachIndexed { index, menuItem ->
+                    if (menuItem.isVisible && menuItem is SeparatorMenuItem) {
+                        val isPrevItemIsVisibleSeparator = visibleMenuItems.getOrNull(index - 1)
+                            ?.let { it is SeparatorMenuItem && it.isVisible }
+                            ?: false
+                        if (isPrevItemIsVisibleSeparator) menuItem.isVisible = false
+                    }
+                }
         }
     }
 

@@ -76,6 +76,17 @@ class CardWordEntry {
         "CardWordEntry(from='$from', to='${to.take(20)}...', wordCardStatuses=$wordCardStatuses," +
                 " translationCount=$translationCount, transcription='$transcription', examples='${examples.take(10)}...')"
 
+    fun copy(): CardWordEntry = CardWordEntry(this.from, this.to).also {
+        it.fromWithPreposition = this.fromWithPreposition
+        it.transcription = this.transcription
+        it.examples = this.examples
+        it.wordCardStatuses = this.wordCardStatuses
+        it.predefinedSets = this.predefinedSets
+        it.sourcePositions = this.sourcePositions
+        it.sourceSentences = this.sourceSentences
+        it.missedBaseWords = this.missedBaseWords
+    }
+
 }
 
 

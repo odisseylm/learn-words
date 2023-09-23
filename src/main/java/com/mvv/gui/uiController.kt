@@ -9,6 +9,7 @@ import com.mvv.gui.javafx.*
 import com.mvv.gui.util.*
 import com.mvv.gui.words.*
 import javafx.application.Platform
+import javafx.beans.value.ChangeListener
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
@@ -137,18 +138,10 @@ class LearnWordsController (
 
         currentWordsList.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
             val card = currentWordsSelection.selectedItem
-            val clickedOnSourceSentence = currentWordsSelection.selectedCells?.get(0)?.tableColumn == pane.sourceSentencesColumn
+            val clickedOnSourceSentence = currentWordsSelection.selectedCells?.getOrNull(0)?.tableColumn == pane.sourceSentencesColumn
 
-            if (ev.clickCount >= 2 && card != null && clickedOnSourceSentence) {
-                //showTextAreaPreviewDialog(pane, "Source sentences of '${card.from}'", card.sourceSentences)
-
-                val htmlWithHighlighting =
-                    escapeHtml4(card.sourceSentences.trim())
-                    .highlightWords(escapeHtml4(card.from.trim()), "red")
-                    .replace("\n", "<br/>")
-
-                showHtmlTextPreviewDialog(pane, "Source sentences of '${card.from}'", htmlWithHighlighting)
-            }
+            if (ev.clickCount >= 2 && card != null && clickedOnSourceSentence)
+                showSourceSentences(card)
         }
 
         settingsPane.goodVoices.setAll(
@@ -162,6 +155,17 @@ class LearnWordsController (
         )
 
         loadExistentWords()
+    }
+
+    internal fun showSourceSentences(card: CardWordEntry) {
+        //showTextAreaPreviewDialog(pane, "Source sentences of '${card.from}'", card.sourceSentences)
+
+        val htmlWithHighlighting =
+            escapeHtml4(card.sourceSentences.trim())
+                .highlightWords(escapeHtml4(card.from.trim()), "red")
+                .replace("\n", "<br/>")
+
+        showHtmlTextPreviewDialog(pane, "Source sentences of '${card.from}'", htmlWithHighlighting)
     }
 
     private val audioPlayer = JavaFxSoundPlayer(PlayingMode.Async)
@@ -225,7 +229,8 @@ class LearnWordsController (
     private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
     private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = pane.warnAboutMissedBaseWordsModeDropDown.value
 
-    private fun markDocumentIsDirty() { this.documentIsDirty = true }
+    private fun markDocumentIsDirty() { this.documentIsDirty = true; Platform.runLater { updateTitle() } }
+    private fun resetDocumentIsDirty() { this.documentIsDirty = false; Platform.runLater { updateTitle() } }
 
 
     private fun addKeyBindings(newScene: Scene) {
@@ -273,7 +278,7 @@ class LearnWordsController (
                 // select new base word to edit it immediately
                 if (currentWordsSelection.selectedItems.size <= 1) {
                     currentWordsSelection.clearSelection()
-                    currentWordsSelection.select(newBaseWordCard)
+                    currentWordsSelection.select(newBaseWordCard.also { addChangeCardListener(it) })
                 }
             }
         }
@@ -386,7 +391,7 @@ class LearnWordsController (
                 LoadType.Open   -> {
                     // !!! Only if success !!!
                     updateCurrentWordsFile(filePath)
-                    this.documentIsDirty = false
+                    resetDocumentIsDirty()
                 }
             }
         }
@@ -434,7 +439,14 @@ class LearnWordsController (
 
     private fun updateCurrentWordsFile(filePath: Path?) {
         this.currentWordsFile = filePath
-        val windowTitle = if (filePath == null) appTitle else "$appTitle - ${filePath.name}"
+        updateTitle()
+    }
+
+    private fun updateTitle() {
+        val filePath: Path? = this.currentWordsFile
+        val documentNameTitle = if (filePath == null) appTitle else "$appTitle - ${filePath.name}"
+        val documentIsDirtySuffix = if (documentIsDirty) " *" else ""
+        val windowTitle = "$documentNameTitle$documentIsDirtySuffix"
         setWindowTitle(pane, windowTitle)
     }
 
@@ -443,7 +455,7 @@ class LearnWordsController (
 
         currentWords.clear()
         updateCurrentWordsFile(null)
-        this.documentIsDirty = false
+        resetDocumentIsDirty()
     }
 
     fun loadWordsFromFile() {
@@ -462,8 +474,27 @@ class LearnWordsController (
             currentWords.setAll(words)
             currentWordsList.sort()
 
+            addChangeCardListener(words)
+
             if (filePath.isInternalCsvFormat) LoadType.Open else LoadType.Import
         }
+    }
+
+    private val changeCardListener = ChangeListener<Any> { _,_,_ -> markDocumentIsDirty() }
+
+    private fun addChangeCardListener(cards: Iterable<CardWordEntry>) =
+        cards.forEach { addChangeCardListener(it) }
+
+    private fun addChangeCardListener(card: CardWordEntry) {
+        card.fromProperty.addListener(changeCardListener)
+        card.fromWithPrepositionProperty.addListener(changeCardListener)
+        card.toProperty.addListener(changeCardListener)
+        card.transcriptionProperty.addListener(changeCardListener)
+        card.examplesProperty.addListener(changeCardListener)
+        card.wordCardStatusesProperty.addListener(changeCardListener)
+        card.predefinedSetsProperty.addListener(changeCardListener)
+        card.sourcePositionsProperty.addListener(changeCardListener)
+        card.sourceSentencesProperty.addListener(changeCardListener)
     }
 
     private fun loadFromSrt(filePath: Path) =
@@ -478,6 +509,7 @@ class LearnWordsController (
     fun loadFromClipboard() {
         val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) ignoredWords else emptySet()
         val words = extractWordsFromClipboard(Clipboard.getSystemClipboard(), settingsPane.sentenceEndRule, toIgnoreWords)
+            .also { addChangeCardListener(it) }
 
         currentWords.setAll(words) // or add all ??
         reanalyzeAllWords()
@@ -514,6 +546,17 @@ class LearnWordsController (
 
     enum class InsertPosition { Above, Below }
 
+    fun cloneWordCard() {
+        val selected: CardWordEntry? = currentWordsList.singleSelection
+
+        selected?.also {
+            val pos = currentWordsList.selectionModel.selectedIndex
+            val cloned: CardWordEntry = selected.copy().also { addChangeCardListener(it) }
+
+            currentWordsList.runWithScrollKeeping { currentWordsList.items.add(pos, cloned) }
+        }
+    }
+
     fun insertWordCard(insertPosition: InsertPosition) {
         val isWordCardsSetEmpty = currentWords.isEmpty()
         val currentlySelectedIndex = currentWordsSelection.selectedIndex
@@ -530,16 +573,16 @@ class LearnWordsController (
         }
 
         if (positionToInsert != -1) {
-            val newCardWordEntry = CardWordEntry("", "")
+            val newCardWordEntry = CardWordEntry("", "").also { addChangeCardListener(it) }
 
             if (currentWordsList.editingCell?.row != -1)
                 currentWordsList.edit(-1, null)
 
             currentWordsList.runWithScrollKeeping( {
 
-                currentWords.add(positionToInsert, newCardWordEntry)
-                currentWordsSelection.clearAndSelect(positionToInsert, pane.fromColumn)
-            },
+                    currentWords.add(positionToInsert, newCardWordEntry)
+                    currentWordsSelection.clearAndSelect(positionToInsert, pane.fromColumn)
+                },
                 {
                     // JavaFX bug.
                     // Without this call at the end of view editing cell appears twice (in right position and in wrong some below position)
@@ -577,7 +620,7 @@ class LearnWordsController (
         splitFilesDir.createDirectories()
         saveSplitWordCards(filePath, currentWords, splitFilesDir, settingsPane.splitWordCountPerFile)
 
-        this.documentIsDirty = false
+        resetDocumentIsDirty()
     }
 
     private fun doSaveCurrentWords(saveAction:(Path)->Unit) {
@@ -623,7 +666,7 @@ class LearnWordsController (
                 saveSplitWordCards(filePath, words, splitFilesDir, wordCountPerFile)
             }
             catch (ex: Exception) {
-                log.error("${ex.message}", ex)
+                log.error(ex) { "Splitting words error: ${ex.message}" }
                 showErrorAlert(pane, ex.message ?: "Unknown error", "Error of splitting.")
             }
         }
@@ -719,18 +762,46 @@ internal fun String.highlightWords(word: String, color: String): String {
     var result = this
     var wordIndex = -1
 
+    val searchWord = if (!result.contains(wordTrimmed) && wordTrimmed.contains(' '))
+                     wordTrimmed.substringBefore(' ') else wordTrimmed
+
     // T O D O: would be nice to rewrite using StringBuilder, but not now :-) (it is not used very often)
     do {
-        wordIndex = result.indexOf(wordTrimmed, wordIndex + 1, true)
+        wordIndex = result.indexOf(searchWord, wordIndex + 1, true)
         if (wordIndex != -1) {
             result = result.substring(0, wordIndex) +
                     startTag +
-                    result.substring(wordIndex, wordIndex + wordTrimmed.length) +
+                    result.substring(wordIndex, wordIndex + searchWord.length) +
                     endTag +
-                    result.substring(wordIndex + wordTrimmed.length)
+                    result.substring(wordIndex + searchWord.length)
             wordIndex += startTag.length + endTag.length
         }
     } while (wordIndex != -1)
 
     return result
+}
+
+
+internal fun moveSelectedTextToExamples(card: CardWordEntry, textInput: TextInputControl) {
+    val rawExamplesToMove = textInput.selectedText
+    if (rawExamplesToMove.isBlank()) return
+
+    val preparedExamplesToMove = rawExamplesToMove.trim().replace(';', '\n')
+    if (card.examples.containsOneOf(rawExamplesToMove, preparedExamplesToMove)) return
+
+    val separator = when {
+        card.examples.isBlank() -> ""
+        card.examples.endsWith("\n\n") -> ""
+        card.examples.endsWith("\n") -> "\n"
+        else -> "\n\n"
+    }
+    val endLine = if (preparedExamplesToMove.endsWith('\n')) "" else "\n"
+
+    card.examples += "$separator$preparedExamplesToMove$endLine"
+
+    //val newCaretPos = min(textInput.selection.start, textInput.selection.end)
+    //textInput.text = textInput.text.substring(0, textInput.selection.start) + textInput.text.substring(textInput.selection.end)
+    //textInput.selectRange(newCaretPos, newCaretPos)
+
+    textInput.deleteText(textInput.selection.start, textInput.selection.end)
 }

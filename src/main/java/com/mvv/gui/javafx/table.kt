@@ -9,6 +9,13 @@ val TableView<*>.isEditing: Boolean get() {
 }
 
 
+@Suppress("unused")
+val <S> TableView<S>.editingItem: S? get() {
+    val editingCell = this.editingCell
+    return if (editingCell != null) this.items.getOrNull(editingCell.row) else null
+}
+
+
 val <T> TableView<T>.singleSelection: T? get() {
     val selected = this.selectionModel.selectedItems
     return if (selected.size == 1) selected.first() else null

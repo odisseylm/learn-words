@@ -53,7 +53,7 @@ class HowJSayWebDownloadSpeechSynthesizer(private val audioPlayer: AudioPlayer) 
             .mapNotNull { urlTemplate ->
                 val url = urlTemplate.replace("\${word}", word)
                 try { downloadUrl(url) }
-                catch (ex: Exception) { log.debug("Error of loading [$url]", ex); null }
+                catch (ex: Exception) { log.debug(ex) { "Error of loading [$url]" }; null }
             }
             .filter { it.isNotEmpty() }
             .firstOrThrow { IOException("Audio file for word [$word] is not loaded.") }

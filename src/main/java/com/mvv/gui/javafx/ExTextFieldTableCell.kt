@@ -60,6 +60,7 @@ class ExTextFieldTableCell<S, T>
         converter: StringConverter<T>,
         private val customValueSetter: BeanPropertySetter<S,T>? = null,
         private val toolTipMode: ToolTipMode = ToolTipMode.Default,
+        private val onEditCreate: (ExTextFieldTableCell<S,T>,TextInputControl)->Unit = { _,_ -> },
     )
 
     : TableCell<S, T>() {
@@ -125,6 +126,7 @@ class ExTextFieldTableCell<S, T>
                 TextFieldType.TextArea  -> createTextArea(this, getConverter(), customValueSetter)
                 TextFieldType.TextField -> createTextField(this, getConverter(), customValueSetter)
             }
+            .also { onEditCreate(this, it) }
         }
 
         TextFieldTableCellUtils.startEdit(this, getConverter(), null, null, textField)
@@ -162,12 +164,21 @@ class ExTextFieldTableCell<S, T>
          * [cell factory property][TableColumn.cellFactoryProperty] of a
          * TableColumn, that enables textual editing of the content.
         </S> */
-        fun <S> forStringTableColumn(textFieldType: TextFieldType, toolTipMode: ToolTipMode = ToolTipMode.Default): Callback<TableColumn<S, String>, TableCell<S, String>> =
-            forTableColumn<S,String>(textFieldType, DefaultStringConverter(), toolTipMode)
+        fun <S> forStringTableColumn(
+            textFieldType: TextFieldType,
+            toolTipMode: ToolTipMode = ToolTipMode.Default,
+            onEditCreate: (ExTextFieldTableCell<S,String>,TextInputControl)->Unit = { _,_ -> },
+            ): Callback<TableColumn<S, String>, TableCell<S, String>> =
+            forTableColumn<S,String>(textFieldType, DefaultStringConverter(), toolTipMode, onEditCreate)
 
         @Suppress("unused")
-        fun <S> forStringTableColumn(textFieldType: TextFieldType, customValueSetter: (String, S) -> Unit, toolTipMode: ToolTipMode = ToolTipMode.Default): Callback<TableColumn<S, String>, TableCell<S, String>> =
-            forTableColumn<S,String>(textFieldType, DefaultStringConverter(), customValueSetter, toolTipMode)
+        fun <S> forStringTableColumn(
+            textFieldType: TextFieldType,
+            customValueSetter: (String, S) -> Unit,
+            toolTipMode: ToolTipMode = ToolTipMode.Default,
+            onEditCreate: (ExTextFieldTableCell<S,String>,TextInputControl)->Unit = { _,_ -> },
+            ): Callback<TableColumn<S, String>, TableCell<S, String>> =
+            forTableColumn<S,String>(textFieldType, DefaultStringConverter(), customValueSetter, toolTipMode, onEditCreate)
 
         /**
          * Provides a [TextField] that allows editing of the cell content when
@@ -188,12 +199,21 @@ class ExTextFieldTableCell<S, T>
          * TableColumn, that enables textual editing of the content.
         </T></S> */
         @Suppress("MemberVisibilityCanBePrivate")
-        fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>, toolTipMode: ToolTipMode = ToolTipMode.Default): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, null, toolTipMode) }
+        fun <S, T> forTableColumn(
+            textFieldType: TextFieldType,
+            converter: StringConverter<T>,
+            toolTipMode: ToolTipMode = ToolTipMode.Default,
+            onEditCreate: (ExTextFieldTableCell<S,T>,TextInputControl)->Unit = { _,_ -> },
+            ): Callback<TableColumn<S, T>, TableCell<S, T>> =
+            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, null, toolTipMode, onEditCreate) }
 
         @Suppress("MemberVisibilityCanBePrivate")
-        fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>, customValueSetter: BeanPropertySetter<S,T>, toolTipMode: ToolTipMode = ToolTipMode.Default): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, customValueSetter, toolTipMode) }
+        fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>,
+                                  customValueSetter: BeanPropertySetter<S,T>,
+                                  toolTipMode: ToolTipMode = ToolTipMode.Default,
+                                  onEditCreate: (ExTextFieldTableCell<S,T>,TextInputControl)->Unit = { _,_ -> },
+                                  ): Callback<TableColumn<S, T>, TableCell<S, T>> =
+            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, customValueSetter, toolTipMode, onEditCreate) }
 
     } // companion end
 }
@@ -373,6 +393,9 @@ enum class ToolTipMode {
 // TODO: move to another file
 fun <C: Control> addKeyBinding(control: C, keyBinding: KeyCombination, action: (C)-> Unit) =
     addKeyBinding(control, KeyEvent.KEY_RELEASED, keyBinding, action)
+
+fun <C: Control> addKeyBinding(control: C, keyBindings: Iterable<KeyCombination>, action: (C)-> Unit) =
+    keyBindings.forEach { keyBinding -> addKeyBinding(control, KeyEvent.KEY_RELEASED, keyBinding, action) }
 
 fun <C: Control> addKeyBinding(control: C, keyEventType: EventType<KeyEvent>, keyBinding: KeyCombination, action: (C)-> Unit) =
     addKeyBindings(control, setOf(keyEventType), mapOf(keyBinding to action))

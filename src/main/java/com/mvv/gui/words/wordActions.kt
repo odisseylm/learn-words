@@ -73,7 +73,7 @@ private fun getTranscription(word: String, dictionary: Dictionary): Optional<Str
     try { Optional.ofNullable(
         dictionary.translateWord(word).transcription.trimToNull()) }
     catch (ex: Exception) {
-        log.warn("Error of getting transcription for [${word}].", ex)
+        log.warn(ex) { "Error of getting transcription for [${word}]." }
         Optional.empty() }
 
 

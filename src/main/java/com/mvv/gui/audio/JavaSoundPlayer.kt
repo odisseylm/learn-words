@@ -115,8 +115,8 @@ private val logListener: LineListener = object : LineListener {
     @Volatile var started = 0L
     override fun update(event: LineEvent) =
         when (event.type) {
-            LineEvent.Type.OPEN  -> log.debug {  "${event.type}" }
-            LineEvent.Type.CLOSE -> log.debug {  "${event.type}" }
+            LineEvent.Type.OPEN  -> log.debug { "${event.type}" }
+            LineEvent.Type.CLOSE -> log.debug { "${event.type}" }
             LineEvent.Type.START -> {
                 val clip = event.source as Clip
                 log.debug { "${event.type}" +

@@ -12,6 +12,9 @@ import javafx.scene.control.*
 import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyCodeCombination
+import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
@@ -151,7 +154,15 @@ class MainWordsPane : BorderPane() {
         toColumn.id = "toColumn"
         toColumn.isEditable = true
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
-        toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+        toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea,
+            onEditCreate = { cell, editor ->
+                addKeyBinding(editor, listOf(
+                        KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN),
+                        KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))) {
+                    // T O D O: would be nice to move it to controller... but how to do it nice??
+                    moveSelectedTextToExamples(cell.tableRow.item, editor)
+                }
+            })
 
         // alternative approach
         //toColumn.cellValueFactory = PropertyValueFactory("to")
@@ -257,7 +268,7 @@ class MainWordsPane : BorderPane() {
         // Impossible to move it to CSS ?!
         fromColumn.prefWidth = 200.0
         wordCardStatusesColumn.prefWidth = 50.0
-        toColumn.prefWidth = 350.0
+        toColumn.prefWidth = 450.0
         translationCountColumn.prefWidth = 50.0
         transcriptionColumn.prefWidth = 150.0
         examplesColumn.prefWidth = 300.0
