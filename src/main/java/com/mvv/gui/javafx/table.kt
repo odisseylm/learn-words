@@ -1,5 +1,6 @@
 package com.mvv.gui.javafx
 
+import javafx.scene.control.TableCell
 import javafx.scene.control.TableView
 
 
@@ -22,3 +23,18 @@ val <T> TableView<T>.singleSelection: T? get() {
 }
 
 
+enum class IndexStartFrom { Zero, One }
+
+fun <S> createIndexTableCell(startFrom: IndexStartFrom): TableCell<S,Int> =
+    object : TableCell<S, Int>() {
+        @Override
+        override fun updateIndex(index: Int) {
+            super.updateIndex(index)
+            if (isEmpty || index < 0)
+                setText(null)
+            else {
+                val showIndex = if (startFrom == IndexStartFrom.Zero) index else  index + 1
+                setText(showIndex.toString())
+            }
+        }
+    }

@@ -40,6 +40,7 @@ class MainWordsPane : BorderPane() {
     internal val toolBar = ToolBar()
 
     internal val currentWordsList = TableView<CardWordEntry>()
+    internal val numberColumn = TableColumn<CardWordEntry, Int>("No.")
     internal val fromColumn = TableColumn<CardWordEntry, String>("English")
     private val wordCardStatusesColumn = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
     internal val toColumn = TableColumn<CardWordEntry, String>("Russian")
@@ -147,6 +148,12 @@ class MainWordsPane : BorderPane() {
         GridPane.setFillWidth(currentWordsList, true)
         GridPane.setHgrow(currentWordsList, Priority.ALWAYS)
         currentWordsList.prefWidth = 10_000.0
+
+        numberColumn.id = "N"
+        numberColumn.text = "No."
+        numberColumn.isEditable = false
+        numberColumn.isSortable = false
+        numberColumn.cellFactory = Callback { createIndexTableCell<CardWordEntry>(IndexStartFrom.One) }
 
         fromColumn.id = "fromColumn"
         fromColumn.isEditable = true
@@ -277,6 +284,7 @@ class MainWordsPane : BorderPane() {
         }
 
         // Impossible to move it to CSS ?!
+        numberColumn.prefWidth = 40.0
         fromColumn.prefWidth = 200.0
         wordCardStatusesColumn.prefWidth = 50.0
         toColumn.prefWidth = 500.0
@@ -289,6 +297,7 @@ class MainWordsPane : BorderPane() {
 
 
         currentWordsList.columns.setAll(
+            numberColumn,
             fromColumn, wordCardStatusesColumn, toColumn, translationCountColumn,
             transcriptionColumn, examplesColumn,
             predefinedSetsColumn, sourcePositionsColumn, sourceSentencesColumn,
