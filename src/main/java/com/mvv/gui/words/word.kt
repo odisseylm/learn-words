@@ -1,11 +1,10 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.javafx.AroundReadOnlyIntegerProperty
 import com.mvv.gui.util.containsEnglishLetters
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
+import javafx.beans.value.ObservableValue
 import javafx.scene.paint.Color
-
 
 
 //private val log = mu.KotlinLogging.logger {}
@@ -16,8 +15,7 @@ class CardWordEntry {
     val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")
     val toProperty = SimpleStringProperty(this, "to", "")
     val transcriptionProperty = SimpleStringProperty(this, "transcription", "")
-    val translationCountProperty = AroundReadOnlyIntegerProperty<String>(this, "translationCount", toProperty) {
-        to -> to?.translationCount ?: 0 }
+    val translationCountProperty: ObservableValue<Int> = toProperty.map { it?.translationCount ?: 0 }
     val examplesProperty = SimpleStringProperty(this, "examples", "")
     val wordCardStatusesProperty = SimpleObjectProperty<Set<WordCardStatus>>(this, "wordCardStatuses", emptySet())
     val predefinedSetsProperty = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())

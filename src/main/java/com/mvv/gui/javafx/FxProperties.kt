@@ -9,6 +9,7 @@ import javafx.beans.value.WritableObjectValue
 import kotlin.reflect.KMutableProperty0
 
 
+@Deprecated("Use method ObservableValue.map.")
 class AroundReadOnlyIntegerProperty<OtherPropertyType>(
     private val bean: Any,
     private val name: String,
