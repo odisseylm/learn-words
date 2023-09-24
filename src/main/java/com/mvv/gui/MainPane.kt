@@ -225,6 +225,7 @@ class MainWordsPane : BorderPane() {
 
         val iconLowPriority = Image("icons/exclamation-1.png")
         val iconHighPriority = Image("icons/exclamation-4.png")
+        val iconTooManyExamples = Image("icons/receiptstext-warn.png")
 
         // Seems it is not allowed to share ImageView instance (between different cells rendering)
         // It causes disappearing/erasing icons in table view during scrolling
@@ -247,17 +248,17 @@ class MainWordsPane : BorderPane() {
 
             val toolTips = mutableListOf<String>()
 
-            if (card.showNoBaseWordInSet) {
-                toolTips.add(NoBaseWordInSet.toolTipF(card))
-                cell.styleClass.add(NoBaseWordInSet.cssClass)
-
-                // Setting icon in CSS does not work. See my other comments regarding it.
-                cell.graphic = ImageView(iconLowPriority)
-            }
-
             if (card.examplesCount > 5) {
                 toolTips.add(TooManyExamples.toolTipF(card))
                 cell.styleClass.add(TooManyExamples.cssClass)
+
+                // Setting icon in CSS does not work. See my other comments regarding it.
+                cell.graphic = ImageView(iconTooManyExamples)
+            }
+
+            if (card.showNoBaseWordInSet) {
+                toolTips.add(NoBaseWordInSet.toolTipF(card))
+                cell.styleClass.add(NoBaseWordInSet.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.
                 cell.graphic = ImageView(iconLowPriority)
