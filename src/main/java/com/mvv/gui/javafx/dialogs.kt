@@ -137,7 +137,7 @@ fun showHtmlTextPreviewDialog(parent: Node, title: String, html: String) {
     dialog.showAndWait()
 }
 
-fun showHtmlTextPreviewContextMenu(webView: WebView, ev: ContextMenuEvent) {
+private fun showHtmlTextPreviewContextMenu(webView: WebView, ev: ContextMenuEvent) {
 
     val selectedText = webView.selectedText
     val text = webView.textContent
@@ -161,7 +161,9 @@ fun showHtmlTextPreviewContextMenu(webView: WebView, ev: ContextMenuEvent) {
     menu.items.add(newMenuItem("Translate All by google", buttonIcon("icons/forward_nav.png")) {
         openGoogleTranslate(text) })
 
-    menu.show(webView, ev.screenX, ev.screenY)
+    // If you pass window popup/context menu is successfully hidden
+    // contrary if you pass directly 'webView' node, menu is not always auto-hidden properly.
+    menu.show(webView.scene.window, ev.screenX, ev.screenY)
 }
 
 
