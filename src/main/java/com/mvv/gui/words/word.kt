@@ -1,6 +1,7 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.javafx.AroundReadOnlyIntegerProperty
+import com.mvv.gui.util.containsEnglishLetters
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.paint.Color
@@ -124,6 +125,19 @@ val Int.toTranslationCountStatus: TranslationCountStatus get() = when (this) {
 }
 
 
+val CardWordEntry.examplesCount: Int get() = this.examples.examplesCount
+
+private val String.examplesCount: Int get() {
+    if (this.isBlank()) return 0
+
+    return this
+        .splitToSequence("\n")
+        .filter { it.isNotBlank() }
+        .filter { it.containsEnglishLetters() }
+        .count()
+}
+
+
 enum class WordCardStatus (
     val toolTipF: (CardWordEntry)->String,
     ) {
@@ -149,6 +163,8 @@ enum class WordCardStatus (
 
     TranslationIsNotPrepared({"The translation for '${it.from}' is not prepared for learning. " +
             "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on)."}),
+
+    TooManyExamples({"There are too many examples for '${it.from}' (${it.examplesCount}). Please convert them to separate cards."}),
     ;
 
     val cssClass: String get() = "WordCardStatus-${this.name}"

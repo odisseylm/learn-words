@@ -146,3 +146,23 @@ fun String.safeSubstring(start: Int, end: Int): String {
         else -> this.substring(start, end)
     }
 }
+
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun Char.isEnglishLetter(): Boolean {
+    return (this in 'a'..'z') || (this in 'A'..'Z')
+}
+fun CharSequence.containsEnglishLetters(): Boolean {
+    //return chars().anyMatch { it.isEnglishLetter() }
+    for (i in this.indices)
+        if (this[i].isEnglishLetter()) return true
+    return false
+}
+
+
+//@Suppress("NOTHING_TO_INLINE")
+//inline fun Int.isEnglishLetter(): Boolean {
+//    return (this in 'a'.code..'z'.code) || (this in 'A'.code..'Z'.code)
+//}
+//fun CharSequence.containsEnglishLetters(): Boolean =
+//    this.codePoints().anyMatch { it.isEnglishLetter() }

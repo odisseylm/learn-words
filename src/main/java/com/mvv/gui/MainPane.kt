@@ -248,6 +248,14 @@ class MainWordsPane : BorderPane() {
                 cell.graphic = ImageView(iconLowPriority)
             }
 
+            if (card.examplesCount > 5) {
+                toolTips.add(TooManyExamples.toolTipF(card))
+                cell.styleClass.add(TooManyExamples.cssClass)
+
+                // Setting icon in CSS does not work. See my other comments regarding it.
+                cell.graphic = ImageView(iconLowPriority)
+            }
+
             if (NoTranslation in card.wordCardStatuses) {
                 toolTips.add(NoTranslation.toolTipF(card))
                 cell.styleClass.add(NoTranslation.cssClass)
