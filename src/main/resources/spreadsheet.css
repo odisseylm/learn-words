@@ -98,9 +98,22 @@
     -fx-padding: 0 5 0 5;
 }
 
+/*#currentWords .table-row-cell {*/
+/*    -fx-cell-size: 200.0;*/
+/*}*/
+
+/* It does not work. */
+/*#currentWords .examplesColumn .cell {*/
+/*    -fx-max-height:  150.0;*/
+/*}*/
+
+#currentWords .examplesColumnCell {
+    /* We do not want to have very high row if from/to are short/small enough but there too many examples. */
+    -fx-max-height:  150.0;
+}
 
 .htmlTextPreview {
-    -fx-context-menu-enabled: false;
+    /*-fx-context-menu-enabled: false;*/
     /*-fx-font-smoothing-type: ;*/
     /*-fx-font-scale: 1.0;*/
 }

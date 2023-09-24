@@ -18,6 +18,7 @@ import javafx.scene.layout.HBox
 import javafx.util.Callback
 import javafx.util.StringConverter
 import javafx.util.converter.DefaultStringConverter
+import kotlin.math.min
 
 
 /**
@@ -55,7 +56,7 @@ class ExTextFieldTableCell<S, T>
      * the given String (from what the user typed in) into an instance of
      * type T.
      */
-    private constructor(
+    (
         private val textFieldType: TextFieldType,
         converter: StringConverter<T>,
         private val customValueSetter: BeanPropertySetter<S,T>? = null,
@@ -144,6 +145,23 @@ class ExTextFieldTableCell<S, T>
         TextFieldTableCellUtils.updateItem(this, getConverter(), null, null, textField, toolTipMode)
     }
 
+    override fun computeMaxHeight(width: Double): Double {
+        val hardcodeMaxHeight = this.maxHeight
+        val computedMaxHeight = super.computeMaxHeight(width)
+
+        return if (/*hardcodeMaxHeight != null &&*/ !hardcodeMaxHeight.isNaN() && hardcodeMaxHeight > 0.0)
+               min(hardcodeMaxHeight, computedMaxHeight)
+               else computedMaxHeight
+    }
+
+    override fun computePrefHeight(width: Double): Double {
+        val hardcodeMaxHeight = this.maxHeight
+        val computedPrefHeight = super.computePrefHeight(width)
+
+        return if (/*hardcodeMaxHeight != null &&*/ !hardcodeMaxHeight.isNaN() && hardcodeMaxHeight > 0.0)
+            min(hardcodeMaxHeight, computedPrefHeight)
+        else computedPrefHeight
+    }
 
     companion object {
         /* *************************************************************************

@@ -1,6 +1,7 @@
 package com.mvv.gui
 
 import com.mvv.gui.javafx.*
+import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.*
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
@@ -20,6 +21,7 @@ import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
 import javafx.util.Callback
 import javafx.util.StringConverter
+import javafx.util.converter.DefaultStringConverter
 import org.apache.commons.lang3.NotImplementedException
 
 
@@ -149,12 +151,12 @@ class MainWordsPane : BorderPane() {
         fromColumn.id = "fromColumn"
         fromColumn.isEditable = true
         fromColumn.cellValueFactory = Callback { p -> p.value.fromProperty }
-        fromColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextField)
+        fromColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextField)
 
         toColumn.id = "toColumn"
         toColumn.isEditable = true
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
-        toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea,
+        toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextArea,
             onEditCreate = { cell, editor ->
                 addKeyBinding(editor, listOf(
                         KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN),
@@ -184,12 +186,13 @@ class MainWordsPane : BorderPane() {
         transcriptionColumn.id = "transcriptionColumn"
         transcriptionColumn.isEditable = true
         transcriptionColumn.cellValueFactory = Callback { p -> p.value.transcriptionProperty }
-        transcriptionColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextField)
+        transcriptionColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextField)
 
         examplesColumn.id = "examplesColumn"
         examplesColumn.isEditable = true
         examplesColumn.cellValueFactory = Callback { p -> p.value.examplesProperty }
-        examplesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea)
+        examplesColumn.cellFactory = Callback { ExTextFieldTableCell<CardWordEntry, String>(
+            TextFieldType.TextArea, DefaultStringConverter()).also { it.styleClass.add("examplesColumnCell") } }
         examplesColumn.styleClass.add("examplesColumn")
 
         predefinedSetsColumn.id = "predefinedSetsColumn"
@@ -203,13 +206,13 @@ class MainWordsPane : BorderPane() {
         sourcePositionsColumn.isEditable = true
         sourcePositionsColumn.graphic = Label("Src").also { it.tooltip = Tooltip("Source Positions") }
         sourcePositionsColumn.cellValueFactory = Callback { p -> p.value.sourcePositionsProperty }
-        sourcePositionsColumn.cellFactory = ExTextFieldTableCell.forTableColumn(ExTextFieldTableCell.TextFieldType.TextField, ListStringConverter(), ToolTipMode.ShowAllContent)
+        sourcePositionsColumn.cellFactory = ExTextFieldTableCell.forTableColumn(TextFieldType.TextField, ListStringConverter(), ToolTipMode.ShowAllContent)
         sourcePositionsColumn.styleClass.add("sourcePositionsColumn")
 
         sourceSentencesColumn.id = "sourceSentencesColumn"
         sourceSentencesColumn.isEditable = false
         sourceSentencesColumn.cellValueFactory = Callback { p -> p.value.sourceSentencesProperty }
-        sourceSentencesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(ExTextFieldTableCell.TextFieldType.TextArea, ToolTipMode.ShowAllContent)
+        sourceSentencesColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextArea, ToolTipMode.ShowAllContent)
         sourceSentencesColumn.styleClass.add("sourceSentencesColumn")
 
 
