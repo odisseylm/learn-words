@@ -2,6 +2,7 @@ package com.mvv.gui
 
 import com.mvv.gui.LearnWordsController.InsertPosition
 import com.mvv.gui.javafx.buttonIcon
+import com.mvv.gui.javafx.hideRepeatedMenuSeparators
 import com.mvv.gui.javafx.newMenuItem
 import com.mvv.gui.words.CardWordEntry
 import com.mvv.gui.words.englishBaseWords
@@ -80,15 +81,7 @@ class ContextMenuController (val controller: LearnWordsController) {
             updateAddMissedBaseWordsMenuItem(addMissedBaseWordsMenuItem)
             updateTranslateMenuItem(translateMenuItem)
 
-            val visibleMenuItems = contextMenu.items.filter { it.isVisible }
-            visibleMenuItems.forEachIndexed { index, menuItem ->
-                    if (menuItem.isVisible && menuItem is SeparatorMenuItem) {
-                        val isPrevItemIsVisibleSeparator = visibleMenuItems.getOrNull(index - 1)
-                            ?.let { it is SeparatorMenuItem && it.isVisible }
-                            ?: false
-                        if (isPrevItemIsVisibleSeparator) menuItem.isVisible = false
-                    }
-                }
+            contextMenu.hideRepeatedMenuSeparators()
         }
     }
 

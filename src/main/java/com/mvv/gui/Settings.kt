@@ -4,8 +4,12 @@ import com.mvv.gui.dictionary.getProjectDirectory
 import com.mvv.gui.util.userHome
 import com.mvv.gui.words.SentenceEndRule
 import java.io.FileReader
+import java.nio.file.Path
 import java.util.Properties
+import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 import kotlin.text.Charsets.UTF_8
 
 
@@ -50,4 +54,23 @@ private fun loadSettings(): Settings {
             .let { SentenceEndRule.valueOf(it) },
         toAutoRemoveIgnored = props.getProperty("toAutoRemoveIgnored", "true").toBoolean(),
     )
+}
+
+
+private val recentsFile = userHome.resolve(".learn-words/recents.txt")
+private val recentCount = 5
+
+class RecentDocuments {
+
+    val recents: List<Path> get() =
+        if (recentsFile.exists())
+            recentsFile.readText(UTF_8).split('\n').map { it.trim() }.distinct().take(recentCount).map { Path.of(it) }
+            else emptyList()
+
+    fun addRecent(file: Path) {
+        val newRecents = (listOf(file) + recents).map { it.toString() }.distinct().take(recentCount)
+
+        recentsFile.parent.createDirectories()
+        recentsFile.writeText(newRecents.joinToString("\n"))
+    }
 }

@@ -366,33 +366,36 @@ class LearnWordsController (
         Import,
     }
 
-    private fun doLoadAction(loadAction: (Path)->LoadType) {
+    private fun doLoadAction(openFile: Path?, loadAction: (Path)->LoadType) {
 
         validateCurrentDocumentIsSaved("Open file")
 
-        val fc = FileChooser()
-        fc.title = "Select words file"
-        fc.initialDirectory = dictDirectory.toFile()
-        fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", "*.csv", "*.words", "*.txt", "*.srt"))
+        val file: File? = if (openFile == null) {
+            val fc = FileChooser()
+            fc.title = "Select words file"
+            fc.initialDirectory = dictDirectory.toFile()
+            fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", "*.csv", "*.words", "*.txt", "*.srt"))
 
-        val file = fc.showOpenDialog(pane.scene.window)
+            fc.showOpenDialog(pane.scene.window)
+        }
+        else openFile.toFile()
 
-        if (file != null) {
-            val filePath = file.toPath()
-            if (filePath == ignoredWordsFile) {
-                showErrorAlert(pane, "You cannot open [${ignoredWordsFile.name}].")
-                return
-            }
+        if (file == null) return
 
-            val loadType = loadAction(filePath)
+        val filePath = file.toPath()
+        if (filePath == ignoredWordsFile) {
+            showErrorAlert(pane, "You cannot open [${ignoredWordsFile.name}].")
+            return
+        }
 
-            when (loadType) {
-                LoadType.Import -> markDocumentIsDirty()
-                LoadType.Open   -> {
-                    // !!! Only if success !!!
-                    updateCurrentWordsFile(filePath)
-                    resetDocumentIsDirty()
-                }
+        val loadType = loadAction(filePath)
+
+        when (loadType) {
+            LoadType.Import -> markDocumentIsDirty()
+            LoadType.Open   -> {
+                // !!! Only if success !!!
+                updateCurrentWordsFile(filePath)
+                resetDocumentIsDirty()
             }
         }
     }
@@ -458,8 +461,10 @@ class LearnWordsController (
         resetDocumentIsDirty()
     }
 
-    fun loadWordsFromFile() {
-        doLoadAction { filePath ->
+    fun loadWordsFromFile() = loadWordsFromFile(null)
+
+    fun loadWordsFromFile(file: Path?) {
+        doLoadAction(file) { filePath ->
             val fileExt = filePath.extension.lowercase()
             val words: List<CardWordEntry> = when (fileExt) {
                 "txt"          -> loadWords(filePath).map { CardWordEntry(it, "") }
@@ -475,6 +480,8 @@ class LearnWordsController (
             currentWordsList.sort()
 
             addChangeCardListener(words)
+
+            RecentDocuments().addRecent(filePath)
 
             if (filePath.isInternalCsvFormat) LoadType.Open else LoadType.Import
         }

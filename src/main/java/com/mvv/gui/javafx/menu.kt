@@ -1,10 +1,9 @@
 package com.mvv.gui.javafx
 
+import com.mvv.gui.util.isDebuggerPresent
+import javafx.event.ActionEvent
 import javafx.event.EventHandler
-import javafx.scene.control.CustomMenuItem
-import javafx.scene.control.Label
-import javafx.scene.control.MenuItem
-import javafx.scene.control.Tooltip
+import javafx.scene.control.*
 import javafx.scene.image.ImageView
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
@@ -54,7 +53,32 @@ private fun newMenuItemImpl(label: String, tooltip: String? = null, icon: ImageV
     }
     .also { menuItem ->
         keyCombination?.let { menuItem.accelerator = it }
-        action?.let         { menuItem.onAction = EventHandler { it() } }
+        action?.let         { menuItem.onAction = safeRunMenuCommand(it) }
     }
 
 
+private val underDebug: Boolean = isDebuggerPresent()
+
+// Under Ubuntu during debugging context menu action, all Ubuntu UI feezes (hangs up) :-(
+// as workaround we start action execution after menu/popup hiding.
+//
+fun safeRunMenuCommand(action: ()->Unit): EventHandler<ActionEvent> = EventHandler {
+    if (underDebug) runLaterWithDelay(1000) { action() }
+    else action()
+}
+
+
+fun ContextMenu.hideRepeatedMenuSeparators() = hideRepeatedMenuSeparators(this.items)
+
+
+fun hideRepeatedMenuSeparators(menuItems: Iterable<MenuItem>) {
+    var isPrevItemIsVisibleSeparator = false
+    menuItems
+        .filter { it.isVisible }
+        .forEach { menuItem ->
+            if (menuItem is SeparatorMenuItem && isPrevItemIsVisibleSeparator)
+                menuItem.isVisible = false
+            else
+                isPrevItemIsVisibleSeparator = menuItem is SeparatorMenuItem && menuItem.isVisible
+        }
+}

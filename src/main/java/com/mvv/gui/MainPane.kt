@@ -268,10 +268,10 @@ class MainWordsPane : BorderPane() {
         // Impossible to move it to CSS ?!
         fromColumn.prefWidth = 200.0
         wordCardStatusesColumn.prefWidth = 50.0
-        toColumn.prefWidth = 450.0
+        toColumn.prefWidth = 500.0
         translationCountColumn.prefWidth = 50.0
         transcriptionColumn.prefWidth = 150.0
-        examplesColumn.prefWidth = 300.0
+        examplesColumn.prefWidth = 350.0
         predefinedSetsColumn.prefWidth = 70.0
         sourcePositionsColumn.prefWidth = 70.0
         sourceSentencesColumn.prefWidth = 300.0

@@ -1,15 +1,19 @@
 package com.mvv.gui.javafx
 
+import com.mvv.gui.util.urlEncode
 import javafx.concurrent.Worker
+import javafx.event.EventHandler
 import javafx.geometry.Insets
 import javafx.scene.Node
 import javafx.scene.Parent
 import javafx.scene.control.*
+import javafx.scene.input.Clipboard
+import javafx.scene.input.ClipboardContent
+import javafx.scene.input.ContextMenuEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.web.WebView
 import javafx.stage.Modality
 import java.util.*
-
 
 
 fun showTextInputDialog(parent: Node, msg: String, title: String = "", defaultValue: String = ""): Optional<String> {
@@ -105,6 +109,8 @@ fun showHtmlTextPreviewDialog(parent: Node, title: String, html: String) {
         WebView().also { webView ->
             webView.styleClass.add("htmlTextPreview")
 
+            webView.onContextMenuRequested = EventHandler { showHtmlTextPreviewContextMenu(webView, it) }
+
             val webEngine = webView.engine
             webEngine.isJavaScriptEnabled = false
 
@@ -130,3 +136,40 @@ fun showHtmlTextPreviewDialog(parent: Node, title: String, html: String) {
 
     dialog.showAndWait()
 }
+
+fun showHtmlTextPreviewContextMenu(webView: WebView, ev: ContextMenuEvent) {
+
+    val selectedText = webView.selectedText
+    val text = webView.textContent
+
+    val menu = ContextMenu()
+
+    if (selectedText.isNotBlank())
+    menu.items.add(newMenuItem("Copy", buttonIcon("icons/copy16x16.gif")) {
+        putNonBlankToClipboard(selectedText) })
+
+    menu.items.add(newMenuItem("Copy All", buttonIcon("icons/copy16x16.gif")) {
+        putNonBlankToClipboard(text) })
+
+    if (selectedText.isNotBlank())
+    menu.items.add(SeparatorMenuItem())
+
+    if (selectedText.isNotBlank())
+    menu.items.add(newMenuItem("Translate by google", buttonIcon("icons/forward_nav.png")) {
+        openGoogleTranslate(selectedText) })
+
+    menu.items.add(newMenuItem("Translate All by google", buttonIcon("icons/forward_nav.png")) {
+        openGoogleTranslate(text) })
+
+    menu.show(webView, ev.screenX, ev.screenY)
+}
+
+
+private fun putNonBlankToClipboard(text: String?) {
+    if (!text.isNullOrBlank())
+        Clipboard.getSystemClipboard()
+            .setContent(ClipboardContent().also { it.putString(text) })
+}
+
+fun openGoogleTranslate(text: String) =
+    openWebBrowser("https://translate.google.com/?sl=en&tl=ru&op=translate&text=${urlEncode(text)}")
