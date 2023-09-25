@@ -9,6 +9,7 @@ import com.mvv.gui.javafx.*
 import com.mvv.gui.util.*
 import com.mvv.gui.words.*
 import javafx.application.Platform
+import javafx.beans.property.ReadOnlyProperty
 import javafx.beans.value.ChangeListener
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
@@ -113,7 +114,7 @@ class LearnWordsController (
 
         // Platform.runLater is used to perform analysis AFTER word card changing
         // It would be nice to find better/proper event (with already changed underlying model after edit commit)
-        val doOnWordChanging: (card: CardWordEntry)->Unit = { markDocumentIsDirty(); Platform.runLater { reanalyzeOnlyWords(listOf(it)) } }
+        val doOnWordChanging: (card: CardWordEntry)->Unit = { markDocumentIsDirty(); Platform.runLater { reanalyzeOnlyWords(it) } }
 
         pane.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { doOnWordChanging(it.rowValue) }
         pane.toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { doOnWordChanging(it.rowValue) }
@@ -131,7 +132,10 @@ class LearnWordsController (
 
         pane.topPane.children.add(0, MenuController(this).fillMenu())
         pane.topPane.children.add(settingsPane)
-        currentWordsList.contextMenu = ContextMenuController(this).fillContextMenu()
+
+        val contextMenuController = ContextMenuController(this)
+        currentWordsList.contextMenu = contextMenuController.contextMenu
+        currentWordsList.onContextMenuRequested = EventHandler { contextMenuController.updateItemsVisibility() }
 
         currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             Platform.runLater { if (settingsPane.playWordOnSelect) playSelectedWord() } }
@@ -304,6 +308,7 @@ class LearnWordsController (
     private fun reanalyzeOnlyWords(words: Iterable<CardWordEntry>) =
         analyzeWordCards(words, currentWarnAboutMissedBaseWordsMode, currentWords, dictionary)
             .also { recalculateWarnedWordsCount() }
+    private fun reanalyzeOnlyWords(vararg words: CardWordEntry) = reanalyzeOnlyWords(words.asIterable())
 
     private fun recalculateWarnedWordsCount() {
         val wordCountWithWarning = currentWords.count { it.hasWarning }
@@ -487,7 +492,15 @@ class LearnWordsController (
         }
     }
 
-    private val changeCardListener = ChangeListener<Any> { _,_,_ -> markDocumentIsDirty() }
+    private val changeCardListener = ChangeListener<Any> { prop,_,_ ->
+        markDocumentIsDirty()
+
+        // in general, it is bad idea to use so many 'instanceOf' but it is not critical there
+        if (prop is ReadOnlyProperty<*>) {
+            val bean = prop.bean
+            if (bean is CardWordEntry) reanalyzeOnlyWords(bean)
+        }
+    }
 
     private fun addChangeCardListener(cards: Iterable<CardWordEntry>) =
         cards.forEach { addChangeCardListener(it) }

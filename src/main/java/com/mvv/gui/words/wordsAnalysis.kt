@@ -60,6 +60,9 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         val from = card.from
         val to = card.to
 
+        val tooManyExamplesStatusUpdateAction = if (card.examplesCount > 5) UpdateSet.Set else UpdateSet.Remove
+        updateSetProperty(card.wordCardStatusesProperty, TooManyExamples, tooManyExamplesStatusUpdateAction)
+
         val noTranslationStatusUpdateAction = if (from.isNotBlank() && to.isBlank()) UpdateSet.Set else UpdateSet.Remove
         updateSetProperty(card.wordCardStatusesProperty, NoTranslation, noTranslationStatusUpdateAction)
 

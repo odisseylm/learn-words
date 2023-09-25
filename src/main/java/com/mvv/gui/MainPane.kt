@@ -248,7 +248,7 @@ class MainWordsPane : BorderPane() {
 
             val toolTips = mutableListOf<String>()
 
-            if (card.examplesCount > 5) {
+            if (TooManyExamples in card.wordCardStatuses) {
                 toolTips.add(TooManyExamples.toolTipF(card))
                 cell.styleClass.add(TooManyExamples.cssClass)
 
@@ -288,7 +288,7 @@ class MainWordsPane : BorderPane() {
         numberColumn.prefWidth = 40.0
         fromColumn.prefWidth = 200.0
         wordCardStatusesColumn.prefWidth = 50.0
-        toColumn.prefWidth = 500.0
+        toColumn.prefWidth = 550.0
         translationCountColumn.prefWidth = 50.0
         transcriptionColumn.prefWidth = 150.0
         examplesColumn.prefWidth = 350.0

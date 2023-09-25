@@ -6,7 +6,6 @@ import com.mvv.gui.javafx.hideRepeatedMenuSeparators
 import com.mvv.gui.javafx.newMenuItem
 import com.mvv.gui.words.CardWordEntry
 import com.mvv.gui.words.englishBaseWords
-import javafx.event.EventHandler
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
@@ -17,25 +16,23 @@ import javafx.scene.control.TableView
 
 
 class ContextMenuController (val controller: LearnWordsController) {
+    val contextMenu = ContextMenu()
+
+    private val ignoreNoBaseWordMenuItem = newMenuItem("Ignore 'No base word'",
+        "Ignore warning 'no base word in set'", buttonIcon("/icons/skip_brkp.png")
+    ) { controller.ignoreNoBaseWordInSet() }
+
+    private val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
+        buttonIcon("/icons/toggleexpand.png")) { controller.addBaseWordsInSetForSelected() }
+    private val translateMenuItem = newMenuItem("Translate selected", buttonIcon("icons/forward_nav.png"),
+        translateSelectedKeyCombination ) { controller.translateSelected() }
+
 
     private val currentWordsList: TableView<CardWordEntry> get() = controller.currentWordsList
 
-    fun fillContextMenu(): ContextMenu {
-        val contextMenu = ContextMenu()
-        fillContextMenu(contextMenu)
-        return contextMenu
-    }
+    init { fillContextMenu() }
 
-    private fun fillContextMenu(contextMenu: ContextMenu) {
-        val ignoreNoBaseWordMenuItem = newMenuItem("Ignore 'No base word'",
-            "Ignore warning 'no base word in set'", buttonIcon("/icons/skip_brkp.png")
-        ) { controller.ignoreNoBaseWordInSet() }
-
-        val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
-            buttonIcon("/icons/toggleexpand.png")) { controller.addBaseWordsInSetForSelected() }
-        val translateMenuItem = newMenuItem("Translate selected", buttonIcon("icons/forward_nav.png"),
-            translateSelectedKeyCombination ) { controller.translateSelected() }
-
+    private fun fillContextMenu() {
         val menuItems = listOf(
             newMenuItem("Clone") { controller.cloneWordCard() },
 
@@ -73,16 +70,20 @@ class ContextMenuController (val controller: LearnWordsController) {
 
         contextMenu.items.addAll(menuItems)
 
-        contextMenu.onShowing = EventHandler {
+        // I cannot understand is it reliable to change menu items visibility in onShowing ??
+        //contextMenu.onShowing = EventHandler { updateItemsVisibility() }
 
-            contextMenu.items.forEach { it.isVisible = true }
+        //useMenuStateDumping(contextMenu)
+    }
 
-            updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
-            updateAddMissedBaseWordsMenuItem(addMissedBaseWordsMenuItem)
-            updateTranslateMenuItem(translateMenuItem)
+    fun updateItemsVisibility() {
+        contextMenu.items.forEach { it.isVisible = true }
 
-            contextMenu.hideRepeatedMenuSeparators()
-        }
+        updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
+        updateAddMissedBaseWordsMenuItem(addMissedBaseWordsMenuItem)
+        updateTranslateMenuItem(translateMenuItem)
+
+        contextMenu.hideRepeatedMenuSeparators()
     }
 
     private fun updateIgnoreNoBaseWordMenuItem(menuItem: MenuItem) {
