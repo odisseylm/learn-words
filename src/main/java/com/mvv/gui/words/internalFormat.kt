@@ -107,7 +107,7 @@ private inline fun <reified T: Enum<T>> stringToEnums(string: String): Set<T> =
 
 
 private fun <T, C: MutableCollection<T>> stringToCollectionImpl(string: String, collection: C, converter: (String)->T): C {
-    string
+    val parsed = string
         .splitToSequence(",")
         .map { it.trim() }
         .filter { it.isNotEmpty() }
@@ -121,5 +121,6 @@ private fun <T, C: MutableCollection<T>> stringToCollectionImpl(string: String, 
         .filterNotNull()
         .toSet()
 
+    collection.addAll(parsed)
     return collection
 }

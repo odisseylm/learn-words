@@ -109,6 +109,7 @@ fun showHtmlTextPreviewDialog(parent: Node, title: String, html: String) {
         WebView().also { webView ->
             webView.styleClass.add("htmlTextPreview")
 
+            webView.isContextMenuEnabled = false // disable default context menu
             webView.onContextMenuRequested = EventHandler { showHtmlTextPreviewContextMenu(webView, it) }
 
             val webEngine = webView.engine
@@ -143,6 +144,7 @@ private fun showHtmlTextPreviewContextMenu(webView: WebView, ev: ContextMenuEven
     val text = webView.textContent
 
     val menu = ContextMenu()
+    //useMenuStateDumping(menu)
 
     if (selectedText.isNotBlank())
     menu.items.add(newMenuItem("Copy", buttonIcon("icons/copy16x16.gif")) {
