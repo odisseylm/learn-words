@@ -93,6 +93,9 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
             val noBaseWordStatusUpdateAction = if (showWarningAboutMissedBaseWord) UpdateSet.Set else UpdateSet.Remove
             updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, noBaseWordStatusUpdateAction)
         }
+        else {
+            updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, UpdateSet.Remove)
+        }
 
     }
     log.info("### analyzeWordCards took {}ms", System.currentTimeMillis() - started)

@@ -3,6 +3,7 @@ package com.mvv.gui.javafx
 import com.mvv.gui.util.isDebuggerPresent
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
+import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
 import javafx.scene.input.KeyCodeCombination
@@ -10,6 +11,7 @@ import javafx.scene.input.KeyCombination
 import javafx.scene.layout.Pane
 import javafx.scene.layout.Region
 import javafx.scene.layout.Region.USE_COMPUTED_SIZE
+import javafx.stage.PopupWindow
 import javafx.stage.WindowEvent
 
 
@@ -66,8 +68,21 @@ private val underDebug: Boolean = isDebuggerPresent()
 // Under Ubuntu during debugging context menu action, all Ubuntu UI feezes (hangs up) :-(
 // as workaround we start action execution after menu/popup hiding.
 //
-fun safeRunMenuCommand(action: ()->Unit): EventHandler<ActionEvent> = EventHandler {
-    if (underDebug) runLaterWithDelay(1000) { action() }
+fun safeRunMenuCommand(action: ()->Unit): EventHandler<ActionEvent> = EventHandler { ev ->
+    if (underDebug) {
+        val popups: List<PopupWindow> = sequenceOf(ev.source, ev.target)
+            .filterNotNull()
+            .filterIsInstance<Node>() // { it is Node }
+            .map { it.scene?.window }
+            .filterNotNull()
+            .filter { it.isShowing }
+            .filterIsInstance<PopupWindow>()
+            .toList()
+        // hiding popups to avoid freezing on Ubuntu
+        popups.forEach { it.hide() }
+
+        runLaterWithDelay(1000) { action() }
+    }
     else action()
 }
 
@@ -193,6 +208,10 @@ fun useMenuStateDumping(contextMenu: ContextMenu) {
             //aa.prefWidth = aa.width + 10
             //
             //aa.requestLayout()
+            //aa.itemsContainer.requestLayout()
+            //aa.parent.requestLayout()
+            //aa.computeAreaInScreen()
+            //aa.autosize()
         }
     }
 }

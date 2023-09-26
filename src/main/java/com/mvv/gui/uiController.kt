@@ -59,6 +59,7 @@ class LearnWordsController (
 
     private val toolBarController = ToolBarController(this)
     private val settingsPane = SettingsPane()
+    private val toolBar2 = ToolBar2(this)
 
     init {
         Timer("updateSpeechSynthesizersAvailabilityTimer", true)
@@ -132,6 +133,7 @@ class LearnWordsController (
 
         pane.topPane.children.add(0, MenuController(this).fillMenu())
         pane.topPane.children.add(settingsPane)
+        pane.topPane.children.add(toolBar2)
 
         val contextMenuController = ContextMenuController(this)
         currentWordsList.contextMenu = contextMenuController.contextMenu

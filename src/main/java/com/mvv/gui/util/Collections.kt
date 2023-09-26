@@ -1,5 +1,6 @@
 package com.mvv.gui.util
 
+import java.util.EnumSet
 
 
 fun <K, V> Map<K, V>.containsOneOfKeys(keys: Iterable<K>): Boolean =
@@ -53,3 +54,7 @@ fun <T> Sequence<T>.firstOr(other: ()->T): T =
 
 fun <T> Iterable<T>.firstOr(other: ()->T): T =
     this.firstOrNull() ?: other()
+
+
+inline fun <reified T: Enum<T>> Iterable<T>.toEnumSet(): EnumSet<T> =
+    this.toCollection(EnumSet.noneOf(T::class.java))

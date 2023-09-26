@@ -73,7 +73,7 @@ class ContextMenuController (val controller: LearnWordsController) {
         // I cannot understand is it reliable to change menu items visibility in onShowing ??
         //contextMenu.onShowing = EventHandler { updateItemsVisibility() }
 
-        //useMenuStateDumping(contextMenu)
+        //com.mvv.gui.javafx.useMenuStateDumping(contextMenu)
     }
 
     fun updateItemsVisibility() {

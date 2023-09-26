@@ -2,6 +2,8 @@ package com.mvv.gui.javafx
 
 import javafx.scene.control.TableCell
 import javafx.scene.control.TableView
+import kotlin.math.max
+import kotlin.math.min
 
 
 val TableView<*>.isEditing: Boolean get() {
@@ -20,6 +22,25 @@ val <S> TableView<S>.editingItem: S? get() {
 val <T> TableView<T>.singleSelection: T? get() {
     val selected = this.selectionModel.selectedItems
     return if (selected.size == 1) selected.first() else null
+}
+
+
+val <S> TableView<S>.visibleRows: IntRange get() {
+    val rowIndex1 = this.virtualFlow?.firstVisibleCell?.index ?: -1
+    val rowIndex2 = this.virtualFlow?.lastVisibleCell?.index ?: -1
+    return IntRange(min(rowIndex1, rowIndex2), max(rowIndex1, rowIndex2))
+}
+
+
+/** Selects and scrolls to this item. */
+fun <S> TableView<S>.selectItem(item: S) {
+    val table = this
+    table.selectionModel.clearSelection()
+    table.selectionModel.select(item)
+    val rowIndex = table.items.indexOf(item)
+
+    if (rowIndex != -1 && !table.visibleRows.contains(rowIndex))
+        table.scrollTo(item)
 }
 
 

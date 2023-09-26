@@ -1,6 +1,5 @@
 package com.mvv.gui.javafx
 
-import javafx.event.EventHandler
 import javafx.scene.control.Button
 import javafx.scene.control.Tooltip
 import javafx.scene.image.Image
@@ -13,6 +12,8 @@ import kotlin.io.path.readBytes
 
 @Suppress("unused")
 fun newButton(label: String, action: ()->Unit): Button = newButtonImpl(label, null, null, action)
+
+fun newButton(icon: ImageView, action: ()->Unit): Button = newButtonImpl("", null, icon, action)
 
 fun newButton(label: String, icon: ImageView, action: ()->Unit): Button =
     newButtonImpl(label, null, icon, action)
@@ -28,7 +29,7 @@ private fun newButtonImpl(label: String, toolTip: String?, icon: ImageView?, act
     Button(label).also { btn ->
         toolTip?.let { btn.tooltip  = Tooltip(toolTip) }
         icon?.   let { btn.graphic  = icon }
-        action?. let { btn.onAction = EventHandler { action() } }
+        action?. let { btn.onAction = safeRunMenuCommand(action) }
     }
 
 

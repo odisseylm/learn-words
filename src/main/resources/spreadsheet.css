@@ -153,3 +153,8 @@
     -fx-max-width: 500;
     -fx-min-width: 130;
 }
+
+/*.combo-box> .list-cell {*/
+.warningsDropDown> .list-cell {
+    -fx-alignment: center;
+}

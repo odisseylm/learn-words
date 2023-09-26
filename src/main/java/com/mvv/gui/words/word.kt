@@ -140,8 +140,6 @@ enum class WordCardStatus (
     val toolTipF: (CardWordEntry)->String,
     ) {
 
-    Ok({""}),
-
     /**
      * If current word has ending/suffix 'ed', 'ing', 'es', 's' does not have
      * but the whole set does not have base word without such ending/suffix.

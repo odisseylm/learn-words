@@ -10,7 +10,6 @@ import com.mvv.gui.words.WordCardStatus.*
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
-import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.input.KeyCode
@@ -235,8 +234,12 @@ class MainWordsPane : BorderPane() {
 
         wordCardStatusesColumn.id = "wordCardStatusesColumn"
         wordCardStatusesColumn.isEditable = false
-        wordCardStatusesColumn.cellValueFactory = PropertyValueFactory("wordCardStatuses")
-        wordCardStatusesColumn.cellValueFactory = Callback { p -> p.value.wordCardStatusesProperty }
+        wordCardStatusesColumn.cellValueFactory = Callback { p ->
+            // We use this trick with examplesProperty to recalculate/refresh tooltip
+            // and show updated examples count in tooltip (even if wordCardStatuses are not changed)
+            // !! I'm sure that it is bug in JavaFX design that we need to set tooltip instead of generating it by request !!
+            p.value.examplesProperty
+                .flatMap { p.value.wordCardStatusesProperty } }
 
         wordCardStatusesColumn.graphic = Label("S").also { it.tooltip = Tooltip("Status") }
         wordCardStatusesColumn.styleClass.add("wordCardStatusesColumn")
