@@ -10,6 +10,7 @@ import com.mvv.gui.util.*
 import com.mvv.gui.words.*
 import javafx.application.Platform
 import javafx.beans.property.ReadOnlyProperty
+import javafx.beans.property.StringPropertyBase
 import javafx.beans.value.ChangeListener
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
@@ -41,6 +42,7 @@ private val log = mu.KotlinLogging.logger {}
 class LearnWordsController (
     private val pane: MainWordsPane,
 ) {
+    init { pane.controller = this }
 
     //private val projectDirectory = getProjectDirectory(this.javaClass)
 
@@ -60,6 +62,8 @@ class LearnWordsController (
     private val toolBarController = ToolBarController(this)
     private val settingsPane = SettingsPane()
     private val toolBar2 = ToolBar2(this)
+
+    val cellEditorStates = WeakHashMap<Pair<TableColumn<CardWordEntry,*>, CardWordEntry>, CellEditorState>()
 
     init {
         Timer("updateSpeechSynthesizersAvailabilityTimer", true)
@@ -750,6 +754,62 @@ class LearnWordsController (
     fun addToListenSet() =
         currentWordsSelection.selectedItems.forEach { it.predefinedSets += PredefinedSet.DifficultToListen }
 
+    internal fun moveSelectedToSeparateCard(editor: TextInputControl, item: CardWordEntry, tableColumn: TableColumn<CardWordEntry, String>) {
+        createCardFromSelection(editor, tableColumn, item, currentWordsList)
+            ?.also {
+                reanalyzeOnlyWords(it)
+                addChangeCardListener(it)
+            }
+    }
+
+    private fun createCardFromSelection(
+        textInput: TextInputControl,
+        tableColumn: TableColumn<CardWordEntry, String>,
+        currentCard: CardWordEntry,
+        currentWords: TableView<CardWordEntry>,
+    ): CardWordEntry? {
+
+        val selection = textInput.selectedText
+        if (selection.isBlank()) return null
+
+        val newCard: CardWordEntry = selection.parseToCard() ?: return null
+        if (!newCard.isGoodLearnCardCandidate()) return null
+
+        textInput.replaceSelection("")
+
+        val caretPosition = textInput.caretPosition
+        val scrollLeft = if (textInput is TextArea) textInput.scrollLeft else 0.0
+        val scrollTop = if (textInput is TextArea) textInput.scrollTop else 0.0
+
+        // After adding new card editor loses focus, and we will lose our changes
+        // I do not know how to avoid this behaviour...
+        // And for that reason I emulate cell commit and reopening it again.
+
+        val prop: StringPropertyBase = tableColumn.cellValueFactory.call(
+            TableColumn.CellDataFeatures(currentWords, tableColumn, currentCard)) as StringPropertyBase
+
+        // emulate cell commit to avoid losing changes on focus lost
+        prop.set(textInput.text)
+
+        val currentCardIndex = currentWords.items.indexOf(currentCard)
+
+        currentWords.runWithScrollKeeping(
+            {
+                // TODO: initially insert in proper place
+                currentWords.items.add(currentCardIndex + 1, newCard)
+            },
+            {
+                println("# Storing state in createCardFromSelection ${CellEditorState(scrollLeft, scrollTop, caretPosition)}")
+                cellEditorStates[Pair(pane.examplesColumn, currentCard)] = CellEditorState(scrollLeft, scrollTop, caretPosition)
+
+                currentWords.selectItem(currentCard)
+                currentWords.edit(currentWords.items.indexOf(currentCard), tableColumn)
+
+            })
+
+        return newCard
+    }
+
 }
 
 
@@ -827,3 +887,35 @@ internal fun moveSelectedTextToExamples(card: CardWordEntry, textInput: TextInpu
 
     textInput.deleteText(textInput.selection.start, textInput.selection.end)
 }
+
+
+
+private val ignoreWordsForGoodLearnCardCandidate = listOf("a", "the", "to", "be")
+
+fun CardWordEntry.isGoodLearnCardCandidate(): Boolean {
+    val sentence = parseSentence(this.from, 0)
+    val wordCount = sentence.allWords.asSequence()
+        .filter { it.word !in ignoreWordsForGoodLearnCardCandidate }
+        .count()
+    return wordCount <= 4 && sentence.allWords.all { !it.word.first().isUpperCase() }
+}
+
+
+// TODO: add tests
+fun String.parseToCard(): CardWordEntry? {
+
+    val indexOfRussianChar = this.indexOfFirst { it.isRussianLetter() }
+    if (indexOfRussianChar == -1) return null
+
+    val from = this.substring(0, indexOfRussianChar).trim()
+    val to = this.substring(indexOfRussianChar).trim()
+
+    return CardWordEntry(from, to)
+}
+
+
+data class CellEditorState (
+    val scrollLeft: Double,
+    val scrollTop: Double,
+    val caretPosition: Int,
+)

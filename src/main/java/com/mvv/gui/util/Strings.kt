@@ -166,3 +166,10 @@ fun CharSequence.containsEnglishLetters(): Boolean {
 //}
 //fun CharSequence.containsEnglishLetters(): Boolean =
 //    this.codePoints().anyMatch { it.isEnglishLetter() }
+
+
+
+@Suppress("NOTHING_TO_INLINE") // TODO: add tests
+inline fun Char.isRussianLetter(): Boolean {
+    return (this in 'а'..'я') || (this in 'А'..'Я')
+}

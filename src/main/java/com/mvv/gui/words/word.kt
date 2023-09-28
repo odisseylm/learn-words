@@ -1,5 +1,8 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.isGoodLearnCardCandidate
+import com.mvv.gui.javafx.mapCached
+import com.mvv.gui.parseToCard
 import com.mvv.gui.util.containsEnglishLetters
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -15,8 +18,12 @@ class CardWordEntry {
     val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")
     val toProperty = SimpleStringProperty(this, "to", "")
     val transcriptionProperty = SimpleStringProperty(this, "transcription", "")
-    val translationCountProperty: ObservableValue<Int> = toProperty.map { it?.translationCount ?: 0 }
+    val translationCountProperty: ObservableValue<Int> = toProperty.mapCached { it?.translationCount ?: 0 }
+
     val examplesProperty = SimpleStringProperty(this, "examples", "")
+    val exampleCountProperty = examplesProperty.mapCached { it.examplesCount }
+    val exampleNewCardCandidateCountProperty = examplesProperty.mapCached { it.examplesCount }
+
     val wordCardStatusesProperty = SimpleObjectProperty<Set<WordCardStatus>>(this, "wordCardStatuses", emptySet())
     val predefinedSetsProperty = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())
     val sourcePositionsProperty = SimpleObjectProperty<List<Int>>(this, "sourcePositions", emptyList())
@@ -132,6 +139,20 @@ private val String.examplesCount: Int get() {
         .splitToSequence("\n")
         .filter { it.isNotBlank() }
         .filter { it.containsEnglishLetters() }
+        .count()
+}
+
+
+val CardWordEntry.exampleNewCardCandidateCount: Int get() = this.examples.exampleNewCardCandidateCount
+
+private val String.exampleNewCardCandidateCount: Int get() {
+    if (this.isBlank()) return 0
+
+    return this
+        .splitToSequence("\n")
+        .filter { it.isNotBlank() }
+        .filter { it.containsEnglishLetters() }
+        .filter { it.parseToCard()?.isGoodLearnCardCandidate() ?: false }
         .count()
 }
 

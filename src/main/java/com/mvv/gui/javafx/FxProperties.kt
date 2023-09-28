@@ -6,6 +6,7 @@ import javafx.beans.property.ReadOnlyProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.beans.value.WritableObjectValue
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.reflect.KMutableProperty0
 
 
@@ -68,4 +69,65 @@ private fun <T> updateSetPropertyImpl(get: ()->Set<T>, set: (Set<T>)->Unit, valu
         action == UpdateSet.Remove &&  currentSetValue.contains(value) -> { set(currentSetValue - value); true }
         else -> false
     }
+}
+
+
+//private val emptyObservables: Array<ObservableValue<*>> = arrayOf<ObservableValue<*>>()
+private val emptyObservable: ObservableValue<*> = object : ObservableValue<Any> {
+    override fun addListener(listener: ChangeListener<in Any>)     { }
+    override fun addListener(listener: InvalidationListener)       { }
+    override fun removeListener(listener: InvalidationListener)    { }
+    override fun removeListener(listener: ChangeListener<in Any>?) { }
+    override fun getValue(): Any = ""
+}
+
+fun <S,T> ObservableValue<S>.mapCached(map: (S)->T): ObservableValue<T> = this.mapCached(map, emptyObservable)
+
+fun <S,T> ObservableValue<S>.mapCached(map: (S)->T, otherDependent: ObservableValue<*>, vararg otherDependents: ObservableValue<*>): ObservableValue<T> {
+
+    var ref: T? = null
+
+    fun addListeners(obs: ObservableValue<*>) {
+        obs.addListener(InvalidationListener { ref = null })
+        obs.addListener { _, _, _ -> ref = map(this.value) }
+    }
+
+    addListeners(this)
+    addListeners(otherDependent)
+    otherDependents.forEach { addListeners(it) }
+
+    val cachedMapper: (S)->T = {
+        val currentRefValue = ref
+        if (currentRefValue != null) currentRefValue
+        else {
+            val newValue = map(this.value)
+            ref = newValue
+            newValue
+        }
+    }
+
+    return this.map(cachedMapper)
+}
+
+
+fun <S,T> ObservableValue<S>.mapCachedAtomic(map: (S)->T): ObservableValue<T> = this.mapCachedAtomic(map, emptyObservable)
+
+fun <S,T> ObservableValue<S>.mapCachedAtomic(map: (S)->T, otherDependent: ObservableValue<*>, vararg otherDependents: ObservableValue<*>): ObservableValue<T> {
+
+    val ref = AtomicReference<T?>()
+
+    fun addListeners(obs: ObservableValue<*>) {
+        obs.addListener(InvalidationListener { ref.set(null) })
+        obs.addListener { _, _, _ -> ref.set(map(this.value)) }
+    }
+
+    addListeners(this)
+    addListeners(otherDependent)
+    otherDependents.forEach { addListeners(it) }
+
+    val cachedMapper: (S)->T = {
+        ref.get() ?: ref.updateAndGet { map(this.value) }!!
+    }
+
+    return this.map(cachedMapper)
 }

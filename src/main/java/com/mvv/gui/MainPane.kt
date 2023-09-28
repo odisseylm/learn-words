@@ -7,6 +7,7 @@ import com.mvv.gui.words.*
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WarnWhenSomeBaseWordsMissed
 import com.mvv.gui.words.WordCardStatus.*
+import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
@@ -31,6 +32,8 @@ const val appTitle = "Words"
 
 class MainWordsPane : BorderPane() {
 
+    lateinit var controller: LearnWordsController
+
     internal val currentWordsLabel = Text("File/Clipboard")
     internal val ignoredWordsLabel = Text("Ignored words")
     internal val allProcessedWordsLabel = Text("All processed words")
@@ -45,6 +48,7 @@ class MainWordsPane : BorderPane() {
     internal val toColumn = TableColumn<CardWordEntry, String>("Russian")
     private val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
     internal val transcriptionColumn = TableColumn<CardWordEntry, String>("Transcription")
+    internal val exampleCountColumn = TableColumn<CardWordEntry, ExampleCountEntry>() //"ExN")
     internal val examplesColumn = TableColumn<CardWordEntry, String>("Examples")
     internal val predefinedSetsColumn = TableColumn<CardWordEntry, Set<PredefinedSet>>() // "predefinedSets")
     internal val sourcePositionsColumn = TableColumn<CardWordEntry, List<Int>>() // "Source Positions")
@@ -165,10 +169,17 @@ class MainWordsPane : BorderPane() {
         toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextArea,
             onEditCreate = { cell, editor ->
                 addKeyBinding(editor, listOf(
+                        // TODO: move all key-bindings to separate single palce
                         KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN),
                         KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))) {
-                    // T O D O: would be nice to move it to controller... but how to do it nice??
                     moveSelectedTextToExamples(cell.tableRow.item, editor)
+                }
+
+                addKeyBinding(editor, listOf(
+                        // TODO: move all key-bindings to separate single palce
+                        KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN),
+                        KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))) {
+                    controller.moveSelectedToSeparateCard(editor, cell.tableRow.item, toColumn)
                 }
             })
 
@@ -194,11 +205,70 @@ class MainWordsPane : BorderPane() {
         transcriptionColumn.cellValueFactory = Callback { p -> p.value.transcriptionProperty }
         transcriptionColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextField)
 
+        exampleCountColumn.id = "exampleCountColumn"
+        exampleCountColumn.isEditable = false
+        exampleCountColumn.graphic = Label("Ex N").also { it.tooltip = Tooltip("Example count and possible new card candidate count.") }
+        exampleCountColumn.styleClass.add("exampleCountColumn")
+
+        exampleCountColumn.cellValueFactory = Callback { p -> p.value.exampleCountProperty
+            .mapCached({ exampleCount: Int -> ExampleCountEntry(exampleCount, p.value.exampleNewCardCandidateCount) },
+                p.value.exampleNewCardCandidateCountProperty ) }
+
+
         examplesColumn.id = "examplesColumn"
         examplesColumn.isEditable = true
         examplesColumn.cellValueFactory = Callback { p -> p.value.examplesProperty }
         examplesColumn.cellFactory = Callback { ExTextFieldTableCell<CardWordEntry, String>(
-            TextFieldType.TextArea, DefaultStringConverter()).also { it.styleClass.add("examplesColumnCell") } }
+            TextFieldType.TextArea, DefaultStringConverter(),
+            onEditCreate = { cell, editor ->
+                addKeyBinding(editor, listOf(
+                    // TODO: move all key-bindings to separate single palce
+                    KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN),
+                    KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))) {
+                    controller.moveSelectedToSeparateCard(editor, cell.tableRow.item!!, examplesColumn)
+                }
+
+                editor.focusedProperty().addListener { _, _, isFocused ->
+                    val textArea = editor as TextArea
+
+                    if (isFocused) {
+                        val editorState = controller.cellEditorStates.getOrElse(Pair(examplesColumn, cell.tableRow.item)) {
+                                CellEditorState(0.0, 0.0, 0) }
+
+                        val caretPos = if (editorState.caretPosition > editor.text.length)
+                                            editor.text.trimEnd().lastIndexOf('\n')
+                                       else editorState.caretPosition
+
+                        textArea.selectRange(caretPos, caretPos)
+                        textArea.selectPositionCaret(caretPos)
+                        textArea.scrollLeft = editorState.scrollLeft
+                        textArea.scrollTop = editorState.scrollTop
+
+                        // hacks hacks hacks :-(
+                        // double-take
+                        Platform.runLater {
+                            textArea.selectRange(caretPos, caretPos)
+                            textArea.selectPositionCaret(caretPos)
+
+                            // hack. Sometimes editor loses focus (after re-scrolling table row)
+                            if (!editor.isFocused) editor.requestFocus()
+
+                            // hack again. Sometimes setting scrollTop really does not change scroll position
+
+                            // This IF does not help - real scroll position is not equal to textArea.scrollTop :-(
+                            //if (textArea.scrollTop != editorState.scrollTop) {
+                                textArea.scrollTop = 0.0
+                                textArea.scrollTop = editorState.scrollTop
+                            //}
+                        }
+                    }
+                    else {
+                        controller.cellEditorStates[Pair(examplesColumn, cell.tableRow.item)] =
+                            CellEditorState(textArea.scrollLeft, textArea.scrollTop, textArea.caretPosition)
+                    }
+                }
+            })
+            .also { it.styleClass.add("examplesColumnCell") } }
         examplesColumn.styleClass.add("examplesColumn")
 
         predefinedSetsColumn.id = "predefinedSetsColumn"
@@ -293,7 +363,8 @@ class MainWordsPane : BorderPane() {
         wordCardStatusesColumn.prefWidth = 50.0
         toColumn.prefWidth = 550.0
         translationCountColumn.prefWidth = 50.0
-        transcriptionColumn.prefWidth = 150.0
+        transcriptionColumn.prefWidth = 120.0
+        exampleCountColumn.prefWidth = 60.0
         examplesColumn.prefWidth = 350.0
         predefinedSetsColumn.prefWidth = 70.0
         sourcePositionsColumn.prefWidth = 70.0
@@ -301,10 +372,12 @@ class MainWordsPane : BorderPane() {
 
 
         currentWordsList.columns.setAll(
-            numberColumn,
-            fromColumn, wordCardStatusesColumn, toColumn, translationCountColumn,
-            transcriptionColumn, examplesColumn,
-            predefinedSetsColumn, sourcePositionsColumn, sourceSentencesColumn,
+            numberColumn, fromColumn, wordCardStatusesColumn,
+            transcriptionColumn,
+            translationCountColumn, toColumn,
+            exampleCountColumn, examplesColumn,
+            predefinedSetsColumn,
+            sourcePositionsColumn, sourceSentencesColumn,
         )
 
 
@@ -358,5 +431,15 @@ private class PredefinedSetsCell : TableCell<CardWordEntry, Set<PredefinedSet>>(
 
         fun forTableColumn(): Callback<TableColumn<CardWordEntry, Set<PredefinedSet>>, TableCell<CardWordEntry, Set<PredefinedSet>>> =
             Callback { _: TableColumn<CardWordEntry, Set<PredefinedSet>>? -> PredefinedSetsCell() }
+    }
+}
+
+
+internal class ExampleCountEntry (val exampleCount: Int, val newCardCandidateCount: Int): Comparable<ExampleCountEntry> {
+    override fun compareTo(other: ExampleCountEntry): Int = this.exampleCount.compareTo(other.exampleCount)
+    override fun toString(): String = when {
+        exampleCount == 0 -> "0"
+        newCardCandidateCount == 0 -> "$exampleCount"
+        else -> "$exampleCount ($newCardCandidateCount)"
     }
 }
