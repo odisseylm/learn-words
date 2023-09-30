@@ -4,6 +4,15 @@
 }
 
 
+#currentWords .fromWordCountColumn .label {
+    -fx-alignment: center;
+    -fx-padding: 0 2 0 2;
+}
+#currentWords .table-row-cell .fromWordCountColumn {
+    -fx-alignment: center;
+}
+
+
 /* Styling TranslationCount-Status column. */
 
 #currentWords  .table-row-cell .TranslationCountStatus-Ok {

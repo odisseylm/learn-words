@@ -1,9 +1,7 @@
 package com.mvv.gui
 
 import com.mvv.gui.LearnWordsController.InsertPosition
-import com.mvv.gui.javafx.buttonIcon
-import com.mvv.gui.javafx.hideRepeatedMenuSeparators
-import com.mvv.gui.javafx.newMenuItem
+import com.mvv.gui.javafx.*
 import com.mvv.gui.words.CardWordEntry
 import com.mvv.gui.words.englishBaseWords
 import javafx.scene.control.ContextMenu
@@ -64,8 +62,16 @@ class ContextMenuController (val controller: LearnWordsController) {
 
             SeparatorMenuItem(),
             newMenuItem("Show source sentences", buttonIcon("icons/receiptstext.png")) {
-                this.currentWordsList.selectionModel.selectedItem
+                this.currentWordsList.selectionModel.selectedItem // TODO: make conditionally visible
                     ?.also { controller.showSourceSentences(it) } },
+
+            SeparatorMenuItem(),
+            newMenuItem("Translate by Google") {
+                this.currentWordsList.selectionModel.selectedItem
+                    ?.also { openGoogleTranslate(it.from) } },
+            newMenuItem("Translate by Abby") {
+                this.currentWordsList.selectionModel.selectedItem
+                    ?.also { openAbbyLingvoTranslate(it.from) } },
         )
 
         contextMenu.items.addAll(menuItems)

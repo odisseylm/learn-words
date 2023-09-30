@@ -157,11 +157,18 @@ private fun showHtmlTextPreviewContextMenu(webView: WebView, ev: ContextMenuEven
     menu.items.add(SeparatorMenuItem())
 
     if (selectedText.isNotBlank())
-    menu.items.add(newMenuItem("Translate by google", buttonIcon("icons/forward_nav.png")) {
+    menu.items.add(newMenuItem("Translate by Google", buttonIcon("icons/forward_nav.png")) {
         openGoogleTranslate(selectedText) })
 
-    menu.items.add(newMenuItem("Translate All by google", buttonIcon("icons/forward_nav.png")) {
+    menu.items.add(newMenuItem("Translate All by Google", buttonIcon("icons/forward_nav.png")) {
         openGoogleTranslate(text) })
+
+    if (selectedText.isNotBlank())
+    menu.items.add(SeparatorMenuItem())
+
+    if (selectedText.isNotBlank())
+    menu.items.add(newMenuItem("Translate word by Abby", buttonIcon("icons/forward_nav.png")) {
+        openAbbyLingvoTranslate(selectedText) })
 
     // If you pass window popup/context menu is successfully hidden
     // contrary if you pass directly 'webView' node, menu is not always auto-hidden properly.
@@ -177,3 +184,7 @@ private fun putNonBlankToClipboard(text: String?) {
 
 fun openGoogleTranslate(text: String) =
     openWebBrowser("https://translate.google.com/?sl=en&tl=ru&op=translate&text=${urlEncode(text)}")
+
+fun openAbbyLingvoTranslate(text: String) =
+    // hm... strange Abby site does not process '+' as space char, need to escape it as '%20'
+    openWebBrowser("https://www.lingvolive.com/en-us/translate/en-ru/${urlEncode(text).replace("+", "%20")}")

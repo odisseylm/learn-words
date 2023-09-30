@@ -41,18 +41,19 @@ class MainWordsPane : BorderPane() {
     internal val topPane = VBox()
     internal val toolBar = ToolBar()
 
-    internal val currentWordsList = TableView<CardWordEntry>()
-    internal val numberColumn = TableColumn<CardWordEntry, Int>("No.")
-    internal val fromColumn = TableColumn<CardWordEntry, String>("English")
-    private val wordCardStatusesColumn = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
-    internal val toColumn = TableColumn<CardWordEntry, String>("Russian")
-    private val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
-    internal val transcriptionColumn = TableColumn<CardWordEntry, String>("Transcription")
-    internal val exampleCountColumn = TableColumn<CardWordEntry, ExampleCountEntry>() //"ExN")
-    internal val examplesColumn = TableColumn<CardWordEntry, String>("Examples")
-    internal val predefinedSetsColumn = TableColumn<CardWordEntry, Set<PredefinedSet>>() // "predefinedSets")
-    internal val sourcePositionsColumn = TableColumn<CardWordEntry, List<Int>>() // "Source Positions")
-    internal val sourceSentencesColumn = TableColumn<CardWordEntry, String>("Source Sentences")
+    internal val currentWordsList       = TableView<CardWordEntry>()
+    private  val numberColumn           = TableColumn<CardWordEntry, Int>("No.")
+    internal val fromColumn             = TableColumn<CardWordEntry, String>("English")
+    private  val fromWordCountColumn    = TableColumn<CardWordEntry, Int>() // "N")
+    private  val wordCardStatusesColumn = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
+    internal val toColumn               = TableColumn<CardWordEntry, String>("Russian")
+    private  val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
+    internal val transcriptionColumn    = TableColumn<CardWordEntry, String>("Transcription")
+    private  val exampleCountColumn     = TableColumn<CardWordEntry, ExampleCountEntry>() //"ExN")
+    internal val examplesColumn         = TableColumn<CardWordEntry, String>("Examples")
+    private  val predefinedSetsColumn   = TableColumn<CardWordEntry, Set<PredefinedSet>>() // "predefinedSets")
+    private  val sourcePositionsColumn  = TableColumn<CardWordEntry, List<Int>>() // "Source Positions")
+    internal val sourceSentencesColumn  = TableColumn<CardWordEntry, String>("Source Sentences")
 
     internal val ignoredWordsList = ListView<String>()
     internal val allProcessedWordsList = ListView<String>()
@@ -69,7 +70,7 @@ class MainWordsPane : BorderPane() {
 
     internal fun updateWarnWordCount(wordCountWithWarning: Int) {
         val shouldBeVisible = (wordCountWithWarning != 0)
-        warnWordCountsTextItems.map { it.isVisible = shouldBeVisible; it.isManaged = shouldBeVisible }
+        warnWordCountsTextItems.forEach { it.isVisible = shouldBeVisible; it.isManaged = shouldBeVisible }
         warnWordCountsText.text = warnWordCountsTextFormat.format(wordCountWithWarning)
     }
 
@@ -163,6 +164,13 @@ class MainWordsPane : BorderPane() {
         fromColumn.cellValueFactory = Callback { p -> p.value.fromProperty }
         fromColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextField)
 
+        fromWordCountColumn.id = "fromWordCountColumn"
+        fromWordCountColumn.isEditable = false
+        fromWordCountColumn.cellValueFactory = Callback { p -> p.value.fromWordCountProperty }
+
+        fromWordCountColumn.graphic = Label("N").also { it.tooltip = Tooltip("Word count") }
+        fromWordCountColumn.styleClass.add("fromWordCountColumn")
+
         toColumn.id = "toColumn"
         toColumn.isEditable = true
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
@@ -207,7 +215,7 @@ class MainWordsPane : BorderPane() {
 
         exampleCountColumn.id = "exampleCountColumn"
         exampleCountColumn.isEditable = false
-        exampleCountColumn.graphic = Label("Ex N").also { it.tooltip = Tooltip("Example count and possible new card candidate count.") }
+        exampleCountColumn.graphic = Label("N").also { it.tooltip = Tooltip("Example count and possible new card candidate count.") }
         exampleCountColumn.styleClass.add("exampleCountColumn")
 
         exampleCountColumn.cellValueFactory = Callback { p -> p.value.exampleCountProperty
@@ -255,7 +263,7 @@ class MainWordsPane : BorderPane() {
 
                             // hack again. Sometimes setting scrollTop really does not change scroll position
 
-                            // This IF does not help - real scroll position is not equal to textArea.scrollTop :-(
+                            // This IF does not help - real scroll position is not synchronized with property textArea.scrollTop :-(
                             //if (textArea.scrollTop != editorState.scrollTop) {
                                 textArea.scrollTop = 0.0
                                 textArea.scrollTop = editorState.scrollTop
@@ -360,6 +368,7 @@ class MainWordsPane : BorderPane() {
         // Impossible to move it to CSS ?!
         numberColumn.prefWidth = 40.0
         fromColumn.prefWidth = 200.0
+        fromWordCountColumn.prefWidth = 30.0
         wordCardStatusesColumn.prefWidth = 50.0
         toColumn.prefWidth = 550.0
         translationCountColumn.prefWidth = 50.0
@@ -372,7 +381,9 @@ class MainWordsPane : BorderPane() {
 
 
         currentWordsList.columns.setAll(
-            numberColumn, fromColumn, wordCardStatusesColumn,
+            numberColumn,
+            fromColumn, fromWordCountColumn,
+            wordCardStatusesColumn,
             transcriptionColumn,
             translationCountColumn, toColumn,
             exampleCountColumn, examplesColumn,
@@ -435,7 +446,7 @@ private class PredefinedSetsCell : TableCell<CardWordEntry, Set<PredefinedSet>>(
 }
 
 
-internal class ExampleCountEntry (val exampleCount: Int, val newCardCandidateCount: Int): Comparable<ExampleCountEntry> {
+internal class ExampleCountEntry (private val exampleCount: Int, private val newCardCandidateCount: Int): Comparable<ExampleCountEntry> {
     override fun compareTo(other: ExampleCountEntry): Int = this.exampleCount.compareTo(other.exampleCount)
     override fun toString(): String = when {
         exampleCount == 0 -> "0"

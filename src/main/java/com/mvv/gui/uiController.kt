@@ -61,7 +61,8 @@ class LearnWordsController (
 
     private val toolBarController = ToolBarController(this)
     private val settingsPane = SettingsPane()
-    private val toolBar2 = ToolBar2(this)
+    private val toolBar2 = ToolBar2(this).also {
+        it.nextPrevWarningWord.addSelectedWarningsChangeListener { _, _, _ -> recalculateWarnedWordsCount() } }
 
     val cellEditorStates = WeakHashMap<Pair<TableColumn<CardWordEntry,*>, CardWordEntry>, CellEditorState>()
 
@@ -317,7 +318,8 @@ class LearnWordsController (
     private fun reanalyzeOnlyWords(vararg words: CardWordEntry) = reanalyzeOnlyWords(words.asIterable())
 
     private fun recalculateWarnedWordsCount() {
-        val wordCountWithWarning = currentWords.count { it.hasWarning }
+        val warnings = toolBar2.nextPrevWarningWord.selectedWarnings
+        val wordCountWithWarning = currentWords.count { it.hasOneOfWarning(warnings) }
         pane.updateWarnWordCount(wordCountWithWarning)
     }
 
@@ -775,6 +777,13 @@ class LearnWordsController (
         val newCard: CardWordEntry = selection.parseToCard() ?: return null
         if (!newCard.isGoodLearnCardCandidate()) return null
 
+        // replace/remove also ending '\n'
+        if (textInput.selection.end < textInput.text.length && textInput.text[textInput.selection.end] == '\n')
+            textInput.selectRange(textInput.selection.start, textInput.selection.end + 1)
+        // verify again (in case of end "\n\n")
+        if (textInput.selection.end < textInput.text.length && textInput.text[textInput.selection.end] == '\n')
+            textInput.selectRange(textInput.selection.start, textInput.selection.end + 1)
+
         textInput.replaceSelection("")
 
         val caretPosition = textInput.caretPosition
@@ -901,14 +910,17 @@ fun CardWordEntry.isGoodLearnCardCandidate(): Boolean {
 }
 
 
-// TODO: add tests
 fun String.parseToCard(): CardWordEntry? {
 
-    val indexOfRussianChar = this.indexOfFirst { it.isRussianLetter() }
-    if (indexOfRussianChar == -1) return null
+    val indexOfRussianCharOrSpecial = this.indexOfFirst { it.isRussianLetter() || it == '_' }
+    if (indexOfRussianCharOrSpecial == -1 || indexOfRussianCharOrSpecial == 0) return null
 
-    val from = this.substring(0, indexOfRussianChar).trim()
-    val to = this.substring(indexOfRussianChar).trim()
+    val startOfTranslationCountStatus = if (this[indexOfRussianCharOrSpecial - 1] == '(')
+        indexOfRussianCharOrSpecial - 1
+        else indexOfRussianCharOrSpecial
+
+    val from = this.substring(0, startOfTranslationCountStatus).trim()
+    val to = this.substring(startOfTranslationCountStatus).trim()
 
     return CardWordEntry(from, to)
 }

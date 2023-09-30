@@ -6,6 +6,7 @@ import javafx.beans.property.ReadOnlyProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.beans.value.WritableObjectValue
+import org.apache.commons.lang3.NotImplementedException
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.reflect.KMutableProperty0
 
@@ -130,4 +131,14 @@ fun <S,T> ObservableValue<S>.mapCachedAtomic(map: (S)->T, otherDependent: Observ
     }
 
     return this.map(cachedMapper)
+}
+
+
+class ReadOnlyWrapper<S,T> (private val delegate: ObservableValue<out S>, private val mapper: (S)->T) : ObservableValue<T> {
+    override fun addListener(listener: ChangeListener<in T>?) = throw NotImplementedException()
+    override fun addListener(listener: InvalidationListener?) = throw NotImplementedException()
+    override fun removeListener(listener: InvalidationListener?) = throw NotImplementedException()
+    override fun removeListener(listener: ChangeListener<in T>?) = throw NotImplementedException()
+
+    override fun getValue(): T = this.mapper(delegate.value)
 }

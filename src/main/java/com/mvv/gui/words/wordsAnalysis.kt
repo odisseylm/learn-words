@@ -6,6 +6,7 @@ import com.mvv.gui.javafx.updateSetProperty
 import com.mvv.gui.util.containsAllKeys
 import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.containsOneOfKeys
+import com.mvv.gui.util.isEnglishLetter
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WarnWhenSomeBaseWordsMissed
 import com.mvv.gui.words.WordCardStatus.*
@@ -18,14 +19,15 @@ val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contain
 val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(BaseWordDoesNotExist)
 val CardWordEntry.showNoBaseWordInSet: Boolean get() = !this.ignoreNoBaseWordInSet && this.noBaseWordInSet
 
-val CardWordEntry.hasWarning: Boolean get() = this.showNoBaseWordInSet ||
-        this.wordCardStatuses.containsOneOf(NoTranslation, TranslationIsNotPrepared)
+//fun CardWordEntry.hasWarning(wordCardStatus: WordCardStatus): Boolean = this.wordCardStatuses.contains(wordCardStatus)
+fun CardWordEntry.hasOneOfWarning(wordCardStatuses: Iterable<WordCardStatus>): Boolean = this.wordCardStatuses.containsOneOf(wordCardStatuses)
 
 // These parts are usually present after getting translation from dictionary
 // but them are useless (even boring/garbage) during learning,
 // and it is desirable to remove this garbage
 // (and remove unneeded translations to keep the shortest translation to learn it by heart).
 private val unneededPartsForLearning = listOf(
+    "<", ">",
     "[", "]",
     "1.", "2.", "3.",
     "1)", "2)", "3)",
@@ -60,18 +62,24 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         val from = card.from
         val to = card.to
 
-        val tooManyExamplesStatusUpdateAction = if (card.examplesCount > 5) UpdateSet.Set else UpdateSet.Remove
+        val tooManyExamples = card.exampleNewCardCandidateCount > 5
+        val tooManyExamplesStatusUpdateAction = if (tooManyExamples) UpdateSet.Set else UpdateSet.Remove
         updateSetProperty(card.wordCardStatusesProperty, TooManyExamples, tooManyExamplesStatusUpdateAction)
 
-        val noTranslationStatusUpdateAction = if (from.isNotBlank() && to.isBlank()) UpdateSet.Set else UpdateSet.Remove
+        val noTranslation = from.isNotBlank() && to.isBlank()
+        val noTranslationStatusUpdateAction = if (noTranslation) UpdateSet.Set else UpdateSet.Remove
         updateSetProperty(card.wordCardStatusesProperty, NoTranslation, noTranslationStatusUpdateAction)
 
+        val fromIsNotPrepared = from.isBlank() || from.containsOneOf(unneededPartsForLearning)
+                || !from.all { it.isEnglishLetter() || it in " -'." }
+        val toIsNotPrepared   = to.isBlank()   || to.containsOneOf(unneededPartsForLearning)
+
         val translationIsNotPreparedStatusUpdateAction =
-            if (from.isNotBlank() && to.containsOneOf(unneededPartsForLearning)) UpdateSet.Set else UpdateSet.Remove
+            if (fromIsNotPrepared || toIsNotPrepared) UpdateSet.Set else UpdateSet.Remove
         updateSetProperty(card.wordCardStatusesProperty, TranslationIsNotPrepared, translationIsNotPreparedStatusUpdateAction)
 
         val englishWord = from.trim().lowercase()
-        if (!card.ignoreNoBaseWordInSet) {
+        if (!card.ignoreNoBaseWordInSet && card.fromWordCount == 1) {
 
             val baseWordCards = englishBaseWords(englishWord, dictionary)
             val baseWords = baseWordCards.map { it.from }

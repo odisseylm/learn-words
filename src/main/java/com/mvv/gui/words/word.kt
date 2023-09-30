@@ -16,6 +16,7 @@ import javafx.scene.paint.Color
 class CardWordEntry {
     val fromProperty = SimpleStringProperty(this, "from", "")
     val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")
+    val fromWordCountProperty = fromProperty.mapCached { it.trim().split(" ", "\t", "\n").size }
     val toProperty = SimpleStringProperty(this, "to", "")
     val transcriptionProperty = SimpleStringProperty(this, "transcription", "")
     val translationCountProperty: ObservableValue<Int> = toProperty.mapCached { it?.translationCount ?: 0 }
@@ -35,6 +36,8 @@ class CardWordEntry {
     var fromWithPreposition: String
         get() = fromWithPrepositionProperty.get()
         set(value) = fromWithPrepositionProperty.set(value)
+    val fromWordCount: Int
+        get() = fromWordCountProperty.value
     var to: String
         get() = toProperty.get()
         set(value) = toProperty.set(value)
@@ -45,15 +48,12 @@ class CardWordEntry {
         get() = examplesProperty.get()
         set(value) = examplesProperty.set(value)
 
-    @Suppress("MemberVisibilityCanBePrivate")
-    var translationCount: Int = 0
-        private set
+    val translationCount: Int
+        get() = translationCountProperty.value
 
     var wordCardStatuses: Set<WordCardStatus>
         get() = wordCardStatusesProperty.get()
-        set(value) {
-            wordCardStatusesProperty.set(value)
-        }
+        set(value) = wordCardStatusesProperty.set(value)
 
     var predefinedSets: Set<PredefinedSet>
         get() = predefinedSetsProperty.get()
@@ -72,7 +72,7 @@ class CardWordEntry {
     var missedBaseWords: List<String> = emptyList()
 
     constructor(from: String, to: String) {
-        toProperty.addListener { _, _, newValue -> translationCount = newValue?.translationCount ?: 0 }
+        //toProperty.addListener { _, _, newValue -> translationCount = newValue?.translationCount ?: 0 }
 
         this.from = from
         this.to = to
@@ -158,6 +158,7 @@ private val String.exampleNewCardCandidateCount: Int get() {
 
 
 enum class WordCardStatus (
+    val isWarning: Boolean,
     val toolTipF: (CardWordEntry)->String,
     ) {
 
@@ -167,21 +168,21 @@ enum class WordCardStatus (
      *
      * It is not comfortable to learn such word if you do not know base word.
      */
-    NoBaseWordInSet({
+    NoBaseWordInSet(true, {
         "Words set does not have base word(s) '${it.missedBaseWords.joinToString("|")}'.\n" +
         "It is advised to add these base word(s) to the set." }),
 
     /**
      * Marker to stop validation on NoBaseWordInSet.
      */
-    BaseWordDoesNotExist({""}),
+    BaseWordDoesNotExist(false, {""}),
 
-    NoTranslation({"No translation for '${it.from}'."}),
+    NoTranslation(true, {"No translation for '${it.from}'."}),
 
-    TranslationIsNotPrepared({"The translation for '${it.from}' is not prepared for learning. " +
+    TranslationIsNotPrepared(true, {"The translation for '${it.from}' is not prepared for learning. " +
             "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on)."}),
 
-    TooManyExamples({"There are too many examples for '${it.from}' (${it.examplesCount}). Please convert them to separate cards."}),
+    TooManyExamples(true, {"There are too many examples for '${it.from}' (${it.examplesCount}). Please convert them to separate cards."}),
     ;
 
     val cssClass: String get() = "WordCardStatus-${this.name}"

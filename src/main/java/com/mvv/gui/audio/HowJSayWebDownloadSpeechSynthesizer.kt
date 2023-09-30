@@ -36,7 +36,8 @@ class HowJSayWebDownloadSpeechSynthesizer(private val audioPlayer: AudioPlayer) 
         if (text.isBlank()) return
 
         val word = text.trim()
-        require(word.wordCount <= 3) { "${this.javaClass.simpleName} does not support long text." }
+
+        validateSupport(text)
 
         val cachedAudioFilePath = cachedAudioFilePath(word)
         if (!cachedAudioFilePath.exists()) {
@@ -46,6 +47,15 @@ class HowJSayWebDownloadSpeechSynthesizer(private val audioPlayer: AudioPlayer) 
 
         audioPlayer.play(AudioSource(cachedAudioFilePath))
     }
+
+    override fun validateSupport(text: String) {
+        if (text.isBlank()) return
+
+        val word = text.trim()
+        if (word.wordCount > 1) throw ExpressionIsNotSupportedException("${this.javaClass.simpleName} does not support long text.")
+    }
+
+    override fun isSupported(text: String): Boolean = try { validateSupport(text); true } catch (_: Exception) { false }
 
     private fun downloadAudioFile(word: String): ByteArray =
         soundWordUrlTemplates
@@ -60,7 +70,7 @@ class HowJSayWebDownloadSpeechSynthesizer(private val audioPlayer: AudioPlayer) 
 }
 
 
-private val String.wordCount: Int get() = this.trim().split(" \t\n").size
+private val String.wordCount: Int get() = this.trim().split(" ", "\t", "\n").size
 
 
 private const val defaultSoundWordUrlTemplate = "https://d1qx7pbj0dvboc.cloudfront.net/\${word}.mp3"

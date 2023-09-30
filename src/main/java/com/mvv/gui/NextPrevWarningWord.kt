@@ -4,6 +4,7 @@ import com.mvv.gui.javafx.*
 import com.mvv.gui.util.toEnumSet
 import com.mvv.gui.words.CardWordEntry
 import com.mvv.gui.words.WordCardStatus
+import javafx.beans.value.ChangeListener
 import javafx.scene.control.ComboBox
 import javafx.scene.control.TableView
 import javafx.scene.layout.FlowPane
@@ -50,12 +51,22 @@ class NextPrevWarningWord (private val currentWords: TableView<CardWordEntry>) {
 
     private fun allDropDownWarnings(): List<WordCardStatusesDropDownEntry> {
         val allPossibleWarnings: Set<WordCardStatus> = WordCardStatus.values()
-            .filterNot { it == WordCardStatus.BaseWordDoesNotExist }
+            .filter { it.isWarning }
             .toEnumSet()
 
         return listOf(WordCardStatusesDropDownEntry(allPossibleWarnings, " -- Any warning -- ")) +
                 allPossibleWarnings.map { WordCardStatusesDropDownEntry(setOf(it), it.shortWarnDescr()) }
     }
+
+    val selectedWarnings: Set<WordCardStatus> get() = warningsDropDown.selectionModel.selectedItem.warnings
+
+    fun addSelectedWarningsChangeListener(l: ChangeListener<Set<WordCardStatus>>) =
+        warningsDropDown.selectionModel.selectedItemProperty().addListener { obs,prev,new ->
+            l.changed(
+                ReadOnlyWrapper<WordCardStatusesDropDownEntry,Set<WordCardStatus>>(obs) { it.warnings },
+                prev?.warnings ?: emptySet(),
+                new?.warnings ?: emptySet(),
+            ) }
 }
 
 private class WordCardStatusesDropDownEntry (
