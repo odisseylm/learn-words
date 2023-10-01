@@ -23,7 +23,7 @@ class CardWordEntry {
 
     val examplesProperty = SimpleStringProperty(this, "examples", "")
     val exampleCountProperty = examplesProperty.mapCached { it.examplesCount }
-    val exampleNewCardCandidateCountProperty = examplesProperty.mapCached { it.examplesCount }
+    val exampleNewCardCandidateCountProperty = examplesProperty.mapCached { it.exampleNewCardCandidateCount }
 
     val wordCardStatusesProperty = SimpleObjectProperty<Set<WordCardStatus>>(this, "wordCardStatuses", emptySet())
     val predefinedSetsProperty = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())
@@ -47,6 +47,8 @@ class CardWordEntry {
     var examples: String
         get() = examplesProperty.get()
         set(value) = examplesProperty.set(value)
+    //val exampleCount: Int get() = exampleCountProperty.value
+    val exampleNewCardCandidateCount: Int get() = exampleNewCardCandidateCountProperty.value
 
     val translationCount: Int
         get() = translationCountProperty.value
@@ -130,8 +132,6 @@ val Int.toTranslationCountStatus: TranslationCountStatus get() = when (this) {
 }
 
 
-val CardWordEntry.examplesCount: Int get() = this.examples.examplesCount
-
 private val String.examplesCount: Int get() {
     if (this.isBlank()) return 0
 
@@ -142,8 +142,6 @@ private val String.examplesCount: Int get() {
         .count()
 }
 
-
-val CardWordEntry.exampleNewCardCandidateCount: Int get() = this.examples.exampleNewCardCandidateCount
 
 private val String.exampleNewCardCandidateCount: Int get() {
     if (this.isBlank()) return 0
@@ -182,7 +180,9 @@ enum class WordCardStatus (
     TranslationIsNotPrepared(true, {"The translation for '${it.from}' is not prepared for learning. " +
             "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on)."}),
 
-    TooManyExamples(true, {"There are too many examples for '${it.from}' (${it.examplesCount}). Please convert them to separate cards."}),
+    // TODO: do not save warnings to file since they are recalculated, only save 'ignore' flags
+    // TODO: rename to TooManyExampleNewCardCandidates
+    TooManyExamples(true, {"There are too many examples for '${it.from}' (${it.exampleNewCardCandidateCount}). Please convert them to separate cards."}),
     ;
 
     val cssClass: String get() = "WordCardStatus-${this.name}"

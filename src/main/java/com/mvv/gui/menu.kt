@@ -69,9 +69,11 @@ class MenuController (val controller: LearnWordsController) {
                 controller.addTranscriptions() },
 
             SeparatorMenuItem(),
-            newMenuItem("Sort") { controller.currentWordsList.sort() },
+            newMenuItem("Sort & Refresh", buttonIcon("/icons/iu_update_obj.png")) {
+                controller.currentWordsList.sort()
+                controller.currentWordsList.refresh()
+            },
             newMenuItem("Reanalyze") { controller.reanalyzeAllWords() },
-            newMenuItem("Refresh table", buttonIcon("/icons/iu_update_obj.png")) { controller.currentWordsList.refresh() },
         )
 
         return MenuBar(fileMenu, editMenu, wordsMenu)
