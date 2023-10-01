@@ -157,17 +157,17 @@ private fun showHtmlTextPreviewContextMenu(webView: WebView, ev: ContextMenuEven
     menu.items.add(SeparatorMenuItem())
 
     if (selectedText.isNotBlank())
-    menu.items.add(newMenuItem("Translate by Google", buttonIcon("icons/forward_nav.png")) {
+    menu.items.add(newMenuItem("Translate by Google", buttonIcon("icons/gt-02.png")) {
         openGoogleTranslate(selectedText) })
 
-    menu.items.add(newMenuItem("Translate All by Google", buttonIcon("icons/forward_nav.png")) {
+    menu.items.add(newMenuItem("Translate All by Google", buttonIcon("icons/gt-02.png")) {
         openGoogleTranslate(text) })
 
     if (selectedText.isNotBlank())
     menu.items.add(SeparatorMenuItem())
 
     if (selectedText.isNotBlank())
-    menu.items.add(newMenuItem("Translate word by Abby", buttonIcon("icons/forward_nav.png")) {
+    menu.items.add(newMenuItem("Translate word by Abby", buttonIcon("icons/abby-icon-01.png")) {
         openAbbyLingvoTranslate(selectedText) })
 
     // If you pass window popup/context menu is successfully hidden

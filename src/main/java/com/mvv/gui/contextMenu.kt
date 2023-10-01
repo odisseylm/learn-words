@@ -25,6 +25,8 @@ class ContextMenuController (val controller: LearnWordsController) {
     private val translateMenuItem = newMenuItem("Translate selected", buttonIcon("icons/forward_nav.png"),
         translateSelectedKeyCombination ) { controller.translateSelected() }
 
+    private val showSourceSentenceMenuItem = newMenuItem("Show source sentences", buttonIcon("icons/receiptstext.png")) {
+        this.selectedCard?.also { controller.showSourceSentences(it) } }
 
     private val currentWordsList: TableView<CardWordEntry> get() = controller.currentWordsList
 
@@ -61,15 +63,13 @@ class ContextMenuController (val controller: LearnWordsController) {
             newMenuItem("Add to 'Listen' Set") { controller.addToListenSet() },
 
             SeparatorMenuItem(),
-            newMenuItem("Show source sentences", buttonIcon("icons/receiptstext.png")) {
-                this.currentWordsList.selectionModel.selectedItem // TODO: make conditionally visible
-                    ?.also { controller.showSourceSentences(it) } },
+            showSourceSentenceMenuItem,
 
             SeparatorMenuItem(),
-            newMenuItem("Translate by Google") {
+            newMenuItem("Translate by Google", buttonIcon("icons/gt-02.png")) {
                 this.currentWordsList.selectionModel.selectedItem
                     ?.also { openGoogleTranslate(it.from) } },
-            newMenuItem("Translate by Abby") {
+            newMenuItem("Translate by Abby", buttonIcon("icons/abby-icon-01.png")) {
                 this.currentWordsList.selectionModel.selectedItem
                     ?.also { openAbbyLingvoTranslate(it.from) } },
         )
@@ -85,6 +85,7 @@ class ContextMenuController (val controller: LearnWordsController) {
     fun updateItemsVisibility() {
         contextMenu.items.forEach { it.isVisible = true }
 
+        showSourceSentenceMenuItem.isVisible = selectedCard?.sourceSentences?.isNotBlank() ?: false
         updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
         updateAddMissedBaseWordsMenuItem(addMissedBaseWordsMenuItem)
         updateTranslateMenuItem(translateMenuItem)
@@ -96,7 +97,7 @@ class ContextMenuController (val controller: LearnWordsController) {
         val oneOfSelectedWordsHasNoBaseWord = controller.isOneOfSelectedWordsHasNoBaseWord()
         menuItem.isVisible = oneOfSelectedWordsHasNoBaseWord
 
-        val selectedCards = currentWordsList.selectionModel.selectedItems
+        val selectedCards = this.selectedCards
         val menuItemText =
             if (selectedCards.size == 1 && oneOfSelectedWordsHasNoBaseWord)
                  "Ignore no base words [${englishBaseWords(selectedCards[0].from, controller.dictionary).joinToString("|")}]"
@@ -108,7 +109,7 @@ class ContextMenuController (val controller: LearnWordsController) {
         val oneOfSelectedWordsHasNoBaseWord = controller.isOneOfSelectedWordsHasNoBaseWord()
         menuItem.isVisible = oneOfSelectedWordsHasNoBaseWord
 
-        val selectedCards = currentWordsList.selectionModel.selectedItems
+        val selectedCards = this.selectedCards
         val menuItemText =
             if (selectedCards.size == 1 && oneOfSelectedWordsHasNoBaseWord)
                  "Add base word(s) '${selectedCards[0].missedBaseWords.joinToString("|") }'"
@@ -120,7 +121,7 @@ class ContextMenuController (val controller: LearnWordsController) {
         val oneOfSelectedIsNotTranslated = currentWordsList.selectionModel.selectedItems.any { it.to.isBlank() }
         menuItem.isVisible = oneOfSelectedIsNotTranslated
 
-        val selectedCards = currentWordsList.selectionModel.selectedItems
+        val selectedCards = this.selectedCards
         val menuItemText =
             if (selectedCards.size == 1 && oneOfSelectedIsNotTranslated)
                  "Translate '${selectedCards[0].from}'"
@@ -128,4 +129,6 @@ class ContextMenuController (val controller: LearnWordsController) {
         menuItem.text = menuItemText
     }
 
+    private val selectedCard: CardWordEntry? get() = currentWordsList.singleSelection
+    private val selectedCards: List<CardWordEntry> get() = currentWordsList.selectionModel.selectedItems
 }
