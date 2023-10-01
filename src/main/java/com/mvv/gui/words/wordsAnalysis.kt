@@ -15,6 +15,7 @@ import com.mvv.gui.words.WordCardStatus.*
 private val log = mu.KotlinLogging.logger {}
 
 
+// TODO: try to remove them, since now NoBaseWordInSet and BaseWordDoesNotExist are (lazy) exclusive
 val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(NoBaseWordInSet)
 val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(BaseWordDoesNotExist)
 val CardWordEntry.showNoBaseWordInSet: Boolean get() = !this.ignoreNoBaseWordInSet && this.noBaseWordInSet
@@ -62,9 +63,14 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         val from = card.from
         val to = card.to
 
-        val tooManyExamples = card.exampleNewCardCandidateCount > 5
-        val tooManyExamplesStatusUpdateAction = if (tooManyExamples) UpdateSet.Set else UpdateSet.Remove
-        updateSetProperty(card.wordCardStatusesProperty, TooManyExamples, tooManyExamplesStatusUpdateAction)
+        if (IgnoreExampleCardCandidates !in card.wordCardStatuses) {
+            val tooManyExampleCardCandidates = card.exampleNewCardCandidateCount > 5 // TODO: move 5 to settings
+            val tooManyExamplesStatusUpdateAction = if (tooManyExampleCardCandidates) UpdateSet.Set else UpdateSet.Remove
+            updateSetProperty(card.wordCardStatusesProperty, TooManyExampleCardCandidates, tooManyExamplesStatusUpdateAction)
+        }
+        else {
+            updateSetProperty(card.wordCardStatusesProperty, TooManyExampleCardCandidates, UpdateSet.Remove)
+        }
 
         val noTranslation = from.isNotBlank() && to.isBlank()
         val noTranslationStatusUpdateAction = if (noTranslation) UpdateSet.Set else UpdateSet.Remove

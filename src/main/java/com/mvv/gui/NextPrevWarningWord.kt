@@ -80,7 +80,8 @@ private fun WordCardStatus.shortWarnDescr(): String =
     when (this) {
         WordCardStatus.NoBaseWordInSet -> "No base word"
         WordCardStatus.BaseWordDoesNotExist -> throw IllegalArgumentException("It is not warning.")
+        WordCardStatus.IgnoreExampleCardCandidates -> throw IllegalArgumentException("It is not warning.")
         WordCardStatus.NoTranslation -> "No translation"
         WordCardStatus.TranslationIsNotPrepared -> "Translation is not prepared"
-        WordCardStatus.TooManyExamples -> "Too many examples"
+        WordCardStatus.TooManyExampleCardCandidates -> "Too many examples' card candidates."
     }

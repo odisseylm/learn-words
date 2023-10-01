@@ -2,8 +2,6 @@ package com.mvv.gui.words
 
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.extractExamples
-import com.mvv.gui.javafx.UpdateSet
-import com.mvv.gui.javafx.updateSetProperty
 import com.mvv.gui.util.trimToNull
 import javafx.collections.ObservableList
 import javafx.scene.input.Clipboard
@@ -123,11 +121,6 @@ internal fun wordCardsToLowerCaseRow(wordCards: Iterable<CardWordEntry>) {
 
 internal val Iterable<CardWordEntry>.isOneOfSelectedWordsHasNoBaseWord: Boolean get() =
     this.any { !it.ignoreNoBaseWordInSet && it.noBaseWordInSet }
-
-
-internal fun ignoreNoBaseWordInSet(cards: Iterable<CardWordEntry>) =
-    cards.forEach {
-        updateSetProperty(it.wordCardStatusesProperty, WordCardStatus.BaseWordDoesNotExist, UpdateSet.Set) }
 
 
 @Suppress("unused")

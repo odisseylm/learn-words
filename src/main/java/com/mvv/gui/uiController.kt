@@ -268,12 +268,12 @@ class LearnWordsController (
         currentWordsSelection.selectedItems.isOneOfSelectedWordsHasNoBaseWord
 
     fun ignoreNoBaseWordInSet() =
-        currentWordsSelection.selectedItems
-            .doIfNotEmpty { cards ->
-                ignoreNoBaseWordInSet(cards)
-                recalculateWarnedWordsCount()
-                markDocumentIsDirty()
-            }
+        currentWordsSelection.selectedItems.forEach {
+                    updateSetProperty(it.wordCardStatusesProperty, WordCardStatus.BaseWordDoesNotExist, UpdateSet.Set) }
+
+    fun ignoreTooManyExampleCardCandidates() =
+        currentWordsSelection.selectedItems.forEach {
+            updateSetProperty(it.wordCardStatusesProperty, WordCardStatus.IgnoreExampleCardCandidates, UpdateSet.Set) }
 
     fun addAllBaseWordsInSet() = addAllBaseWordsInSetImpl(currentWords)
     fun addBaseWordsInSetForSelected() = addAllBaseWordsInSetImpl(currentWordsSelection.selectedItems)
@@ -634,7 +634,11 @@ class LearnWordsController (
 
     private fun saveCurrentWords() = doSaveCurrentWords { filePath ->
         val words = currentWords
-        saveWordCards(filePath.useFilenameSuffix(internalWordCardsFileExt), CsvFormat.Internal, words)
+
+        val internalFormatFile = filePath.useFilenameSuffix(internalWordCardsFileExt)
+        saveWordCards(internalFormatFile, CsvFormat.Internal, words)
+        RecentDocuments().addRecent(internalFormatFile)
+
         saveWordCards(filePath.useFilenameSuffix(memoWordFileExt), CsvFormat.MemoWord, words)
 
         val splitFilesDir = filePath.parent.resolve(filePath.baseWordsFilename)

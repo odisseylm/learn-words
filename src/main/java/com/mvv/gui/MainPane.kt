@@ -329,9 +329,9 @@ class MainWordsPane : BorderPane() {
 
             val toolTips = mutableListOf<String>()
 
-            if (TooManyExamples in card.wordCardStatuses) {
-                toolTips.add(TooManyExamples.toolTipF(card))
-                cell.styleClass.add(TooManyExamples.cssClass)
+            if (TooManyExampleCardCandidates in card.wordCardStatuses) {
+                toolTips.add(TooManyExampleCardCandidates.toolTipF(card))
+                cell.styleClass.add(TooManyExampleCardCandidates.cssClass)
 
                 // Setting icon in CSS does not work. See my other comments regarding it.
                 cell.graphic = ImageView(iconTooManyExamples)

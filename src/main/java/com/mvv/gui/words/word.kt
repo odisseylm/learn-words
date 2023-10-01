@@ -175,6 +175,8 @@ enum class WordCardStatus (
      */
     BaseWordDoesNotExist(false, {""}),
 
+    IgnoreExampleCardCandidates(false, {""}),
+
     NoTranslation(true, {"No translation for '${it.from}'."}),
 
     TranslationIsNotPrepared(true, {"The translation for '${it.from}' is not prepared for learning. " +
@@ -182,7 +184,9 @@ enum class WordCardStatus (
 
     // TODO: do not save warnings to file since they are recalculated, only save 'ignore' flags
     // TODO: rename to TooManyExampleNewCardCandidates
-    TooManyExamples(true, {"There are too many examples for '${it.from}' (${it.exampleNewCardCandidateCount}). Please convert them to separate cards."}),
+    TooManyExampleCardCandidates(true, {
+        "There are too many examples similar to learning cards for '${it.from}' (${it.exampleNewCardCandidateCount})." +
+        " Please convert them to separate cards."}),
     ;
 
     val cssClass: String get() = "WordCardStatus-${this.name}"
