@@ -176,3 +176,14 @@
 .warningsDropDown> .list-cell {
     -fx-alignment: center;
 }
+
+
+.toolBarButton24x {
+    -fx-padding: 10 10 10 10;
+}
+.toolBarLabelledButton24x {
+    /*-fx-padding: 10 10 10 10;*/
+    -fx-padding: 10 0 4 0;
+    -fx-min-width: 60;
+    -fx-min-height: 60;
+}

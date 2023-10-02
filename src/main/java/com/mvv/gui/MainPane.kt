@@ -39,7 +39,7 @@ class MainWordsPane : BorderPane() {
     internal val allProcessedWordsLabel = Text("All processed words")
 
     internal val topPane = VBox()
-    internal val toolBar = ToolBar()
+    //internal val toolBar = ToolBar()
 
     internal val currentWordsList       = TableView<CardWordEntry>()
     private  val numberColumn           = TableColumn<CardWordEntry, Int>("No.")
@@ -119,7 +119,7 @@ class MainWordsPane : BorderPane() {
 
 
         this.top = topPane
-        topPane.children.add(toolBar)
+        //topPane.children.add(toolBar)
 
         val buttonsMiddleBar = VBox(5.0)
         buttonsMiddleBar.isFillWidth = true

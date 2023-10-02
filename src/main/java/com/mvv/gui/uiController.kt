@@ -59,7 +59,8 @@ class LearnWordsController (
 
     private var currentWordsFile: Path? = null
 
-    private val toolBarController = ToolBarController(this)
+    //private val toolBarController = ToolBarController(this)
+    private val toolBarController2 = ToolBarControllerBig(this)
     private val settingsPane = SettingsPane()
     private val toolBar2 = ToolBar2(this).also {
         it.nextPrevWarningWord.addSelectedWarningsChangeListener { _, _, _ -> recalculateWarnedWordsCount() } }
@@ -134,9 +135,10 @@ class LearnWordsController (
         fixSortingAfterCellEditCommit(pane.fromColumn)
 
 
-        toolBarController.fillToolBar(pane.toolBar)
+        //toolBarController.fillToolBar(pane.toolBar)
 
         pane.topPane.children.add(0, MenuController(this).fillMenu())
+        pane.topPane.children.add(toolBarController2.toolBar)
         pane.topPane.children.add(settingsPane)
         pane.topPane.children.add(toolBar2)
 

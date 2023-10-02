@@ -17,17 +17,18 @@ import javafx.scene.control.TableView
 class ContextMenuController (val controller: LearnWordsController) {
     val contextMenu = ContextMenu()
 
+    private val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
+        buttonIcon("/icons/icons8-layers-16-with-plus.png")) {
+        controller.addBaseWordsInSetForSelected() }
     private val ignoreNoBaseWordMenuItem = newMenuItem("Ignore 'No base word'",
-        "Ignore warning 'no base word in set'", buttonIcon("/icons/skip_brkp.png")
-    ) { controller.ignoreNoBaseWordInSet() }
+        "Ignore warning 'no base word in set'", buttonIcon("/icons/icons8-layers-16-with-cross.png")) {
+        controller.ignoreNoBaseWordInSet() }
 
     private val ignoreTooManyExampleCardCandidatesMenuItem = newMenuItem("Ignore example card candidates",
-        "Ignore warning TooManyExampleCardCandidates in set", buttonIcon("/icons/skip_brkp.png")
-    ) { controller.ignoreTooManyExampleCardCandidates() }
+        "Ignore warning TooManyExampleCardCandidates in set", buttonIcon("/icons/skip_brkp.png")) {
+        controller.ignoreTooManyExampleCardCandidates() }
 
-    private val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
-        buttonIcon("/icons/toggleexpand.png")) { controller.addBaseWordsInSetForSelected() }
-    private val translateMenuItem = newMenuItem("Translate selected", buttonIcon("icons/forward_nav.png"),
+    private val translateMenuItem = newMenuItem("Translate selected", buttonIcon("icons/translate-16-01.png"),
         translateSelectedKeyCombination ) { controller.translateSelected() }
 
     private val showSourceSentenceMenuItem = newMenuItem("Show source sentences", buttonIcon("icons/receiptstext.png")) {
@@ -50,7 +51,7 @@ class ContextMenuController (val controller: LearnWordsController) {
                 controller.toLowerCaseRow() },
 
             SeparatorMenuItem(),
-            newMenuItem("To ignore >>", buttonIcon("icons/rem_all_co.png")) {
+            newMenuItem("To ignore >>", buttonIcon("icons/removememory_tsk.png")) { // rem_co.png removememory_tsk.png
                 controller.moveSelectedToIgnored() },
             newMenuItem("Remove", buttonIcon("icons/cross-1.png")) {
                 controller.removeSelected() },

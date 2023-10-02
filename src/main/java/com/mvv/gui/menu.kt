@@ -51,22 +51,29 @@ class MenuController (val controller: LearnWordsController) {
 
         val wordsMenu = Menu("_Words", null,
             newMenuItem("Move to ignored", "Move selected words to ignored.",
-                buttonIcon("icons/rem_all_co.png")) { controller.moveSelectedToIgnored() },
-            newMenuItem("Remove ignored", "Removed ignored words from current words.") { controller.removeIgnoredFromCurrentWords() },
-            newMenuItem("Translate Selected", buttonIcon("/icons/forward_nav.png"), translateSelectedKeyCombination) {
-                controller.translateSelected() },
-            newMenuItem("Translate All", "Translate all words", buttonIcon("/icons/forward_nav.png")) {
-                controller.translateAll() },
+                buttonIcon("icons/removememory_tsk.png")) { // rem_all_co.png rem_co.png removememory_tsk.png
+                controller.moveSelectedToIgnored() },
+            newMenuItem("Remove ignored", "Removed ignored words from current words.") {
+                controller.removeIgnoredFromCurrentWords() },
             newMenuItem("Remove words of other sets", "Remove words from other sets") {
                 controller.removeWordsFromOtherSetsFromCurrentWords() },
 
-            SeparatorMenuItem(),
-            newMenuItem("No base word", "Ignore warning 'no base word in set'.", buttonIcon("/icons/skip_brkp.png")) {
-                controller.ignoreNoBaseWordInSet() },
-            newMenuItem("Add all missed base words", "Add all possible missed base words.", buttonIcon("/icons/toggleexpand.png")) {
-                controller.addAllBaseWordsInSet() },
+            newMenuItem("Translate Selected", buttonIcon("/icons/translate-16-01.png"), translateSelectedKeyCombination) {
+                controller.translateSelected() },
+            newMenuItem("Translate All", "Translate all words", buttonIcon("/icons/translate-16-01.png")) {
+                controller.translateAll() },
             newMenuItem("Add transcriptions", "Add missed transcription.", buttonIcon("/icons/transcription-1.png")) {
                 controller.addTranscriptions() },
+
+            SeparatorMenuItem(),
+            newMenuItem("Add all missed base words", "Add all possible missed base words.", buttonIcon("/icons/icons8-layers-16-with-plus.png")) {
+                controller.addAllBaseWordsInSet() },
+            newMenuItem("No/Ignore base words", "Ignore warning 'no base word in set'.", buttonIcon("/icons/icons8-layers-16-with-cross.png")) {
+                controller.ignoreNoBaseWordInSet() },
+
+            newMenuItem("Ignore example card candidates", "Ignore warning TooManyExampleCardCandidates in set",
+                buttonIcon("/icons/skip_brkp.png")) {
+                controller.ignoreTooManyExampleCardCandidates() },
 
             SeparatorMenuItem(),
             newMenuItem("Sort & Refresh", buttonIcon("/icons/iu_update_obj.png")) {
