@@ -40,11 +40,12 @@ class MenuController (val controller: LearnWordsController) {
         val editMenu = Menu("_Edit", null,
             newMenuItem("From clipboard", "Parse text from clipboard", buttonIcon("/icons/paste.gif")) {
                 controller.loadFromClipboard() },
+            newMenuItem("To lowercase", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
+                controller.toLowerCaseRow() },
 
             SeparatorMenuItem(),
             newMenuItem("Insert above", buttonIcon("/icons/insertAbove-01.png")) {
                 controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
-                //.also { it.contentDisplay = ContentDisplay.RIGHT },
             newMenuItem("Insert below", buttonIcon("/icons/insertBelow-01.png")) {
                 controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
         )

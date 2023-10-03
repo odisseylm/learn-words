@@ -13,9 +13,6 @@ import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
-import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyCodeCombination
-import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
@@ -176,19 +173,11 @@ class MainWordsPane : BorderPane() {
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
         toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextArea,
             onEditCreate = { cell, editor ->
-                addKeyBinding(editor, listOf(
-                        // TODO: move all key-bindings to separate single palce
-                        KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN),
-                        KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))) {
-                    moveSelectedTextToExamples(cell.tableRow.item, editor)
-                }
+                addKeyBinding(editor, moveSelectedTextToExamplesKeyCombination) {
+                    moveSelectedTextToExamples(cell.tableRow.item, editor) }
 
-                addKeyBinding(editor, listOf(
-                        // TODO: move all key-bindings to separate single palce
-                        KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN),
-                        KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))) {
-                    controller.moveSelectedToSeparateCard(editor, cell.tableRow.item, toColumn)
-                }
+                addKeyBinding(editor, moveSelectedToSeparateCardKeyCombination) {
+                    controller.moveSelectedToSeparateCard(editor, cell.tableRow.item, toColumn) }
             })
 
         // alternative approach
@@ -229,12 +218,8 @@ class MainWordsPane : BorderPane() {
         examplesColumn.cellFactory = Callback { ExTextFieldTableCell<CardWordEntry, String>(
             TextFieldType.TextArea, DefaultStringConverter(),
             onEditCreate = { cell, editor ->
-                addKeyBinding(editor, listOf(
-                    // TODO: move all key-bindings to separate single palce
-                    KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN),
-                    KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))) {
-                    controller.moveSelectedToSeparateCard(editor, cell.tableRow.item!!, examplesColumn)
-                }
+                addKeyBinding(editor, moveSelectedToSeparateCardKeyCombination) {
+                    controller.moveSelectedToSeparateCard(editor, cell.tableRow.item!!, examplesColumn) }
 
                 editor.focusedProperty().addListener { _, _, isFocused ->
                     val textArea = editor as TextArea

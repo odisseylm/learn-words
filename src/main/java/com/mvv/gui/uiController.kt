@@ -336,13 +336,15 @@ class LearnWordsController (
     }
 
     fun toLowerCaseRow() {
-        if (currentWordsList.isEditing) return
-
-        wordCardsToLowerCaseRow(currentWordsSelection.selectedItems)
-        markDocumentIsDirty()
-
-        //currentWordsList.sort()
-        //currentWordsList.refresh()
+        if (!currentWordsList.isEditing) {
+            wordCardsToLowerCaseRow(currentWordsSelection.selectedItems)
+        }
+        else {
+            val focusOwner = pane.scene.focusOwner
+            if (focusOwner is TextInputControl) {
+                toLowerCase(focusOwner)
+            }
+        }
     }
 
     private fun copySelectedWord() = copyWordsToClipboard(currentWordsSelection.selectedItems)

@@ -11,3 +11,11 @@ val saveDocumentKeyCodeCombination = KeyCodeCombination(KeyCode.S, KeyCombinatio
 
 val lowerCaseKeyCombination = KeyCodeCombination(KeyCode.U, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN)
 val translateSelectedKeyCombination = KeyCodeCombination(KeyCode.T, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN)
+
+val moveSelectedTextToExamplesKeyCombination = listOf(
+    KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN),
+    KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))
+
+val moveSelectedToSeparateCardKeyCombination = listOf(
+    KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN),
+    KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))

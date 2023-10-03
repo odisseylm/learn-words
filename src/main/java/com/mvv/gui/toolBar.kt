@@ -11,6 +11,7 @@ import javafx.scene.control.Label
 import javafx.scene.control.ToolBar
 
 
+@Suppress("unused")
 class ToolBarController (val controller: LearnWordsController) {
 
     private val controls: List<Control> = listOf(
@@ -60,6 +61,8 @@ class ToolBarController (val controller: LearnWordsController) {
 class ToolBarControllerBig (val controller: LearnWordsController) {
 
     private val controls: List<Node> = listOf(
+        new24xButton("New", "Create new words set",
+            button24xIcon("/icons/big/new.png")) { controller.newDocument() },
         new24xButton("Open", "Open internal or memo-word csv, or srt file",
             button24xIcon("/icons/big/open-blue-02.png")) { controller.loadWordsFromFile() },
         new24xButton("Save All", "Save current file in internal and memo-word csv format and save ignored words",
