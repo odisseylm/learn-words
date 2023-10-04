@@ -84,4 +84,5 @@ private fun WordCardStatus.shortWarnDescr(): String =
         WordCardStatus.NoTranslation -> "No translation"
         WordCardStatus.TranslationIsNotPrepared -> "Translation is not prepared"
         WordCardStatus.TooManyExampleCardCandidates -> "Too many examples' card candidates."
+        WordCardStatus.Duplicates -> "Duplicates"
     }

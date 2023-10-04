@@ -187,6 +187,8 @@ enum class WordCardStatus (
     TooManyExampleCardCandidates(true, {
         "There are too many examples similar to learning cards for '${it.from}' (${it.exampleNewCardCandidateCount})." +
         " Please convert them to separate cards."}),
+
+    Duplicates(true, { "Duplicate. Please remove duplicates." }),
     ;
 
     val cssClass: String get() = "WordCardStatus-${this.name}"

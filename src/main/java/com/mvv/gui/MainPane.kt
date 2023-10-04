@@ -309,6 +309,14 @@ class MainWordsPane : BorderPane() {
                 cell.graphic = ImageView(iconHighPriority)
             }
 
+            if (Duplicates in card.wordCardStatuses) {
+                toolTips.add(Duplicates.toolTipF(card))
+                cell.styleClass.add(Duplicates.cssClass)
+
+                // Setting icon in CSS does not work. See my other comments regarding it.
+                cell.graphic = ImageView(iconHighPriority)
+            }
+
             val toolTipText = toolTips.joinToString("\n").trimToNull()
             cell.toolTipText = toolTipText
         }

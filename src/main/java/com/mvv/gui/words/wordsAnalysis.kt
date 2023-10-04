@@ -56,12 +56,16 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
     val started = System.currentTimeMillis()
     log.debug("### analyzeWordCards")
 
-    val allWordCardsMap: Map<String, CardWordEntry> = allWordCards.associateBy { it.from.trim().lowercase() }
+    val allWordCardsMap: Map<String, List<CardWordEntry>> = allWordCards.groupBy { it.from.trim().lowercase() }
 
     wordCardsToVerify.forEach { card ->
 
         val from = card.from
         val to = card.to
+
+        val hasDuplicate = (allWordCardsMap[from.trim().lowercase()]?.size ?: 0) >= 2
+        val hasDuplicateStatusUpdateAction = if (hasDuplicate) UpdateSet.Set else UpdateSet.Remove
+        updateSetProperty(card.wordCardStatusesProperty, Duplicates, hasDuplicateStatusUpdateAction)
 
         if (IgnoreExampleCardCandidates !in card.wordCardStatuses) {
             val tooManyExampleCardCandidates = card.exampleNewCardCandidateCount > 5 // TODO: move 5 to settings
