@@ -322,7 +322,7 @@ class LearnWordsController (
 
     private fun recalculateWarnedWordsCount() {
         val warnings = toolBar2.nextPrevWarningWord.selectedWarnings
-        val wordCountWithWarning = currentWords.count { it.hasOneOfWarning(warnings) }
+        val wordCountWithWarning = currentWords.count { it.hasOneOfWarnings(warnings) }
         pane.updateWarnWordCount(wordCountWithWarning)
     }
 

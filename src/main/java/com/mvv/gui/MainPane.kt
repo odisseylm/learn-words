@@ -269,58 +269,7 @@ class MainWordsPane : BorderPane() {
         val statusesIcons = StatusesIcons()
 
         statusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
-            updateWordCardStatusesCell(cell, card, statusesIcons)
-
-            /*
-            cell.styleClass.removeAll(WordCardStatus.allCssClasses)
-            cell.graphic = null
-
-            val toolTips = mutableListOf<String>()
-
-            if (TooManyExampleCardCandidates in card.statuses) {
-                toolTips.add(TooManyExampleCardCandidates.toolTipF(card))
-                cell.styleClass.add(TooManyExampleCardCandidates.cssClass)
-
-                // Setting icon in CSS does not work. See my other comments regarding it.
-                cell.graphic = ImageView(iconTooManyExamples)
-            }
-
-            if (card.showNoBaseWordInSet) {
-                toolTips.add(NoBaseWordInSet.toolTipF(card))
-                cell.styleClass.add(NoBaseWordInSet.cssClass)
-
-                // Setting icon in CSS does not work. See my other comments regarding it.
-                cell.graphic = ImageView(iconLowPriority)
-            }
-
-            if (NoTranslation in card.statuses) {
-                toolTips.add(NoTranslation.toolTipF(card))
-                cell.styleClass.add(NoTranslation.cssClass)
-
-                // Setting icon in CSS does not work. See my other comments regarding it.
-                cell.graphic = ImageView(iconHighPriority)
-            }
-
-            if (TranslationIsNotPrepared in card.statuses) {
-                toolTips.add(TranslationIsNotPrepared.toolTipF(card))
-                cell.styleClass.add(TranslationIsNotPrepared.cssClass)
-
-                // Setting icon in CSS does not work. See my other comments regarding it.
-                cell.graphic = ImageView(iconHighPriority)
-            }
-
-            if (Duplicates in card.statuses) {
-                toolTips.add(Duplicates.toolTipF(card))
-                cell.styleClass.add(Duplicates.cssClass)
-
-                // Setting icon in CSS does not work. See my other comments regarding it.
-                cell.graphic = ImageView(iconHighPriority)
-            }
-
-            val toolTipText = toolTips.joinToString("\n").trimToNull()
-            cell.toolTipText = toolTipText
-            */
-        }
+            updateWordCardStatusesCell(cell, card, statusesIcons) }
 
         // Impossible to move it to CSS ?!
         numberColumn.prefWidth = 40.0
@@ -431,21 +380,6 @@ private fun updateWordCardStatusesCell(cell: TableCell<CardWordEntry, Set<WordCa
     WordCardStatus.values()
         .filter { status -> status.isWarning && status in card.statuses }
         .forEach { updateCell(it) }
-
-    /*
-    // !!! Do NOT use 'when' there !!!
-    // they are located in order fro low to high priority
-    if (TooManyExampleCardCandidates in card.statuses)
-        updateCell(TooManyExampleCardCandidates, icons.iconTooManyExamples)
-    if (card.showNoBaseWordInSet)
-        updateCell(NoBaseWordInSet, icons.showNoBaseWordInSetIcon)
-    if (NoTranslation in card.statuses)
-        updateCell(NoTranslation, icons.noTranslationIcon)
-    if (TranslationIsNotPrepared in card.statuses)
-        updateCell(TranslationIsNotPrepared, icons.translationIsNotPrepared)
-    if (Duplicates in card.statuses)
-        updateCell(Duplicates, icons.duplicatesIcons)
-    */
 
     val toolTipText = toolTips.joinToString("\n").trimToNull()
     cell.toolTipText = toolTipText

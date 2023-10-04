@@ -31,21 +31,21 @@ class CardWordEntry {
     val sourceSentencesProperty = SimpleStringProperty(this, "sourceSentences", "")
 
     var from: String
-        get() = fromProperty.get()
+        get()      = fromProperty.get()
         set(value) = fromProperty.set(value)
     var fromWithPreposition: String
-        get() = fromWithPrepositionProperty.get()
+        get()      = fromWithPrepositionProperty.get()
         set(value) = fromWithPrepositionProperty.set(value)
     val fromWordCount: Int
         get() = fromWordCountProperty.value
     var to: String
-        get() = toProperty.get()
+        get()      = toProperty.get()
         set(value) = toProperty.set(value)
     var transcription: String
-        get() = transcriptionProperty.get()
+        get()      = transcriptionProperty.get()
         set(value) = transcriptionProperty.set(value)
     var examples: String
-        get() = examplesProperty.get()
+        get()      = examplesProperty.get()
         set(value) = examplesProperty.set(value)
     //val exampleCount: Int get() = exampleCountProperty.value
     val exampleNewCardCandidateCount: Int get() = exampleNewCardCandidateCountProperty.value
@@ -54,19 +54,19 @@ class CardWordEntry {
         get() = translationCountProperty.value
 
     var statuses: Set<WordCardStatus>
-        get() = statusesProperty.get()
+        get()      = statusesProperty.get()
         set(value) = statusesProperty.set(value)
 
     var predefinedSets: Set<PredefinedSet>
-        get() = predefinedSetsProperty.get()
+        get()      = predefinedSetsProperty.get()
         set(value) = predefinedSetsProperty.set(value)
 
     var sourcePositions: List<Int>
-        get() = sourcePositionsProperty.get()
+        get()      = sourcePositionsProperty.get()
         set(value) = sourcePositionsProperty.set(value)
 
     var sourceSentences: String
-        get() = sourceSentencesProperty.get()
+        get()      = sourceSentencesProperty.get()
         set(value) = sourceSentencesProperty.set(value)
 
     // for showing in tooltip. It is filled during word cards analysis.
@@ -74,10 +74,8 @@ class CardWordEntry {
     var missedBaseWords: List<String> = emptyList()
 
     constructor(from: String, to: String) {
-        //toProperty.addListener { _, _, newValue -> translationCount = newValue?.translationCount ?: 0 }
-
         this.from = from
-        this.to = to
+        this.to   = to
     }
 
     override fun toString(): String =
@@ -86,10 +84,10 @@ class CardWordEntry {
 
     fun copy(): CardWordEntry = CardWordEntry(this.from, this.to).also {
         it.fromWithPreposition = this.fromWithPreposition
-        it.transcription = this.transcription
-        it.examples = this.examples
-        it.statuses = this.statuses
-        it.predefinedSets = this.predefinedSets
+        it.transcription   = this.transcription
+        it.examples        = this.examples
+        it.statuses        = this.statuses
+        it.predefinedSets  = this.predefinedSets
         it.sourcePositions = this.sourcePositions
         it.sourceSentences = this.sourceSentences
         it.missedBaseWords = this.missedBaseWords
