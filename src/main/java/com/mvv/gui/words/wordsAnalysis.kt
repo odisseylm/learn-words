@@ -17,12 +17,12 @@ private val log = mu.KotlinLogging.logger {}
 
 
 // TODO: try to remove them, since now NoBaseWordInSet and BaseWordDoesNotExist are (lazy) exclusive
-//val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(NoBaseWordInSet)
-//val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(BaseWordDoesNotExist)
+//val CardWordEntry.noBaseWordInSet: Boolean get() = this.statuses.contains(NoBaseWordInSet)
+//val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.statuses.contains(BaseWordDoesNotExist)
 //val CardWordEntry.showNoBaseWordInSet: Boolean get() = !this.ignoreNoBaseWordInSet && this.noBaseWordInSet
 
-//fun CardWordEntry.hasWarning(wordCardStatus: WordCardStatus): Boolean = this.wordCardStatuses.contains(wordCardStatus)
-fun CardWordEntry.hasOneOfWarning(wordCardStatuses: Iterable<WordCardStatus>): Boolean = this.wordCardStatuses.containsOneOf(wordCardStatuses)
+//fun CardWordEntry.hasWarning(wordCardStatus: WordCardStatus): Boolean = this.statuses.contains(wordCardStatus)
+fun CardWordEntry.hasOneOfWarning(statuses: Iterable<WordCardStatus>): Boolean = this.statuses.containsOneOf(statuses)
 
 // These parts are usually present after getting translation from dictionary
 // but them are useless (even boring/garbage) during learning,
@@ -68,15 +68,16 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
     wordCardsToVerify.forEach { card ->
 
         val from = card.from
+        val fromLowerTrimmed = from.trim().lowercase()
         val to = card.to
 
-        val statusesProperty = card.wordCardStatusesProperty
-        val wordCardStatuses = card.wordCardStatuses
+        val statusesProperty = card.statusesProperty
+        val statuses = card.statuses
 
-        val hasDuplicate = (allWordCardsMap[from.trim().lowercase()]?.size ?: 0) >= 2
+        val hasDuplicate = (allWordCardsMap[fromLowerTrimmed]?.size ?: 0) >= 2
         statusesProperty.update(Duplicates, hasDuplicate)
 
-        if (IgnoreExampleCardCandidates in wordCardStatuses)
+        if (IgnoreExampleCardCandidates in statuses)
             statusesProperty.remove(TooManyExampleNewCardCandidates)
         else {
             val tooManyExampleCardCandidates = card.exampleNewCardCandidateCount > 5 // TODO: move 5 to settings
@@ -86,23 +87,22 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         val noTranslation = from.isNotBlank() && to.isBlank()
         statusesProperty.update(NoTranslation, noTranslation)
 
-        val fromIsNotPrepared = from.isBlank() || from.containsOneOf(unneededPartsForLearning)
-                || !from.all { it.isEnglishLetter() || it in " -'." }
+        val fromIsNotPrepared = from.isBlank()
+                || from.containsOneOf(unneededPartsForLearning)
+                || from.any { ! (it in " -'." || it.isEnglishLetter()) }
         val toIsNotPrepared   = to.isBlank()   || to.containsOneOf(unneededPartsForLearning)
         statusesProperty.update(TranslationIsNotPrepared, fromIsNotPrepared || toIsNotPrepared)
 
 
-        val englishWord = from.trim().lowercase()
-
-        if (BaseWordDoesNotExist in wordCardStatuses || card.fromWordCount != 1)
+        if (BaseWordDoesNotExist in statuses || card.fromWordCount != 1)
             statusesProperty.remove(NoBaseWordInSet)
         else {
 
-            val baseWordCards = englishBaseWords(englishWord, dictionary)
+            val baseWordCards = englishBaseWords(fromLowerTrimmed, dictionary)
             val baseWords = baseWordCards.map { it.from }
 
             val cardsSetContainsOneOfBaseWords = allWordCardsMap.containsOneOfKeys(baseWords)
-            val cardsSetContainsAllBaseWords = allWordCardsMap.containsAllKeys(baseWords)
+            val cardsSetContainsAllBaseWords   = allWordCardsMap.containsAllKeys(baseWords)
 
             val showWarningAboutMissedBaseWord = when (warnAboutMissedBaseWordsMode) {
                 NotWarnWhenSomeBaseWordsPresent -> baseWords.isNotEmpty() && !cardsSetContainsOneOfBaseWords
@@ -113,7 +113,7 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
             card.missedBaseWords = missedBaseWords
 
             log.debug("analyzeWordCards => '{}', cardsSetContainsOneOfBaseWords: {}, cardsSetContainsAllBaseWords: {}, baseWords: {}",
-                englishWord, cardsSetContainsOneOfBaseWords, cardsSetContainsAllBaseWords, baseWords)
+                from, cardsSetContainsOneOfBaseWords, cardsSetContainsAllBaseWords, baseWords)
 
             statusesProperty.update(NoBaseWordInSet, showWarningAboutMissedBaseWord)
         }

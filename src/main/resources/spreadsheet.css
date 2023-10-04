@@ -103,7 +103,7 @@
     -fx-padding: 0 0 0 5;
 }
 
-#currentWords .wordCardStatusesColumn .label {
+#currentWords .statusesColumn .label {
     -fx-alignment: center;
     -fx-padding: 0 15 0 15;
 }

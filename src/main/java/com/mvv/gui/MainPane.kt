@@ -41,7 +41,7 @@ class MainWordsPane : BorderPane() {
     private  val numberColumn           = TableColumn<CardWordEntry, Int>("No.")
     internal val fromColumn             = TableColumn<CardWordEntry, String>("English")
     private  val fromWordCountColumn    = TableColumn<CardWordEntry, Int>() // "N")
-    private  val wordCardStatusesColumn = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
+    private  val statusesColumn         = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
     internal val toColumn               = TableColumn<CardWordEntry, String>("Russian")
     private  val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
     internal val transcriptionColumn    = TableColumn<CardWordEntry, String>("Transcription")
@@ -254,21 +254,21 @@ class MainWordsPane : BorderPane() {
         //
         // val iconView = ImageView(icon)
 
-        wordCardStatusesColumn.id = "wordCardStatusesColumn"
-        wordCardStatusesColumn.isEditable = false
-        wordCardStatusesColumn.cellValueFactory = Callback { p ->
+        statusesColumn.id = "statusesColumn"
+        statusesColumn.isEditable = false
+        statusesColumn.cellValueFactory = Callback { p ->
             // We use this trick with examplesProperty to recalculate/refresh tooltip
-            // and show updated examples count in tooltip (even if wordCardStatuses are not changed)
+            // and show updated examples count in tooltip (even if statuses are not changed)
             // !! I'm sure that it is bug in JavaFX design that we need to set tooltip instead of generating it by request !!
             p.value.examplesProperty
-                .flatMap { p.value.wordCardStatusesProperty } }
+                .flatMap { p.value.statusesProperty } }
 
-        wordCardStatusesColumn.graphic = Label("S").also { it.tooltip = Tooltip("Status") }
-        wordCardStatusesColumn.styleClass.add("wordCardStatusesColumn")
+        statusesColumn.graphic = Label("S").also { it.tooltip = Tooltip("Status") }
+        statusesColumn.styleClass.add("statusesColumn")
 
         val statusesIcons = StatusesIcons()
 
-        wordCardStatusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
+        statusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
             updateWordCardStatusesCell(cell, card, statusesIcons)
 
             /*
@@ -277,7 +277,7 @@ class MainWordsPane : BorderPane() {
 
             val toolTips = mutableListOf<String>()
 
-            if (TooManyExampleCardCandidates in card.wordCardStatuses) {
+            if (TooManyExampleCardCandidates in card.statuses) {
                 toolTips.add(TooManyExampleCardCandidates.toolTipF(card))
                 cell.styleClass.add(TooManyExampleCardCandidates.cssClass)
 
@@ -293,7 +293,7 @@ class MainWordsPane : BorderPane() {
                 cell.graphic = ImageView(iconLowPriority)
             }
 
-            if (NoTranslation in card.wordCardStatuses) {
+            if (NoTranslation in card.statuses) {
                 toolTips.add(NoTranslation.toolTipF(card))
                 cell.styleClass.add(NoTranslation.cssClass)
 
@@ -301,7 +301,7 @@ class MainWordsPane : BorderPane() {
                 cell.graphic = ImageView(iconHighPriority)
             }
 
-            if (TranslationIsNotPrepared in card.wordCardStatuses) {
+            if (TranslationIsNotPrepared in card.statuses) {
                 toolTips.add(TranslationIsNotPrepared.toolTipF(card))
                 cell.styleClass.add(TranslationIsNotPrepared.cssClass)
 
@@ -309,7 +309,7 @@ class MainWordsPane : BorderPane() {
                 cell.graphic = ImageView(iconHighPriority)
             }
 
-            if (Duplicates in card.wordCardStatuses) {
+            if (Duplicates in card.statuses) {
                 toolTips.add(Duplicates.toolTipF(card))
                 cell.styleClass.add(Duplicates.cssClass)
 
@@ -326,7 +326,7 @@ class MainWordsPane : BorderPane() {
         numberColumn.prefWidth = 40.0
         fromColumn.prefWidth = 200.0
         fromWordCountColumn.prefWidth = 30.0
-        wordCardStatusesColumn.prefWidth = 50.0
+        statusesColumn.prefWidth = 50.0
         toColumn.prefWidth = 550.0
         translationCountColumn.prefWidth = 50.0
         transcriptionColumn.prefWidth = 120.0
@@ -340,7 +340,7 @@ class MainWordsPane : BorderPane() {
         currentWordsList.columns.setAll(
             numberColumn,
             fromColumn, fromWordCountColumn,
-            wordCardStatusesColumn,
+            statusesColumn,
             transcriptionColumn,
             translationCountColumn, toColumn,
             exampleCountColumn, examplesColumn,
@@ -429,21 +429,21 @@ private fun updateWordCardStatusesCell(cell: TableCell<CardWordEntry, Set<WordCa
     }
 
     WordCardStatus.values()
-        .filter { status -> status.isWarning && status in card.wordCardStatuses }
+        .filter { status -> status.isWarning && status in card.statuses }
         .forEach { updateCell(it) }
 
     /*
     // !!! Do NOT use 'when' there !!!
     // they are located in order fro low to high priority
-    if (TooManyExampleCardCandidates in card.wordCardStatuses)
+    if (TooManyExampleCardCandidates in card.statuses)
         updateCell(TooManyExampleCardCandidates, icons.iconTooManyExamples)
     if (card.showNoBaseWordInSet)
         updateCell(NoBaseWordInSet, icons.showNoBaseWordInSetIcon)
-    if (NoTranslation in card.wordCardStatuses)
+    if (NoTranslation in card.statuses)
         updateCell(NoTranslation, icons.noTranslationIcon)
-    if (TranslationIsNotPrepared in card.wordCardStatuses)
+    if (TranslationIsNotPrepared in card.statuses)
         updateCell(TranslationIsNotPrepared, icons.translationIsNotPrepared)
-    if (Duplicates in card.wordCardStatuses)
+    if (Duplicates in card.statuses)
         updateCell(Duplicates, icons.duplicatesIcons)
     */
 

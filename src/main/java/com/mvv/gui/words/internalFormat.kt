@@ -57,14 +57,14 @@ fun loadWordCardsFromInternalCsv(file: Path): List<CardWordEntry> =
             internalFormatCsvReader(fileReader)
                 .filter { it.isNotEmpty() && it[0].isNotBlank() }
                 .map {
-                    // Fields order: from, to, transcription, examples, wordCardStatuses
+                    // Fields order: from, to, transcription, examples, statuses
                     val card = CardWordEntry("", "")
                     var index = 0
                     card.from = it[index++]
                     card.to = it.getOrEmpty(index++)
                     card.transcription = it.getOrEmpty(index++)
                     card.examples = it.getOrEmpty(index++)
-                    card.wordCardStatuses = stringToEnums(it.getOrEmpty(index++))
+                    card.statuses = stringToEnums(it.getOrEmpty(index++))
                     card.fromWithPreposition = it.getOrEmpty(index++)
                     card.predefinedSets = stringToEnums(it.getOrEmpty(index++))
                     card.sourcePositions = stringToInts(it.getOrEmpty(index++))
@@ -88,7 +88,7 @@ fun saveWordCardsIntoInternalCsv(file: Path, words: Iterable<CardWordEntry>) {
                     card.to,
                     card.transcription,
                     card.examples,
-                    card.wordCardStatuses.joinToString(",") { it.name },
+                    card.statuses.joinToString(",") { it.name },
                     card.fromWithPreposition,
                     card.predefinedSets.joinToString(",") { it.name },
                     card.sourcePositions.joinToString(",") { it.toString() },

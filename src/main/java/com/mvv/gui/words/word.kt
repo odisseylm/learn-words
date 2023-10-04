@@ -25,8 +25,8 @@ class CardWordEntry {
     val exampleCountProperty = examplesProperty.mapCached { it.examplesCount }
     val exampleNewCardCandidateCountProperty = examplesProperty.mapCached { it.exampleNewCardCandidateCount }
 
-    val wordCardStatusesProperty = SimpleObjectProperty<Set<WordCardStatus>>(this, "wordCardStatuses", emptySet())
-    val predefinedSetsProperty = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())
+    val statusesProperty        = SimpleObjectProperty<Set<WordCardStatus>>(this, "statuses", emptySet())
+    val predefinedSetsProperty  = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())
     val sourcePositionsProperty = SimpleObjectProperty<List<Int>>(this, "sourcePositions", emptyList())
     val sourceSentencesProperty = SimpleStringProperty(this, "sourceSentences", "")
 
@@ -53,9 +53,9 @@ class CardWordEntry {
     val translationCount: Int
         get() = translationCountProperty.value
 
-    var wordCardStatuses: Set<WordCardStatus>
-        get() = wordCardStatusesProperty.get()
-        set(value) = wordCardStatusesProperty.set(value)
+    var statuses: Set<WordCardStatus>
+        get() = statusesProperty.get()
+        set(value) = statusesProperty.set(value)
 
     var predefinedSets: Set<PredefinedSet>
         get() = predefinedSetsProperty.get()
@@ -81,14 +81,14 @@ class CardWordEntry {
     }
 
     override fun toString(): String =
-        "CardWordEntry(from='$from', to='${to.take(20)}...', wordCardStatuses=$wordCardStatuses," +
+        "CardWordEntry(from='$from', to='${to.take(20)}...', statuses=$statuses," +
                 " translationCount=$translationCount, transcription='$transcription', examples='${examples.take(10)}...')"
 
     fun copy(): CardWordEntry = CardWordEntry(this.from, this.to).also {
         it.fromWithPreposition = this.fromWithPreposition
         it.transcription = this.transcription
         it.examples = this.examples
-        it.wordCardStatuses = this.wordCardStatuses
+        it.statuses = this.statuses
         it.predefinedSets = this.predefinedSets
         it.sourcePositions = this.sourcePositions
         it.sourceSentences = this.sourceSentences

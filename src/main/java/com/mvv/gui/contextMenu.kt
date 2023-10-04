@@ -98,7 +98,7 @@ class ContextMenuController (val controller: LearnWordsController) {
         updateTranslateMenuItem(translateMenuItem)
 
         ignoreTooManyExampleCardCandidatesMenuItem.isVisible = selectedCards.any {
-            TooManyExampleNewCardCandidates in it.wordCardStatuses }
+            TooManyExampleNewCardCandidates in it.statuses }
 
         contextMenu.hideRepeatedMenuSeparators()
     }

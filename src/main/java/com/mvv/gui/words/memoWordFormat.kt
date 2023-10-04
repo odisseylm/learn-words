@@ -46,7 +46,7 @@ fun loadWordCardsFromMemoWordCsv(file: Path): List<CardWordEntry> =
             memoWordCsvReader(fileReader)
                 .filter { it.size >= 2 && it[0].isNotBlank() }
                 .map {
-                    // Fields order: russian/to, english/from, transcription, examples, wordCardStatuses
+                    // Fields order: russian/to, english/from, transcription, examples, statuses
                     val card = CardWordEntry("", "")
                     var index = 0
                     card.to = it.getOrEmpty(index++)

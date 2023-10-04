@@ -19,7 +19,7 @@ class WordsAnalysisTest {
             listOf(card), EmptyDictionary()
         )
 
-        assertThat(card.wordCardStatuses).isEmpty()
+        assertThat(card.statuses).isEmpty()
     }
 
 

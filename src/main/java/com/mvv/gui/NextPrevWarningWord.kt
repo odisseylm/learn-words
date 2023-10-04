@@ -45,7 +45,7 @@ class NextPrevWarningWord (private val currentWords: TableView<CardWordEntry>) {
             .asSequence()
             .dropWhile { it !== startFrom }
             .drop(1)
-            .find { card -> card.wordCardStatuses.any { it in warningsToFind } } // compare by priority
+            .find { card -> card.statuses.any { it in warningsToFind } } // compare by priority
             ?.also { currentWords.selectItem(it) }
     }
 

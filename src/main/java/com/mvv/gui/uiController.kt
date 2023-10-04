@@ -268,15 +268,15 @@ class LearnWordsController (
     }
 
     fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =
-        currentWordsSelection.selectedItems.any { NoBaseWordInSet in it.wordCardStatuses }
+        currentWordsSelection.selectedItems.any { NoBaseWordInSet in it.statuses }
 
     fun ignoreNoBaseWordInSet() =
         currentWordsSelection.selectedItems.forEach {
-                    updateSetProperty(it.wordCardStatusesProperty, WordCardStatus.BaseWordDoesNotExist, UpdateSet.Set) }
+                    updateSetProperty(it.statusesProperty, WordCardStatus.BaseWordDoesNotExist, UpdateSet.Set) }
 
     fun ignoreTooManyExampleCardCandidates() =
         currentWordsSelection.selectedItems.forEach {
-            updateSetProperty(it.wordCardStatusesProperty, WordCardStatus.IgnoreExampleCardCandidates, UpdateSet.Set) }
+            updateSetProperty(it.statusesProperty, WordCardStatus.IgnoreExampleCardCandidates, UpdateSet.Set) }
 
     fun addAllBaseWordsInSet() = addAllBaseWordsInSetImpl(currentWords)
     fun addBaseWordsInSetForSelected() = addAllBaseWordsInSetImpl(currentWordsSelection.selectedItems)
@@ -524,7 +524,7 @@ class LearnWordsController (
         card.toProperty.addListener(changeCardListener)
         card.transcriptionProperty.addListener(changeCardListener)
         card.examplesProperty.addListener(changeCardListener)
-        card.wordCardStatusesProperty.addListener(changeCardListener)
+        card.statusesProperty.addListener(changeCardListener)
         card.predefinedSetsProperty.addListener(changeCardListener)
         card.sourcePositionsProperty.addListener(changeCardListener)
         card.sourceSentencesProperty.addListener(changeCardListener)

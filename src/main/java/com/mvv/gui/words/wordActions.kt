@@ -31,7 +31,7 @@ internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
 
     val withoutBaseWord = wordCardsToProcess
         .asSequence()
-        .filter { NoBaseWordInSet in it.wordCardStatuses }
+        .filter { NoBaseWordInSet in it.statuses }
         .toSortedSet(cardWordEntryComparator)
 
     val baseWordsToAddMap: Map<CardWordEntry, List<CardWordEntry>> = withoutBaseWord
@@ -167,7 +167,7 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
     card.fromWithPreposition = cards.merge("\n") { it.fromWithPreposition }
     card.transcription    = cards.merge(" ")  { it.transcription }
     card.examples         = cards.merge("\n") { it.examples }
-    card.wordCardStatuses = cards.mergeSet    { it.wordCardStatuses }
+    card.statuses         = cards.mergeSet    { it.statuses }
     card.predefinedSets   = cards.mergeSet    { it.predefinedSets }
     card.sourcePositions  = cards.mergeList   { it.sourcePositions }
     card.sourceSentences  = cards.merge("\n") { it.sourceSentences }

@@ -49,7 +49,7 @@ class WordActionsTest {
             assertions.assertThat(it.transcription).isEqualTo("")
             assertions.assertThat(it.examples).isEqualTo("")
             assertions.assertThat(it.translationCount).isEqualTo(0)
-            assertions.assertThat(it.wordCardStatuses).isEmpty()
+            assertions.assertThat(it.statuses).isEmpty()
             assertions.assertThat(it.predefinedSets).isEmpty()
             assertions.assertThat(it.missedBaseWords).isEmpty()
 
@@ -149,7 +149,7 @@ class WordActionsTest {
             //assertions.assertThat(it.transcription).isEqualTo("")
             //assertions.assertThat(it.examples).isEqualTo("")
             //assertions.assertThat(it.translationCount).isEqualTo(0)
-            //assertions.assertThat(it.wordCardStatuses).isEmpty()
+            //assertions.assertThat(it.statuses).isEmpty()
             //assertions.assertThat(it.predefinedSets).isEmpty()
             //assertions.assertThat(it.missedBaseWords).isEmpty()
         }
