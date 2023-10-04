@@ -91,6 +91,14 @@
     /*-fx-graphic: url("icons/exclamation-1.png");*/
 }
 
+#currentWords  .table-row-cell .WordCardStatus-Duplicates {
+    -fx-alignment: center;
+    /*-fx-background-color: #ffdcc0;*/
+
+    /* Does not work properly! JavaFX bug */
+    /*-fx-graphic: url("icons/exclamation-1.png");*/
+}
+
 #currentWords .column-header > .label {
     -fx-padding: 0 0 0 5;
 }

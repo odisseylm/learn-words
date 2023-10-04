@@ -248,10 +248,6 @@ class MainWordsPane : BorderPane() {
         sourceSentencesColumn.styleClass.add("sourceSentencesColumn")
 
 
-        val iconLowPriority = Image("icons/exclamation-1.png")
-        val iconHighPriority = Image("icons/exclamation-4.png")
-        val iconTooManyExamples = Image("icons/receiptstext-warn.png")
-
         // Seems it is not allowed to share ImageView instance (between different cells rendering)
         // It causes disappearing/erasing icons in table view during scrolling
         // Most probably it is a bug or probably feature :-) */
@@ -270,8 +266,12 @@ class MainWordsPane : BorderPane() {
         wordCardStatusesColumn.graphic = Label("S").also { it.tooltip = Tooltip("Status") }
         wordCardStatusesColumn.styleClass.add("wordCardStatusesColumn")
 
-        wordCardStatusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
+        val statusesIcons = StatusesIcons()
 
+        wordCardStatusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
+            updateWordCardStatusesCell(cell, card, statusesIcons)
+
+            /*
             cell.styleClass.removeAll(WordCardStatus.allCssClasses)
             cell.graphic = null
 
@@ -319,6 +319,7 @@ class MainWordsPane : BorderPane() {
 
             val toolTipText = toolTips.joinToString("\n").trimToNull()
             cell.toolTipText = toolTipText
+            */
         }
 
         // Impossible to move it to CSS ?!
@@ -410,3 +411,70 @@ internal class ExampleCountEntry (private val exampleCount: Int, private val new
         else -> "$exampleCount ($newCardCandidateCount)"
     }
 }
+
+
+private fun updateWordCardStatusesCell(cell: TableCell<CardWordEntry, Set<WordCardStatus>>, card: CardWordEntry, icons: StatusesIcons) {
+
+    cell.styleClass.removeAll(WordCardStatus.allCssClasses)
+    cell.graphic = null
+
+    val toolTips = mutableListOf<String>()
+
+    fun updateCell(status: WordCardStatus) {
+        toolTips.add(status.toolTipF(card))
+        cell.styleClass.add(status.cssClass)
+
+        // Setting icon in CSS does not work. See my other comments regarding it.
+        cell.graphic = ImageView(icons.iconFor(status))
+    }
+
+    WordCardStatus.values()
+        .filter { status -> status.isWarning && status in card.wordCardStatuses }
+        .forEach { updateCell(it) }
+
+    /*
+    // !!! Do NOT use 'when' there !!!
+    // they are located in order fro low to high priority
+    if (TooManyExampleCardCandidates in card.wordCardStatuses)
+        updateCell(TooManyExampleCardCandidates, icons.iconTooManyExamples)
+    if (card.showNoBaseWordInSet)
+        updateCell(NoBaseWordInSet, icons.showNoBaseWordInSetIcon)
+    if (NoTranslation in card.wordCardStatuses)
+        updateCell(NoTranslation, icons.noTranslationIcon)
+    if (TranslationIsNotPrepared in card.wordCardStatuses)
+        updateCell(TranslationIsNotPrepared, icons.translationIsNotPrepared)
+    if (Duplicates in card.wordCardStatuses)
+        updateCell(Duplicates, icons.duplicatesIcons)
+    */
+
+    val toolTipText = toolTips.joinToString("\n").trimToNull()
+    cell.toolTipText = toolTipText
+}
+
+
+// Creating icons moved out of function updateWordCardStatusesCell()
+// to avoid loading them every time
+private class StatusesIcons {
+    // Or we can use EnumMap, BUT with !MANDATORY! tests.
+    fun iconFor(status: WordCardStatus): Image = when (status) {
+        NoBaseWordInSet                 -> noBaseWordInSetIcon
+        TooManyExampleNewCardCandidates -> tooManyExampleNewCardCandidatesIcon
+        TranslationIsNotPrepared        -> translationIsNotPrepared
+        Duplicates                      -> duplicatesIcons
+        NoTranslation                   -> noTranslationIcon
+
+        BaseWordDoesNotExist            -> throw IllegalArgumentException("It is not warning and nothing to show.")
+        IgnoreExampleCardCandidates     -> throw IllegalArgumentException("It is not warning and nothing to show.")
+    }
+
+    val iconLowPriority  = Image("icons/exclamation-1.png")
+    val iconHighPriority = Image("icons/exclamation-4.png")
+
+    // T O D O: would be nice to create individual icon for every warning
+    val noBaseWordInSetIcon      = iconLowPriority
+    val tooManyExampleNewCardCandidatesIcon = Image("icons/receiptstext-warn.png")
+    val noTranslationIcon        = iconHighPriority
+    val translationIsNotPrepared = iconHighPriority
+    val duplicatesIcons          = iconHighPriority
+}
+

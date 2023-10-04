@@ -3,6 +3,7 @@ package com.mvv.gui.words
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.extractExamples
 import com.mvv.gui.util.trimToNull
+import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
 import javafx.collections.ObservableList
 import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
@@ -30,7 +31,7 @@ internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
 
     val withoutBaseWord = wordCardsToProcess
         .asSequence()
-        .filter { !it.ignoreNoBaseWordInSet && it.noBaseWordInSet }
+        .filter { NoBaseWordInSet in it.wordCardStatuses }
         .toSortedSet(cardWordEntryComparator)
 
     val baseWordsToAddMap: Map<CardWordEntry, List<CardWordEntry>> = withoutBaseWord
@@ -81,9 +82,10 @@ internal fun Dictionary.translateWord(word: String): CardWordEntry =
 
 internal fun Dictionary.translateWord(card: CardWordEntry) {
     val translation = this.find(card.from.trim())
-    card.to = translation.translations.joinToString("\n")
+
+    card.to            = translation.translations.joinToString("\n")
     card.transcription = translation.transcription ?: ""
-    card.examples = extractExamples(translation)
+    card.examples      = extractExamples(translation)
 }
 
 
@@ -112,15 +114,10 @@ internal fun wordCardsToLowerCaseRow(wordCards: Iterable<CardWordEntry>) {
 
     it.forEach {
         it.from = it.from.lowercase()
-        it.to = it.to.lowercase()
+        it.to   = it.to.lowercase()
     }
-    //currentWordsList.sort()
-    //currentWordsList.refresh()
 }
 
-
-internal val Iterable<CardWordEntry>.isOneOfSelectedWordsHasNoBaseWord: Boolean get() =
-    this.any { !it.ignoreNoBaseWordInSet && it.noBaseWordInSet }
 
 
 @Suppress("unused")
@@ -139,7 +136,7 @@ internal fun extractWordsFromText_New(content: CharSequence, sentenceEndRule: Se
         .asSequence()
         .flatMap { extractNeededWords(it) }
         .flatMap { it.toCardWordEntries() }
-        .filter { !ignoredWords.contains(it.from) }
+        .filter  { !ignoredWords.contains(it.from) }
         .toList()
 
 
@@ -168,13 +165,13 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
     )
 
     card.fromWithPreposition = cards.merge("\n") { it.fromWithPreposition }
-    card.transcription = cards.merge(" ") { it.transcription }
-    card.examples = cards.merge("\n") { it.examples }
-    card.wordCardStatuses = cards.mergeSet { it.wordCardStatuses }
-    card.predefinedSets   = cards.mergeSet { it.predefinedSets }
-    card.sourcePositions = cards.mergeList { it.sourcePositions }
-    card.sourceSentences = cards.merge("\n") { it.sourceSentences }
-    card.missedBaseWords = cards.mergeList { it.missedBaseWords }
+    card.transcription    = cards.merge(" ")  { it.transcription }
+    card.examples         = cards.merge("\n") { it.examples }
+    card.wordCardStatuses = cards.mergeSet    { it.wordCardStatuses }
+    card.predefinedSets   = cards.mergeSet    { it.predefinedSets }
+    card.sourcePositions  = cards.mergeList   { it.sourcePositions }
+    card.sourceSentences  = cards.merge("\n") { it.sourceSentences }
+    card.missedBaseWords  = cards.mergeList   { it.missedBaseWords }
 
     return card
 }

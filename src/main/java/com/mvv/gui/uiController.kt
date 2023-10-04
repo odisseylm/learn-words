@@ -8,6 +8,7 @@ import com.mvv.gui.dictionary.DictionaryComposition
 import com.mvv.gui.javafx.*
 import com.mvv.gui.util.*
 import com.mvv.gui.words.*
+import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
 import javafx.application.Platform
 import javafx.beans.property.ReadOnlyProperty
 import javafx.beans.property.StringPropertyBase
@@ -267,7 +268,7 @@ class LearnWordsController (
     }
 
     fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =
-        currentWordsSelection.selectedItems.isOneOfSelectedWordsHasNoBaseWord
+        currentWordsSelection.selectedItems.any { NoBaseWordInSet in it.wordCardStatuses }
 
     fun ignoreNoBaseWordInSet() =
         currentWordsSelection.selectedItems.forEach {

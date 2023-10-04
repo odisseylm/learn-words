@@ -160,6 +160,8 @@ enum class WordCardStatus (
     val toolTipF: (CardWordEntry)->String,
     ) {
 
+    // *************************** Low priority warnings ***************************************************************
+    //
     /**
      * If current word has ending/suffix 'ed', 'ing', 'es', 's' does not have
      * but the whole set does not have base word without such ending/suffix.
@@ -170,25 +172,30 @@ enum class WordCardStatus (
         "Words set does not have base word(s) '${it.missedBaseWords.joinToString("|")}'.\n" +
         "It is advised to add these base word(s) to the set." }),
 
+    // T O D O: do not save warnings to file since they are recalculated, only save 'ignore' flags
+    TooManyExampleNewCardCandidates(true, {
+        "There are too many examples similar to learning cards for '${it.from}' (${it.exampleNewCardCandidateCount})." +
+                " Please convert them to separate cards."}),
+
+
+    // *************************** High priority warnings **************************************************************
+    //
+    TranslationIsNotPrepared(true, {"The translation for '${it.from}' is not prepared for learning. " +
+            "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on)."}),
+
+    Duplicates(true, { "Duplicate. Please remove duplicates." }),
+
+    NoTranslation(true, {"No translation for '${it.from}'."}),
+
+
+    // *************************** Ignore flags ************************************************************************
+    //
     /**
      * Marker to stop validation on NoBaseWordInSet.
      */
     BaseWordDoesNotExist(false, {""}),
 
     IgnoreExampleCardCandidates(false, {""}),
-
-    NoTranslation(true, {"No translation for '${it.from}'."}),
-
-    TranslationIsNotPrepared(true, {"The translation for '${it.from}' is not prepared for learning. " +
-            "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on)."}),
-
-    // TODO: do not save warnings to file since they are recalculated, only save 'ignore' flags
-    // TODO: rename to TooManyExampleNewCardCandidates
-    TooManyExampleCardCandidates(true, {
-        "There are too many examples similar to learning cards for '${it.from}' (${it.exampleNewCardCandidateCount})." +
-        " Please convert them to separate cards."}),
-
-    Duplicates(true, { "Duplicate. Please remove duplicates." }),
     ;
 
     val cssClass: String get() = "WordCardStatus-${this.name}"

@@ -10,15 +10,16 @@ import com.mvv.gui.util.isEnglishLetter
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WarnWhenSomeBaseWordsMissed
 import com.mvv.gui.words.WordCardStatus.*
+import javafx.beans.value.WritableObjectValue
 
 
 private val log = mu.KotlinLogging.logger {}
 
 
 // TODO: try to remove them, since now NoBaseWordInSet and BaseWordDoesNotExist are (lazy) exclusive
-val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(NoBaseWordInSet)
-val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(BaseWordDoesNotExist)
-val CardWordEntry.showNoBaseWordInSet: Boolean get() = !this.ignoreNoBaseWordInSet && this.noBaseWordInSet
+//val CardWordEntry.noBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(NoBaseWordInSet)
+//val CardWordEntry.ignoreNoBaseWordInSet: Boolean get() = this.wordCardStatuses.contains(BaseWordDoesNotExist)
+//val CardWordEntry.showNoBaseWordInSet: Boolean get() = !this.ignoreNoBaseWordInSet && this.noBaseWordInSet
 
 //fun CardWordEntry.hasWarning(wordCardStatus: WordCardStatus): Boolean = this.wordCardStatuses.contains(wordCardStatus)
 fun CardWordEntry.hasOneOfWarning(wordCardStatuses: Iterable<WordCardStatus>): Boolean = this.wordCardStatuses.containsOneOf(wordCardStatuses)
@@ -58,38 +59,44 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
 
     val allWordCardsMap: Map<String, List<CardWordEntry>> = allWordCards.groupBy { it.from.trim().lowercase() }
 
+
+    fun <T> WritableObjectValue<Set<T>>.update(value: T, toSet: Boolean): Boolean =
+        updateSetProperty(this, value, if (toSet) UpdateSet.Set else UpdateSet.Remove)
+    fun <T> WritableObjectValue<Set<T>>.remove(value: T): Boolean =
+        updateSetProperty(this, value, UpdateSet.Remove)
+
     wordCardsToVerify.forEach { card ->
 
         val from = card.from
         val to = card.to
 
-        val hasDuplicate = (allWordCardsMap[from.trim().lowercase()]?.size ?: 0) >= 2
-        val hasDuplicateStatusUpdateAction = if (hasDuplicate) UpdateSet.Set else UpdateSet.Remove
-        updateSetProperty(card.wordCardStatusesProperty, Duplicates, hasDuplicateStatusUpdateAction)
+        val statusesProperty = card.wordCardStatusesProperty
+        val wordCardStatuses = card.wordCardStatuses
 
-        if (IgnoreExampleCardCandidates !in card.wordCardStatuses) {
-            val tooManyExampleCardCandidates = card.exampleNewCardCandidateCount > 5 // TODO: move 5 to settings
-            val tooManyExamplesStatusUpdateAction = if (tooManyExampleCardCandidates) UpdateSet.Set else UpdateSet.Remove
-            updateSetProperty(card.wordCardStatusesProperty, TooManyExampleCardCandidates, tooManyExamplesStatusUpdateAction)
-        }
+        val hasDuplicate = (allWordCardsMap[from.trim().lowercase()]?.size ?: 0) >= 2
+        statusesProperty.update(Duplicates, hasDuplicate)
+
+        if (IgnoreExampleCardCandidates in wordCardStatuses)
+            statusesProperty.remove(TooManyExampleNewCardCandidates)
         else {
-            updateSetProperty(card.wordCardStatusesProperty, TooManyExampleCardCandidates, UpdateSet.Remove)
+            val tooManyExampleCardCandidates = card.exampleNewCardCandidateCount > 5 // TODO: move 5 to settings
+            statusesProperty.update(TooManyExampleNewCardCandidates, tooManyExampleCardCandidates)
         }
 
         val noTranslation = from.isNotBlank() && to.isBlank()
-        val noTranslationStatusUpdateAction = if (noTranslation) UpdateSet.Set else UpdateSet.Remove
-        updateSetProperty(card.wordCardStatusesProperty, NoTranslation, noTranslationStatusUpdateAction)
+        statusesProperty.update(NoTranslation, noTranslation)
 
         val fromIsNotPrepared = from.isBlank() || from.containsOneOf(unneededPartsForLearning)
                 || !from.all { it.isEnglishLetter() || it in " -'." }
         val toIsNotPrepared   = to.isBlank()   || to.containsOneOf(unneededPartsForLearning)
+        statusesProperty.update(TranslationIsNotPrepared, fromIsNotPrepared || toIsNotPrepared)
 
-        val translationIsNotPreparedStatusUpdateAction =
-            if (fromIsNotPrepared || toIsNotPrepared) UpdateSet.Set else UpdateSet.Remove
-        updateSetProperty(card.wordCardStatusesProperty, TranslationIsNotPrepared, translationIsNotPreparedStatusUpdateAction)
 
         val englishWord = from.trim().lowercase()
-        if (!card.ignoreNoBaseWordInSet && card.fromWordCount == 1) {
+
+        if (BaseWordDoesNotExist in wordCardStatuses || card.fromWordCount != 1)
+            statusesProperty.remove(NoBaseWordInSet)
+        else {
 
             val baseWordCards = englishBaseWords(englishWord, dictionary)
             val baseWords = baseWordCards.map { it.from }
@@ -108,11 +115,7 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
             log.debug("analyzeWordCards => '{}', cardsSetContainsOneOfBaseWords: {}, cardsSetContainsAllBaseWords: {}, baseWords: {}",
                 englishWord, cardsSetContainsOneOfBaseWords, cardsSetContainsAllBaseWords, baseWords)
 
-            val noBaseWordStatusUpdateAction = if (showWarningAboutMissedBaseWord) UpdateSet.Set else UpdateSet.Remove
-            updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, noBaseWordStatusUpdateAction)
-        }
-        else {
-            updateSetProperty(card.wordCardStatusesProperty, NoBaseWordInSet, UpdateSet.Remove)
+            statusesProperty.update(NoBaseWordInSet, showWarningAboutMissedBaseWord)
         }
 
     }

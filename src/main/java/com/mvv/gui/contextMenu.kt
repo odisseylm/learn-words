@@ -3,7 +3,7 @@ package com.mvv.gui
 import com.mvv.gui.LearnWordsController.InsertPosition
 import com.mvv.gui.javafx.*
 import com.mvv.gui.words.CardWordEntry
-import com.mvv.gui.words.WordCardStatus.TooManyExampleCardCandidates
+import com.mvv.gui.words.WordCardStatus.TooManyExampleNewCardCandidates
 import com.mvv.gui.words.englishBaseWords
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.MenuItem
@@ -98,7 +98,7 @@ class ContextMenuController (val controller: LearnWordsController) {
         updateTranslateMenuItem(translateMenuItem)
 
         ignoreTooManyExampleCardCandidatesMenuItem.isVisible = selectedCards.any {
-            TooManyExampleCardCandidates in it.wordCardStatuses }
+            TooManyExampleNewCardCandidates in it.wordCardStatuses }
 
         contextMenu.hideRepeatedMenuSeparators()
     }

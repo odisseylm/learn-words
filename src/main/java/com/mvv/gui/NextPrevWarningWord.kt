@@ -13,33 +13,33 @@ import javafx.scene.layout.FlowPane
 class NextPrevWarningWord (private val currentWords: TableView<CardWordEntry>) {
     private val warningsDropDown = ComboBox<WordCardStatusesDropDownEntry>().also {
         it.styleClass.add("warningsDropDown")
-        it.items.setAll(allDropDownWarnings())
+        it.items.setAll(allDropDownWarningEntries)
         it.selectionModel.select(0)
     }
 
-    private val prevButton = newButton(buttonIcon("icons/search_prev.gif")) { prevItemWithWarning() }
-    private val nextButton = newButton(buttonIcon("icons/search_next.gif")) { nextItemWithWarning() }
+    private val prevButton = newButton(buttonIcon("icons/search_prev.gif")) { selectPrevItemWithWarning() }
+    private val nextButton = newButton(buttonIcon("icons/search_next.gif")) { selectNextItemWithWarning() }
     val pane = FlowPane().also { it.children.addAll(nextButton, warningsDropDown, prevButton) }
 
-    private fun nextItemWithWarning() {
+    private fun selectNextItemWithWarning() {
         if (currentWords.items.isEmpty()) return
 
         val currentItem = currentWords.singleSelection
             ?: currentWords.items.getOrNull(currentWords.visibleRows.first)
             ?: currentWords.items.first()
-        selectNextWarnItemImpl(currentWords.items, currentItem)
+        selectWarnItemImpl(currentWords.items, currentItem)
     }
 
-    private fun prevItemWithWarning() {
+    private fun selectPrevItemWithWarning() {
         if (currentWords.items.isEmpty()) return
 
         val currentItem = currentWords.singleSelection
             ?: currentWords.items.getOrNull(currentWords.visibleRows.last)
             ?: currentWords.items.last()
-        selectNextWarnItemImpl(currentWords.items.asReversed(), currentItem)
+        selectWarnItemImpl(currentWords.items.asReversed(), currentItem)
     }
 
-    private fun selectNextWarnItemImpl(items: Iterable<CardWordEntry>, startFrom: CardWordEntry) {
+    private fun selectWarnItemImpl(items: Iterable<CardWordEntry>, startFrom: CardWordEntry) {
         val warningsToFind = warningsDropDown.selectionModel.selectedItem.warnings
         items
             .asSequence()
@@ -49,7 +49,7 @@ class NextPrevWarningWord (private val currentWords: TableView<CardWordEntry>) {
             ?.also { currentWords.selectItem(it) }
     }
 
-    private fun allDropDownWarnings(): List<WordCardStatusesDropDownEntry> {
+    private val allDropDownWarningEntries: List<WordCardStatusesDropDownEntry> get() {
         val allPossibleWarnings: Set<WordCardStatus> = WordCardStatus.values()
             .filter { it.isWarning }
             .toEnumSet()
@@ -78,11 +78,11 @@ private class WordCardStatusesDropDownEntry (
 
 private fun WordCardStatus.shortWarnDescr(): String =
     when (this) {
-        WordCardStatus.NoBaseWordInSet -> "No base word"
-        WordCardStatus.BaseWordDoesNotExist -> throw IllegalArgumentException("It is not warning.")
+        WordCardStatus.NoBaseWordInSet             -> "No base word"
+        WordCardStatus.TooManyExampleNewCardCandidates -> "Too many examples' card candidates."
+        WordCardStatus.TranslationIsNotPrepared    -> "Translation is not prepared"
+        WordCardStatus.Duplicates                  -> "Duplicates"
+        WordCardStatus.NoTranslation               -> "No translation"
+        WordCardStatus.BaseWordDoesNotExist        -> throw IllegalArgumentException("It is not warning.")
         WordCardStatus.IgnoreExampleCardCandidates -> throw IllegalArgumentException("It is not warning.")
-        WordCardStatus.NoTranslation -> "No translation"
-        WordCardStatus.TranslationIsNotPrepared -> "Translation is not prepared"
-        WordCardStatus.TooManyExampleCardCandidates -> "Too many examples' card candidates."
-        WordCardStatus.Duplicates -> "Duplicates"
     }
