@@ -764,6 +764,28 @@ class LearnWordsController (
     fun addToListenSet() =
         currentWordsSelection.selectedItems.forEach { it.predefinedSets += PredefinedSet.DifficultToListen }
 
+    internal fun moveSelectedToSeparateCard() {
+        val focusOwner = pane.scene.focusOwner
+        val editingCard = currentWordsList.editingItem
+        val editingTableColumn: TableColumn<CardWordEntry, *>? = currentWordsList.editingCell?.column?.let { currentWordsList.columns[it] }
+
+        if (editingCard != null && (editingTableColumn === pane.toColumn || editingTableColumn === pane.examplesColumn)
+            && focusOwner is TextArea && focusOwner.belongsToParent(currentWordsList)) {
+            moveSelectedToSeparateCard(focusOwner, editingCard, editingTableColumn)
+        }
+    }
+
+    internal fun moveSelectedTextToExamples() {
+        val focusOwner = pane.scene.focusOwner
+        val editingCard = currentWordsList.editingItem
+        val editingTableColumn: TableColumn<CardWordEntry, *>? = currentWordsList.editingCell?.column?.let { currentWordsList.columns[it] }
+
+        if (editingCard != null && editingTableColumn === pane.toColumn
+            && focusOwner is TextArea && focusOwner.belongsToParent(currentWordsList)) {
+            moveSelectedTextToExamples(editingCard, focusOwner)
+        }
+    }
+
     internal fun moveSelectedToSeparateCard(editor: TextInputControl, item: CardWordEntry, tableColumn: TableColumn<CardWordEntry, String>) {
         createCardFromSelection(editor, tableColumn, item, currentWordsList)
             ?.also {

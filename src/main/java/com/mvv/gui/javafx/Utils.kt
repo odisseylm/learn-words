@@ -4,6 +4,7 @@ import javafx.animation.KeyFrame
 import javafx.animation.Timeline
 import javafx.application.Platform
 import javafx.scene.Node
+import javafx.scene.Parent
 import javafx.scene.control.Control
 import javafx.scene.control.Tooltip
 import javafx.scene.paint.Color
@@ -12,7 +13,7 @@ import javafx.stage.Stage
 import javafx.util.Duration
 
 
-//private val log = mu.KotlinLogging.logger {}
+private val log = mu.KotlinLogging.logger {}
 
 
 internal fun emptyIcon16x16() = Rectangle(16.0, 16.0, Color(0.0, 0.0, 0.0, 0.0))
@@ -43,6 +44,24 @@ fun Control.setToolTip(text: String?, maxWidth: Double?) {
         maxWidth?.let  { this.tooltip.maxWidth  = it }
     }
 }
+
+
+fun Node.belongsToParent(possibleParent: Parent): Boolean {
+    var parentLeaf: Parent? = this.parent
+
+    val maxDeep = 100
+    var i = 0
+
+    while (i <= maxDeep && parentLeaf !== null && parentLeaf !== possibleParent) {
+        parentLeaf = parentLeaf.parent
+        i++
+    }
+
+    if (i == maxDeep) log.warn { "${this.javaClass.simpleName}.belongsToParent() has too many iterations." }
+
+    return parentLeaf === possibleParent
+}
+
 
 
 fun runLaterWithDelay(delayMillis: Long, action: ()->Unit) {

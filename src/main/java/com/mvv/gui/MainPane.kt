@@ -7,7 +7,6 @@ import com.mvv.gui.words.*
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WarnWhenSomeBaseWordsMissed
 import com.mvv.gui.words.WordCardStatus.*
-import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
@@ -178,6 +177,8 @@ class MainWordsPane : BorderPane() {
 
                 addKeyBinding(editor, moveSelectedToSeparateCardKeyCombination) {
                     controller.moveSelectedToSeparateCard(editor, cell.tableRow.item, toColumn) }
+
+                editor.keepCellEditorState( { Pair(toColumn, cell.tableRow.item) }, controller.cellEditorStates)
             })
 
         // alternative approach
@@ -221,45 +222,7 @@ class MainWordsPane : BorderPane() {
                 addKeyBinding(editor, moveSelectedToSeparateCardKeyCombination) {
                     controller.moveSelectedToSeparateCard(editor, cell.tableRow.item!!, examplesColumn) }
 
-                editor.focusedProperty().addListener { _, _, isFocused ->
-                    val textArea = editor as TextArea
-
-                    if (isFocused) {
-                        val editorState = controller.cellEditorStates.getOrElse(Pair(examplesColumn, cell.tableRow.item)) {
-                                CellEditorState(0.0, 0.0, 0) }
-
-                        val caretPos = if (editorState.caretPosition > editor.text.length)
-                                            editor.text.trimEnd().lastIndexOf('\n')
-                                       else editorState.caretPosition
-
-                        textArea.selectRange(caretPos, caretPos)
-                        textArea.selectPositionCaret(caretPos)
-                        textArea.scrollLeft = editorState.scrollLeft
-                        textArea.scrollTop = editorState.scrollTop
-
-                        // hacks hacks hacks :-(
-                        // double-take
-                        Platform.runLater {
-                            textArea.selectRange(caretPos, caretPos)
-                            textArea.selectPositionCaret(caretPos)
-
-                            // hack. Sometimes editor loses focus (after re-scrolling table row)
-                            if (!editor.isFocused) editor.requestFocus()
-
-                            // hack again. Sometimes setting scrollTop really does not change scroll position
-
-                            // This IF does not help - real scroll position is not synchronized with property textArea.scrollTop :-(
-                            //if (textArea.scrollTop != editorState.scrollTop) {
-                                textArea.scrollTop = 0.0
-                                textArea.scrollTop = editorState.scrollTop
-                            //}
-                        }
-                    }
-                    else {
-                        controller.cellEditorStates[Pair(examplesColumn, cell.tableRow.item)] =
-                            CellEditorState(textArea.scrollLeft, textArea.scrollTop, textArea.caretPosition)
-                    }
-                }
+                editor.keepCellEditorState( { Pair(examplesColumn, cell.tableRow.item) }, controller.cellEditorStates)
             })
             .also { it.styleClass.add("examplesColumnCell") } }
         examplesColumn.styleClass.add("examplesColumn")

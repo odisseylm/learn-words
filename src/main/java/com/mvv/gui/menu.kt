@@ -48,17 +48,24 @@ class MenuController (val controller: LearnWordsController) {
                 controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
             newMenuItem("Insert below", buttonIcon("/icons/insertBelow-01.png")) {
                 controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
+
+            SeparatorMenuItem(),
+            newMenuItem("Selection to example") { controller.moveSelectedTextToExamples() }
+                .also { it.accelerator = moveSelectedTextToExamplesKeyCombination.first() },
+            newMenuItem("Selection to new card") { controller.moveSelectedToSeparateCard() }
+                .also { it.accelerator = moveSelectedToSeparateCardKeyCombination.first() },
         )
 
         val wordsMenu = Menu("_Words", null,
             newMenuItem("Move to ignored", "Move selected words to ignored.",
                 buttonIcon("icons/removememory_tsk.png")) { // rem_all_co.png rem_co.png removememory_tsk.png
                 controller.moveSelectedToIgnored() },
-            newMenuItem("Remove ignored", "Removed ignored words from current words.") {
+            newMenuItem("Remove ignored", "Removed already 'ignored' words from current words.") {
                 controller.removeIgnoredFromCurrentWords() },
             newMenuItem("Remove words of other sets", "Remove words from other sets") {
                 controller.removeWordsFromOtherSetsFromCurrentWords() },
 
+            SeparatorMenuItem(),
             newMenuItem("Translate Selected", buttonIcon("/icons/translate-16-01.png"), translateSelectedKeyCombination) {
                 controller.translateSelected() },
             newMenuItem("Translate All", "Translate all words", buttonIcon("/icons/translate-16-01.png")) {
