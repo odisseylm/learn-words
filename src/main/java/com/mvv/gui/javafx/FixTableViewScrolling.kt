@@ -1,6 +1,8 @@
 package com.mvv.gui.javafx
 
 import com.mvv.gui.javafx.SetViewPortAbsoluteOffsetMode.*
+import com.mvv.gui.util.logInfo
+import com.mvv.gui.util.startStopWatch
 import javafx.application.Platform
 import javafx.scene.control.TableView
 import javafx.scene.control.skin.VirtualFlow
@@ -47,7 +49,7 @@ internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
         return
     }
 
-    fixEstimatedContentHeight()
+    fixEstimatedContentHeight(absoluteOffset)
 
     fun setAdjustPosIml(pos: Double) {
         virtualFlow.absoluteOffsetValue = pos
@@ -86,14 +88,23 @@ internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
 // For that reason we need to recalculate it properly.
 // The simplest known for me solution is just scroll over all items/rows to recalculate them again.
 // T O D O: unsafe method with scrolling over all rows, we need to find better way
-private fun <S> TableView<S>.fixEstimatedContentHeight() {
-    val safeItemsCopy = this.items.toList()
+private fun <S> TableView<S>.fixEstimatedContentHeight(desiredAbsoluteOffset: Double) {
+    //val safeItemsCopy = this.items.toList()
 
     // It does not work
     //val virtualFlow = this.virtualFlow
     //safeItemsCopy.forEachIndexed { index, _ -> virtualFlow?.getCell(index) }
 
-    safeItemsCopy.forEach { this.scrollTo(it) }
+    val sw = startStopWatch("TableView.fixEstimatedContentHeight")
+
+    for (rowIndex in 0 until this.items.size) {
+        if ((this.viewPortAbsoluteOffset ?: 0.0) > desiredAbsoluteOffset + this.height) break
+        this.scrollTo(rowIndex)
+    }
+
+    //safeItemsCopy.forEach { this.scrollTo(it) }
+
+    sw.logInfo(log) // TODO: takes too much time if table is not small (1000 rows)
 }
 
 
