@@ -544,9 +544,8 @@ class LearnWordsController (
         val words = extractWordsFromClipboard(Clipboard.getSystemClipboard(), settingsPane.sentenceEndRule, toIgnoreWords)
             .also { addChangeCardListener(it) }
 
-        currentWords.setAll(words) // or add all ??
+        currentWords.addAll(words)
         reanalyzeAllWords()
-        updateCurrentWordsFile(null)
     }
 
 

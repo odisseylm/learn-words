@@ -58,6 +58,12 @@ class ContextMenuController (val controller: LearnWordsController) {
             translateMenuItem,
 
             SeparatorMenuItem(),
+            newMenuItem("Translate by Google", buttonIcon("icons/gt-02.png")) {
+                selectedCard?.from?.also { openGoogleTranslate(it) } },
+            newMenuItem("Translate by Abby", buttonIcon("icons/abby-icon-01.png")) {
+                selectedCard?.from?.also { openAbbyLingvoTranslate(it) } },
+
+            SeparatorMenuItem(),
             ignoreNoBaseWordMenuItem,
             ignoreTooManyExampleCardCandidatesMenuItem,
             addMissedBaseWordsMenuItem,
@@ -71,14 +77,6 @@ class ContextMenuController (val controller: LearnWordsController) {
 
             SeparatorMenuItem(),
             showSourceSentenceMenuItem,
-
-            SeparatorMenuItem(),
-            newMenuItem("Translate by Google", buttonIcon("icons/gt-02.png")) {
-                this.currentWordsList.selectionModel.selectedItem
-                    ?.also { openGoogleTranslate(it.from) } },
-            newMenuItem("Translate by Abby", buttonIcon("icons/abby-icon-01.png")) {
-                this.currentWordsList.selectionModel.selectedItem
-                    ?.also { openAbbyLingvoTranslate(it.from) } },
         )
 
         contextMenu.items.addAll(menuItems)

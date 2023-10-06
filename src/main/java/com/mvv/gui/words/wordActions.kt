@@ -195,6 +195,8 @@ private fun fillCardFrom(word: WordEntry): CardWordEntry =
         it.sourceSentences = word.sentence.text.toString().replace('\n', ' ').replace("  ", " ") // TODO: make sure that the same String instance is used
     }
 
+fun WordEntry.lowercase(): WordEntry =
+    WordEntry(this.word.lowercase(), this.position, this.sentence)
 
 private fun extractNeededWords(sentence: Sentence): List<WordInternal> {
 
@@ -206,7 +208,7 @@ private fun extractNeededWords(sentence: Sentence): List<WordInternal> {
 
             result.add(WordInternal(
                 wordEntry,
-                preposition?.let { WordEntry(wordEntry.word + " " + preposition, wordEntry.position, wordEntry.sentence) }
+                preposition?.let { WordEntry(wordEntry.word.lowercase() + " " + preposition, wordEntry.position, wordEntry.sentence) }
             ))
         }
     }
