@@ -2,11 +2,18 @@ package com.mvv.gui
 
 import com.mvv.gui.javafx.installJavaFxLogger
 import javafx.application.Application
+import javafx.application.Preloader
 import javafx.event.EventHandler
 import javafx.scene.Scene
 import javafx.stage.Screen
 import javafx.stage.Stage
 
+
+internal class SetApplicationNamePreloader : Preloader() {
+    override fun start(stage: Stage) =
+        // this code does not work if just to call it from main()
+        com.sun.glass.ui.Application.GetApplication().setName("Learn Words Editor")
+}
 
 class LearnWordsEditorApp : Application() {
 
@@ -52,4 +59,7 @@ class LearnWordsEditorApp : Application() {
 }
 
 
-fun main() = Application.launch(LearnWordsEditorApp::class.java)
+fun main() {
+    System.setProperty("javafx.preloader", SetApplicationNamePreloader::class.java.name)
+    Application.launch(LearnWordsEditorApp::class.java)
+}
