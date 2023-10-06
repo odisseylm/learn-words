@@ -1,6 +1,7 @@
 package com.mvv.gui.audio
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test
 private val log = mu.KotlinLogging.logger {}
 
 
+@Disabled("for manual testing")
 class FestivalTest {
 
     @Test

@@ -1,5 +1,6 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.util.splitByCharSeparatorsAndPreserveAllTokens
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.DisplayName
@@ -27,12 +28,12 @@ class TextParserExTest {
 
             assertions.assertThat(sentences[0].text).isEqualTo("Mama washed rama.")
             assertions.assertThat(sentences[0].allWords).containsExactly(
-                wordEntry("mama", 0, "Mama washed rama."),
+                wordEntry("Mama", 0, "Mama washed rama."),
                 wordEntry("washed", 1, "Mama washed rama."),
                 wordEntry("rama", 2, "Mama washed rama."),
             )
             assertions.assertThat(sentences[0].translatableWords).containsExactly(
-                wordEntry("mama", 0, "Mama washed rama."),
+                wordEntry("Mama", 0, "Mama washed rama."),
                 wordEntry("washed", 1, "Mama washed rama."),
                 wordEntry("rama", 2, "Mama washed rama."),
             )
@@ -42,7 +43,7 @@ class TextParserExTest {
                 .containsExactly(
                     Sentence(
                         "Mama washed rama.", listOf(
-                            wordEntry("mama", 0, "Mama washed rama."),
+                            wordEntry("Mama", 0, "Mama washed rama."),
                             wordEntry("washed", 1, "Mama washed rama."),
                             wordEntry("rama", 2, "Mama washed rama."),
                         )
@@ -56,14 +57,14 @@ class TextParserExTest {
                 .containsExactly(
                     Sentence(
                         "Mama washed rama.", listOf(
-                            wordEntry("mama", 0, "Mama washed rama."),
+                            wordEntry("Mama", 0, "Mama washed rama."),
                             wordEntry("washed", 1, "Mama washed rama."),
                             wordEntry("rama", 2, "Mama washed rama."),
                         )
                     ),
                     Sentence(
                         "But papa didn't.", listOf(
-                            wordEntry("but", 3, "But papa didn't."),
+                            wordEntry("But", 3, "But papa didn't."),
                             wordEntry("papa", 4, "But papa didn't."),
                             wordEntry("didn't", 5, "But papa didn't."),
                         )
@@ -85,11 +86,11 @@ class TextParserExTest {
 
         assertions.assertThat(sentences[0].text).isEqualTo("Mrs. Mama washed rama.")
 
-        assertions.assertThat(sentences[0].allWords[1]).isEqualTo(wordEntry("mama", 1, "Mrs. Mama washed rama."))
+        assertions.assertThat(sentences[0].allWords[1]).isEqualTo(wordEntry("Mama", 1, "Mrs. Mama washed rama."))
 
         assertions.assertThat(sentences[0].allWords).containsExactly(
-            wordEntry("mrs.", 0, "Mrs. Mama washed rama."),
-            wordEntry("mama", 1, "Mrs. Mama washed rama."),
+            wordEntry("Mrs.", 0, "Mrs. Mama washed rama."),
+            wordEntry("Mama", 1, "Mrs. Mama washed rama."),
             wordEntry("washed", 2, "Mrs. Mama washed rama."),
             wordEntry("rama", 3, "Mrs. Mama washed rama."),
         )
@@ -97,9 +98,9 @@ class TextParserExTest {
         assertions.assertThat(sentences[1].text).isEqualTo("But Mr. Papa \n didn't.")
 
         assertions.assertThat(sentences[1].allWords).containsExactly(
-            wordEntry("but", 4, "But Mr. Papa \n didn't."),
-            wordEntry("mr.", 5, "But Mr. Papa \n didn't."),
-            wordEntry("papa", 6, "But Mr. Papa \n didn't."),
+            wordEntry("But", 4, "But Mr. Papa \n didn't."),
+            wordEntry("Mr.", 5, "But Mr. Papa \n didn't."),
+            wordEntry("Papa", 6, "But Mr. Papa \n didn't."),
             wordEntry("didn't", 7, "But Mr. Papa \n didn't."),
         )
 
@@ -121,8 +122,8 @@ class TextParserExTest {
         assertions.assertThat(sentences[0].text).isEqualTo("Mrs. Mama washed rama")
 
         assertions.assertThat(sentences[0].allWords).containsExactly(
-            wordEntry("mrs.", 0, "Mrs. Mama washed rama"),
-            wordEntry("mama", 1, "Mrs. Mama washed rama"),
+            wordEntry("Mrs.", 0, "Mrs. Mama washed rama"),
+            wordEntry("Mama", 1, "Mrs. Mama washed rama"),
             wordEntry("washed", 2, "Mrs. Mama washed rama"),
             wordEntry("rama", 3, "Mrs. Mama washed rama"),
         )
@@ -130,9 +131,9 @@ class TextParserExTest {
         assertions.assertThat(sentences[1].text).isEqualTo("But Mr. Papa didn't")
 
         assertions.assertThat(sentences[1].allWords).containsExactly(
-            wordEntry("but", 4, "But Mr. Papa didn't"),
-            wordEntry("mr.", 5, "But Mr. Papa didn't"),
-            wordEntry("papa", 6, "But Mr. Papa didn't"),
+            wordEntry("But", 4, "But Mr. Papa didn't"),
+            wordEntry("Mr.", 5, "But Mr. Papa didn't"),
+            wordEntry("Papa", 6, "But Mr. Papa didn't"),
             wordEntry("didn't", 7, "But Mr. Papa didn't"),
         )
 
@@ -155,8 +156,8 @@ class TextParserExTest {
         assertions.assertThat(sentences[0].text).isEqualTo("Mrs. Mama washed rama.")
 
         assertions.assertThat(sentences[0].allWords).containsExactly(
-            wordEntry("mrs.", 0, "Mrs. Mama washed rama."),
-            wordEntry("mama", 1, "Mrs. Mama washed rama."),
+            wordEntry("Mrs.", 0, "Mrs. Mama washed rama."),
+            wordEntry("Mama", 1, "Mrs. Mama washed rama."),
             wordEntry("washed", 2, "Mrs. Mama washed rama."),
             wordEntry("rama", 3, "Mrs. Mama washed rama."),
         )
@@ -164,16 +165,16 @@ class TextParserExTest {
         assertions.assertThat(sentences[1].text).isEqualTo("But Mr. Papa didn't")
 
         assertions.assertThat(sentences[1].allWords).containsExactly(
-            wordEntry("but", 4, "But Mr. Papa didn't"),
-            wordEntry("mr.", 5, "But Mr. Papa didn't"),
-            wordEntry("papa", 6, "But Mr. Papa didn't"),
+            wordEntry("But", 4, "But Mr. Papa didn't"),
+            wordEntry("Mr.", 5, "But Mr. Papa didn't"),
+            wordEntry("Papa", 6, "But Mr. Papa didn't"),
             wordEntry("didn't", 7, "But Mr. Papa didn't"),
         )
 
         assertions.assertThat(sentences[2].text).isEqualTo("What about grandpa?")
 
         assertions.assertThat(sentences[2].allWords).containsExactly(
-            wordEntry("what", 8, "What about grandpa?"),
+            wordEntry("What", 8, "What about grandpa?"),
             wordEntry("about", 9, "What about grandpa?"),
             wordEntry("grandpa", 10, "What about grandpa?"),
         )
@@ -192,17 +193,17 @@ class TextParserExTest {
 
         assertions.assertThat(sentences[0].text).isEqualTo("Mrs. Mama washed rama.")
         assertions.assertThat(sentences[0].allWords).containsExactly(
-            wordEntry("mrs.", 0, "Mrs. Mama washed rama."),
-            wordEntry("mama", 1, "Mrs. Mama washed rama."),
+            wordEntry("Mrs.", 0, "Mrs. Mama washed rama."),
+            wordEntry("Mama", 1, "Mrs. Mama washed rama."),
             wordEntry("washed", 2, "Mrs. Mama washed rama."),
             wordEntry("rama", 3, "Mrs. Mama washed rama."),
         )
 
         assertions.assertThat(sentences[1].text).isEqualTo("But Mr. Papa didn't.")
         assertions.assertThat(sentences[1].allWords).containsExactly(
-            wordEntry("but", 4, "But Mr. Papa didn't."),
-            wordEntry("mr.", 5, "But Mr. Papa didn't."),
-            wordEntry("papa", 6, "But Mr. Papa didn't."),
+            wordEntry("But", 4, "But Mr. Papa didn't."),
+            wordEntry("Mr.", 5, "But Mr. Papa didn't."),
+            wordEntry("Papa", 6, "But Mr. Papa didn't."),
             wordEntry("didn't", 7, "But Mr. Papa didn't."),
         )
 
@@ -211,15 +212,15 @@ class TextParserExTest {
             .hasSize(2)
             .containsExactly(
                 Sentence("Mrs. Mama washed rama.", listOf(
-                    wordEntry("mrs.", 0, "Mrs. Mama washed rama."),
-                    wordEntry("mama", 1, "Mrs. Mama washed rama."),
+                    wordEntry("Mrs.", 0, "Mrs. Mama washed rama."),
+                    wordEntry("Mama", 1, "Mrs. Mama washed rama."),
                     wordEntry("washed", 2, "Mrs. Mama washed rama."),
                     wordEntry("rama", 3, "Mrs. Mama washed rama."),
                 )),
                 Sentence("But Mr. Papa didn't.", listOf(
-                    wordEntry("but", 4, "But Mr. Papa didn't."),
-                    wordEntry("mr.", 5, "But Mr. Papa didn't."),
-                    wordEntry("papa", 6, "But Mr. Papa didn't."),
+                    wordEntry("But", 4, "But Mr. Papa didn't."),
+                    wordEntry("Mr.", 5, "But Mr. Papa didn't."),
+                    wordEntry("Papa", 6, "But Mr. Papa didn't."),
                     wordEntry("didn't", 7, "But Mr. Papa didn't."),
                 )),
             )
@@ -239,9 +240,9 @@ class TextParserExTest {
 
         assertions.assertThat(sentences[0].text).isEqualTo("The number PI 3.1415926 is a magic!")
         assertions.assertThat(sentences[0].allWords).containsExactly(
-            wordEntry("the", 0, "The number PI 3.1415926 is a magic!"),
+            wordEntry("The", 0, "The number PI 3.1415926 is a magic!"),
             wordEntry("number", 1, "The number PI 3.1415926 is a magic!"),
-            wordEntry("pi", 2, "The number PI 3.1415926 is a magic!"),
+            wordEntry("PI", 2, "The number PI 3.1415926 is a magic!"),
             wordEntry("3.1415926", 3, "The number PI 3.1415926 is a magic!"),
             wordEntry("is", 4, "The number PI 3.1415926 is a magic!"),
             wordEntry("a", 5, "The number PI 3.1415926 is a magic!"),
@@ -250,7 +251,7 @@ class TextParserExTest {
 
         assertions.assertThat(sentences[1].text).isEqualTo("But number 2.2 is not one.")
         assertions.assertThat(sentences[1].allWords).containsExactly(
-            wordEntry("but", 7, "But number 2.2 is not one."),
+            wordEntry("But", 7, "But number 2.2 is not one."),
             wordEntry("number", 8, "But number 2.2 is not one."),
             wordEntry("2.2", 9, "But number 2.2 is not one."),
             wordEntry("is", 10, "But number 2.2 is not one."),
@@ -277,9 +278,9 @@ class TextParserExTest {
 
         assertions.assertThat(sentences[0].text).isEqualTo("The number PI 3.1415926 is a magic!!!")
         assertions.assertThat(sentences[0].allWords).containsExactly(
-            wordEntry("the", 0, "The number PI 3.1415926 is a magic!!!"),
+            wordEntry("The", 0, "The number PI 3.1415926 is a magic!!!"),
             wordEntry("number", 1, "The number PI 3.1415926 is a magic!!!"),
-            wordEntry("pi", 2, "The number PI 3.1415926 is a magic!!!"),
+            wordEntry("PI", 2, "The number PI 3.1415926 is a magic!!!"),
             wordEntry("3.1415926", 3, "The number PI 3.1415926 is a magic!!!"),
             wordEntry("is", 4, "The number PI 3.1415926 is a magic!!!"),
             wordEntry("a", 5, "The number PI 3.1415926 is a magic!!!"),
@@ -288,7 +289,7 @@ class TextParserExTest {
 
         assertions.assertThat(sentences[1].text).isEqualTo("But number 2.2 is not one...")
         assertions.assertThat(sentences[1].allWords).containsExactly(
-            wordEntry("but", 7, "But number 2.2 is not one..."),
+            wordEntry("But", 7, "But number 2.2 is not one..."),
             wordEntry("number", 8, "But number 2.2 is not one..."),
             wordEntry("2.2", 9, "But number 2.2 is not one..."),
             wordEntry("is", 10, "But number 2.2 is not one..."),
@@ -362,6 +363,78 @@ class TextParserExTest {
                     " of an applicant’s suitability for a job opening—you give them priority over your regular work load.",
             "Even when it’s pretty obvious that they’re taking the piss."
         )
+    }
+
+
+    @Test
+    fun extractWordsFromText_New_IgnorePrepositionAfterComa() {
+        val text =
+            "The colors, white, grey, blue, orange, in the wall, in the furniture, in the sky beyond the window, were . . . were . . . ."
+
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDot).parse(text)
+
+        val resultingSentence = "The colors, white, grey, blue, orange, in the wall, in the furniture, in the sky beyond the window, were . . . were . . . ."
+
+        assertThat(sentences.map { it.text }).containsExactly(resultingSentence)
+
+        assertThat(sentences.first().allWords).containsExactly(
+            wordEntry("The", 0, resultingSentence),
+            wordEntry("colors", 1, resultingSentence),
+            wordEntry("white", 2, resultingSentence),
+            wordEntry("grey", 3, resultingSentence),
+            wordEntry("blue", 4, resultingSentence),
+            wordEntry("orange", 5, resultingSentence),
+            wordEntry("in", 6, resultingSentence),
+            wordEntry("the", 7, resultingSentence),
+            wordEntry("wall", 8, resultingSentence),
+            wordEntry("in", 9, resultingSentence),
+            wordEntry("the", 10, resultingSentence),
+            wordEntry("furniture", 11, resultingSentence),
+            wordEntry("in", 12, resultingSentence),
+            wordEntry("the", 13, resultingSentence),
+            wordEntry("sky", 14, resultingSentence),
+            wordEntry("beyond", 15, resultingSentence),
+            wordEntry("the", 16, resultingSentence),
+            wordEntry("window", 17, resultingSentence),
+            wordEntry("were", 18, resultingSentence),
+            wordEntry(".", 19, resultingSentence),
+            wordEntry(".", 20, resultingSentence),
+            wordEntry(".", 21, resultingSentence),
+            wordEntry("were", 22, resultingSentence),
+            wordEntry(".", 23, resultingSentence),
+            wordEntry(".", 24, resultingSentence),
+            wordEntry(".", 25, resultingSentence),
+        )
+
+        val cards: List<CardWordEntry> = extractWordsFromText_New(text, SentenceEndRule.ByEndingDot, emptyList())
+
+        assertThat(cards.map { it.from })
+            .containsExactly(
+                "The",
+                "colors",
+                "white",
+                "grey",
+                "blue",
+                "orange",
+                //"orange in", // should not be present because they separated by coma
+                "in",
+                "the",
+                "wall",
+                //"wall in",   // should not be present because they separated by coma
+                "in",
+                "the",
+                "furniture",
+                //"furniture in", // should not be present because they separated by coma
+                "in",
+                "the",
+                "sky",
+                "sky beyond",
+                "beyond",
+                "the",
+                "window",
+                "were",
+                "were",
+            )
     }
 
 
@@ -495,6 +568,19 @@ class TextParserExTest {
         assertThat(removeUnpairedEndingQuote("Bob!'")).isEqualTo("Bob!")
     }
 
+
+    @Test
+    fun test_splitByCharSeparatorsAndPreserveAllTokens() {
+        val tokens = "   \n \t Are you busy right now?  \n \t  "
+            .splitByCharSeparatorsAndPreserveAllTokens(",\n\t \"")
+
+        // hm
+        assertThat(tokens).containsExactly(
+            " ", " ", " ", "\n", " ", "\t", " ",
+            "Are", " ", "you", " ", "busy", " ", "right", " ", "now?",
+            " ", " ", "\n", " ", "\t", " ", " ",
+        )
+    }
 }
 
 

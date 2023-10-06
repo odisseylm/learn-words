@@ -6,6 +6,11 @@ import com.mvv.gui.util.*
 private val log = mu.KotlinLogging.logger {}
 
 
+sealed interface Token {
+    val text: String
+}
+
+
 /**
  * Classes WordEntry and Sentence are deeply coupled.
  * I think in this case we can afford it and for that reason they have
@@ -16,9 +21,10 @@ private val log = mu.KotlinLogging.logger {}
 class WordEntry internal constructor (
     val word: String,
     /** It is word index in the WHOLE text (not char index!). */
-    val position: Int,
+    val position: Int, // TODO: rename to textPosition
     val sentence: Sentence,
-) {
+) : Token {
+    override val text: String get() = word
 
     override fun toString(): String = "Word([$word]:$position )"
 
@@ -37,16 +43,41 @@ class WordEntry internal constructor (
     }
 }
 
+
 @Suppress("EqualsOrHashCode")
-class Sentence internal constructor(text: CharSequence, words: Iterable<WordEntry>) {
+class Delimiter (
+    override val text: String,
+) : Token {
+
+    override fun toString(): String = "Delimiter([$text] )"
+
+    // !! Only for testing !! Do not rely on it on production code!
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Delimiter
+        return text == other.text
+    }
+}
+
+
+@Suppress("EqualsOrHashCode")
+class Sentence internal constructor(text: CharSequence, tokens: Iterable<Token>) {
 
     val text: CharSequence
+    val allTokens: List<Token>
     val allWords: List<WordEntry>
     val translatableWords: List<WordEntry>
 
     init {
         this.text = text
-        this.allWords = words.map { WordEntry(it.word, it.position, this) }
+        this.allTokens = tokens.toList()
+        this.allWords = tokens
+            .asSequence()
+            .filterIsInstance<WordEntry>()
+            .map { WordEntry(it.word, it.position, this) }
+            .toList()
         this.translatableWords = this.allWords.filter { it.word.isTranslatable }
     }
 
@@ -458,6 +489,7 @@ private fun addMissedEndingQuote(sentence: CharSequence): CharSequence {
 }
 
 
+/*
 private val wordDelimiters = arrayOf(
     " ", "\n", "\r", "\t",
     ",", ";", ":", "!", "?",
@@ -472,24 +504,55 @@ private val wordDelimiters = arrayOf(
     "(", ")", "[", "]", "{", "}",
     "\\", "/",
 )
+*/
+
+private val wordCharDelimiters = charArrayOf(
+    ' ', '\n', '\r', '\t',
+    ',', ';', ':', '!', '?',
+    // '.',
+    // '\'',
+    '=', '—',
+    '!', '@', '$', '%', '^', '&', '*',
+    '+', '*', '/',
+    '<', '>',
+    '\"', '/', '|',
+    '~', '`', '“',
+    '(', ')', '[', ']', '{', '}',
+    '\\', '/',
+)
+
+private val wordCharDelimitersAsString = wordCharDelimiters.joinToString("")
+
+private inline val String.isWordCharDelimiter: Boolean get() =
+    this.length == 1 && this[0] in wordCharDelimiters
 
 
 fun parseSentence(sentence: CharSequence, prevWordCount: Int): Sentence {
     val tempSentenceStuff = Sentence(sentence, emptyList())
     val unneeded = "-—\"!?“”'"
+
+    fun String.isDelimiter(): Boolean = this.isWordCharDelimiter || (this.length == 1 && this[0] in unneeded)
+
+    var wordPos = prevWordCount
+
     return sentence
         .removeCharSuffixesRepeatably(".!?")
-        .splitToSequence(delimiters = wordDelimiters)
-        .filter { it.isNotBlank() }
-        //.filter { it.length > 1 }
-        .map { it.removeCharPrefixesRepeatably(unneeded) }
-        .map { it.removeCharSuffixesRepeatably(unneeded) }
-        .filter { it.isNotBlank() }
-        .mapIndexed { index, s -> WordEntry(s.toString().lowercase(), prevWordCount + index, tempSentenceStuff) }
+        .toString()
+        .splitByCharSeparatorsAndPreserveAllTokens(wordCharDelimitersAsString)
+        .asSequence()
+        .flatMap { it.separateCharPrefixesRepeatably(unneeded) }
+        .flatMap { it.separateCharSuffixesRepeatably(unneeded) }
+        .filter  { it.isNotBlank() }
+        .map { token -> when {
+                token.isDelimiter() -> Delimiter(token)
+                else -> WordEntry(token, wordPos++, tempSentenceStuff)
+            }
+        }
         .toList()
         .let { Sentence(sentence, it) }
-
 }
+
+
 
 
 private const val numberChars = "1234567890-_.Ee"

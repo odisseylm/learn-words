@@ -200,9 +200,9 @@ private fun extractNeededWords(sentence: Sentence): List<WordInternal> {
 
     val result = mutableListOf<WordInternal>()
 
-    sentence.allWords.forEachIndexed { index, wordEntry ->
-        if (wordEntry.word.isTranslatable) {
-            val preposition: String? = extractPreposition(sentence.allWords, index + 1)
+    sentence.allTokens.forEachIndexed { index, wordEntry ->
+        if (wordEntry is WordEntry && wordEntry.word.isTranslatable) {
+            val preposition: String? = extractPreposition(sentence.allTokens, index + 1)
 
             result.add(WordInternal(
                 wordEntry,
@@ -214,18 +214,24 @@ private fun extractNeededWords(sentence: Sentence): List<WordInternal> {
     return result
 }
 
-fun extractPreposition(words: List<WordEntry>, index: Int): String? {
+fun extractPreposition(words: List<Token>, tokenSequenceIndex: Int): String? {
     val possiblePrepositions: List<WordSequence> = prepositions
-    val preposition: WordSequence? = possiblePrepositions.find { words.containsWordSequence(index, it) }
+    val preposition: WordSequence? = possiblePrepositions.find { words.containsWordSequence(tokenSequenceIndex, it) }
     return preposition?.asText
 }
 
-private fun List<WordEntry>.containsWordSequence(sequenceIndex: Int, wordSequence: WordSequence): Boolean {
+private fun List<Token>.containsWordSequence(tokenSequenceIndex: Int, wordSequence: WordSequence): Boolean {
 
-    if (this.lastIndex < sequenceIndex + wordSequence.size) return false
+    if (this.lastIndex < tokenSequenceIndex + wordSequence.size) return false
 
+    var j = tokenSequenceIndex
     for (i in wordSequence.indices) {
-        if (this[sequenceIndex + i].word != wordSequence[i]) return false
+
+        // skip 'space' tokens
+        while (j < this.size && this[j].text.isBlank()) j++
+
+        if (j >= this.size || this[j].text != wordSequence[i]) return false
+        j++
     }
 
     return true

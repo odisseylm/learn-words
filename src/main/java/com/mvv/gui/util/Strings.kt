@@ -78,6 +78,42 @@ fun CharSequence.removeCharPrefixesRepeatably(prefixes: String): CharSequence {
 }
 
 
+fun CharSequence.separateCharPrefixesRepeatably(prefixes: String): List<String> {
+    val res = mutableListOf<String>()
+
+    for (i in this.indices) {
+        val ch = this[i]
+        if (ch in prefixes)
+            // TODO: use cached string
+            res.add(this.substring(i, i + 1))
+        else {
+            res.add(this.substring(i))
+            break
+        }
+    }
+
+    return res
+}
+
+
+fun CharSequence.separateCharSuffixesRepeatably(prefixes: String): List<String> {
+    val res = mutableListOf<String>()
+
+    for (i in this.indices.reversed()) {
+        val ch = this[i]
+        if (ch in prefixes)
+            // TODO: use cached string
+            res.add(this.substring(i, i + 1))
+        else {
+            res.add(this.substring(0, i + 1))
+            break
+        }
+    }
+
+    return res.reversed()
+}
+
+
 fun CharSequence.startsWithOneOfChars(chars: String) =
     if (this.isEmpty()) false else this[0] in chars
 

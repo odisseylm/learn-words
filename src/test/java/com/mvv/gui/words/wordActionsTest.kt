@@ -12,7 +12,7 @@ class WordActionsTest {
         val cards = extractWordsFromText_New("John has come in the room.", SentenceEndRule.ByEndingDot, emptySet())
 
         assertThat(cards.map { it.from }).containsExactly(
-            "john", "has",
+            "John", "has",
             "come",
             "come in", // with preposition
             "in", "the", "room",
@@ -24,7 +24,7 @@ class WordActionsTest {
 
         val cards = extractWordsFromText_New("Businesses have costs to cover in addition to your salary.", SentenceEndRule.ByEndingDot, emptySet())
         assertThat(cards.map { it.from }).containsExactly(
-            "businesses", "have",
+            "Businesses", "have",
             "costs",
             "costs to", // with preposition
             "to",
@@ -79,7 +79,7 @@ class WordActionsTest {
 
         val cards = extractWordsFromText_New(content, SentenceEndRule.ByEndingDot, emptySet())
         assertThat(cards.map { it.from }).containsExactly(
-            "businesses", "have",
+            "Businesses", "have",
             "costs",
             "costs to", // with preposition
             "to",
@@ -88,7 +88,7 @@ class WordActionsTest {
             "in", "addition",
             "addition to", // would be nice to exclude it in some way?!
             "to", "your", "salary",
-            "john", "promised", "promised to", "to", "cover", "trade", "code", "code with", "with", "tests"
+            "John", "promised", "promised to", "to", "cover", "trade", "code", "code with", "with", "tests"
         )
     }
 
@@ -102,7 +102,7 @@ class WordActionsTest {
 
         val cards = extractWordsFromText_New(content, SentenceEndRule.ByEndingDot, emptySet())
         assertThat(cards.map { it.from }).containsExactly(
-            "businesses", "have",
+            "Businesses", "have",
             "costs",
             "costs to", // with preposition
             "to",
@@ -111,12 +111,12 @@ class WordActionsTest {
             "in", "addition",
             "addition to", // would be nice to exclude it in some way?!
             "to", "your", "salary",
-            "john", "promised", "promised to", "to", "cover", "trade", "code", "code with", "with", "tests"
+            "John", "promised", "promised to", "to", "cover", "trade", "code", "code with", "with", "tests"
         )
 
         val mergedCards = mergeDuplicates(cards)
         assertThat(mergedCards.map { it.from }).containsExactly(
-            "businesses", "have",
+            "Businesses", "have",
             "costs",
             "costs to", // with preposition
             "to",
@@ -126,7 +126,7 @@ class WordActionsTest {
             "addition to", // would be nice to exclude it in some way?!
             //"to",    // duplicate
             "your", "salary",
-            "john", "promised", "promised to",
+            "John", "promised", "promised to",
             //"to",    // duplicate
             //"cover", // duplicate
             "trade", "code", "code with", "with", "tests"
