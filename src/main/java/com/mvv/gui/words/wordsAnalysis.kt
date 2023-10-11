@@ -77,7 +77,7 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
 
         val fromIsNotPrepared = from.isBlank()
                 || from.containsOneOf(unneededPartsForLearning)
-                || from.any { ! (it in " -'." || it.isEnglishLetter()) }
+                || from.any { ! (it in " -'.!?" || it.isEnglishLetter()) }
         val toIsNotPrepared   = to.isBlank()  || to.containsOneOf(unneededPartsForLearning)
         statusesProperty.update(TranslationIsNotPrepared, fromIsNotPrepared || toIsNotPrepared)
 

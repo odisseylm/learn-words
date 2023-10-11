@@ -58,3 +58,11 @@ fun <T> Iterable<T>.firstOr(other: ()->T): T =
 
 inline fun <reified T: Enum<T>> Iterable<T>.toEnumSet(): EnumSet<T> =
     this.toCollection(EnumSet.noneOf(T::class.java))
+
+
+@Suppress("NOTHING_TO_INLINE", "unused")
+inline fun Int.ifIndexNotFound(altValue: Int): Int =
+    if (this == -1) altValue else this
+
+inline fun Int.ifIndexNotFound(altValue: () -> Int): Int =
+    if (this == -1) altValue() else this

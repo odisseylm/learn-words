@@ -189,17 +189,30 @@ internal class AbbreviationRule (val text: String, val indices: Array<Int>) {
         require(indices.isNotEmpty()) { "There are no '.' in abbreviation [$text]." }
     }
 
-    internal fun thisDotIsPartOfTheAbbreviation(text: CharSequence, textDotPosition: Int): Boolean =
-        this.indices.any { thisDotIsPartOfTheAbbreviation(it, text, textDotPosition) }
+    internal fun thisDotIsPartOfTheAbbreviation(text: CharSequence, textDotPosition: Int): Boolean {
+        require(text[textDotPosition] == '.') { "Char [${text[textDotPosition]}] at textDotPosition ($text) should point '.'." }
+        return this.indices.any { abbrevDotPosition -> thisDotIsPartOfTheAbbreviation(abbrevDotPosition, text, textDotPosition) }
+    }
 
 
     private fun thisDotIsPartOfTheAbbreviation(abbrevDotPosition: Int, text: CharSequence, textDotPosition: Int): Boolean {
-        for (i in abbrevDotPosition downTo 0) {
+
+        for (i in abbrevDotPosition downTo -1) {
             val textPos = textDotPosition - (abbrevDotPosition - i)
-            if (textPos < 0 || textPos >= text.length || text[textPos] != this.text[i]) return false
+            if (i == -1) {
+                if (textPos >= 0) {
+                    val charBeforeAbbreviation = text[textPos]
+                    if (charBeforeAbbreviation.isEnglishLetter()) return false
+                }
+            }
+            else {
+                if (textPos < 0 || textPos >= text.length || text[textPos] != this.text[i]) return false
+            }
         }
 
-        for (i in abbrevDotPosition until this.text.length) {
+        val abbreviationLength = this.text.length
+
+        for (i in abbrevDotPosition until abbreviationLength) {
             val textPos = textDotPosition + i - abbrevDotPosition
             if (textPos < 0 || textPos >= text.length || text[textPos] != this.text[i]) return false
         }
@@ -257,8 +270,6 @@ private const val closingQuotesChars = "”’»’❯›❜" //»"
 
 private fun isSentenceEnd(text: CharSequence, position: Int, sentenceEndRule: SentenceEndRule): Boolean {
     val char = text[position]
-    if (char == 'C')
-        Math.random()
 
     if (sentenceEndRule.byLineBreak && char == '\n') return true
 
@@ -268,7 +279,7 @@ private fun isSentenceEnd(text: CharSequence, position: Int, sentenceEndRule: Se
 
         if (!possibleSentenceEndChars.contains(char)) return false
 
-        if (isPartOfAbbreviation(text, position)) return false
+        if (char == '.' && thisDotIsPartOfTheAbbreviation(text, position)) return false
         if (isPartOfNumber(text, position)) return false
 
         return nextCharsAreSentenceBeginning(text, position, sentenceEndRule)
@@ -350,7 +361,7 @@ fun isPartOfNumber(text: CharSequence, position: Int): Boolean {
     return false
 }
 
-private fun isPartOfAbbreviation(text: CharSequence, position: Int) =
+private fun thisDotIsPartOfTheAbbreviation(text: CharSequence, position: Int) =
     abbreviations.any { abbr -> abbr.thisDotIsPartOfTheAbbreviation(text, position) }
 
 
@@ -531,7 +542,8 @@ fun parseSentence(sentence: CharSequence, prevWordCount: Int): Sentence {
     val tempSentenceStuff = Sentence(sentence, emptyList())
     val unneeded = "-—\"!?“”'"
 
-    fun String.isDelimiter(): Boolean = this.isWordCharDelimiter || (this.length == 1 && this[0] in unneeded)
+    // T O D O: would be nice to think what to do with '...'???
+    fun String.isDelimiter(): Boolean = this.isWordCharDelimiter || (this.length == 1 && this[0] in unneeded) || this == "..."
 
     var wordPos = prevWordCount
 
@@ -540,6 +552,8 @@ fun parseSentence(sentence: CharSequence, prevWordCount: Int): Sentence {
         .toString()
         .splitByCharSeparatorsAndPreserveAllTokens(wordCharDelimitersAsString)
         .asSequence()
+        .flatMap { it.separateEllipsisPrefix() }
+        .flatMap { it.separateEllipsisSuffix() }
         .flatMap { it.separateCharPrefixesRepeatably(unneeded) }
         .flatMap { it.separateCharSuffixesRepeatably(unneeded) }
         .filter  { it.isNotBlank() }
@@ -569,3 +583,10 @@ private val String.isNumber: Boolean get() {
 
 // T O D O: probably can be removed or moved to other file (to CardWordEntry file)
 val String.isTranslatable: Boolean get() = !this.isNumber
+
+
+private fun String.separateEllipsisPrefix(): List<String> =
+    if (this.startsWith("...")) listOf("...", this.substring(3).trimStart()) else listOf(this)
+
+private fun String.separateEllipsisSuffix(): List<String> =
+    if (this.endsWith("...")) listOf(this.substring(0, this.length - 3).trimEnd(), "...") else listOf(this)

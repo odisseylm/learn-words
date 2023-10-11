@@ -13,6 +13,7 @@ import java.io.Reader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Optional
+import java.util.TreeMap
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 import kotlin.io.path.notExists
@@ -141,7 +142,7 @@ internal fun extractWordsFromText_New(content: CharSequence, sentenceEndRule: Se
 
 
 fun mergeDuplicates(cards: Iterable<CardWordEntry>): List<CardWordEntry> {
-    val grouped = cards.groupByTo(LinkedHashMap()) { it.from }
+    val grouped = cards.groupByTo(TreeMap(String.CASE_INSENSITIVE_ORDER)) { it.from }
     return grouped.entries.asSequence().map { mergeCards(it.value) }.toList()
 }
 

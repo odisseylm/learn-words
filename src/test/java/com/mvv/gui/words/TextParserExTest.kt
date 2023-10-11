@@ -367,6 +367,174 @@ class TextParserExTest {
 
 
     @Test
+    fun parseRealText_04() {
+        val text =
+            """
+            Talk about your...
+            ...big lizards.
+             """
+
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDot).parse(text)
+
+        val expectedSentence = "Talk about your...\n            ...big lizards."
+        assertThat(sentences.map { it.text }).containsExactly(
+            expectedSentence
+        )
+
+        assertThat(sentences.first().allWords).containsExactly(
+            wordEntry("Talk", 0, expectedSentence),
+            wordEntry("about", 1, expectedSentence),
+            wordEntry("your", 2, expectedSentence),
+            wordEntry("big", 3, expectedSentence),
+            wordEntry("lizards", 4, expectedSentence),
+        )
+    }
+
+
+    @Test
+    fun parseRealText_05() {
+        val text =
+            """
+            Talk about your...
+            ...big lizards.
+            Anyway, if you don't feel
+            like being alone tonight...
+            ...Joey and Chandler are
+            helping me with my furniture.
+            """
+
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDot).parse(text)
+
+        val expectedSentence = "Talk about your...\n            ...big lizards."
+        assertThat(sentences.map { it.text }).containsExactly(
+            "Talk about your...\n            ...big lizards.",
+            "Anyway, if you don't feel\n            like being alone tonight...",
+            "...", // T O D O: Ideally it should be part of some sentence... probably...
+            "Joey and Chandler are\n            helping me with my furniture."
+        )
+
+        assertThat(sentences.first().allWords).containsExactly(
+            wordEntry("Talk", 0, expectedSentence),
+            wordEntry("about", 1, expectedSentence),
+            wordEntry("your", 2, expectedSentence),
+            wordEntry("big", 3, expectedSentence),
+            wordEntry("lizards", 4, expectedSentence),
+        )
+    }
+
+
+    @Test
+    fun parseRealText_06_0() {
+
+        //assertEquals(".", ".")
+
+        val text =
+            //"She always drank it out of the can. I should have known. Hey. Ross, let me ask you a question."
+            "She always drank it out of the can. I should have known. Hey. Ross, let me ask you a question."
+
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDot).parse(text)
+
+        val expectedSentence1 = "She always drank it out of the can."
+        val expectedSentence2 = "I should have known."
+
+        assertThat(sentences.map { it.text }).containsExactly(
+            "She always drank it out of the can.",
+            "I should have known.",
+            "Hey.",
+            "Ross, let me ask you a question."
+        )
+
+        assertThat(sentences[0].allWords).containsExactly(
+            wordEntry("She", 0, expectedSentence1),
+            wordEntry("always", 1, expectedSentence1),
+            wordEntry("drank", 2, expectedSentence1),
+            wordEntry("it", 3, expectedSentence1),
+            wordEntry("out", 4, expectedSentence1),
+            wordEntry("of", 5, expectedSentence1),
+            wordEntry("the", 6, expectedSentence1),
+            wordEntry("can", 7, expectedSentence1),
+        )
+
+        assertThat(sentences[1].allWords).containsExactly(
+            wordEntry("I", 8, expectedSentence2),
+            wordEntry("should", 9, expectedSentence2),
+            wordEntry("have", 10, expectedSentence2),
+            wordEntry("known", 11, expectedSentence2),
+        )
+    }
+
+
+    @Test
+    fun parseRealText_06() {
+
+        //assertEquals(".", ".")
+
+        val text =
+            """
+            She always drank it out of the can.
+            I should have known.
+            Hey. Ross, let me ask you a question.
+            """
+
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDot).parse(text)
+
+
+        val expectedSentence1 = "She always drank it out of the can."
+        val expectedSentence2 = "I should have known."
+
+        assertThat(sentences.map { it.text }).containsExactly(
+            "She always drank it out of the can.",
+            "I should have known.",
+            "Hey.",
+            "Ross, let me ask you a question."
+        )
+
+        assertThat(sentences[0].allWords).containsExactly(
+            wordEntry("She", 0, expectedSentence1),
+            wordEntry("always", 1, expectedSentence1),
+            wordEntry("drank", 2, expectedSentence1),
+            wordEntry("it", 3, expectedSentence1),
+            wordEntry("out", 4, expectedSentence1),
+            wordEntry("of", 5, expectedSentence1),
+            wordEntry("the", 6, expectedSentence1),
+            wordEntry("can", 7, expectedSentence1),
+        )
+
+        assertThat(sentences[1].allWords).containsExactly(
+            wordEntry("I", 8, expectedSentence2),
+            wordEntry("should", 9, expectedSentence2),
+            wordEntry("have", 10, expectedSentence2),
+            wordEntry("known", 11, expectedSentence2),
+        )
+    }
+
+
+    @Test
+    fun parseRealText_07() {
+
+        //assertEquals(".", ".")
+
+        val text =
+            """
+            One woman. That's like saying there's only one flavor of ice cream for you.
+            """
+
+        val sentences: List<Sentence> = TextParserEx(SentenceEndRule.ByEndingDot).parse(text)
+
+        assertThat(sentences.map { it.text }).containsExactly(
+            "One woman.",
+            "That's like saying there's only one flavor of ice cream for you.",
+        )
+
+        assertThat(sentences.first().allWords).contains(
+            wordEntry("One", 0, "One woman."),
+            wordEntry("woman", 1, "One woman."), // word woman should be without '.'
+            // ...
+        )
+    }
+
+
+    @Test
     fun extractWordsFromText_New_IgnorePrepositionAfterComa() {
         val text =
             "The colors, white, grey, blue, orange, in the wall, in the furniture, in the sky beyond the window, were . . . were . . . ."
@@ -489,12 +657,23 @@ class TextParserExTest {
         assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" Mr.", 3)).isTrue
         assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" Mr. ", 3)).isTrue
 
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Mr.", 0)).isFalse
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Mr.", 1)).isFalse
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Mr. ", 3)).isFalse
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Mr.  ", 4)).isFalse
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation("Mr.", 0) }
+            .hasMessage("Char [M] at textDotPosition (Mr.) should point '.'.")
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation("Mr.", 1) }
+            .hasMessage("Char [r] at textDotPosition (Mr.) should point '.'.")
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation("Mr. ", 3) }
+            .hasMessage("Char [ ] at textDotPosition (Mr. ) should point '.'.")
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation("Mr.  ", 4) }
+            .hasMessage("Char [ ] at textDotPosition (Mr.  ) should point '.'.")
 
         assertions.assertAll()
+    }
+
+
+    @Test
+    fun temp5545() {
+        val abbreviation = AbbreviationRule("e.g.")
+        abbreviation.thisDotIsPartOfTheAbbreviation("ee.g.", 2)
     }
 
 
@@ -505,37 +684,51 @@ class TextParserExTest {
 
         val abbreviation = AbbreviationRule("e.g.")
 
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("e.g.", 0)).isFalse
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("e.g.", 1)).isTrue
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("e.g.", 2)).isFalse
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("e.g.", 3)).isTrue
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("e.g.", 4)).isFalse
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation("e.g.", 0) }
+            .hasMessage("Char [e] at textDotPosition (e.g.) should point '.'.")
 
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 0)).isFalse
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 1)).isFalse
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("e.g.", 1)).isTrue
+
         assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 2)).isTrue
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 3)).isFalse
+
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("ee.g.", 2)).isFalse
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Фe.g.", 2)).isTrue
+
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g. ", 2)).isTrue
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.\t", 2)).isTrue
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.\n", 2)).isTrue
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.\"", 2)).isTrue
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.\'", 2)).isTrue
+
+        // ??? Should it be true ot false
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.otherEnglishChars", 2)).isTrue
+
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation("e.g.", 2) }
+            .hasMessage("Char [g] at textDotPosition (e.g.) should point '.'.")
+
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("e.g.", 3)).isTrue
+
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation("e.g. ", 4) }
+            .hasMessage("Char [ ] at textDotPosition (e.g. ) should point '.'.")
+
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 0) }
+            .hasMessage("Char [ ] at textDotPosition ( e.g.) should point '.'.")
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 1) }
+            .hasMessage("Char [e] at textDotPosition ( e.g.) should point '.'.")
+
+        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 2)).isTrue
+
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 3) }
+            .hasMessage("Char [g] at textDotPosition ( e.g.) should point '.'.")
+
         assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 4)).isTrue
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 5)).isFalse
-        assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 6)).isFalse
+
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 5) }
+            .hasMessage("String index out of range: 5")
+        assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 6) }
+            .hasMessage("String index out of range: 6")
 
         assertions.assertAll()
-    }
-
-
-    @Test
-    @DisplayName("isEndOf 02")
-    fun test_isEndOf_02() {
-        val abbreviation = AbbreviationRule("Mr.")
-
-        assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Mr.", 2)).isTrue
-        assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" Mr.", 3)).isTrue
-        assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" Mr. ", 3)).isTrue
-
-        assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Mr.", 0)).isFalse
-        assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Mr.", 1)).isFalse
-        assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Mr. ", 3)).isFalse
-        assertThat(abbreviation.thisDotIsPartOfTheAbbreviation("Mr.  ", 4)).isFalse
     }
 
 

@@ -26,3 +26,6 @@ fun timerTask(action: ()->Unit): TimerTask =
 
 
 inline val Int.isEven: Boolean get() = (this % 2) == 0
+
+
+fun <T> T.isOneOf(vararg values: T): Boolean = values.any { it == this }

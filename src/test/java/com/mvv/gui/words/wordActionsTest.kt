@@ -115,7 +115,9 @@ class WordActionsTest {
         )
 
         val mergedCards = mergeDuplicates(cards)
-        assertThat(mergedCards.map { it.from }).containsExactly(
+        assertThat(mergedCards
+            .sortedBy { it.sourcePositions.first() }
+            .map { it.from }).containsExactly(
             "Businesses", "have",
             "costs",
             "costs to", // with preposition
