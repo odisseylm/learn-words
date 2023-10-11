@@ -14,7 +14,7 @@ class HowJSayWebDownloadSpeechSynthesizerTest {
         val minJs = javaClass.getResourceAsStream("/script-min-formatted.js")
             .use { stream -> String(stream!!.readAllBytes(), UTF_8) }
 
-        val templates = parseSoundWordUrlTemplates(minJs)
+        val templates = parseHowJSaySoundWordUrlTemplates(minJs)
 
         assertThat(templates).containsExactlyInAnyOrder(
             "https://d1qx7pbj0dvboc_1.cloudfront.net/\${word}.mp3",
@@ -32,6 +32,9 @@ class HowJSayWebDownloadSpeechSynthesizerTest {
     @Disabled("for manual testing")
     fun speak() {
         val speechSynthesizer = HowJSayWebDownloadSpeechSynthesizer(JavaFxSoundPlayer(PlayingMode.Sync))
-        speechSynthesizer.speak(" door \n ")
+
+        val text = " door \n "
+        speechSynthesizer.cleanCacheFor(text)
+        speechSynthesizer.speak(text)
     }
 }

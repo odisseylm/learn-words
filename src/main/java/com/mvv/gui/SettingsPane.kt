@@ -65,6 +65,8 @@ class SettingsPane : ToolBar() {
 
         goodVoices.addListener( ListChangeListener { _ -> refreshDropDown(voiceChoicesDropDown) } )
         deadVoices.addListener( SetChangeListener  { _ -> refreshDropDown(voiceChoicesDropDown) } )
+
+        playWordOnSelectCheckBox.isSelected = settings.autoPlay
     }
 
     private fun fillVoices(voiceChoicesDropDown: ComboBox<VoiceChoice>) {

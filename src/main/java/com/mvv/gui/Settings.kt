@@ -25,6 +25,7 @@ class Settings (
     val isMaximized: Boolean = false,
     val sentenceEndRule: SentenceEndRule = SentenceEndRule.ByEndingDotOrLineBreak,
     val toAutoRemoveIgnored: Boolean = true,
+    val autoPlay: Boolean = true,
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -53,6 +54,7 @@ private fun loadSettings(): Settings {
         sentenceEndRule = props.getProperty("sentenceEndRule", "ByEndingDotOrLineBreak")
             .let { SentenceEndRule.valueOf(it) },
         toAutoRemoveIgnored = props.getProperty("toAutoRemoveIgnored", "true").toBoolean(),
+        autoPlay = props.getProperty("autoPlay", "true").toBoolean(),
     )
 }
 
