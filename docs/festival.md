@@ -15,6 +15,7 @@ Commands:
  - Say: (SayText "Hello from Ubuntu")
  - (tts "story.txt" nil)
  - Say intro text using current voice: (intro)
+ - `echo "This is a test." | text2wave -o output.wav`
 
 
 

@@ -95,6 +95,11 @@ class ToolBarControllerBig (val controller: LearnWordsController) {
             button24xIcon("/icons/big/add-base-words-with-plus.png")) { controller.addAllBaseWordsInSet() },
         new24xButton("No base", "Ignore warning 'no base word in set'.",
             button24xIcon("/icons/big/add-base-words-with-cross.png")) { controller.ignoreNoBaseWordInSet() },
+
+        stub(),
+        new24xButton("Refresh", "Sort & Refresh'.",
+            button24xIcon("/icons/iu_update_obj.png")) { // TODO: find 24x24 icon
+            controller.currentWordsList.sort(); controller.currentWordsList.refresh() },
     )
 
     private fun stub(width: Double = 6.0): Node = Label(" ").also { it.prefWidth = width }

@@ -121,3 +121,6 @@ private fun String.indexesOf(subString: String): List<Int> {
 
     return indexes
 }
+
+
+// TODO: add support of https://api.lingvolive.com/sounds?uri=LingvoUniversal%20(En-Ru)%2Firis.wav

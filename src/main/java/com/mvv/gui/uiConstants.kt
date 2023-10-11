@@ -10,6 +10,9 @@ val openDocumentKeyCodeCombination = KeyCodeCombination(KeyCode.O, KeyCombinatio
 val saveDocumentKeyCodeCombination = KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN)
 
 val lowerCaseKeyCombination = KeyCodeCombination(KeyCode.U, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN)
+val copySelectedOrCurrentLineCombination = KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN)
+val removeCurrentLineCombination = KeyCodeCombination(KeyCode.Y, KeyCombination.CONTROL_DOWN)
+
 val translateSelectedKeyCombination = KeyCodeCombination(KeyCode.T, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN)
 
 val moveSelectedTextToExamplesKeyCombination = listOf(

@@ -38,7 +38,7 @@ class MainWordsPane : BorderPane() {
     //internal val toolBar = ToolBar()
 
     internal val currentWordsList       = TableView<CardWordEntry>()
-    private  val numberColumn           = TableColumn<CardWordEntry, Int>("No.")
+    internal val numberColumn           = TableColumn<CardWordEntry, Int>("No.")
     internal val fromColumn             = TableColumn<CardWordEntry, String>("English")
     private  val fromWordCountColumn    = TableColumn<CardWordEntry, Int>() // "N")
     private  val statusesColumn         = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"

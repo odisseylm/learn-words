@@ -1,8 +1,10 @@
 package com.mvv.gui.javafx
 
+import com.mvv.gui.copySelectedOrCurrentLineCombination
 import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextArea
 import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextField
 import com.mvv.gui.lowerCaseKeyCombination
+import com.mvv.gui.removeCurrentLineCombination
 import javafx.application.Platform
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
@@ -348,6 +350,8 @@ internal class TextFieldTableCellUtils {
             */
 
             addKeyBinding(textField, lowerCaseKeyCombination) { toLowerCase(it) }
+            addKeyBinding(textField, copySelectedOrCurrentLineCombination) { copySelectedOrCurrentLine(it) }
+            addKeyBinding(textField, removeCurrentLineCombination) { removeCurrentLine(it) }
 
             textField.addEventHandler(KeyEvent.KEY_RELEASED) {
                 processEditCompletion(textField, it, cell, converter, customValueSetter) }

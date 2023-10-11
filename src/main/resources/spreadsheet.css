@@ -83,7 +83,7 @@
     /*-fx-graphic: url("icons/exclamation-4.png");*/
 }
 
-#currentWords  .table-row-cell .WordCardStatus-TooManyExampleCardCandidates {
+#currentWords  .table-row-cell .WordCardStatus-TooManyExampleNewCardCandidates {
     -fx-alignment: center;
     /*-fx-background-color: #ffdcc0;*/
 

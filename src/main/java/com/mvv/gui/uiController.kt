@@ -152,9 +152,9 @@ class LearnWordsController (
 
         currentWordsList.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
             val card = currentWordsSelection.selectedItem
-            val clickedOnSourceSentence = currentWordsSelection.selectedCells?.getOrNull(0)?.tableColumn == pane.sourceSentencesColumn
+            val tableColumn = currentWordsSelection.selectedCells?.getOrNull(0)?.tableColumn
 
-            if (ev.clickCount >= 2 && card != null && clickedOnSourceSentence)
+            if (ev.clickCount >= 2 && card != null && tableColumn.isOneOf(pane.sourceSentencesColumn, pane.numberColumn))
                 showSourceSentences(card)
         }
 
@@ -254,8 +254,8 @@ class LearnWordsController (
         newScene.accelerators[lowerCaseKeyCombination] = Runnable { toLowerCaseRow() }
 
         newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT1, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingFrom() }
-        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTo() }
-        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT3, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTranscription() }
+        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTranscription() }
+        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT3, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTo() }
         newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT4, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingRemarks() }
     }
 
@@ -834,7 +834,7 @@ class LearnWordsController (
         if (selection.isBlank()) return null
 
         val newCard: CardWordEntry = selection.parseToCard() ?: return null
-        if (!newCard.isGoodLearnCardCandidate()) return null
+        //if (!newCard.isGoodLearnCardCandidate()) return null
 
         // replace/remove also ending '\n'
         if (textInput.selection.end < textInput.text.length && textInput.text[textInput.selection.end] == '\n')
@@ -965,7 +965,9 @@ fun CardWordEntry.isGoodLearnCardCandidate(): Boolean {
     val wordCount = sentence.allWords.asSequence()
         .filter { it.word !in ignoreWordsForGoodLearnCardCandidate }
         .count()
-    return wordCount <= 4 && sentence.allWords.all { !it.word.first().isUpperCase() }
+    return wordCount <= 4 && sentence.allWords
+        // ??? Why I've added it? ???
+        .all { !it.word.first().isUpperCase() }
 }
 
 
@@ -979,7 +981,7 @@ fun String.parseToCard(): CardWordEntry? {
         else indexOfRussianCharOrSpecial
 
     val from = this.substring(0, startOfTranslationCountStatus).trim()
-    val to = this.substring(startOfTranslationCountStatus).trim()
+    val to = this.substring(startOfTranslationCountStatus).trim().removeSuffix(";").trim()
 
     return CardWordEntry(from, to)
 }
