@@ -43,24 +43,45 @@ fun newMenuItem(label: String, tooltip: String, icon: ImageView, keyCombination:
     newMenuItemImpl(label, tooltip, icon, keyCombination, action)
 
 
-private fun newMenuItemImpl(label: String, tooltip: String? = null, icon: ImageView? = null, keyCombination: KeyCombination? = null, action: (()->Unit)? = null): MenuItem =
-    if (tooltip == null) MenuItem(label, icon ?: emptyIcon16x16())
-    else {
-        // Standard MenuItem class does not support tooltips,
-        // but CustomMenuItem does not show accelerator :-)
-        // T O D O: fix showing accelerator and tooltip together
+/**
+ * @param icon In the most cases every popup-menu should have icons in (at least some) menu items to look user-friendly.
+ *             In some special cases (for example 'Recents' sub-menu) directly pass noIcon() to really do not have any icon.
+ */
+private fun newMenuItemImpl(label: String, tooltip: String? = null, icon: ImageView? = null, keyCombination: KeyCombination? = null, action: (()->Unit)? = null): MenuItem {
 
-        keyCombination?.also { log.warn { "Menu item key-combination [$keyCombination] most probably will not be shown." } }
+    val graphicNode = when (icon) {
+        // In the most cases every popup-menu should have icons in (at least some) menu items.
+        // For some special cases (for example 'Recents' sub-menu) pass noIcon() to really do not have any icon.
+        noIcon() -> null
+        null -> emptyIcon16x16()
+        else -> icon
+    }
 
-        CustomMenuItem(Label(label, icon ?: emptyIcon16x16()).also {
-            it.styleClass.add("custom-menu-item-content")
+    val menuItem = if (tooltip == null) MenuItem(label, graphicNode)
+                   else createCustomMenuItem(label, tooltip, graphicNode, keyCombination)
+
+    keyCombination?.let { menuItem.accelerator = it }
+    action?.let { menuItem.onAction = safeRunMenuCommand(it) }
+
+    return menuItem
+}
+
+
+private fun createCustomMenuItem(label: String, tooltip: String? = null, graphicNode: Node?, keyCombination: KeyCombination? = null): MenuItem {
+    // Standard MenuItem class does not support tooltips,
+    // but CustomMenuItem does not show accelerator :-)
+    // T O D O: fix showing accelerator and tooltip together
+
+    keyCombination?.also { log.warn { "Menu item key-combination [$keyCombination] most probably will not be shown." } }
+
+    val cssClass = if (graphicNode == null) "custom-menu-item-without-icon-content" else "custom-menu-item-content"
+
+    return CustomMenuItem(Label(label, graphicNode)
+        .also {
+            it.styleClass.add(cssClass)
             Tooltip.install(it, Tooltip(tooltip))
         })
-    }
-    .also { menuItem ->
-        keyCombination?.let { menuItem.accelerator = it }
-        action?.let         { menuItem.onAction = safeRunMenuCommand(it) }
-    }
+}
 
 
 private val underDebug: Boolean = isDebuggerPresent()

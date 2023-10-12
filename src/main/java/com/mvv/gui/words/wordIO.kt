@@ -17,6 +17,7 @@ const val plainWordsFileExt = ".txt"
 const val ignoredWordsFilename = "ignored-words${plainWordsFileExt}"
 val ignoredWordsFile = dictDirectory.resolve(ignoredWordsFilename)
 
+const val maxMemoCardWordCount = 300
 
 val Path.isMemoWordFile: Boolean get() = this.name.lowercase().endsWith(memoWordFileExt.lowercase())
 val Path.isInternalCsvFormat: Boolean get() {
@@ -80,6 +81,6 @@ fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Pa
             //val folder = file.parent.resolve("split")
             val numberSuffix = "%02d".format(i + 1)
 
-            saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${internalWordCardsFileExt}"), CsvFormat.Internal, cardWordEntries)
+            //saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${internalWordCardsFileExt}"), CsvFormat.Internal, cardWordEntries)
             saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${memoWordFileExt}"), CsvFormat.MemoWord, cardWordEntries)
         }

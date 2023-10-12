@@ -2,6 +2,7 @@ package com.mvv.gui
 
 import com.mvv.gui.javafx.buttonIcon
 import com.mvv.gui.javafx.newMenuItem
+import com.mvv.gui.javafx.noIcon
 import javafx.event.EventHandler
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
@@ -101,10 +102,19 @@ class MenuController (val controller: LearnWordsController) {
     private fun addRecentMenuItems(recentMenuItem: Menu) {
         recentMenuItem.items.clear()
 
-        val recentMenuItems: List<MenuItem> = RecentDocuments().recents.map { recentPath ->
-            MenuItem(recentPath.name)
-                .also { it.onAction = EventHandler { controller.loadWordsFromFile(recentPath) } }
+        val recentFiles = RecentDocuments().recentFiles
+        val recentDirectories = RecentDocuments().recentDirectories
+
+        val recentFilesMenuItems: List<MenuItem> = recentFiles.map { recentFile ->
+            newMenuItem(recentFile.name, recentFile.toString(), noIcon()) { controller.loadWordsFromFile(recentFile) }
         }
-        recentMenuItem.items.setAll(recentMenuItems)
+        val recentDirsMenuItems: List<MenuItem> = recentDirectories.map { recentDir ->
+            newMenuItem(recentDir.name + "/", recentDir.toString(), noIcon()) { controller.loadWordsFromFile(recentDir) }
+        }
+
+        recentMenuItem.items.addAll(recentFilesMenuItems)
+        if (recentFilesMenuItems.isNotEmpty() && recentDirsMenuItems.isNotEmpty())
+            recentMenuItem.items.add(SeparatorMenuItem())
+        recentMenuItem.items.addAll(recentDirsMenuItems)
     }
 }

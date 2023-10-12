@@ -3,6 +3,7 @@ package com.mvv.gui
 import com.mvv.gui.dictionary.getProjectDirectory
 import com.mvv.gui.util.userHome
 import com.mvv.gui.words.SentenceEndRule
+import com.mvv.gui.words.isInternalCsvFormat
 import java.io.FileReader
 import java.nio.file.Path
 import java.util.Properties
@@ -59,20 +60,31 @@ private fun loadSettings(): Settings {
 }
 
 
-private val recentsFile = userHome.resolve(".learn-words/recents.txt")
+private val recentFilesFile = userHome.resolve(".learn-words/recents.txt")
+private val recentDirectoriesFile = userHome.resolve(".learn-words/recentDirs.txt")
 private val recentCount = 5
 
 class RecentDocuments {
 
-    val recents: List<Path> get() =
-        if (recentsFile.exists())
-            recentsFile.readText(UTF_8).split('\n').map { it.trim() }.distinct().take(recentCount).map { Path.of(it) }
+    val recentFiles: List<Path> get() =
+        if (recentFilesFile.exists())
+            recentFilesFile.readText(UTF_8).split('\n').map { it.trim() }.distinct().take(recentCount).map { Path.of(it) }
+            else emptyList()
+
+    val recentDirectories: List<Path> get() =
+        if (recentDirectoriesFile.exists())
+            recentDirectoriesFile.readText(UTF_8).split('\n').map { it.trim() }.distinct().take(recentCount).map { Path.of(it) }
             else emptyList()
 
     fun addRecent(file: Path) {
-        val newRecents = (listOf(file) + recents).map { it.toString() }.distinct().take(recentCount)
+        if (file.isInternalCsvFormat) {
+            val newRecentFiles = (listOf(file) + recentFiles).map { it.toString() }.distinct().take(recentCount)
+            recentFilesFile.parent.createDirectories()
+            recentFilesFile.writeText(newRecentFiles.joinToString("\n"))
+        }
 
-        recentsFile.parent.createDirectories()
-        recentsFile.writeText(newRecents.joinToString("\n"))
+        val newRecentDirs = (listOf(file.parent) + recentDirectories).map { it.toString() }.distinct().take(recentCount)
+        recentDirectoriesFile.parent.createDirectories()
+        recentDirectoriesFile.writeText(newRecentDirs.joinToString("\n"))
     }
 }

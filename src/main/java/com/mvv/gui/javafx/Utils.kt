@@ -7,6 +7,7 @@ import javafx.scene.Node
 import javafx.scene.Parent
 import javafx.scene.control.Control
 import javafx.scene.control.Tooltip
+import javafx.scene.image.ImageView
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import javafx.stage.Stage
@@ -17,6 +18,12 @@ private val log = mu.KotlinLogging.logger {}
 
 
 internal fun emptyIcon16x16() = Rectangle(16.0, 16.0, Color(0.0, 0.0, 0.0, 0.0))
+
+// In general using shared ImageView is risky,
+// but this instance should not be really used/rendered.
+// It is designed to be used only as flag.
+private val noIconSingleton = ImageView()
+fun noIcon(): ImageView = noIconSingleton
 
 
 fun setWindowTitle(node: Node, title: String) {

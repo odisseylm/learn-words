@@ -442,6 +442,8 @@
 .custom-menu-item-content {
     -fx-graphic-text-gap: 10;
 }
+.custom-menu-item-without-icon-content {
+}
 
 .menu-item:hover {
     -fx-background-color: #3E3E40;

@@ -383,15 +383,16 @@ class LearnWordsController (
         Import,
     }
 
-    private fun doLoadAction(openFile: Path?, loadAction: (Path)->LoadType) {
+    private fun doLoadAction(fileOrDir: Path?, loadAction: (Path)->LoadType) {
 
         validateCurrentDocumentIsSaved("Open file")
 
-        val file: File =
-            ( if (openFile == null) showOpenDialog() else openFile.toFile() )
-            ?: return
+        val filePath = if (fileOrDir == null || fileOrDir.isDirectory())
+            showOpenDialog(dir = fileOrDir)?.toPath()
+            else fileOrDir
 
-        val filePath = file.toPath()
+        if (filePath == null) return
+
         if (filePath == ignoredWordsFile) {
             showErrorAlert(pane, "You cannot open [${ignoredWordsFile.name}].")
             return
@@ -409,13 +410,15 @@ class LearnWordsController (
         }
     }
 
-    private fun showOpenDialog(vararg extensions: String): File? {
-        val allExtensions = arrayOf("*.csv", "*.words", "*.txt", "*.srt")
-        val ext = if (extensions.isNotEmpty()) extensions else allExtensions
+    private fun showOpenDialog(dir: Path? = null, extensions: List<String> = emptyList()): File? {
+
+        val allExtensions = listOf("*.csv", "*.words", "*.txt", "*.srt")
+        val ext = extensions.ifEmpty { allExtensions }
+
         val fc = FileChooser()
         fc.title = "Select words file"
-        fc.initialDirectory = dictDirectory.toFile()
-        fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", *ext))
+        fc.initialDirectory = (dir ?: dictDirectory).toFile()
+        fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", ext))
 
         return fc.showOpenDialog(pane.scene.window)
     }
@@ -674,7 +677,13 @@ class LearnWordsController (
         saveWordCards(internalFormatFile, CsvFormat.Internal, words)
         RecentDocuments().addRecent(internalFormatFile)
 
-        saveWordCards(filePath.useFilenameSuffix(memoWordFileExt), CsvFormat.MemoWord, words)
+        val memoWordFile = filePath.useFilenameSuffix(memoWordFileExt)
+        if (words.size <= maxMemoCardWordCount)
+            saveWordCards(memoWordFile, CsvFormat.MemoWord, words)
+        else {
+            memoWordFile.deleteIfExists()
+            log.info { "Saving MemoWord file ${memoWordFile.name} is skipped since it has too many entries ${words.size} (> $maxMemoCardWordCount)." }
+        }
 
         val splitFilesDir = filePath.parent.resolve(filePath.baseWordsFilename)
         if (splitFilesDir.exists()) {
@@ -726,7 +735,6 @@ class LearnWordsController (
                 val wordCountPerFile: Int = it.toInt()
                 require(wordCountPerFile >= 1) { "Word count should be positive value." }
 
-                val maxMemoCardWordCount = 300
                 require(wordCountPerFile <= maxMemoCardWordCount) {
                     "Word count should be less than 300 since memo-word supports only $maxMemoCardWordCount sized word sets." }
 
@@ -900,7 +908,7 @@ class LearnWordsController (
 
 
     fun removeWordsFromOtherSet() {
-        val file = showOpenDialog("*.csv") ?: return
+        val file = showOpenDialog(extensions = listOf("*.csv")) ?: return
 
         if (file == currentWordsFile) {
             showInfoAlert(pane, "You cannot remove themself :-)")
@@ -983,9 +991,12 @@ fun tryToAdToExamples(example: String, card: CardWordEntry): Boolean {
     if (example.isBlank()) return false
 
     val examples = card.examples
-    val preparedExamplesToMove = example.trim().replace(';', '\n')
+    val fixedExample = example
+        .trim().removePrefix(";").removeSuffix(";")
+    val preparedExamplesToMove = fixedExample
+        .trim().replace(';', '\n')
 
-    if (examples.containsOneOf(example, preparedExamplesToMove)) return false
+    if (examples.containsOneOf(example, fixedExample, preparedExamplesToMove)) return false
 
     val separator = when {
         examples.isBlank() -> ""
@@ -1016,15 +1027,17 @@ fun CardWordEntry.isGoodLearnCardCandidate(): Boolean {
 
 fun String.parseToCard(): CardWordEntry? {
 
-    val indexOfRussianCharOrSpecial = this.indexOfFirst { it.isRussianLetter() || it == '_' }
+    val text = this.trim().removePrefix(";").removeSuffix(";").trim()
+
+    val indexOfRussianCharOrSpecial = text.indexOfFirst { it.isRussianLetter() || it == '_' }
     if (indexOfRussianCharOrSpecial == -1 || indexOfRussianCharOrSpecial == 0) return null
 
-    val startOfTranslationCountStatus = if (this[indexOfRussianCharOrSpecial - 1] == '(')
+    val startOfTranslationCountStatus = if (text[indexOfRussianCharOrSpecial - 1] == '(')
         indexOfRussianCharOrSpecial - 1
         else indexOfRussianCharOrSpecial
 
-    val from = this.substring(0, startOfTranslationCountStatus).trim()
-    val to = this.substring(startOfTranslationCountStatus).trim().removeSuffix(";").trim()
+    val from = text.substring(0, startOfTranslationCountStatus).trim()
+    val to = text.substring(startOfTranslationCountStatus).trim().removeSuffix(";").trim()
 
     return CardWordEntry(from, to)
 }
