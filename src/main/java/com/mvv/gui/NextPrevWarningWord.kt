@@ -7,7 +7,7 @@ import com.mvv.gui.words.WordCardStatus
 import javafx.beans.value.ChangeListener
 import javafx.scene.control.ComboBox
 import javafx.scene.control.TableView
-import javafx.scene.layout.FlowPane
+import javafx.scene.layout.HBox
 
 
 class NextPrevWarningWord (private val currentWords: TableView<CardWordEntry>) {
@@ -19,7 +19,7 @@ class NextPrevWarningWord (private val currentWords: TableView<CardWordEntry>) {
 
     private val prevButton = newButton(buttonIcon("icons/search_prev.gif")) { selectPrevItemWithWarning() }
     private val nextButton = newButton(buttonIcon("icons/search_next.gif")) { selectNextItemWithWarning() }
-    val pane = FlowPane().also { it.children.addAll(nextButton, warningsDropDown, prevButton) }
+    val pane = HBox().also { it.children.addAll(nextButton, warningsDropDown, prevButton) }
 
     private fun selectNextItemWithWarning() {
         if (currentWords.items.isEmpty()) return
