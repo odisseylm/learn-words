@@ -54,8 +54,6 @@ class MainWordsPane : BorderPane() {
     internal val ignoredWordsList = ListView<String>()
     internal val allProcessedWordsList = ListView<String>()
 
-    internal val removeIgnoredButton = Button("Remove ignored")
-
     private val warnWordCountsTextFormat = " (%d words with warning)"
     private val warnWordCountsText = Text(warnWordCountsTextFormat)
     private val warnWordCountsTextItems = listOf(
@@ -120,8 +118,6 @@ class MainWordsPane : BorderPane() {
         val buttonsMiddleBar = VBox(5.0)
         buttonsMiddleBar.isFillWidth = true
 
-        removeIgnoredButton.styleClass.add("middleBarButton")
-        buttonsMiddleBar.children.add(removeIgnoredButton)
 
         contentPane.add(buttonsMiddleBar, 1, 1)
 

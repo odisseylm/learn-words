@@ -20,7 +20,7 @@ class MenuController (val controller: LearnWordsController) {
             newMenuItem("New", // new-01.png new-02.png new-03.png new-04.png new-05.png new16x16.gif new-05.gif
                 buttonIcon("/icons/new-03.png"), newDocumentKeyCodeCombination) {
                 controller.newDocument() },
-            newMenuItem("Load file", "Open internal or memo-word csv, or srt file",
+            newMenuItem("Open/Import file", "Open internal/memo-word csv, or Import srt file",
                 buttonIcon("/icons/open16x16.gif"), openDocumentKeyCodeCombination) {
                 controller.loadWordsFromFile() },
             recentMenu,
@@ -62,8 +62,10 @@ class MenuController (val controller: LearnWordsController) {
                 controller.moveSelectedToIgnored() },
             newMenuItem("Remove ignored", "Removed already 'ignored' words from current words.") {
                 controller.removeIgnoredFromCurrentWords() },
-            newMenuItem("Remove words of other sets", "Remove words from other sets") {
+            newMenuItem("Remove words of All other sets", "Remove words from other sets") {
                 controller.removeWordsFromOtherSetsFromCurrentWords() },
+            newMenuItem("Remove words of other set...", "Remove words from other sets") {
+                controller.removeWordsFromOtherSet() },
 
             SeparatorMenuItem(),
             newMenuItem("Translate Selected", buttonIcon("/icons/translate-16-01.png"), translateSelectedKeyCombination) {

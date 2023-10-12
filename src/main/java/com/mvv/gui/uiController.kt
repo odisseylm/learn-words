@@ -111,7 +111,6 @@ class LearnWordsController (
 
         pane.sceneProperty().addListener { _, _, newScene -> newScene?.let { addKeyBindings(it) } }
 
-        pane.removeIgnoredButton.onAction = EventHandler { removeIgnoredFromCurrentWords() }
 
 
         pane.fromColumn.isSortable = true
@@ -388,17 +387,9 @@ class LearnWordsController (
 
         validateCurrentDocumentIsSaved("Open file")
 
-        val file: File? = if (openFile == null) {
-            val fc = FileChooser()
-            fc.title = "Select words file"
-            fc.initialDirectory = dictDirectory.toFile()
-            fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", "*.csv", "*.words", "*.txt", "*.srt"))
-
-            fc.showOpenDialog(pane.scene.window)
-        }
-        else openFile.toFile()
-
-        if (file == null) return
+        val file: File =
+            ( if (openFile == null) showOpenDialog() else openFile.toFile() )
+            ?: return
 
         val filePath = file.toPath()
         if (filePath == ignoredWordsFile) {
@@ -416,6 +407,17 @@ class LearnWordsController (
                 resetDocumentIsDirty()
             }
         }
+    }
+
+    private fun showOpenDialog(vararg extensions: String): File? {
+        val allExtensions = arrayOf("*.csv", "*.words", "*.txt", "*.srt")
+        val ext = if (extensions.isNotEmpty()) extensions else allExtensions
+        val fc = FileChooser()
+        fc.title = "Select words file"
+        fc.initialDirectory = dictDirectory.toFile()
+        fc.extensionFilters.add(FileChooser.ExtensionFilter("Words file", *ext))
+
+        return fc.showOpenDialog(pane.scene.window)
     }
 
     internal fun doIsCurrentDocumentIsSaved(currentAction: String = ""): Boolean =
@@ -876,6 +878,23 @@ class LearnWordsController (
             })
 
         return newCard
+    }
+
+
+    fun removeWordsFromOtherSet() {
+        val file = showOpenDialog("*.csv") ?: return
+
+        if (file == currentWordsFile) {
+            showInfoAlert(pane, "You cannot remove themself :-)")
+            return
+        }
+
+        val words: List<String> = loadWords(file.toPath())
+        val wordsSet: Set<String> = words.toSortedSet(String.CASE_INSENSITIVE_ORDER)
+
+        val cardsToRemove = currentWords.filter { it.from in wordsSet }
+        // Let's try to remove as one bulk operation to minimize notifications hell.
+        currentWords.removeAll(cardsToRemove)
     }
 
 }
