@@ -15,10 +15,15 @@ val removeCurrentLineCombination = KeyCodeCombination(KeyCode.Y, KeyCombination.
 
 val translateSelectedKeyCombination = KeyCodeCombination(KeyCode.T, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN)
 
-val moveSelectedTextToExamplesKeyCombination = listOf(
+/** SubText = current line or selected text */
+val moveSubTextToExamplesKeyCombination = listOf(
     KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN),
     KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))
 
-val moveSelectedToSeparateCardKeyCombination = listOf(
+val moveSubTextToSeparateCardKeyCombination = listOf(
     KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN),
     KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))
+
+val moveSubTextToExamplesAndSeparateCardKeyCombination = listOf(
+    KeyCodeCombination(KeyCode.J, KeyCombination.CONTROL_DOWN),
+    KeyCodeCombination(KeyCode.J, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN))

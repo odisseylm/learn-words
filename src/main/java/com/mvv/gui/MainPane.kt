@@ -2,6 +2,7 @@ package com.mvv.gui
 
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
+import com.mvv.gui.util.skipFirst
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.*
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
@@ -168,11 +169,15 @@ class MainWordsPane : BorderPane() {
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
         toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextArea,
             onEditCreate = { cell, editor ->
-                addKeyBinding(editor, moveSelectedTextToExamplesKeyCombination) {
-                    moveSelectedTextToExamples(cell.tableRow.item, editor) }
+                // first key-binding is already registered in menu
+                addKeyBinding(editor, moveSubTextToExamplesKeyCombination.skipFirst()) {
+                    moveSubTextToExamples(cell.tableRow.item, editor) }
 
-                addKeyBinding(editor, moveSelectedToSeparateCardKeyCombination) {
-                    controller.moveSelectedToSeparateCard(editor, cell.tableRow.item, toColumn) }
+                addKeyBinding(editor, moveSubTextToSeparateCardKeyCombination.skipFirst()) {
+                    controller.moveSubTextToSeparateCard(editor, cell.tableRow.item, toColumn) }
+
+                addKeyBinding(editor, moveSubTextToExamplesAndSeparateCardKeyCombination.skipFirst()) {
+                    controller.moveSubTextToExamplesAndSeparateCard(editor, cell.tableRow.item, toColumn) }
 
                 editor.keepCellEditorState( { Pair(toColumn, cell.tableRow.item) }, controller.cellEditorStates)
             })
@@ -215,8 +220,8 @@ class MainWordsPane : BorderPane() {
         examplesColumn.cellFactory = Callback { ExTextFieldTableCell<CardWordEntry, String>(
             TextFieldType.TextArea, DefaultStringConverter(),
             onEditCreate = { cell, editor ->
-                addKeyBinding(editor, moveSelectedToSeparateCardKeyCombination) {
-                    controller.moveSelectedToSeparateCard(editor, cell.tableRow.item!!, examplesColumn) }
+                addKeyBinding(editor, moveSubTextToSeparateCardKeyCombination) {
+                    controller.moveSubTextToSeparateCard(editor, cell.tableRow.item!!, examplesColumn) }
 
                 editor.keepCellEditorState( { Pair(examplesColumn, cell.tableRow.item) }, controller.cellEditorStates)
             })

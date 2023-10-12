@@ -52,21 +52,3 @@ private val String.isSrtNumber: Boolean get() = srtNumber.asPredicate().test(thi
 
 // 00:23:03,281
 internal val String.isSrtTimestamp: Boolean get() = srtTimestampPattern.asPredicate().test(this)
-
-/*
-internal fun String.isSrtTimestamp(): Boolean =
-    Scanner(this).use { s ->
-
-        val matchedString = s.findInLine(srtTimestampPattern)
-        if (matchedString != null) {
-            val result = s.match()
-
-            println(this)
-            for (i in 1..result.groupCount())
-                println(result.group(i))
-
-            result.groupCount() == 4
-        }
-        else false
-    }
-*/

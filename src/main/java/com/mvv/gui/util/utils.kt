@@ -29,3 +29,7 @@ inline val Int.isEven: Boolean get() = (this % 2) == 0
 
 
 fun <T> T.isOneOf(vararg values: T): Boolean = values.any { it == this }
+
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T> Iterable<T>.skipFirst(): List<T> = this.drop(1)

@@ -50,10 +50,12 @@ class MenuController (val controller: LearnWordsController) {
                 controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
 
             SeparatorMenuItem(),
-            newMenuItem("Selection to example") { controller.moveSelectedTextToExamples() }
-                .also { it.accelerator = moveSelectedTextToExamplesKeyCombination.first() },
-            newMenuItem("Selection to new card") { controller.moveSelectedToSeparateCard() }
-                .also { it.accelerator = moveSelectedToSeparateCardKeyCombination.first() },
+            newMenuItem("Line/Selection to example") { controller.moveSubTextToExamples() }
+                .also { it.accelerator = moveSubTextToExamplesKeyCombination.first() },
+            newMenuItem("Line/Selection to new card") { controller.moveSubTextToSeparateCard() }
+                .also { it.accelerator = moveSubTextToSeparateCardKeyCombination.first() },
+            newMenuItem("Line/Selection to examples & new card") { controller.moveSubTextToExamplesAndSeparateCard() }
+                .also { it.accelerator = moveSubTextToExamplesAndSeparateCardKeyCombination.first() },
         )
 
         val wordsMenu = Menu("_Words", null,

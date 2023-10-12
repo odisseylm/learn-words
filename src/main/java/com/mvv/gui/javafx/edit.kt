@@ -3,6 +3,7 @@ package com.mvv.gui.javafx
 import com.mvv.gui.CellEditorState
 import com.mvv.gui.util.ifIndexNotFound
 import javafx.application.Platform
+import javafx.scene.control.IndexRange
 import javafx.scene.control.TextArea
 import javafx.scene.control.TextInputControl
 import kotlin.math.max
@@ -25,6 +26,38 @@ fun toLowerCase(textInput: TextInputControl) {
 }
 
 
+val TextInputControl.selectionOrCurrentLine: String get() =
+    this.text.substring(this.selectionOrCurrentLineRange)
+
+val TextInputControl.selectionOrCurrentLineRange: IntRange get() {
+    val currentText = this.text
+
+    return if (this.selectedText.isNotEmpty())
+        this.selection.toIntRange()
+    else {
+        val startLineIndex = currentText.lastIndexOf('\n', 0, caretPosition) + 1
+        val lastLineIndexInclusive = if (currentText[caretPosition] == '\n') caretPosition
+        else currentText.indexOf('\n', caretPosition)
+                        .ifIndexNotFound { currentText.length - 1 }
+        IntRange(startLineIndex, lastLineIndexInclusive)
+    }
+}
+
+
+fun TextInputControl.replaceText(range: IntRange, text: String) =
+    this.replaceText(range.toIndexRange(), text)
+
+fun TextInputControl.selectRange(range: IntRange) =
+    // !!! '+ 1' is needed because it is caret position !!!
+    this.selectRange(min(range.first, range.last), max(range.first, range.last) + 1)
+
+
+fun IndexRange.toIntRange(): IntRange = IntRange(this.start, this.end - 1)
+fun IntRange.toIndexRange(): IndexRange = IndexRange(min(this.first, this.last), max(this.first, this.last) + 1)
+
+// to easy port java code to kotlin
+val IntRange.endExclusive: Int get() = max(this.first, this.last) + 1
+
 fun copySelectedOrCurrentLine(textInput: TextInputControl) {
 
     val currentText = textInput.text
@@ -43,7 +76,10 @@ fun copySelectedOrCurrentLine(textInput: TextInputControl) {
         val anchor = textInput.anchor
 
         val startLineIndex = currentText.lastIndexOf('\n', 0, caretPosition) + 1
-        val lastLineIndexInclusive = currentText.indexOf('\n', caretPosition).ifIndexNotFound { currentText.length - 1 }
+        val lastLineIndexInclusive =
+            if (currentText[caretPosition] == '\n') caretPosition
+            else currentText.indexOf('\n', caretPosition)
+                            .ifIndexNotFound { currentText.length - 1 }
 
         val currentLine = currentText.substring(startLineIndex, lastLineIndexInclusive + 1)
             .let { if (it.endsWith('\n')) it else it + '\n' }
@@ -72,12 +108,12 @@ fun removeCurrentLine(textInput: TextArea) {
 
 
 /**
- * @param endIndex exclusive
+ * @param endIndexExclusive exclusive
  */
-private fun String.lastIndexOf(char: Char, startIndex: Int, endIndex: Int): Int {
-    if (endIndex  <= 0) return -1
+private fun String.lastIndexOf(char: Char, startIndex: Int, endIndexExclusive: Int): Int {
+    if (endIndexExclusive  <= 0) return -1
 
-    for (i in endIndex downTo startIndex) {
+    for (i in endIndexExclusive - 1 downTo startIndex) {
         if (this[i] == char) return i
     }
 

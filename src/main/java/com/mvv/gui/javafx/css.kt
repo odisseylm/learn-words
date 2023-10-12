@@ -27,7 +27,7 @@ fun getStyles(selector: String, cssFiles: Iterable<String>): List<Rule> {
     }
 
     val ruleSelectors = listOf(selector, ".$selector", "*.$selector").map { Selector.createSelector(it) }
-    return cssRules.filter { it.selectors.containsOneOf(ruleSelectors) } // .also { println("asCssText: ${it.asCssText}") }
+    return cssRules.filter { it.selectors.containsOneOf(ruleSelectors) }
 }
 
 val List<Rule>.asCssText: String get() {

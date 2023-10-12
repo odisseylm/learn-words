@@ -795,48 +795,67 @@ class LearnWordsController (
     fun addToListenSet() =
         currentWordsSelection.selectedItems.forEach { it.predefinedSets += PredefinedSet.DifficultToListen }
 
-    internal fun moveSelectedToSeparateCard() {
+    internal fun moveSubTextToSeparateCard() {
         val focusOwner = pane.scene.focusOwner
         val editingCard = currentWordsList.editingItem
         val editingTableColumn: TableColumn<CardWordEntry, *>? = currentWordsList.editingCell?.column?.let { currentWordsList.columns[it] }
 
         if (editingCard != null && (editingTableColumn === pane.toColumn || editingTableColumn === pane.examplesColumn)
             && focusOwner is TextArea && focusOwner.belongsToParent(currentWordsList)) {
-            moveSelectedToSeparateCard(focusOwner, editingCard, editingTableColumn)
+            moveSubTextToSeparateCard(focusOwner, editingCard, editingTableColumn)
         }
     }
 
-    internal fun moveSelectedTextToExamples() {
+    internal fun moveSubTextToExamplesAndSeparateCard() {
+        val focusOwner = pane.scene.focusOwner
+        val editingCard = currentWordsList.editingItem
+        val editingTableColumn: TableColumn<CardWordEntry, *>? = currentWordsList.editingCell?.column?.let { currentWordsList.columns[it] }
+
+        if (editingCard != null && (editingTableColumn === pane.toColumn)
+            && focusOwner is TextArea && focusOwner.belongsToParent(currentWordsList)) {
+            moveSubTextToExamplesAndSeparateCard(focusOwner, editingCard, editingTableColumn)
+        }
+    }
+
+    internal fun moveSubTextToExamples() {
         val focusOwner = pane.scene.focusOwner
         val editingCard = currentWordsList.editingItem
         val editingTableColumn: TableColumn<CardWordEntry, *>? = currentWordsList.editingCell?.column?.let { currentWordsList.columns[it] }
 
         if (editingCard != null && editingTableColumn === pane.toColumn
             && focusOwner is TextArea && focusOwner.belongsToParent(currentWordsList)) {
-            moveSelectedTextToExamples(editingCard, focusOwner)
+            moveSubTextToExamples(editingCard, focusOwner)
         }
     }
 
-    internal fun moveSelectedToSeparateCard(editor: TextInputControl, item: CardWordEntry, tableColumn: TableColumn<CardWordEntry, String>) {
-        createCardFromSelection(editor, tableColumn, item, currentWordsList)
+    internal fun moveSubTextToSeparateCard(editor: TextInputControl, item: CardWordEntry, tableColumn: TableColumn<CardWordEntry, String>) {
+        createCardFromSelectionOrCurrentLine(editor, tableColumn, item, currentWordsList)
             ?.also {
                 reanalyzeOnlyWords(it)
                 addChangeCardListener(it)
             }
     }
 
-    private fun createCardFromSelection(
+    internal fun moveSubTextToExamplesAndSeparateCard(editor: TextInputControl, item: CardWordEntry, tableColumn: TableColumn<CardWordEntry, String>) {
+        tryToAdToExamples(editor.selectionOrCurrentLine, item)
+        moveSubTextToSeparateCard(editor, item, tableColumn)
+    }
+
+    private fun createCardFromSelectionOrCurrentLine(
         textInput: TextInputControl,
         tableColumn: TableColumn<CardWordEntry, String>,
         currentCard: CardWordEntry,
         currentWords: TableView<CardWordEntry>,
     ): CardWordEntry? {
 
-        val selection = textInput.selectedText
-        if (selection.isBlank()) return null
+        val selectionOrCurrentLine = textInput.selectionOrCurrentLine
+        if (selectionOrCurrentLine.isBlank()) return null
 
-        val newCard: CardWordEntry = selection.parseToCard() ?: return null
-        //if (!newCard.isGoodLearnCardCandidate()) return null
+        val newCard: CardWordEntry = selectionOrCurrentLine.parseToCard() ?: return null
+
+        if (textInput.selectedText.isEmpty()) {
+            textInput.selectRange(textInput.selectionOrCurrentLineRange)
+        }
 
         // replace/remove also ending '\n'
         if (textInput.selection.end < textInput.text.length && textInput.text[textInput.selection.end] == '\n')
@@ -869,7 +888,6 @@ class LearnWordsController (
                 currentWords.items.add(currentCardIndex + 1, newCard)
             },
             {
-                println("# Storing state in createCardFromSelection ${CellEditorState(scrollLeft, scrollTop, caretPosition)}")
                 cellEditorStates[Pair(pane.examplesColumn, currentCard)] = CellEditorState(scrollLeft, scrollTop, caretPosition)
 
                 currentWords.selectItem(currentCard)
@@ -951,30 +969,36 @@ internal fun String.highlightWords(word: String, color: String): String {
 }
 
 
-internal fun moveSelectedTextToExamples(card: CardWordEntry, textInput: TextInputControl) {
-    val rawExamplesToMove = textInput.selectedText
-    if (rawExamplesToMove.isBlank()) return
+internal fun moveSubTextToExamples(card: CardWordEntry, textInput: TextInputControl) {
+    val textRange = textInput.selectionOrCurrentLineRange
 
-    val preparedExamplesToMove = rawExamplesToMove.trim().replace(';', '\n')
-    if (card.examples.containsOneOf(rawExamplesToMove, preparedExamplesToMove)) return
+    if (tryToAdToExamples(textInput.selectionOrCurrentLine, card)) {
+        //textInput.selectRange(textInput.selectionOrCurrentLineRange)
+        textInput.replaceText(textRange, "")
+    }
+}
+
+
+fun tryToAdToExamples(example: String, card: CardWordEntry): Boolean {
+    if (example.isBlank()) return false
+
+    val examples = card.examples
+    val preparedExamplesToMove = example.trim().replace(';', '\n')
+
+    if (examples.containsOneOf(example, preparedExamplesToMove)) return false
 
     val separator = when {
-        card.examples.isBlank() -> ""
-        card.examples.endsWith("\n\n") -> ""
-        card.examples.endsWith("\n") -> "\n"
+        examples.isBlank() -> ""
+        examples.endsWith("\n\n") -> ""
+        examples.endsWith("\n") -> "\n"
         else -> "\n\n"
     }
     val endLine = if (preparedExamplesToMove.endsWith('\n')) "" else "\n"
 
     card.examples += "$separator$preparedExamplesToMove$endLine"
 
-    //val newCaretPos = min(textInput.selection.start, textInput.selection.end)
-    //textInput.text = textInput.text.substring(0, textInput.selection.start) + textInput.text.substring(textInput.selection.end)
-    //textInput.selectRange(newCaretPos, newCaretPos)
-
-    textInput.deleteText(textInput.selection.start, textInput.selection.end)
+    return true
 }
-
 
 
 private val ignoreWordsForGoodLearnCardCandidate = listOf("a", "the", "to", "be")
