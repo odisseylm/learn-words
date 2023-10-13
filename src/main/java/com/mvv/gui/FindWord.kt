@@ -1,13 +1,14 @@
 package com.mvv.gui
 
+import com.mvv.gui.javafx.newButton
 import com.mvv.gui.javafx.selectItem
 import com.mvv.gui.words.CardWordEntry
 import javafx.event.EventHandler
 import javafx.event.EventType
 import javafx.scene.Node
-import javafx.scene.control.Button
 import javafx.scene.control.TableView
 import javafx.scene.control.TextField
+import javafx.scene.image.ImageView
 import javafx.scene.layout.HBox
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -21,9 +22,7 @@ class FindWord (private val currentWords: TableView<CardWordEntry>)  {
         it.onAction = EventHandler { findAndSelectWord() }
     }
 
-    private val goButton = Button("Go").also {
-        it.onAction = EventHandler { findAndSelectWord() }
-    }
+    private val goButton = newButton(ImageView("/icons/binocular.png")) { findAndSelectWord() }
 
     val pane = HBox().also { it.children.addAll(editor, goButton) }
 

@@ -1,14 +1,17 @@
 package com.mvv.gui.util
 
+import javafx.application.Platform
 import java.util.TimerTask
 
 
 private val log = mu.KotlinLogging.logger {}
 
 
-fun Boolean.doIfTrue(action: ()->Unit) {
+inline fun Boolean.doIfTrue(action: ()->Unit) {
     if (this) action()
 }
+// just alias
+inline fun Boolean.doIfSuccess(action: ()->Unit) = this.doIfTrue(action)
 
 
 //fun <T> List<T>.addIf(predicate: Boolean, additional: ()->Iterable<T>): List<T> =
@@ -23,6 +26,9 @@ fun timerTask(action: ()->Unit): TimerTask =
             catch (ex: Throwable) { log.error(ex) { "Error in timer: $ex" } }
         }
     }
+
+@Suppress("unused")
+fun uiTimerTask(action: ()->Unit): TimerTask = timerTask { Platform.runLater(action) }
 
 
 inline val Int.isEven: Boolean get() = (this % 2) == 0

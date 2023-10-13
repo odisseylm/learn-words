@@ -98,7 +98,7 @@ class ToolBarControllerBig (val controller: LearnWordsController) {
 
         stub(),
         new24xButton("Refresh", "Sort & Refresh'.",
-            button24xIcon("/icons/iu_update_obj.png")) { // TODO: find 24x24 icon
+            button24xIcon("/icons/big/iu_update_obj_24.png")) {
             controller.currentWordsList.sort(); controller.currentWordsList.refresh() },
     )
 

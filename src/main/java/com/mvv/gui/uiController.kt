@@ -51,7 +51,7 @@ class LearnWordsController (
     private val allDictionaries: List<Dictionary> = AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
     internal val dictionary = CachedDictionary(DictionaryComposition(allDictionaries))
 
-    private val currentWords: ObservableList<CardWordEntry> = FXCollections.observableArrayList()
+    private val currentWords: ObservableList<CardWordEntry> get() = pane.currentWordsList.items
     private var documentIsDirty: Boolean = false
 
     private val ignoredWords: ObservableList<String> = FXCollections.observableArrayList()
@@ -103,9 +103,6 @@ class LearnWordsController (
 
         pane.allProcessedWordsList.items = SortedList(allProcessedWords, String.CASE_INSENSITIVE_ORDER)
 
-
-        pane.currentWordsList.items = currentWords // Sorted
-        //currentWordsList.setComparator(cardWordEntryComparator)
 
         addKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
             if (!currentWordsList.isEditing) copySelectedWord() } })
@@ -305,7 +302,7 @@ class LearnWordsController (
 
     fun addTranscriptions() =
         addTranscriptions(currentWords, dictionary)
-            .doIfTrue { markDocumentIsDirty() }
+            .doIfSuccess { markDocumentIsDirty() }
 
 
     fun removeSelected() {
