@@ -26,6 +26,7 @@ import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
 import javafx.scene.input.MouseEvent
 import javafx.stage.FileChooser
+import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.commons.text.StringEscapeUtils.escapeHtml4
 import java.io.File
 import java.io.Reader
@@ -189,6 +190,12 @@ class LearnWordsController (
     private fun playFrom(card: CardWordEntry) {
         val voice = settingsPane.voice
         CompletableFuture.runAsync { playWord(card.from.trim(), voice) }
+            .exceptionally {
+                val rootCause = ExceptionUtils.getRootCause(it)
+                //log.info { "Word [${card.from}] is not played => ${rootCause.javaClass.simpleName}: ${rootCause.message}" }
+                log.info { "Word [${card.from}] is not played => ${rootCause.message}" }
+                null
+            }
     }
 
     private fun playWord(text: String, voice: VoiceChoice) {

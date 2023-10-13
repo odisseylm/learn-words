@@ -1,9 +1,11 @@
 package com.mvv.gui.audio
 
 import com.mvv.gui.util.downloadUrl
+import com.mvv.gui.util.readBytes
 import com.mvv.gui.util.safeSubstring
 import com.mvv.gui.util.userHome
 import java.nio.file.Path
+import kotlin.text.Charsets.ISO_8859_1
 import kotlin.text.Charsets.UTF_8
 
 
@@ -27,6 +29,15 @@ class HowJSayWebDownloadSpeechSynthesizer(audioPlayer: AudioPlayer) : CachingSpe
 
     override fun isSupported(text: String): Boolean = text.isBlank() || isOneWordText(text)
     override fun validateSupport(text: String) = validateTextIsOneWord(text, this.javaClass.simpleName)
+
+    override fun validateFileContent(audioFilePath: Path, word: String) {
+        super.validateFileContent(audioFilePath, word)
+
+        val bytes = audioFilePath.readBytes(200U)
+        val asString = String(bytes, ISO_8859_1)
+        if (asString.startsWith("<?xml") && asString.contains("<Error>"))
+            throw SpeechSynthesizerException("No data for the word [$word] at howjsay.com.")
+    }
 }
 
 

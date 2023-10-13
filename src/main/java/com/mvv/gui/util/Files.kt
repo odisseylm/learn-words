@@ -1,5 +1,7 @@
 package com.mvv.gui.util
 
+import org.apache.commons.io.IOUtils
+import java.io.FileInputStream
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.name
@@ -23,3 +25,11 @@ val Path.nullIfNotExists: Path? get() = if (this.exists()) this else null
 
 
 val userHome: Path get() = Path.of(System.getProperty("user.home"))
+
+
+fun Path.readBytes(bytesCount: UInt): ByteArray =
+    FileInputStream(this.toFile()).use {
+        val buffer = ByteArray(bytesCount.toInt())
+        IOUtils.read(it, buffer)
+        buffer
+    }

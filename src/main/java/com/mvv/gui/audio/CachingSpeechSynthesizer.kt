@@ -10,6 +10,7 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
+import kotlin.io.path.fileSize
 
 
 private val log = mu.KotlinLogging.logger {}
@@ -45,7 +46,13 @@ abstract class CachingSpeechSynthesizer (
             Files.write(cachedAudioFilePath, downloadAudioFile(word))
         }
 
+        validateFileContent(cachedAudioFilePath, word)
+
         audioPlayer.play(AudioSource(cachedAudioFilePath))
+    }
+
+    protected open fun validateFileContent(audioFilePath: Path, word: String) {
+        if (audioFilePath.fileSize() == 0L) throw SpeechSynthesizerException("Audio file for [$word] is corrupted.")
     }
 
     fun cleanCacheFor(text: String) = cachedAudioFilePath(text).deleteIfExists()
