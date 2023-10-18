@@ -37,7 +37,7 @@ internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
 
     val baseWordsToAddMap: Map<CardWordEntry, List<CardWordEntry>> = withoutBaseWord
         .asSequence()
-        .map { card -> Pair(card, englishBaseWords(card.from, dictionary)) }
+        .map { card -> Pair(card, englishBaseWords(card.from, dictionary, card)) }
         .filter { it.second.isNotEmpty() }
         .associate { it }
 

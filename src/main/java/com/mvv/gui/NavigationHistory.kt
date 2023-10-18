@@ -36,6 +36,8 @@ class NavigationHistory {
                 currentPos--    // most probably too simple approach
             }
         }
+
+        if (currentPos < -1) currentPos = -1
     }
 
     fun visited(entry: CardWordEntry) {

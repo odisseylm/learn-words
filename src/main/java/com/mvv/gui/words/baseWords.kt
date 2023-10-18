@@ -273,12 +273,20 @@ private fun possibleEnglishBaseWords(word: String): List<String> {
 }
 
 
-fun englishBaseWords(word: String, dictionary: Dictionary): List<CardWordEntry> {
+fun englishBaseWords(word: String, dictionary: Dictionary, deriveFromCard: CardWordEntry = CardWordEntry("","")): List<CardWordEntry> {
     val foundWords: List<CardWordEntry> = possibleEnglishBaseWords(word)
         .asSequence()
         .map { baseWord ->
-            try { dictionary.translateWord(baseWord) }
-            catch (ignore: Exception) { CardWordEntry(baseWord, "") } }
+            //val card = deriveFromCard.copy()
+            //    .also { it.from = baseWord; it.transcription = ""; it.to = ""; it.examples = ""; it.predefinedSets = emptySet(); it.missedBaseWords = emptyList() }
+            val card = CardWordEntry(baseWord, "").also {
+                it.sourcePositions = deriveFromCard.sourcePositions
+                it.sourceSentences = deriveFromCard.sourceSentences
+            }
+            try { dictionary.translateWord(card) }
+            catch (ignore: Exception) { }
+            card
+        }
         .filter { it.to.isNotBlank() }
         .toList()
 

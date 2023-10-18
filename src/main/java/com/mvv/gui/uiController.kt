@@ -952,17 +952,17 @@ fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S,T>) {
 }
 
 
-internal fun String.highlightWords(word: String, color: String): String {
+internal fun String.highlightWords(word_: String, color: String): String {
 
     val startTag = "<span style=\"color:$color; font-weight: bold;\"><strong><b><font color=\"$color\">"
     val endTag = "</font></b></strong></span>"
 
-    val wordTrimmed = word.trim()
     var result = this
     var wordIndex = -1
 
-    val searchWord = if (!result.contains(wordTrimmed) && wordTrimmed.contains(' '))
-                     wordTrimmed.substringBefore(' ') else wordTrimmed
+    //val searchWord = if (!result.contains(wordTrimmed) && wordTrimmed.contains(' '))
+    //                 wordTrimmed.substringBefore(' ') else wordTrimmed
+    val searchWord = this.findWordToHighlight(word_)
 
     // T O D O: would be nice to rewrite using StringBuilder, but not now :-) (it is not used very often)
     do {
@@ -980,6 +980,49 @@ internal fun String.highlightWords(word: String, color: String): String {
     return result
 }
 
+internal fun String.findWordToHighlight(tryToHighlightWord: String): String {
+    val word = tryToHighlightWord.trim()
+
+    val preparations: List<(String)->String> = listOf(
+        { it },
+        { it.removePrefix("to ") },
+        { it.removePrefix("to be ") },
+        { it.removeSuffix("ing") },
+        { it.removeSuffix("ling") },
+        { it.removeSuffix("e") },
+        { it.removeSuffix("le") },
+        { it.removeSuffix("y") },
+        { it.removeSuffix("ly") },
+        { it.removePrefix("to ").removeSuffix("e") },
+        { it.removePrefix("to be ").removeSuffix("e") },
+        { it.removePrefix("to ").removeSuffix("s to") },
+        { it.removePrefix("to ").removeSuffix(" to") },
+        { it.removeSuffix(" to") },
+        { it.removeSuffix(" to").removeSuffix("e") },
+        { it.removeSuffix(" to").removeSuffix("le") },
+        { it.removeSuffix(" to").removeSuffix("y") },
+        { it.removeSuffix(" to").removeSuffix("ly") },
+
+        { it.removePrefix("to ").firstWord() },
+        { it.removePrefix("to be ").firstWord() },
+        { it.removePrefix("to ").firstWord().removeSuffix("e") },
+        { it.removePrefix("to ").firstWord().removeSuffix("le") },
+        { it.removePrefix("to ").firstWord().removeSuffix("y") },
+        { it.removePrefix("to ").firstWord().removeSuffix("ly") },
+        { it.removePrefix("to be ").firstWord().removeSuffix("s") },
+    )
+
+    return preparations.firstNotNullOfOrNull { prep ->
+        val preparedWord = prep(word)
+        if (preparedWord in this) preparedWord else null
+    } ?: word
+}
+
+private fun String.firstWord(): String {
+    val s = this.trim()
+    val endIndex = s.indexOfOneOfChars(" \n\t")
+    return if (endIndex == -1) s else s.substring(0, endIndex)
+}
 
 internal fun moveSubTextToExamples(card: CardWordEntry, textInput: TextInputControl) {
     val textRange = textInput.selectionOrCurrentLineRange
@@ -999,6 +1042,18 @@ fun tryToAdToExamples(example: String, card: CardWordEntry): Boolean {
         .trim().removePrefix(";").removeSuffix(";")
     val preparedExamplesToMove = fixedExample
         .trim().replace(';', '\n')
+
+    // TODO: use all possible combination of this replacements (the easiest way use numbers as binary number)
+    //val possibleReplacements: List<Map<String,String>> = listOf(
+    //    mapOf(";" to "\n"),
+    //    mapOf("а>" to "а)", "б>" to "б)", "в>" to "в)", "г>" to "г)", "д>" to "д)", "е>" to "е)", ),
+    //    mapOf("а>" to "\n", "б>" to "\n", "в>" to "\n", "г>" to "\n", "д>" to "\n", "е>" to "\n", ),
+    //    mapOf("а>" to "", "б>" to "", "в>" to "", "г>" to "", "д>" to "", "е>" to "", ),
+    //    mapOf(
+    //      юр юрид уст спорт амер полит жарг театр воен ист фон посл парл австрал шутл полигр
+    //      "(_юр.)" to "(юр.)", "_юр." to "(юр.)",
+    //      ),
+    //)
 
     if (examples.containsOneOf(example, fixedExample, preparedExamplesToMove)) return false
 

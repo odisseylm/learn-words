@@ -15,7 +15,7 @@ const val internalWordCardsFileExt = ".csv"
 const val memoWordFileExt = "-RuEn-MemoWord.csv" //
 const val plainWordsFileExt = ".txt"
 const val ignoredWordsFilename = "ignored-words${plainWordsFileExt}"
-val ignoredWordsFile = dictDirectory.resolve(ignoredWordsFilename)
+val ignoredWordsFile: Path = dictDirectory.resolve(ignoredWordsFilename)
 
 const val maxMemoCardWordCount = 300
 
