@@ -7,28 +7,28 @@ import javafx.scene.input.KeyEvent
 
 
 
-fun <C: Control> addKeyBinding(control: C, keyBinding: KeyCombination, action: (C)-> Unit) =
-    addKeyBinding(control, KeyEvent.KEY_RELEASED, keyBinding, action)
+fun <C: Control> addLocalKeyBinding(control: C, keyBinding: KeyCombination, action: (C)-> Unit) =
+    addLocalKeyBinding(control, KeyEvent.KEY_RELEASED, keyBinding, action)
 
-fun <C: Control> addKeyBinding(control: C, keyBindings: Iterable<KeyCombination>, action: (C)-> Unit) =
-    keyBindings.forEach { keyBinding -> addKeyBinding(control, KeyEvent.KEY_RELEASED, keyBinding, action) }
+fun <C: Control> addLocalKeyBinding(control: C, keyEventType: EventType<KeyEvent>, keyBinding: KeyCombination, action: (C)-> Unit) =
+    addLocalKeyBindings(control, setOf(keyEventType), mapOf(keyBinding to action))
 
-fun <C: Control> addKeyBinding(control: C, keyEventType: EventType<KeyEvent>, keyBinding: KeyCombination, action: (C)-> Unit) =
-    addKeyBindings(control, setOf(keyEventType), mapOf(keyBinding to action))
+fun <C: Control> addLocalKeyBindings(control: C, keyBindings: Iterable<KeyCombination>, action: (C)-> Unit) =
+    keyBindings.forEach { keyBinding -> addLocalKeyBinding(control, KeyEvent.KEY_RELEASED, keyBinding, action) }
 
-fun <C: Control> addKeyBindings(control: C, keyBindings: Map<KeyCombination, (C)-> Unit>) =
-    addKeyBindings(control, setOf(KeyEvent.KEY_RELEASED), keyBindings)
+fun <C: Control> addLocalKeyBindings(control: C, keyBindings: Map<KeyCombination, (C)-> Unit>) =
+    addLocalKeyBindings(control, setOf(KeyEvent.KEY_RELEASED), keyBindings)
 
-fun <C: Control> addKeyBindings(control: C, keyEventTypes: Set<EventType<KeyEvent>>, keyBindings: Map<KeyCombination, (C)-> Unit>) {
+fun <C: Control> addLocalKeyBindings(control: C, keyEventTypes: Set<EventType<KeyEvent>>, keyBindings: Map<KeyCombination, (C)-> Unit>) {
     if (control.scene != null)
-        addKeyBindingsImpl(control, keyEventTypes, keyBindings)
+        addLocalKeyBindingsImpl(control, keyEventTypes, keyBindings)
     else
         // T O D O: would be nice to add protection from repeated call
         control.sceneProperty().addListener { _,_, newScene ->
-            if (newScene != null) addKeyBindingsImpl(control, keyEventTypes, keyBindings) }
+            if (newScene != null) addLocalKeyBindingsImpl(control, keyEventTypes, keyBindings) }
 }
 
-private fun <C: Control> addKeyBindingsImpl(control: C, keyEventTypes: Set<EventType<KeyEvent>>, keyBindings: Map<KeyCombination, (C)-> Unit>) =
+private fun <C: Control> addLocalKeyBindingsImpl(control: C, keyEventTypes: Set<EventType<KeyEvent>>, keyBindings: Map<KeyCombination, (C)-> Unit>) =
     keyEventTypes.forEach { keyEventType -> // KeyEvent.KEY_PRESSED, KeyEvent.KEY_TYPED, KeyEvent.KEY_RELEASED
 
         val rootKeyCombinations: Set<KeyCombination> = control.scene.accelerators.keys
@@ -38,3 +38,24 @@ private fun <C: Control> addKeyBindingsImpl(control: C, keyEventTypes: Set<Event
             notRegisteredYetKeyBindings.forEach { (keyBinding, action) -> if (keyBinding.match(it)) action(control) }
         }
     }
+
+
+
+
+fun <C: Control> addGlobalKeyBinding(control: C, keyBinding: KeyCombination, action: (C)-> Unit) =
+    addGlobalKeyBindings(control, mapOf(keyBinding to action))
+
+fun <C: Control> addGlobalKeyBindings(control: C, keyBindings: Iterable<KeyCombination>, action: (C)-> Unit) =
+    keyBindings.forEach { keyBinding -> addGlobalKeyBinding(control, keyBinding, action) }
+
+fun <C: Control> addGlobalKeyBindings(control: C, keyBindings: Map<KeyCombination, (C)-> Unit>) {
+    if (control.scene != null)
+        addGlobalKeyBindingsImpl(control, keyBindings)
+    else
+        // T O D O: would be nice to add protection from repeated call
+        control.sceneProperty().addListener { _,_, newScene ->
+            if (newScene != null) addGlobalKeyBindingsImpl(control, keyBindings) }
+}
+
+private fun <C: Control> addGlobalKeyBindingsImpl(control: C, keyBindings: Map<KeyCombination, (C)-> Unit>) =
+    keyBindings.forEach { (keyBinding, action) -> control.scene.accelerators.putIfAbsent(keyBinding) { action(control) } }

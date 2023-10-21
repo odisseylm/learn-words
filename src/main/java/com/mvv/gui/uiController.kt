@@ -104,7 +104,7 @@ class LearnWordsController (
         pane.allProcessedWordsList.items = SortedList(allProcessedWords, String.CASE_INSENSITIVE_ORDER)
 
 
-        addKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
+        addGlobalKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
             if (!currentWordsList.isEditing) copySelectedWord() } })
 
         pane.sceneProperty().addListener { _, _, newScene -> newScene?.let { addKeyBindings(it) } }

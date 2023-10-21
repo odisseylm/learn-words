@@ -318,7 +318,7 @@ internal class TextFieldTableCellUtils {
                 event.consume()
             }
 
-            addKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
+            addLocalKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
 
             textField.addEventHandler(KeyEvent.KEY_RELEASED) {
                 processEditCompletion(textField, it, cell, converter, customValueSetter) }
@@ -347,9 +347,9 @@ internal class TextFieldTableCellUtils {
             }
             */
 
-            addKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
-            addKeyBinding(textField, copySelectedOrCurrentLineCombination) { copySelectedOrCurrentLine(it) }
-            addKeyBinding(textField, removeCurrentLineCombination) { removeCurrentLine(it) }
+            addLocalKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
+            addLocalKeyBinding(textField, copySelectedOrCurrentLineCombination) { copySelectedOrCurrentLine(it) }
+            addLocalKeyBinding(textField, removeCurrentLineCombination) { removeCurrentLine(it) }
 
             textField.addEventHandler(KeyEvent.KEY_RELEASED) {
                 processEditCompletion(textField, it, cell, converter, customValueSetter) }

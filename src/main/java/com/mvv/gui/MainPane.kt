@@ -168,13 +168,13 @@ class MainWordsPane : BorderPane() {
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
         toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextArea,
             onEditCreate = { cell, editor ->
-                addKeyBinding(editor, moveSubTextToExamplesKeyCombination) {
+                addLocalKeyBindings(editor, moveSubTextToExamplesKeyCombination) {
                     moveSubTextToExamples(cell.tableRow.item, editor) }
 
-                addKeyBinding(editor, moveSubTextToSeparateCardKeyCombination) {
+                addLocalKeyBindings(editor, moveSubTextToSeparateCardKeyCombination) {
                     controller.moveSubTextToSeparateCard(editor, cell.tableRow.item, toColumn) }
 
-                addKeyBinding(editor, moveSubTextToExamplesAndSeparateCardKeyCombination) {
+                addLocalKeyBindings(editor, moveSubTextToExamplesAndSeparateCardKeyCombination) {
                     controller.moveSubTextToExamplesAndSeparateCard(editor, cell.tableRow.item, toColumn) }
 
                 editor.keepCellEditorState( { Pair(toColumn, cell.tableRow.item) }, controller.cellEditorStates)
@@ -218,7 +218,7 @@ class MainWordsPane : BorderPane() {
         examplesColumn.cellFactory = Callback { ExTextFieldTableCell<CardWordEntry, String>(
             TextFieldType.TextArea, DefaultStringConverter(),
             onEditCreate = { cell, editor ->
-                addKeyBinding(editor, moveSubTextToSeparateCardKeyCombination) {
+                addLocalKeyBindings(editor, moveSubTextToSeparateCardKeyCombination) {
                     controller.moveSubTextToSeparateCard(editor, cell.tableRow.item!!, examplesColumn) }
 
                 editor.keepCellEditorState( { Pair(examplesColumn, cell.tableRow.item) }, controller.cellEditorStates)
