@@ -26,7 +26,7 @@ fun <C: Node> addLocalKeyBindings(control: C, keyEventTypes: Set<EventType<KeyEv
         // T O D O: would be nice to add protection from repeated call
         // We use some timeout to make sure that menu accelerators are already set up (to avoid repeating action's calls).
         control.sceneProperty().addListener { _,_, newScene ->
-            if (newScene != null) runLaterWithDelay(100L) { addLocalKeyBindingsImpl(control, keyEventTypes, keyBindings) } }
+            if (newScene != null) runLaterWithDelay(250L) { addLocalKeyBindingsImpl(control, keyEventTypes, keyBindings) } }
 }
 
 private fun <C: Node> addLocalKeyBindingsImpl(control: C, keyEventTypes: Set<EventType<KeyEvent>>, keyBindings: Map<KeyCombination, (C)-> Unit>) =
@@ -58,7 +58,7 @@ fun <C: Node> addGlobalKeyBindings(control: C, keyBindings: Map<KeyCombination, 
             // We use some timeout to make sure that menu accelerators are already set up,
             // however for global binding it is not so important since later binding just overwrites previous one
             // because bindings are just kept in simple map
-            if (newScene != null) runLaterWithDelay(100L) { addGlobalKeyBindingsImpl(control, keyBindings) } }
+            if (newScene != null) runLaterWithDelay(50L) { addGlobalKeyBindingsImpl(control, keyBindings) } }
 }
 
 private fun <C: Node> addGlobalKeyBindingsImpl(control: C, keyBindings: Map<KeyCombination, (C)-> Unit>) =
