@@ -41,8 +41,8 @@ class MenuController (val controller: LearnWordsController) {
         val editMenu = Menu("_Edit", null,
             newMenuItem("From clipboard", "Parse text from clipboard", buttonIcon("/icons/paste.gif")) {
                 controller.loadFromClipboard() },
-            newMenuItem("To lowercase", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
-                controller.toLowerCaseRow() },
+            newMenuItem("To toggle/lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
+                controller.toggleTextSelectionCaseOrLowerCaseRow() },
 
             SeparatorMenuItem(),
             newMenuItem("Insert above", buttonIcon("/icons/insertAbove-01.png")) {

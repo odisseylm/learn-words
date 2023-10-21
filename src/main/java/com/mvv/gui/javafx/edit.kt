@@ -10,6 +10,19 @@ import kotlin.math.max
 import kotlin.math.min
 
 
+
+fun toggleCase(textInput: TextInputControl) =
+    doSelectionOrAllTextAction(textInput) { it.toggleCase() }
+
+fun String.toggleCase(): String {
+    if (this.isBlank()) return this
+
+    val allLowerCase = this.all { it.isLowerCase() || !it.isLetter() }
+    return if (allLowerCase) this.uppercase() else this.lowercase()
+}
+
+
+/*
 fun toLowerCase(textInput: TextInputControl) {
 
     val currentText = textInput.text
@@ -23,6 +36,46 @@ fun toLowerCase(textInput: TextInputControl) {
 
     //textInput.text = currentText.lowercase()
     textInput.selectRange(anchor, caretPosition)
+}
+*/
+
+internal fun doSelectionOrAllTextAction(textInput: TextInputControl, action:  (String)->String): Boolean =
+    if (textInput.selectedText.isNotBlank())
+        doSelectionAction(textInput, action)
+    else
+        doAllTextAction(textInput, action)
+
+internal fun doSelectionAction(textInput: TextInputControl, action:  (String)->String): Boolean {
+
+    val caretPosition = textInput.caretPosition
+    val anchor = textInput.anchor
+
+    val selectedText = textInput.selectedText
+    if (selectedText.isBlank()) return false
+
+    val transformedText = action(selectedText)
+    if (transformedText == selectedText) return false
+
+    textInput.replaceSelection(transformedText)
+
+    textInput.selectRange(anchor, caretPosition)
+    return true
+}
+
+internal fun doAllTextAction(textInput: TextInputControl, action:  (String)->String): Boolean {
+
+    val currentText = textInput.text
+
+    val transformedText = action(currentText)
+    if (transformedText == currentText) return false
+
+    val caretPosition = textInput.caretPosition
+    val anchor = textInput.anchor
+
+    textInput.replaceText(0, textInput.text.length, transformedText)
+    textInput.selectRange(anchor, caretPosition)
+
+    return true
 }
 
 

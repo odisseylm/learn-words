@@ -3,7 +3,6 @@ package com.mvv.gui.javafx
 import com.mvv.gui.copySelectedOrCurrentLineCombination
 import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextArea
 import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextField
-import com.mvv.gui.lowerCaseKeyCombination
 import com.mvv.gui.removeCurrentLineCombination
 import javafx.application.Platform
 import javafx.beans.property.ObjectProperty
@@ -320,7 +319,10 @@ internal class TextFieldTableCellUtils {
                 event.consume()
             }
 
-            addKeyBinding(textField, lowerCaseKeyCombination) { toLowerCase(it) }
+            // TODO: add verification of already registered combination and skip
+            //       key-combination registration if it is already registered
+            // it is already registered
+            //addKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
 
             textField.addEventHandler(KeyEvent.KEY_RELEASED) {
                 processEditCompletion(textField, it, cell, converter, customValueSetter) }
@@ -349,7 +351,11 @@ internal class TextFieldTableCellUtils {
             }
             */
 
-            addKeyBinding(textField, lowerCaseKeyCombination) { toLowerCase(it) }
+            // TODO: add verification of already registered combination and skip
+            //       key-combination registration if it is already registered
+            //
+            // it is already registered
+            //addKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
             addKeyBinding(textField, copySelectedOrCurrentLineCombination) { copySelectedOrCurrentLine(it) }
             addKeyBinding(textField, removeCurrentLineCombination) { removeCurrentLine(it) }
 

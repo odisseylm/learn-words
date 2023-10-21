@@ -254,7 +254,7 @@ class LearnWordsController (
         newScene.accelerators[openDocumentKeyCodeCombination] = Runnable { loadWordsFromFile() }
         newScene.accelerators[saveDocumentKeyCodeCombination] = Runnable { saveAll() }
 
-        newScene.accelerators[lowerCaseKeyCombination] = Runnable { toLowerCaseRow() }
+        newScene.accelerators[lowerCaseKeyCombination] = Runnable { toggleTextSelectionCaseOrLowerCaseRow() }
 
         newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT1, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingFrom() }
         newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTranscription() }
@@ -339,14 +339,14 @@ class LearnWordsController (
         if (selectedIndex != -1) currentWordsList.edit(selectedIndex, column)
     }
 
-    fun toLowerCaseRow() {
+    fun toggleTextSelectionCaseOrLowerCaseRow() {
         if (!currentWordsList.isEditing) {
             wordCardsToLowerCaseRow(currentWordsSelection.selectedItems)
         }
         else {
             val focusOwner = pane.scene.focusOwner
             if (focusOwner is TextInputControl) {
-                toLowerCase(focusOwner)
+                toggleCase(focusOwner)
             }
         }
     }

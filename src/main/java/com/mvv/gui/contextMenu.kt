@@ -47,8 +47,8 @@ class ContextMenuController (val controller: LearnWordsController) {
                 controller.insertWordCard(InsertPosition.Above) },
             newMenuItem("Insert below", buttonIcon("/icons/insertBelow-01.png")) {
                 controller.insertWordCard(InsertPosition.Below) },
-            newMenuItem("Lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
-                controller.toLowerCaseRow() },
+            newMenuItem("Toggle/lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
+                controller.toggleTextSelectionCaseOrLowerCaseRow() },
 
             SeparatorMenuItem(),
             newMenuItem("To ignore >>", buttonIcon("icons/removememory_tsk.png")) { // rem_co.png removememory_tsk.png
