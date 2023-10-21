@@ -3,17 +3,16 @@ package com.mvv.gui.javafx
 import com.mvv.gui.copySelectedOrCurrentLineCombination
 import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextArea
 import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextField
+import com.mvv.gui.lowerCaseKeyCombination
 import com.mvv.gui.removeCurrentLineCombination
 import javafx.application.Platform
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
-import javafx.event.EventType
 import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyCombination
 import javafx.scene.input.KeyEvent
 import javafx.scene.layout.HBox
 import javafx.util.Callback
@@ -319,10 +318,7 @@ internal class TextFieldTableCellUtils {
                 event.consume()
             }
 
-            // TODO: add verification of already registered combination and skip
-            //       key-combination registration if it is already registered
-            // it is already registered
-            //addKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
+            addKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
 
             textField.addEventHandler(KeyEvent.KEY_RELEASED) {
                 processEditCompletion(textField, it, cell, converter, customValueSetter) }
@@ -351,11 +347,7 @@ internal class TextFieldTableCellUtils {
             }
             */
 
-            // TODO: add verification of already registered combination and skip
-            //       key-combination registration if it is already registered
-            //
-            // it is already registered
-            //addKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
+            addKeyBinding(textField, lowerCaseKeyCombination) { toggleCase(it) }
             addKeyBinding(textField, copySelectedOrCurrentLineCombination) { copySelectedOrCurrentLine(it) }
             addKeyBinding(textField, removeCurrentLineCombination) { removeCurrentLine(it) }
 
@@ -416,24 +408,3 @@ enum class ToolTipMode {
     Default, // no tooltip
     ShowAllContent
 }
-
-
-// TODO: move to another file
-fun <C: Control> addKeyBinding(control: C, keyBinding: KeyCombination, action: (C)-> Unit) =
-    addKeyBinding(control, KeyEvent.KEY_RELEASED, keyBinding, action)
-
-fun <C: Control> addKeyBinding(control: C, keyBindings: Iterable<KeyCombination>, action: (C)-> Unit) =
-    keyBindings.forEach { keyBinding -> addKeyBinding(control, KeyEvent.KEY_RELEASED, keyBinding, action) }
-
-fun <C: Control> addKeyBinding(control: C, keyEventType: EventType<KeyEvent>, keyBinding: KeyCombination, action: (C)-> Unit) =
-    addKeyBindings(control, setOf(keyEventType), mapOf(keyBinding to action))
-
-fun <C: Control> addKeyBindings(control: C, keyBindings: Map<KeyCombination, (C)-> Unit>) =
-    addKeyBindings(control, setOf(KeyEvent.KEY_RELEASED), keyBindings)
-
-fun <C: Control> addKeyBindings(control: C, keyEventTypes: Set<EventType<KeyEvent>>, keyBindings: Map<KeyCombination, (C)-> Unit>) =
-    keyEventTypes.forEach { keyEventType -> // KeyEvent.KEY_PRESSED, KeyEvent.KEY_TYPED, KeyEvent.KEY_RELEASED
-        control.addEventHandler(keyEventType) {
-            keyBindings.forEach { (keyBinding, action) -> if (keyBinding.match(it)) action(control) }
-        }
-    }

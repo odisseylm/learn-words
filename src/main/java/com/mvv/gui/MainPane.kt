@@ -2,7 +2,6 @@ package com.mvv.gui
 
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
-import com.mvv.gui.util.skipFirst
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.*
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
@@ -169,14 +168,13 @@ class MainWordsPane : BorderPane() {
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
         toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextArea,
             onEditCreate = { cell, editor ->
-                // first key-binding is already registered in menu
-                addKeyBinding(editor, moveSubTextToExamplesKeyCombination.skipFirst()) {
+                addKeyBinding(editor, moveSubTextToExamplesKeyCombination) {
                     moveSubTextToExamples(cell.tableRow.item, editor) }
 
-                addKeyBinding(editor, moveSubTextToSeparateCardKeyCombination.skipFirst()) {
+                addKeyBinding(editor, moveSubTextToSeparateCardKeyCombination) {
                     controller.moveSubTextToSeparateCard(editor, cell.tableRow.item, toColumn) }
 
-                addKeyBinding(editor, moveSubTextToExamplesAndSeparateCardKeyCombination.skipFirst()) {
+                addKeyBinding(editor, moveSubTextToExamplesAndSeparateCardKeyCombination) {
                     controller.moveSubTextToExamplesAndSeparateCard(editor, cell.tableRow.item, toColumn) }
 
                 editor.keepCellEditorState( { Pair(toColumn, cell.tableRow.item) }, controller.cellEditorStates)
