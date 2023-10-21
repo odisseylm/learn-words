@@ -1,6 +1,8 @@
 package com.mvv.gui.javafx
 
+import javafx.application.Platform
 import javafx.scene.control.TableCell
+import javafx.scene.control.TableColumn
 import javafx.scene.control.TableView
 import kotlin.math.max
 import kotlin.math.min
@@ -59,3 +61,25 @@ fun <S> createIndexTableCell(startFrom: IndexStartFrom): TableCell<S,Int> =
             }
         }
     }
+
+
+fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S, T>) {
+
+    column.addEventHandler(TableColumn.CellEditEvent.ANY) {
+
+        if (it.eventType == TableColumn.editCommitEvent<S,T>()) {
+
+            //val index = column.tableView?.editingCell?.row ?: -1
+            //val editedEntry: S? = if (index >= 0) column.tableView.items[index] else null
+
+            Platform.runLater {
+                column.tableView.sort()
+
+                //if (editedEntry != null) column.tableView.selectionModel.select(editedEntry)
+
+                // seems bug in JavaFx, after cell edition complete table view looses focus
+                if (!column.tableView.isFocused) column.tableView.requestFocus()
+            }
+        }
+    }
+}

@@ -23,8 +23,8 @@ class LearnWordsEditorApp : Application() {
 
         installJavaFxLogger()
 
-        val mainWordsPane = MainWordsPane()
-        val controller = LearnWordsController(mainWordsPane)
+        val controller = LearnWordsController()
+        val mainWordsPane = controller.pane
 
         val scene = Scene(mainWordsPane)
         primaryStage.setScene(scene)

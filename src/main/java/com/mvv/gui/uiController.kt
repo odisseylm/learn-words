@@ -18,12 +18,8 @@ import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.collections.transformation.SortedList
 import javafx.event.EventHandler
-import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.input.Clipboard
-import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyCodeCombination
-import javafx.scene.input.KeyCombination
 import javafx.scene.input.MouseEvent
 import javafx.stage.FileChooser
 import org.apache.commons.lang3.exception.ExceptionUtils
@@ -41,17 +37,16 @@ import kotlin.io.path.*
 private val log = mu.KotlinLogging.logger {}
 
 
-class LearnWordsController (
-    private val pane: MainWordsPane,
-) {
-    init { pane.controller = this }
+class LearnWordsController {
+
+    internal val pane = MainWordsPane(this)
 
     //private val projectDirectory = getProjectDirectory(this.javaClass)
 
     private val allDictionaries: List<Dictionary> = AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
     internal val dictionary = CachedDictionary(DictionaryComposition(allDictionaries))
 
-    private val currentWords: ObservableList<CardWordEntry> get() = pane.currentWordsList.items
+    private val currentWords: ObservableList<CardWordEntry> get() = currentWordsList.items
     private var documentIsDirty: Boolean = false
 
     private val ignoredWords: ObservableList<String> = FXCollections.observableArrayList()
@@ -61,7 +56,6 @@ class LearnWordsController (
 
     private var currentWordsFile: Path? = null
 
-    //private val toolBarController = ToolBarController(this)
     private val toolBarController2 = ToolBarControllerBig(this)
     private val settingsPane = SettingsPane()
     private val toolBar2 = ToolBar2(this).also {
@@ -107,33 +101,9 @@ class LearnWordsController (
         addGlobalKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
             if (!currentWordsList.isEditing) copySelectedWord() } })
 
-        pane.sceneProperty().addListener { _, _, newScene -> newScene?.let { addKeyBindings(it) } }
-
-
-
-        pane.fromColumn.isSortable = true
-        pane.fromColumn.sortType = TableColumn.SortType.ASCENDING
-        pane.fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
-
-        currentWordsList.sortOrder.add(pane.fromColumn)
-
-        // Platform.runLater is used to perform analysis AFTER word card changing
-        // It would be nice to find better/proper event (with already changed underlying model after edit commit)
-        val doOnWordChanging: (card: CardWordEntry)->Unit = { markDocumentIsDirty(); Platform.runLater { reanalyzeOnlyWords(it) } }
-
-        pane.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { doOnWordChanging(it.rowValue) }
-        pane.toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { doOnWordChanging(it.rowValue) }
+        addKeyBindings()
 
         pane.warnAboutMissedBaseWordsModeDropDown.onAction = EventHandler { reanalyzeAllWords() }
-
-        // It is needed if SortedList is used as TableView items
-        // ??? just needed :-) (otherwise warning in console)
-        //currentWordsSorted.comparatorProperty().bind(currentWordsList.comparatorProperty());
-
-        fixSortingAfterCellEditCommit(pane.fromColumn)
-
-
-        //toolBarController.fillToolBar(pane.toolBar)
 
         pane.topPane.children.add(0, MenuController(this).fillMenu())
         pane.topPane.children.add(toolBarController2.toolBar)
@@ -151,7 +121,7 @@ class LearnWordsController (
             val card = currentWordsSelection.selectedItem
             val tableColumn = currentWordsSelection.selectedCells?.getOrNull(0)?.tableColumn
 
-            if (ev.clickCount >= 2 && card != null && tableColumn.isOneOf(pane.sourceSentencesColumn, pane.numberColumn))
+            if (ev.clickCount >= 2 && card != null && tableColumn.isOneOf(currentWordsList.sourceSentencesColumn, currentWordsList.numberColumn))
                 showSourceSentences(card)
         }
 
@@ -241,25 +211,18 @@ class LearnWordsController (
         }
     }
 
-    internal val currentWordsList: TableView<CardWordEntry> get() = pane.currentWordsList
+    internal val currentWordsList: WordCardsTable get() = pane.currentWordsList
     //internal val currentWords: ObservableList<CardWordEntry> get() = pane.currentWordsList.items
     private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
     private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = pane.warnAboutMissedBaseWordsModeDropDown.value
 
-    private fun markDocumentIsDirty() { this.documentIsDirty = true; Platform.runLater { updateTitle() } }
+    internal fun markDocumentIsDirty() { this.documentIsDirty = true; Platform.runLater { updateTitle() } }
     private fun resetDocumentIsDirty() { this.documentIsDirty = false; Platform.runLater { updateTitle() } }
 
 
-    private fun addKeyBindings(newScene: Scene) {
-        newScene.accelerators[openDocumentKeyCodeCombination] = Runnable { loadWordsFromFile() }
-        newScene.accelerators[saveDocumentKeyCodeCombination] = Runnable { saveAll() }
-
-        newScene.accelerators[lowerCaseKeyCombination] = Runnable { toggleTextSelectionCaseOrLowerCaseRow() }
-
-        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT1, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingFrom() }
-        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTranscription() }
-        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT3, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingTo() }
-        newScene.accelerators[KeyCodeCombination(KeyCode.DIGIT4, KeyCombination.CONTROL_DOWN)] = Runnable { startEditingRemarks() }
+    private fun addKeyBindings() {
+        addGlobalKeyBinding(pane, openDocumentKeyCodeCombination) { loadWordsFromFile() }
+        addGlobalKeyBinding(pane, saveDocumentKeyCodeCombination) { saveAll() }
     }
 
     private fun initTheme() {
@@ -321,7 +284,7 @@ class LearnWordsController (
     private fun reanalyzeOnlyWords(words: Iterable<CardWordEntry>) =
         analyzeWordCards(words, currentWarnAboutMissedBaseWordsMode, currentWords, dictionary)
             .also { recalculateWarnedWordsCount() }
-    private fun reanalyzeOnlyWords(vararg words: CardWordEntry) = reanalyzeOnlyWords(words.asIterable())
+    internal fun reanalyzeOnlyWords(vararg words: CardWordEntry) = reanalyzeOnlyWords(words.asIterable())
 
     private fun recalculateWarnedWordsCount() {
         val warnings = toolBar2.nextPrevWarningWord.selectedWarnings
@@ -329,27 +292,7 @@ class LearnWordsController (
         pane.updateWarnWordCount(wordCountWithWarning)
     }
 
-    private fun startEditingFrom() = startEditingColumnCell(pane.fromColumn)
-    private fun startEditingTo() = startEditingColumnCell(pane.toColumn)
-    private fun startEditingTranscription() = startEditingColumnCell(pane.transcriptionColumn)
-    private fun startEditingRemarks() = startEditingColumnCell(pane.examplesColumn)
-
-    private fun startEditingColumnCell(column: TableColumn<CardWordEntry, String>) {
-        val selectedIndex = currentWordsSelection.selectedIndex
-        if (selectedIndex != -1) currentWordsList.edit(selectedIndex, column)
-    }
-
-    fun toggleTextSelectionCaseOrLowerCaseRow() {
-        if (!currentWordsList.isEditing) {
-            wordCardsToLowerCaseRow(currentWordsSelection.selectedItems)
-        }
-        else {
-            val focusOwner = pane.scene.focusOwner
-            if (focusOwner is TextInputControl) {
-                toggleCase(focusOwner)
-            }
-        }
-    }
+    fun toggleTextSelectionCaseOrLowerCaseRow() = currentWordsList.toggleTextSelectionCaseOrLowerCaseRow()
 
     private fun copySelectedWord() = copyWordsToClipboard(currentWordsSelection.selectedItems)
 
@@ -651,7 +594,7 @@ class LearnWordsController (
             currentWordsList.runWithScrollKeeping( {
 
                     currentWords.add(positionToInsert, newCardWordEntry)
-                    currentWordsSelection.clearAndSelect(positionToInsert, pane.fromColumn)
+                    currentWordsSelection.clearAndSelect(positionToInsert, currentWordsList.fromColumn)
                 },
                 {
                     // JavaFX bug.
@@ -666,7 +609,7 @@ class LearnWordsController (
                     // if column cells were not present before (if TableView did not have content yet).
                     // Platform.runLater() also does not help.
                     //
-                    runLaterWithDelay(50) { currentWordsList.edit(positionToInsert, pane.fromColumn) }
+                    runLaterWithDelay(50) { currentWordsList.edit(positionToInsert, currentWordsList.fromColumn) }
                 }
             )
         }
@@ -812,7 +755,7 @@ class LearnWordsController (
         val editingCard = currentWordsList.editingItem
         val editingTableColumn: TableColumn<CardWordEntry, *>? = currentWordsList.editingCell?.column?.let { currentWordsList.columns[it] }
 
-        if (editingCard != null && (editingTableColumn === pane.toColumn || editingTableColumn === pane.examplesColumn)
+        if (editingCard != null && (editingTableColumn === currentWordsList.toColumn || editingTableColumn === currentWordsList.examplesColumn)
             && focusOwner is TextArea && focusOwner.belongsToParent(currentWordsList)) {
             moveSubTextToSeparateCard(focusOwner, editingCard, editingTableColumn)
         }
@@ -823,7 +766,7 @@ class LearnWordsController (
         val editingCard = currentWordsList.editingItem
         val editingTableColumn: TableColumn<CardWordEntry, *>? = currentWordsList.editingCell?.column?.let { currentWordsList.columns[it] }
 
-        if (editingCard != null && (editingTableColumn === pane.toColumn)
+        if (editingCard != null && (editingTableColumn === currentWordsList.toColumn)
             && focusOwner is TextArea && focusOwner.belongsToParent(currentWordsList)) {
             moveSubTextToExamplesAndSeparateCard(focusOwner, editingCard, editingTableColumn)
         }
@@ -834,7 +777,7 @@ class LearnWordsController (
         val editingCard = currentWordsList.editingItem
         val editingTableColumn: TableColumn<CardWordEntry, *>? = currentWordsList.editingCell?.column?.let { currentWordsList.columns[it] }
 
-        if (editingCard != null && editingTableColumn === pane.toColumn
+        if (editingCard != null && editingTableColumn === currentWordsList.toColumn
             && focusOwner is TextArea && focusOwner.belongsToParent(currentWordsList)) {
             moveSubTextToExamples(editingCard, focusOwner)
         }
@@ -900,7 +843,7 @@ class LearnWordsController (
                 currentWords.items.add(currentCardIndex + 1, newCard)
             },
             {
-                cellEditorStates[Pair(pane.examplesColumn, currentCard)] = CellEditorState(scrollLeft, scrollTop, caretPosition)
+                cellEditorStates[Pair(currentWordsList.examplesColumn, currentCard)] = CellEditorState(scrollLeft, scrollTop, caretPosition)
 
                 currentWords.selectItem(currentCard)
                 currentWords.edit(currentWords.items.indexOf(currentCard), tableColumn)
@@ -930,29 +873,7 @@ class LearnWordsController (
 }
 
 
-fun <S,T> fixSortingAfterCellEditCommit(column: TableColumn<S,T>) {
-
-    column.addEventHandler(TableColumn.CellEditEvent.ANY) {
-
-        if (it.eventType == TableColumn.editCommitEvent<S,T>()) {
-
-            //val index = column.tableView?.editingCell?.row ?: -1
-            //val editedEntry: S? = if (index >= 0) column.tableView.items[index] else null
-
-            Platform.runLater {
-                column.tableView.sort()
-
-                //if (editedEntry != null) column.tableView.selectionModel.select(editedEntry)
-
-                // seems bug in JavaFx, after cell edition complete table view looses focus
-                if (!column.tableView.isFocused) column.tableView.requestFocus()
-            }
-        }
-    }
-}
-
-
-internal fun String.highlightWords(word_: String, color: String): String {
+internal fun String.highlightWords(wordOrPhrase: String, color: String): String {
 
     val startTag = "<span style=\"color:$color; font-weight: bold;\"><strong><b><font color=\"$color\">"
     val endTag = "</font></b></strong></span>"
@@ -962,7 +883,7 @@ internal fun String.highlightWords(word_: String, color: String): String {
 
     //val searchWord = if (!result.contains(wordTrimmed) && wordTrimmed.contains(' '))
     //                 wordTrimmed.substringBefore(' ') else wordTrimmed
-    val searchWord = this.findWordToHighlight(word_)
+    val searchWord = this.findWordToHighlight(wordOrPhrase)
 
     // T O D O: would be nice to rewrite using StringBuilder, but not now :-) (it is not used very often)
     do {
