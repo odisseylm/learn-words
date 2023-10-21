@@ -82,7 +82,7 @@ class LearnWordsController {
 
 
         val currentWordsLabelText = "File/Clipboard (%d words)"
-        currentWords.addListener(ListChangeListener { pane.currentWordsLabel.text = currentWordsLabelText.format(it.list.size) })
+        currentWords.addListener(ListChangeListener { pane.wordEntriesLabel.text = currentWordsLabelText.format(it.list.size) })
 
         currentWords.addListener(ListChangeListener { markDocumentIsDirty(); reanalyzeAllWords() })
 
@@ -211,7 +211,7 @@ class LearnWordsController {
         }
     }
 
-    internal val currentWordsList: WordCardsTable get() = pane.currentWordsList
+    internal val currentWordsList: WordCardsTable get() = pane.wordEntriesTable
     //internal val currentWords: ObservableList<CardWordEntry> get() = pane.currentWordsList.items
     private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
     private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = pane.warnAboutMissedBaseWordsModeDropDown.value

@@ -26,7 +26,7 @@ class WordCardsTable(val controller: LearnWordsController) : TableView<CardWordE
     private  val statusesColumn         = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
     internal val toColumn               = TableColumn<CardWordEntry, String>("Russian")
     private  val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
-    internal val transcriptionColumn    = TableColumn<CardWordEntry, String>("Transcription")
+    private  val transcriptionColumn    = TableColumn<CardWordEntry, String>("Transcription")
     private  val exampleCountColumn     = TableColumn<CardWordEntry, ExampleCountEntry>() //"ExN")
     internal val examplesColumn         = TableColumn<CardWordEntry, String>("Examples")
     private  val predefinedSetsColumn   = TableColumn<CardWordEntry, Set<PredefinedSet>>() // "predefinedSets")
@@ -247,9 +247,7 @@ class WordCardsTable(val controller: LearnWordsController) : TableView<CardWordE
 
 private class PredefinedSetsCell : TableCell<CardWordEntry, Set<PredefinedSet>>() {
 
-    init {
-        styleClass.add("predefined-sets-table-cell")
-    }
+    init { styleClass.add("predefined-sets-table-cell") }
 
     public override fun updateItem(item: Set<PredefinedSet>?, empty: Boolean) {
         super.updateItem(item, empty)
@@ -273,7 +271,7 @@ private class PredefinedSetsCell : TableCell<CardWordEntry, Set<PredefinedSet>>(
 
     companion object {
         private val difficultToListen: Image by lazy { Image("icons/ear.png") }
-        private val difficultSense: Image by lazy { Image("icons/sad.png") }
+        private val difficultSense:    Image by lazy { Image("icons/sad.png") }
 
         private fun iconFor(predefinedSet: PredefinedSet): Image = when (predefinedSet) {
             PredefinedSet.DifficultToListen -> difficultToListen
@@ -291,11 +289,11 @@ private class PredefinedSetsCell : TableCell<CardWordEntry, Set<PredefinedSet>>(
 private class StatusesIcons {
     // Or we can use EnumMap, BUT with !MANDATORY! tests.
     fun iconFor(status: WordCardStatus): Image = when (status) {
-        WordCardStatus.NoBaseWordInSet -> noBaseWordInSetIcon
+        WordCardStatus.NoBaseWordInSet                 -> noBaseWordInSetIcon
         WordCardStatus.TooManyExampleNewCardCandidates -> tooManyExampleNewCardCandidatesIcon
-        WordCardStatus.TranslationIsNotPrepared -> translationIsNotPrepared
-        WordCardStatus.Duplicates -> duplicatesIcons
-        WordCardStatus.NoTranslation -> noTranslationIcon
+        WordCardStatus.TranslationIsNotPrepared        -> translationIsNotPreparedIcon
+        WordCardStatus.Duplicates                      -> duplicatesIcon
+        WordCardStatus.NoTranslation                   -> noTranslationIcon
 
         WordCardStatus.BaseWordDoesNotExist -> throw IllegalArgumentException("It is not warning and nothing to show.")
         WordCardStatus.IgnoreExampleCardCandidates -> throw IllegalArgumentException("It is not warning and nothing to show.")
@@ -305,11 +303,11 @@ private class StatusesIcons {
     val iconHighPriority = Image("icons/exclamation-4.png")
 
     // T O D O: would be nice to create individual icon for every warning
-    val noBaseWordInSetIcon      = iconLowPriority
+    val noBaseWordInSetIcon          = iconLowPriority
     val tooManyExampleNewCardCandidatesIcon = Image("icons/receiptstext-warn.png")
-    val noTranslationIcon        = iconHighPriority
-    val translationIsNotPrepared = iconHighPriority
-    val duplicatesIcons          = iconHighPriority
+    val noTranslationIcon            = iconHighPriority
+    val translationIsNotPreparedIcon = iconHighPriority
+    val duplicatesIcon               = iconHighPriority
 }
 
 

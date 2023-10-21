@@ -26,33 +26,33 @@ const val appTitle = "Words"
 
 class MainWordsPane(val controller: LearnWordsController) : BorderPane() {
 
-    internal val currentWordsLabel = Text("File/Clipboard")
+    internal val wordEntriesLabel = Text("File/Clipboard")
     internal val ignoredWordsLabel = Text("Ignored words")
     internal val allProcessedWordsLabel = Text("All processed words")
 
     internal val topPane = VBox()
 
-    internal val currentWordsList       = WordCardsTable(controller)
+    internal val wordEntriesTable = WordCardsTable(controller)
 
     internal val ignoredWordsList = ListView<String>()
     internal val allProcessedWordsList = ListView<String>()
 
-    private val warnWordCountsTextFormat = " (%d words with warning)"
-    private val warnWordCountsText = Text(warnWordCountsTextFormat)
-    private val warnWordCountsTextItems = listOf(
+    private val warnWordEntryCountsTextFormat = " (%d words with warning)"
+    private val warnWordEntryCountsText = Text(warnWordEntryCountsTextFormat)
+    private val warnWordEntryCountsTextItems = listOf(
         Text("      "),
         ImageView("/icons/warning_obj.gif").also { it.translateY = 3.0 },
-        warnWordCountsText,
+        warnWordEntryCountsText,
     )
 
     internal fun updateWarnWordCount(wordCountWithWarning: Int) {
         val shouldBeVisible = (wordCountWithWarning != 0)
-        warnWordCountsTextItems.forEach { it.isVisible = shouldBeVisible; it.isManaged = shouldBeVisible }
-        warnWordCountsText.text = warnWordCountsTextFormat.format(wordCountWithWarning)
+        warnWordEntryCountsTextItems.forEach { it.isVisible = shouldBeVisible; it.isManaged = shouldBeVisible }
+        warnWordEntryCountsText.text = warnWordEntryCountsTextFormat.format(wordCountWithWarning)
     }
 
     internal val warnAboutMissedBaseWordsModeDropDown = ComboBox<WarnAboutMissedBaseWordsMode>().also {
-        it.items.setAll(com.mvv.gui.words.WarnAboutMissedBaseWordsMode.values().toList())
+        it.items.setAll(WarnAboutMissedBaseWordsMode.values().toList())
         it.value = WarnWhenSomeBaseWordsMissed
 
         it.converter = object : StringConverter<WarnAboutMissedBaseWordsMode>() {
@@ -74,12 +74,12 @@ class MainWordsPane(val controller: LearnWordsController) : BorderPane() {
         contentPane.hgap = 10.0; contentPane.vgap = 10.0
         contentPane.padding = Insets(10.0, 10.0, 10.0, 10.0)
 
-        val currentWordsTopHeader = BorderPane()
+        val wordEntriesTopHeader = BorderPane()
 
         val currentWordsLabelsTextFlow = TextFlow(
-            *(listOf(currentWordsLabel) + warnWordCountsTextItems).toTypedArray())
+            *(listOf(wordEntriesLabel) + warnWordEntryCountsTextItems).toTypedArray())
 
-        currentWordsTopHeader.center = BorderPane().also {
+        wordEntriesTopHeader.center = BorderPane().also {
             // Workaround with using BorderPane as container/wrapper over TextFlow
             // since TextFlow does not have possibility to vertically align content to the bottom.
             it.bottom = currentWordsLabelsTextFlow }
@@ -87,12 +87,12 @@ class MainWordsPane(val controller: LearnWordsController) : BorderPane() {
         updateWarnWordCount(0) // hide WarnWordCount by default
 
 
-        currentWordsTopHeader.right = warnAboutMissedBaseWordsModeDropDown
-        contentPane.add(currentWordsTopHeader, 0, 0)
+        wordEntriesTopHeader.right = warnAboutMissedBaseWordsModeDropDown
+        contentPane.add(wordEntriesTopHeader, 0, 0)
 
-        GridPane.setFillWidth(currentWordsList, true)
-        GridPane.setHgrow(currentWordsList, Priority.ALWAYS)
-        contentPane.add(currentWordsList, 0, 1, 1, 3)
+        GridPane.setFillWidth(wordEntriesTable, true)
+        GridPane.setHgrow(wordEntriesTable, Priority.ALWAYS)
+        contentPane.add(wordEntriesTable, 0, 1, 1, 3)
 
 
         this.top = topPane
@@ -120,13 +120,13 @@ class MainWordsPane(val controller: LearnWordsController) : BorderPane() {
         GridPane.setFillWidth(allProcessedWordsList, true)
         GridPane.setHgrow(allProcessedWordsList, Priority.ALWAYS)
 
-        currentWordsList.id = "currentWords"
-        currentWordsList.isEditable = true
-        currentWordsList.selectionModel.selectionMode = SelectionMode.MULTIPLE
+        wordEntriesTable.id = "currentWords"
+        wordEntriesTable.isEditable = true
+        wordEntriesTable.selectionModel.selectionMode = SelectionMode.MULTIPLE
 
-        GridPane.setFillWidth(currentWordsList, true)
-        GridPane.setHgrow(currentWordsList, Priority.ALWAYS)
-        currentWordsList.prefWidth = 10_000.0
+        GridPane.setFillWidth(wordEntriesTable, true)
+        GridPane.setHgrow(wordEntriesTable, Priority.ALWAYS)
+        wordEntriesTable.prefWidth = 10_000.0
 
         this.center = contentPane
     }
