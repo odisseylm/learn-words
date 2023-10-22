@@ -116,10 +116,12 @@ enum class TranslationCountStatus(val color: Color) {
 
 
 // It would be nice to optimize it to avoid unneeded string conversions.
-val String.translationCount: Int get() =
+val String.translationCount: Int get() = splitToToTranslations().size
+
+fun String.splitToToTranslations() =
     formatWordOrPhraseToMemoWordFormat(this)
         .split(",")
-        .filter { it.isNotBlank() }.size
+        .filter { it.isNotBlank() }
 
 
 val Int.toTranslationCountStatus: TranslationCountStatus get() = when (this) {

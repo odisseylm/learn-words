@@ -263,18 +263,23 @@ internal fun extractWordsFromClipboard(clipboard: Clipboard, sentenceEndRule: Se
 
 
 
-internal fun loadWordsFromAllExistentDictionaries(baseWordsFilename: String?): List<String> {
 
+
+fun getAllExistentSetFiles(includeMemoWordFile: Boolean, toIgnoreBaseWordsFilename: String?): List<Path> {
     if (dictDirectory.notExists()) return emptyList()
-
-    val allWordsFilesExceptIgnored = Files.list(dictDirectory)
+    return Files.list(dictDirectory)
         .asSequence()
         .filter { it.isRegularFile() }
         .filter { it != ignoredWordsFile }
-        .filter { it.isInternalCsvFormat || it.isMemoWordFile }
-        .filter { baseWordsFilename.isNullOrBlank() || !it.name.contains(baseWordsFilename) }
-        .sorted()
+        .filter { it.isInternalCsvFormat || (includeMemoWordFile && it.isMemoWordFile) }
+        .filter { toIgnoreBaseWordsFilename.isNullOrBlank() || !it.name.contains(toIgnoreBaseWordsFilename) }
         .toList()
+}
+
+
+internal fun loadWordsFromAllExistentDictionaries(baseWordsFilename: String?): List<String> {
+
+    val allWordsFilesExceptIgnored = getAllExistentSetFiles(includeMemoWordFile = true, toIgnoreBaseWordsFilename = baseWordsFilename)
 
     return allWordsFilesExceptIgnored
         .asSequence()

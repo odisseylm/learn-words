@@ -63,6 +63,8 @@ class LearnWordsController {
 
     val cellEditorStates = WeakHashMap<Pair<TableColumn<CardWordEntry,*>, CardWordEntry>, CellEditorState>()
 
+    private val allWordCardSetsManager = AllWordCardSetsManager()
+
     init {
         Timer("updateSpeechSynthesizersAvailabilityTimer", true)
             .also { it.schedule(timerTask { updateSpeechSynthesizerAvailability() }, 15000, 15000) }
@@ -136,6 +138,22 @@ class LearnWordsController {
         )
 
         loadExistentWords()
+
+        /*
+        pane.wordEntriesTable.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) {
+            val wordOrPhrase = it.newValue
+            Platform.runLater {
+                val foundInOtherSets = allWordCardSetsManager.findBy(wordOrPhrase)
+                log.info { "foundInOtherSets[$wordOrPhrase]: $foundInOtherSets\n-------------\n" }
+
+                listOf("грузить(ся), садиться на корабль", "грузить(ся)", "грузить", "садиться на корабль", "отправиться на корабле", "начинать").forEach { w ->
+                    log.info { "foundInOtherSets[$w]: ${allWordCardSetsManager.findBy(w)}\n-------------\n" }
+                }
+            }
+        }
+        */
+
+        pane.addIsShownHandler { CompletableFuture.runAsync { allWordCardSetsManager.reloadAllSets() } }
     }
 
     internal fun showSourceSentences(card: CardWordEntry) {
@@ -413,6 +431,9 @@ class LearnWordsController {
     private fun updateCurrentWordsFile(filePath: Path?) {
         this.currentWordsFile = filePath
         updateTitle()
+
+        allWordCardSetsManager.ignoredFile = filePath
+        CompletableFuture.runAsync { allWordCardSetsManager.reloadAllSets() }
     }
 
     private fun updateTitle() {

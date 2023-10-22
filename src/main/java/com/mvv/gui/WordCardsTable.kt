@@ -242,6 +242,7 @@ class WordCardsTable(val controller: LearnWordsController) : TableView<CardWordE
 
     private val currentWordsSelection: TableViewSelectionModel<CardWordEntry> get() = selectionModel
 
+    // companion object { }
 }
 
 
