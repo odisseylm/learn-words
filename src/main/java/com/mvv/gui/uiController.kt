@@ -38,13 +38,14 @@ import kotlin.io.path.*
 private val log = mu.KotlinLogging.logger {}
 
 
-class LearnWordsController {
+class LearnWordsController (val isReadOnly: Boolean = false) {
 
     internal val pane = MainWordsPane(this)
 
     //private val projectDirectory = getProjectDirectory(this.javaClass)
 
-    private val allDictionaries: List<Dictionary> = AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
+    private val allDictionaries: List<Dictionary> = if (isReadOnly) emptyList()
+                                                    else AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
     internal val dictionary = CachedDictionary(DictionaryComposition(allDictionaries))
 
     private val currentWords: ObservableList<CardWordEntry> get() = currentWordsList.items
@@ -71,10 +72,6 @@ class LearnWordsController {
     init {
         Timer("updateSpeechSynthesizersAvailabilityTimer", true)
             .also { it.schedule(timerTask { updateSpeechSynthesizerAvailability() }, 15000, 15000) }
-
-        // to create panel immediately to avoid later waiting a few second
-        // TODO: avoid it by optimizing soo long window creation! Why so long??
-        pane.addIsShownHandler { runLaterWithDelay(500) { otherCardsViewPopup } }
     }
 
     init {
@@ -256,6 +253,8 @@ class LearnWordsController {
 
 
     private fun addKeyBindings() {
+        if (isReadOnly) return
+
         addGlobalKeyBinding(pane, openDocumentKeyCodeCombination) { loadWordsFromFile() }
         addGlobalKeyBinding(pane, saveDocumentKeyCodeCombination) { saveAll() }
     }

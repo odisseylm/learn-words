@@ -87,6 +87,7 @@ class AllWordCardSetsManager : AutoCloseable {
         this.searchWordEntries = currentSearchWordEntries
     }
 
+    // TODO: try to return read-only cards
     fun findBy(wordOrPhrase: String): List<SearchEntry> {
 
         val toSearch = wordOrPhrase.lowercase().trim()

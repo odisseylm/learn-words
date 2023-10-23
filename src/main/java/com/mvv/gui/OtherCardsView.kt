@@ -22,7 +22,7 @@ import java.nio.file.Path
 
 private class OtherCardsView : BorderPane() {
 
-    private val controller = LearnWordsController() // TODO: use light version without modification logic
+    private val controller = LearnWordsController(isReadOnly = true) // TODO: use light version without modification logic
     private val cardsTable = OtherWordCardsTable(controller).also { it.id = "currentWords" }
 
     init {

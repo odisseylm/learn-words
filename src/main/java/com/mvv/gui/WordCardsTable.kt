@@ -33,6 +33,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
     private  val sourcePositionsColumn  = TableColumn<CardWordEntry, List<Int>>() // "Source Positions")
     internal val sourceSentencesColumn  = TableColumn<CardWordEntry, String>("Source Sentences")
 
+    private val isReadOnly: Boolean get() = controller.isReadOnly
 
     init {
         numberColumn.id = "N"
@@ -58,16 +59,18 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
         toColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextArea,
             onEditCreate = { cell, editor ->
-                addLocalKeyBindings(editor, moveSubTextToExamplesKeyCombination) {
-                    moveSubTextToExamples(cell.tableRow.item, editor) }
-
-                addLocalKeyBindings(editor, moveSubTextToSeparateCardKeyCombination) {
-                    controller.moveSubTextToSeparateCard(editor, cell.tableRow.item, toColumn) }
-
-                addLocalKeyBindings(editor, moveSubTextToExamplesAndSeparateCardKeyCombination) {
-                    controller.moveSubTextToExamplesAndSeparateCard(editor, cell.tableRow.item, toColumn) }
-
                 editor.keepCellEditorState( { Pair(toColumn, cell.tableRow.item) }, controller.cellEditorStates)
+
+                if (!isReadOnly) {
+                    addLocalKeyBindings(editor, moveSubTextToExamplesKeyCombination) {
+                        moveSubTextToExamples(cell.tableRow.item, editor) }
+
+                    addLocalKeyBindings(editor, moveSubTextToSeparateCardKeyCombination) {
+                        controller.moveSubTextToSeparateCard(editor, cell.tableRow.item, toColumn) }
+
+                    addLocalKeyBindings(editor, moveSubTextToExamplesAndSeparateCardKeyCombination) {
+                        controller.moveSubTextToExamplesAndSeparateCard(editor, cell.tableRow.item, toColumn) }
+                }
             })
 
         // alternative approach
@@ -108,10 +111,12 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         examplesColumn.cellFactory = Callback { ExTextFieldTableCell<CardWordEntry, String>(
             TextFieldType.TextArea, DefaultStringConverter(),
             onEditCreate = { cell, editor ->
-                addLocalKeyBindings(editor, moveSubTextToSeparateCardKeyCombination) {
-                    controller.moveSubTextToSeparateCard(editor, cell.tableRow.item!!, examplesColumn) }
-
                 editor.keepCellEditorState( { Pair(examplesColumn, cell.tableRow.item) }, controller.cellEditorStates)
+
+                if (!isReadOnly)
+                    addLocalKeyBindings(editor, moveSubTextToSeparateCardKeyCombination) {
+                        controller.moveSubTextToSeparateCard(editor, cell.tableRow.item!!, examplesColumn) }
+
             })
             .also { it.styleClass.add("examplesColumnCell") } }
         examplesColumn.styleClass.add("examplesColumn")
@@ -191,6 +196,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) { doOnWordChanging(it.rowValue) }
         toColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>())   { doOnWordChanging(it.rowValue) }
 
+        isEditable = !isReadOnly
 
         this.columns.setAll(
             numberColumn,
@@ -220,6 +226,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
     }
 
     private fun addKeyBindings() {
+        if (isReadOnly) return
 
         addGlobalKeyBinding(this, lowerCaseKeyCombination) { toggleTextSelectionCaseOrLowerCaseRow() }
 
