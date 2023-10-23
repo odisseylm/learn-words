@@ -1,7 +1,6 @@
 package com.mvv.gui.javafx
 
 import com.mvv.gui.initThemeAndStyles
-import javafx.event.EventHandler
 import javafx.geometry.Point2D
 import javafx.geometry.Rectangle2D
 import javafx.scene.Node
@@ -16,18 +15,17 @@ import javafx.stage.Stage
 import javafx.stage.Window
 
 
+
 fun addWindowMovingFeature(stage: Stage, hang: Node) {
     var xOffset = 0.0
     var yOffset = 0.0
 
-    //grab your root here
-    hang.onMousePressed = EventHandler {
+    hang.addEventHandler(MouseEvent.MOUSE_PRESSED) {
         xOffset = it.sceneX
         yOffset = it.sceneY
     }
 
-    //move around here
-    hang.onMouseDragged = EventHandler {
+    hang.addEventHandler(MouseEvent.MOUSE_DRAGGED) {
         stage.x = it.screenX - xOffset
         stage.y = it.screenY - yOffset
     }
@@ -38,20 +36,19 @@ enum class ResizingAction { Top, TopRightCorner, Right, BottomRightCorner, Botto
 private const val cornerSize = 10.0
 
 
-fun addWindowResizingFeature(stage: Stage, hang: Node) {
+fun addWindowResizingFeature(stage: Stage, borderNode: Node) {
 
     var resizingAction: ResizingAction? = null
     var initScreenPoint: Point2D? = null
     var initBounds: Rectangle2D? = null
 
-    hang.onMousePressed = EventHandler {
-        resizingAction = determineResizingAction(it, hang)
+    borderNode.addEventHandler(MouseEvent.MOUSE_PRESSED) {
+        resizingAction = determineResizingAction(it, borderNode)
         initScreenPoint = Point2D(it.screenX, it.screenY)
         initBounds = stage.bounds
     }
 
-    //move around here
-    hang.onMouseDragged = EventHandler {
+    borderNode.addEventHandler(MouseEvent.MOUSE_DRAGGED) {
 
         val initPt = initScreenPoint!!
         val initRc = initBounds!!
@@ -60,54 +57,52 @@ fun addWindowResizingFeature(stage: Stage, hang: Node) {
         val difY = it.screenY - initPt.y
 
         val newBounds = when (resizingAction) {
-            ResizingAction.Top -> Rectangle2D( // +++
+            ResizingAction.Top -> Rectangle2D(
                 initRc.minX, initRc.minY + difY,
                 initRc.width, initRc.height - difY
             )
 
-            ResizingAction.TopRightCorner -> Rectangle2D( // ???
+            ResizingAction.TopRightCorner -> Rectangle2D(
                 initRc.minX, initRc.minY + difY,
                 initRc.width + difX, initRc.height - difY
             )
 
-            ResizingAction.Right -> Rectangle2D( // +++
+            ResizingAction.Right -> Rectangle2D(
                 initRc.minX, initRc.minY,
                 initRc.width + difX, initRc.height
             )
 
-            ResizingAction.BottomRightCorner -> Rectangle2D( // +++
+            ResizingAction.BottomRightCorner -> Rectangle2D(
                 initRc.minX, initRc.minY,
                 initRc.width + difX, initRc.height + difY
             )
 
-            ResizingAction.Bottom -> Rectangle2D( // +++
+            ResizingAction.Bottom -> Rectangle2D(
                 initRc.minX, initRc.minY,
                 initRc.width, initRc.height + difY
             )
 
-            ResizingAction.BottomLeftCorner -> Rectangle2D( // ???
+            ResizingAction.BottomLeftCorner -> Rectangle2D(
                 initRc.minX + difX, initRc.minY,
                 initRc.width - difX, initRc.height + difY
             )
 
-            ResizingAction.Left -> Rectangle2D( // +++
+            ResizingAction.Left -> Rectangle2D(
                 initRc.minX + difX, initRc.minY,
                 initRc.width - difX, initRc.height
             )
 
-            ResizingAction.TopLeftCorner -> Rectangle2D( // +++
+            ResizingAction.TopLeftCorner -> Rectangle2D(
                 initRc.minX + difX, initRc.minY + difY,
                 initRc.width - difX, initRc.height - difY
             )
 
-            else -> {
-                null
-            }
+            else -> null
         }
         newBounds?.let { bounds -> stage.bounds = bounds }
     }
 
-    hang.onMouseReleased = EventHandler {
+    borderNode.addEventHandler(MouseEvent.MOUSE_RELEASED) {
         resizingAction = null
         initScreenPoint = null
         initBounds = null
@@ -115,11 +110,11 @@ fun addWindowResizingFeature(stage: Stage, hang: Node) {
 }
 
 
-fun determineResizingAction(mouseEvent: MouseEvent, hang: Node): ResizingAction? {
+fun determineResizingAction(mouseEvent: MouseEvent, hangNode: Node): ResizingAction? {
     val x = mouseEvent.x
     val y = mouseEvent.y
-    val w = hang.boundsInLocal.width
-    val h = hang.boundsInLocal.height
+    val w = hangNode.boundsInLocal.width
+    val h = hangNode.boundsInLocal.height
 
     return when {
         x >= cornerSize && x < w - cornerSize && y < cornerSize ->
