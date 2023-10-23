@@ -1,23 +1,17 @@
 package com.mvv.gui.javafx
 
-import com.mvv.gui.initThemeAndStyles
 import javafx.animation.KeyFrame
 import javafx.animation.Timeline
 import javafx.application.Platform
 import javafx.beans.property.ReadOnlyObjectProperty
-import javafx.geometry.Point2D
 import javafx.scene.Node
 import javafx.scene.Parent
 import javafx.scene.Scene
 import javafx.scene.control.Control
-import javafx.scene.control.PopupControl
 import javafx.scene.control.Tooltip
 import javafx.scene.image.ImageView
-import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyCodeCombination
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
-import javafx.stage.PopupWindow
 import javafx.stage.Stage
 import javafx.stage.Window
 import javafx.util.Duration
@@ -111,37 +105,4 @@ fun <C: Node> C.addIsShownHandler(action: (C)->Unit) {
         scene  != null -> addWndListener(scene.windowProperty())
         else           -> addSceneListener(this.sceneProperty())
     }
-}
-
-
-
-//*************************************************************************************************
-//             Helper functions to write the same code for PopupControl and Stage
-//*************************************************************************************************
-
-fun setSceneRoot(popup: PopupControl, content: Parent) { popup.scene.root = content   }
-fun setSceneRoot(stage: Stage, content: Parent)        { stage.scene = Scene(content) }
-
-fun PopupWindow.show(parentWindow: Window, pos: Point2D) = this.show(parentWindow, pos.x, pos.y)
-fun Stage.show(parentWindow: Window, pos: Point2D) = this.show(parentWindow, pos.x, pos.y)
-
-val PopupWindow.isResizable: Boolean get() = false
-
-
-fun Stage.show(parentWindow: Window, x: Double, y: Double, asPopup: Boolean = true) {
-
-    if (this.owner == null) {
-        this.initOwner(parentWindow)
-        this.scene.root.initThemeAndStyles()
-
-        if (asPopup) {
-            // it is not needed for PopupControl
-            addGlobalKeyBindings(this.scene.root,
-                listOf(KeyCodeCombination(KeyCode.CANCEL), KeyCodeCombination(KeyCode.ESCAPE))) { hide() }
-        }
-    }
-
-    this.x = x
-    this.y = y
-    this.show()
 }

@@ -6,6 +6,7 @@ import com.mvv.gui.util.addOnceEventHandler
 import com.mvv.gui.words.CardWordEntry
 import com.mvv.gui.words.baseWordsFilename
 import javafx.geometry.Point2D
+import javafx.scene.Node
 import javafx.scene.control.Label
 import javafx.scene.control.TableColumn
 import javafx.scene.image.ImageView
@@ -16,44 +17,35 @@ import javafx.util.Callback
 import java.nio.file.Path
 
 
-private class OtherCardsView : BorderPane() {
-
-    private val controller = LearnWordsController(isReadOnly = true) // TODO: use light version without modification logic
-    private val cardsTable = OtherWordCardsTable(controller).also { it.id = "currentWords" }
-
-    init {
-        styleClass.add("cardDuplicatesContainer")
-        center = cardsTable
-    }
-
-    var cards: List<CardWordEntry>
-        get() = cardsTable.items
-        set(value) { cardsTable.items.setAll(value) }
-}
-
 
 class OtherCardsViewPopup :
     javafx.stage.Stage(javafx.stage.StageStyle.UNDECORATED) {
     //javafx.scene.control.PopupControl() {
 
-    private val otherCardsView = OtherCardsView()
+    private val controller = LearnWordsController(isReadOnly = true) // TODO: use light version without modification logic
+    private val cardsTable = OtherWordCardsTable(controller).also { it.id = "currentWords" }
+
     private val wordLabel = Label().also { it.styleClass.add("cardDuplicatesTitle") }
-    private val content = BorderPane(otherCardsView)
+    private val content = BorderPane(cardsTable).also { it.styleClass.add("cardDuplicatesContainer") }
+    private val titleBar: Node
 
     init {
         //styleClass.add("cardDuplicatesPopup")
 
         val closeButton = newButton(ImageView("icons/cross(5).png")) { this.hide() }
             .also { it.style = " -fx-padding: 0; -fx-background-color: transparent; -fx-border-insets: 0; -fx-border-width: 0; " }
-        content.top = BorderPane().also { title ->
+
+        titleBar = BorderPane().also { title ->
             title.left  = wordLabel
             title.right = closeButton
         }
 
+        content.top = titleBar
+
         content.maxWidth  = 500.0
         content.maxHeight = 200.0
 
-        setSceneRoot(this, content)
+        this.sceneRoot = content
 
         // temp
         //val w: Any = this
@@ -63,11 +55,14 @@ class OtherCardsViewPopup :
         //}
 
         sizeToScene()
+
+        addWindowMovingFeature(this, titleBar)
+        addWindowResizingFeature(this, content)
     }
 
     var cards: List<CardWordEntry>
-        get() = otherCardsView.cards
-        set(value) { otherCardsView.cards = value }
+        get() = cardsTable.items
+        set(value) { cardsTable.items.setAll(value) }
 
     var word: String
         get() = wordLabel.properties["word"] as String? ?: ""
@@ -82,8 +77,10 @@ class OtherCardsViewPopup :
         if (this.isResizable && this.width > 100 || this.height > 20) {
 
             val prevW = this.width; val prevH = this.height
+
             this.show() // Stage.show() sets size to pref size
-            // lets keep old bounds (or otherwise, lets change x/y too)
+
+            // let's keep old bounds (or otherwise, lets change x/y too)
             this.width = prevW; this.height = prevH
             return
         }
@@ -101,8 +98,9 @@ class OtherCardsViewPopup :
 
         addOnceEventHandler(WindowEvent.WINDOW_SHOWN) {
 
-            content.prefWidth  = javafx.scene.layout.Region.USE_COMPUTED_SIZE
-            content.prefHeight = javafx.scene.layout.Region.USE_COMPUTED_SIZE
+            val useComputedSize = javafx.scene.layout.Region.USE_COMPUTED_SIZE
+            content.prefWidth  = useComputedSize
+            content.prefHeight = useComputedSize
 
             sizeToScene()
 

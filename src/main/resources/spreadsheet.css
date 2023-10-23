@@ -190,18 +190,17 @@
     -fx-padding: 10 10 10 10;
 }
 .toolBarLabelledButton24x {
-    /*-fx-padding: 10 10 10 10;*/
     -fx-padding: 10 0 4 0;
     -fx-min-width: 60;
     -fx-min-height: 60;
 }
 
 .cardDuplicatesTitle {
-    -fx-padding: 0 0 0 4;
+    -fx-padding: 0 0 0 0;
     -fx-text-fill: orange;
     -fx-font-weight: bold;
 }
 
 .cardDuplicatesContainer {
-    -fx-padding: 4 4 4 4;
+    -fx-padding: 2 4 4 4;
 }
