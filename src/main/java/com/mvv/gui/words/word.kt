@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.value.ObservableValue
 import javafx.scene.paint.Color
+import java.nio.file.Path
 
 
 //private val log = mu.KotlinLogging.logger {}
@@ -29,6 +30,8 @@ class CardWordEntry {
     val predefinedSetsProperty  = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())
     val sourcePositionsProperty = SimpleObjectProperty<List<Int>>(this, "sourcePositions", emptyList())
     val sourceSentencesProperty = SimpleStringProperty(this, "sourceSentences", "")
+
+    val fileProperty = SimpleObjectProperty<Path>(this, "file", null)
 
     var from: String
         get()      = fromProperty.get()
@@ -68,6 +71,11 @@ class CardWordEntry {
     var sourceSentences: String
         get()      = sourceSentencesProperty.get()
         set(value) = sourceSentencesProperty.set(value)
+
+    //@Transient
+    var file: Path?
+        get()      = fileProperty.get()
+        set(value) = fileProperty.set(value)
 
     // for showing in tooltip. It is filled during word cards analysis.
     @Transient

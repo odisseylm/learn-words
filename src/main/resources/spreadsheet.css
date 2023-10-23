@@ -195,3 +195,13 @@
     -fx-min-width: 60;
     -fx-min-height: 60;
 }
+
+.cardDuplicatesTitle {
+    -fx-padding: 0 0 0 4;
+    -fx-text-fill: orange;
+    -fx-font-weight: bold;
+}
+
+.cardDuplicatesContainer {
+    -fx-padding: 4 4 4 4;
+}

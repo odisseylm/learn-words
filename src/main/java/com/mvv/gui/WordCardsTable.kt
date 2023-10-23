@@ -18,16 +18,16 @@ import javafx.util.converter.DefaultStringConverter
 
 
 
-class WordCardsTable(val controller: LearnWordsController) : TableView<CardWordEntry>() {
+open class WordCardsTable(val controller: LearnWordsController) : TableView<CardWordEntry>() {
 
     internal val numberColumn           = TableColumn<CardWordEntry, Int>("No.")
     internal val fromColumn             = TableColumn<CardWordEntry, String>("English")
     private  val fromWordCountColumn    = TableColumn<CardWordEntry, Int>() // "N")
     private  val statusesColumn         = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
     internal val toColumn               = TableColumn<CardWordEntry, String>("Russian")
-    private  val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
-    private  val transcriptionColumn    = TableColumn<CardWordEntry, String>("Transcription")
-    private  val exampleCountColumn     = TableColumn<CardWordEntry, ExampleCountEntry>() //"ExN")
+    internal val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
+    internal val transcriptionColumn    = TableColumn<CardWordEntry, String>("Transcription")
+    internal val exampleCountColumn     = TableColumn<CardWordEntry, ExampleCountEntry>() //"ExN")
     internal val examplesColumn         = TableColumn<CardWordEntry, String>("Examples")
     private  val predefinedSetsColumn   = TableColumn<CardWordEntry, Set<PredefinedSet>>() // "predefinedSets")
     private  val sourcePositionsColumn  = TableColumn<CardWordEntry, List<Int>>() // "Source Positions")

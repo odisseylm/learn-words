@@ -46,6 +46,9 @@ class SettingsPane : ToolBar() {
     private val autoRemoveIgnoredCheckBox = CheckBox("Auto remove ignored")
         .also { it.isSelected = settings.toAutoRemoveIgnored }
         .also { it.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT }
+    private val warnAboutDuplicatesInOtherSetsCheckBox = CheckBox("Warn about duplicates in other sets")
+        .also { it.isSelected = settings.warnAboutDuplicatesInOtherSets }
+        .also { it.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT }
 
     init {
         items.addAll(
@@ -61,6 +64,8 @@ class SettingsPane : ToolBar() {
             sentenceEndRuleDropDown,
             stub(),
             autoRemoveIgnoredCheckBox,
+            stub(),
+            warnAboutDuplicatesInOtherSetsCheckBox,
         )
 
         goodVoices.addListener( ListChangeListener { _ -> refreshDropDown(voiceChoicesDropDown) } )
@@ -105,6 +110,7 @@ class SettingsPane : ToolBar() {
     val voice: VoiceChoice get() = voiceChoicesDropDown.selectionModel.selectedItem!!
     val sentenceEndRule: SentenceEndRule get() = sentenceEndRuleDropDown.selectionModel.selectedItem
     val autoRemoveIgnoredWords: Boolean get() = autoRemoveIgnoredCheckBox.isSelected
+    val warnAboutDuplicatesInOtherSets: Boolean get() = warnAboutDuplicatesInOtherSetsCheckBox.isSelected
 }
 
 

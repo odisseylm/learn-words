@@ -1,6 +1,7 @@
 package com.mvv.gui
 
 import com.mvv.gui.dictionary.getProjectDirectory
+import com.mvv.gui.util.trimToNull
 import com.mvv.gui.util.userHome
 import com.mvv.gui.words.SentenceEndRule
 import com.mvv.gui.words.isInternalCsvFormat
@@ -27,6 +28,7 @@ class Settings (
     val sentenceEndRule: SentenceEndRule = SentenceEndRule.ByEndingDotOrLineBreak,
     val toAutoRemoveIgnored: Boolean = true,
     val autoPlay: Boolean = true,
+    val warnAboutDuplicatesInOtherSets: Boolean = true,
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -48,16 +50,22 @@ private fun loadSettings(): Settings {
         .firstOrNull { it.exists() }
         ?.let { configFile -> FileReader(configFile.toFile(), UTF_8).use { r -> props.load(r) } }
 
+    val defSet = Settings()
+
     return Settings(
-        splitWordCountPerFile = props.getProperty("splitWordCountPerFile", defaultSplitWordCountPerFile.toString()).toInt(),
+        splitWordCountPerFile = props.getInt("splitWordCountPerFile") ?: defSet.splitWordCountPerFile,
         theme = Theme.valueOf(props.getProperty("theme", defaultTheme.name)),
-        isMaximized = props.getProperty("isWindowMaximized", "false").toBoolean(),
-        sentenceEndRule = props.getProperty("sentenceEndRule", "ByEndingDotOrLineBreak")
-            .let { SentenceEndRule.valueOf(it) },
-        toAutoRemoveIgnored = props.getProperty("toAutoRemoveIgnored", "true").toBoolean(),
-        autoPlay = props.getProperty("autoPlay", "true").toBoolean(),
+        isMaximized = props.getBool("isWindowMaximized") ?: defSet.isMaximized,
+        sentenceEndRule = props.getProperty("sentenceEndRule", defSet.sentenceEndRule.name).let { SentenceEndRule.valueOf(it) },
+        toAutoRemoveIgnored = props.getBool("toAutoRemoveIgnored") ?: defSet.toAutoRemoveIgnored,
+        autoPlay = props.getBool("autoPlay") ?: defSet.autoPlay,
+        warnAboutDuplicatesInOtherSets = props.getBool("warnAboutDuplicatesInOtherSets") ?: defSet.warnAboutDuplicatesInOtherSets,
     )
 }
+
+
+private fun Properties.getBool(propName: String): Boolean? = this.getProperty(propName)?.trimToNull()?.toBoolean()
+private fun Properties.getInt(propName: String): Int? = this.getProperty(propName)?.trimToNull()?.toInt()
 
 
 private val recentFilesFile = userHome.resolve(".learn-words/recents.txt")

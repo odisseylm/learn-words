@@ -38,6 +38,13 @@ class DefaultReadOnlyObjectStringConverter<T> : StringConverter<T>() {
         throw IllegalStateException("fromString is not implemented.")
 }
 
+class DelegateStringConverter<T>(private val toStr: (T)->String) : StringConverter<T>() {
+    override fun toString(value: T): String = if (value == null) "" else toStr(value)
+
+    override fun fromString(string: String?): T =
+        throw IllegalStateException("fromString is not implemented.")
+}
+
 class EmptyTextStringConverter<T> : StringConverter<T>() {
     override fun toString(value: T): String = ""
 

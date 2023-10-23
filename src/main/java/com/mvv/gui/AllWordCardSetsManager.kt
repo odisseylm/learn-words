@@ -59,16 +59,16 @@ class AllWordCardSetsManager : AutoCloseable {
         if (removedSetFiles.isEmpty() && addedSetFiles.isEmpty() && toUpdatedSetsFromFiles.isEmpty()) return
 
         val currentExistentSets = allExistentSetFiles
-            .mapNotNull {
-                val prevFileData = prevSets[it]
+            .mapNotNull { f ->
+                val prevFileData = prevSets[f]
                 val fileLastUpdatedAt = prevFileData?.fileLastUpdatedAt
 
                 if (prevFileData != null && fileLastUpdatedAt != null && fileLastUpdatedAt < prevFileData.loadedAt)
                     prevFileData
                 else try {
-                    WordsData(it, loadWordCardsFromInternalCsv(it))
+                    WordsData(f, loadWordCardsFromInternalCsv(f).onEach { it.file = f  })
                 } catch (ex: Exception) {
-                    log.warn(ex) { "Error of loading set [$it]." }; null
+                    log.warn(ex) { "Error of loading set [$f]." }; null
                 }
             }
             .associateBy { it.file }

@@ -18,6 +18,7 @@ import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.collections.transformation.SortedList
 import javafx.event.EventHandler
+import javafx.geometry.Point2D
 import javafx.scene.control.*
 import javafx.scene.input.Clipboard
 import javafx.scene.input.MouseEvent
@@ -64,10 +65,16 @@ class LearnWordsController {
     val cellEditorStates = WeakHashMap<Pair<TableColumn<CardWordEntry,*>, CardWordEntry>, CellEditorState>()
 
     private val allWordCardSetsManager = AllWordCardSetsManager()
+    // we have to lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
+    private val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
 
     init {
         Timer("updateSpeechSynthesizersAvailabilityTimer", true)
             .also { it.schedule(timerTask { updateSpeechSynthesizerAvailability() }, 15000, 15000) }
+
+        // to create panel immediately to avoid later waiting a few second
+        // TODO: avoid it by optimizing soo long window creation! Why so long??
+        pane.addIsShownHandler { runLaterWithDelay(500) { otherCardsViewPopup } }
     }
 
     init {
@@ -139,21 +146,31 @@ class LearnWordsController {
 
         loadExistentWords()
 
-        /*
         pane.wordEntriesTable.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) {
             val wordOrPhrase = it.newValue
-            Platform.runLater {
-                val foundInOtherSets = allWordCardSetsManager.findBy(wordOrPhrase)
-                log.info { "foundInOtherSets[$wordOrPhrase]: $foundInOtherSets\n-------------\n" }
-
-                listOf("грузить(ся), садиться на корабль", "грузить(ся)", "грузить", "садиться на корабль", "отправиться на корабле", "начинать").forEach { w ->
-                    log.info { "foundInOtherSets[$w]: ${allWordCardSetsManager.findBy(w)}\n-------------\n" }
-                }
-            }
+            if (wordOrPhrase.isNotBlank()) Platform.runLater { onCardFromEdited(wordOrPhrase) }
         }
-        */
 
         pane.addIsShownHandler { CompletableFuture.runAsync { allWordCardSetsManager.reloadAllSets() } }
+    }
+
+    private fun onCardFromEdited(wordOrPhrase: String) {
+        if (settingsPane.warnAboutDuplicatesInOtherSets) {
+            val foundInOtherSets = allWordCardSetsManager.findBy(wordOrPhrase)
+            if (foundInOtherSets.isNotEmpty())
+                showThisWordsInOtherSetsPopup(wordOrPhrase, foundInOtherSets)
+        }
+    }
+
+    private fun showThisWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
+        val mainWnd = pane.scene.window
+
+        otherCardsViewPopup.show(mainWnd, wordOrPhrase, cards) {
+            val xOffset = 20.0;  val yOffset = 50.0
+            Point2D(
+                mainWnd.x + mainWnd.width - otherCardsViewPopup.width - xOffset,
+                mainWnd.y + yOffset)
+        }
     }
 
     internal fun showSourceSentences(card: CardWordEntry) {
