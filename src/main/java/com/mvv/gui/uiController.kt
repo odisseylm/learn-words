@@ -76,9 +76,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
     init {
 
-        initTheme()
-        // after possible adding theme CSS
-        pane.stylesheets.add("spreadsheet.css")
+        pane.initThemeAndStyles()
 
 
         log.info("Used dictionaries\n" +
@@ -257,14 +255,6 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         addGlobalKeyBinding(pane, openDocumentKeyCodeCombination) { loadWordsFromFile() }
         addGlobalKeyBinding(pane, saveDocumentKeyCodeCombination) { saveAll() }
-    }
-
-    private fun initTheme() {
-        when (settings.theme) {
-            Theme.System -> { }
-            Theme.SystemDark -> pane.style = "-fx-base:black" // standard JavaFX dark theme
-            Theme.Dark -> pane.stylesheets.add("dark-theme.css")
-        }
     }
 
     fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =

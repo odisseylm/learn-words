@@ -5,6 +5,7 @@ import com.mvv.gui.util.trimToNull
 import com.mvv.gui.util.userHome
 import com.mvv.gui.words.SentenceEndRule
 import com.mvv.gui.words.isInternalCsvFormat
+import javafx.scene.Parent
 import java.io.FileReader
 import java.nio.file.Path
 import java.util.Properties
@@ -95,4 +96,17 @@ class RecentDocuments {
         recentDirectoriesFile.parent.createDirectories()
         recentDirectoriesFile.writeText(newRecentDirs.joinToString("\n"))
     }
+}
+
+
+fun Parent.initThemeAndStyles() {
+    val pane = this
+    when (settings.theme) {
+        Theme.System -> { }
+        Theme.SystemDark -> pane.style = "-fx-base:black" // standard JavaFX dark theme
+        Theme.Dark -> pane.stylesheets.add("dark-theme.css")
+    }
+
+    // after possible adding theme CSS
+    pane.stylesheets.add("spreadsheet.css")
 }

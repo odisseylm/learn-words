@@ -1,16 +1,12 @@
 package com.mvv.gui
 
-import com.mvv.gui.javafx.DelegateStringConverter
-import com.mvv.gui.javafx.ExTextFieldTableCell
+import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
-import com.mvv.gui.javafx.ToolTipMode
-import com.mvv.gui.javafx.newButton
 import com.mvv.gui.util.addOnceEventHandler
 import com.mvv.gui.words.CardWordEntry
 import com.mvv.gui.words.baseWordsFilename
 import javafx.geometry.Point2D
 import javafx.scene.control.Label
-import javafx.scene.control.PopupControl
 import javafx.scene.control.TableColumn
 import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
@@ -36,14 +32,16 @@ private class OtherCardsView : BorderPane() {
 }
 
 
-class OtherCardsViewPopup : PopupControl() {
+class OtherCardsViewPopup :
+    javafx.stage.Stage(javafx.stage.StageStyle.UNDECORATED) {
+    //javafx.scene.control.PopupControl() {
 
     private val otherCardsView = OtherCardsView()
     private val wordLabel = Label().also { it.styleClass.add("cardDuplicatesTitle") }
     private val content = BorderPane(otherCardsView)
 
     init {
-        styleClass.add("cardDuplicatesPopup")
+        //styleClass.add("cardDuplicatesPopup")
 
         val closeButton = newButton(ImageView("icons/cross(5).png")) { this.hide() }
             .also { it.style = " -fx-padding: 0; -fx-background-color: transparent; -fx-border-insets: 0; -fx-border-width: 0; " }
@@ -55,7 +53,15 @@ class OtherCardsViewPopup : PopupControl() {
         content.maxWidth  = 500.0
         content.maxHeight = 200.0
 
-        scene.root = content
+        setSceneRoot(this, content)
+
+        // temp
+        //val w: Any = this
+        //@Suppress("KotlinConstantConditions")
+        //if (w is javafx.stage.Stage) {
+        //    w.isResizable = true
+        //}
+
         sizeToScene()
     }
 
@@ -72,9 +78,18 @@ class OtherCardsViewPopup : PopupControl() {
         this.word  = wordOrPhrase
         this.cards = cards.map { it.card }
 
+        // for non-popup impl
+        if (this.isResizable && this.width > 100 || this.height > 20) {
+
+            val prevW = this.width; val prevH = this.height
+            this.show() // Stage.show() sets size to pref size
+            // lets keep old bounds (or otherwise, lets change x/y too)
+            this.width = prevW; this.height = prevH
+            return
+        }
+
         if (this.width > 0 || this.height > 0) {
-            val pos = getPos()
-            this.show(parentWindow, pos.x, pos.y)
+            this.show(parentWindow, getPos())
             return
         }
 
@@ -86,8 +101,8 @@ class OtherCardsViewPopup : PopupControl() {
 
         addOnceEventHandler(WindowEvent.WINDOW_SHOWN) {
 
-            content.prefWidth  = USE_COMPUTED_SIZE
-            content.prefHeight = USE_COMPUTED_SIZE
+            content.prefWidth  = javafx.scene.layout.Region.USE_COMPUTED_SIZE
+            content.prefHeight = javafx.scene.layout.Region.USE_COMPUTED_SIZE
 
             sizeToScene()
 
@@ -96,8 +111,7 @@ class OtherCardsViewPopup : PopupControl() {
             y = pos.y
         }
 
-        val pos = getPos()
-        show(parentWindow, pos.x, pos.y)
+        show(parentWindow, getPos())
     }
 }
 
