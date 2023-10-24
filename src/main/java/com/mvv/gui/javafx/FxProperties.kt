@@ -142,3 +142,57 @@ class ReadOnlyWrapper<S,T> (private val delegate: ObservableValue<out S>, privat
 
     override fun getValue(): T = this.mapper(delegate.value)
 }
+
+
+
+abstract class AbstractObservable<T> : ObservableValue<T> {
+
+    //private val observable: ObservableValue<out T>? = null
+    private var valid = true
+    private val listener: InvalidationListener? = null
+    private var helper: ExpressionHelper<T>? = null
+
+    override fun addListener(listener: InvalidationListener) {
+        helper = ExpressionHelper.addListener(helper, this, listener)
+    }
+
+    override fun removeListener(listener: InvalidationListener) {
+        helper = ExpressionHelper.removeListener(helper, listener)
+    }
+
+    override fun addListener(listener: ChangeListener<in T>) {
+        helper = ExpressionHelper.addListener(helper, this, listener)
+    }
+
+    override fun removeListener(listener: ChangeListener<in T>) {
+        helper = ExpressionHelper.removeListener(helper, listener)
+    }
+
+    /**
+     * Sends notifications to all attached
+     * [InvalidationListeners][javafx.beans.InvalidationListener] and
+     * [ChangeListeners][javafx.beans.value.ChangeListener].
+     *
+     * This method is called when the value is changed, either manually by
+     * calling [.set] or in case of a bound property, if the
+     * binding becomes invalid.
+     */
+    protected fun fireValueChangedEvent() = ExpressionHelper.fireValueChangedEvent(helper)
+
+    private fun markInvalid() {
+        if (valid) {
+            valid = false
+            invalidated()
+            fireValueChangedEvent()
+        }
+    }
+
+    /**
+     * The method `invalidated()` can be overridden to receive
+     * invalidation notifications. This is the preferred option in
+     * `Objects` defining the property, because it requires less memory.
+     *
+     * The default implementation is empty.
+     */
+    protected open fun invalidated() { }
+}

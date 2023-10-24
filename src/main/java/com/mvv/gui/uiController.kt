@@ -40,15 +40,19 @@ private val log = mu.KotlinLogging.logger {}
 
 class LearnWordsController (val isReadOnly: Boolean = false) {
 
-    internal val pane = MainWordsPane(this)
-
     //private val projectDirectory = getProjectDirectory(this.javaClass)
 
-    private val allDictionaries: List<Dictionary> = if (isReadOnly) emptyList()
-                                                    else AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
-    internal val dictionary = CachedDictionary(DictionaryComposition(allDictionaries))
+    private val _allDictionaries: List<Dictionary> = if (isReadOnly) emptyList()
+                                                     else AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
+    internal val dictionary = CachedDictionary(DictionaryComposition(_allDictionaries))
 
+    internal val navigationHistory = NavigationHistory()
+
+    internal val pane = MainWordsPane(this)
+
+    internal val currentWordsList: WordCardsTable get() = pane.wordEntriesTable
     private val currentWords: ObservableList<CardWordEntry> get() = currentWordsList.items
+
     private var documentIsDirty: Boolean = false
 
     private val ignoredWords: ObservableList<String> = FXCollections.observableArrayList()
@@ -66,7 +70,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     val cellEditorStates = WeakHashMap<Pair<TableColumn<CardWordEntry,*>, CardWordEntry>, CellEditorState>()
 
     private val allWordCardSetsManager = AllWordCardSetsManager()
-    // we have to lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
+    // we have to use lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
     private val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
 
     init {
@@ -75,12 +79,10 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     }
 
     init {
-
         pane.initThemeAndStyles()
 
-
         log.info("Used dictionaries\n" +
-                allDictionaries.mapIndexed { i, d -> "${i + 1} $d" }.joinToString("\n") +
+                _allDictionaries.mapIndexed { i, d -> "${i + 1} $d" }.joinToString("\n") +
                 "\n---------------------------------------------------\n\n"
         )
 
@@ -147,6 +149,8 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         }
 
         pane.addIsShownHandler { CompletableFuture.runAsync { allWordCardSetsManager.reloadAllSets() } }
+
+        installNavigationHistoryUpdates(currentWordsList, navigationHistory)
     }
 
     private fun onCardFromEdited(wordOrPhrase: String) {
@@ -241,8 +245,6 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         }
     }
 
-    internal val currentWordsList: WordCardsTable get() = pane.wordEntriesTable
-    //internal val currentWords: ObservableList<CardWordEntry> get() = pane.currentWordsList.items
     private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
     private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = pane.warnAboutMissedBaseWordsModeDropDown.value
 
@@ -255,6 +257,9 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         addGlobalKeyBinding(pane, openDocumentKeyCodeCombination) { loadWordsFromFile() }
         addGlobalKeyBinding(pane, saveDocumentKeyCodeCombination) { saveAll() }
+
+        addGlobalKeyBinding(pane, previousNavigationKeyCodeCombination) { navigateToCard(NavigationDirection.Back, navigationHistory, currentWordsList) }
+        addGlobalKeyBinding(pane, nextNavigationKeyCodeCombination)     { navigateToCard(NavigationDirection.Forward, navigationHistory, currentWordsList) }
     }
 
     fun isOneOfSelectedWordsHasNoBaseWord(): Boolean =

@@ -9,6 +9,9 @@ val newDocumentKeyCodeCombination = KeyCodeCombination(KeyCode.N, KeyCombination
 val openDocumentKeyCodeCombination = KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN)
 val saveDocumentKeyCodeCombination = KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN)
 
+val previousNavigationKeyCodeCombination = KeyCodeCombination(KeyCode.LEFT, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN)
+val nextNavigationKeyCodeCombination = KeyCodeCombination(KeyCode.RIGHT, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN)
+
 val lowerCaseKeyCombination = KeyCodeCombination(KeyCode.U, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN)
 val copySelectedOrCurrentLineCombination = KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN)
 val removeCurrentLineCombination = KeyCodeCombination(KeyCode.Y, KeyCombination.CONTROL_DOWN)

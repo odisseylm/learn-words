@@ -1,9 +1,6 @@
 package com.mvv.gui
 
-import com.mvv.gui.javafx.button24xIcon
-import com.mvv.gui.javafx.buttonIcon
-import com.mvv.gui.javafx.new24xButton
-import com.mvv.gui.javafx.newButton
+import com.mvv.gui.javafx.*
 import javafx.scene.Node
 import javafx.scene.control.ContentDisplay
 import javafx.scene.control.Control
@@ -100,6 +97,9 @@ class ToolBarControllerBig (val controller: LearnWordsController) {
         new24xButton("Refresh", "Sort & Refresh'.",
             button24xIcon("/icons/big/iu_update_obj_24.png")) {
             controller.currentWordsList.sort(); controller.currentWordsList.refresh() },
+
+        stub(),
+        NavigationHistoryPane(controller.currentWordsList, controller.navigationHistory, ToolBarButtonType.Middle),
     )
 
     private fun stub(width: Double = 6.0): Node = Label(" ").also { it.prefWidth = width }

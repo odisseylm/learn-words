@@ -12,6 +12,12 @@ import kotlin.io.path.exists
 import kotlin.io.path.readBytes
 
 
+enum class ToolBarButtonType {
+    Small,  // 16x16
+    Middle, // 24x24
+}
+
+
 @Suppress("unused")
 fun newButton(label: String, action: ()->Unit): Button = newButtonImpl(label, null, null, action)
 
