@@ -72,10 +72,6 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     // we have to use lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
     private val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
 
-    //init {
-    //    Timer("updateSpeechSynthesizersAvailabilityTimer", true)
-    //        .also { it.schedule(timerTask { updateSpeechSynthesizerAvailability() }, 15000, 15000) }
-    //}
 
     init {
         pane.initThemeAndStyles()
@@ -130,18 +126,6 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
                 showSourceSentences(card)
         }
 
-        /*
-        settingsPane.goodVoices.setAll(
-            // This voice is really the best for sentences, but sounds of single words are extremely ugly (too low).
-            //VoiceChoice(VoiceConfigs.cmu_slt_hsmm_en_US_female_hmm),
-            //
-            VoiceChoice(PredefinedMarryTtsSpeechConfig.cmu_rms_hsmm_en_US_male_hmm),
-            VoiceChoice(PredefinedMarryTtsSpeechConfig.cmu_bdl_hsmm_en_US_male_hmm),
-            VoiceChoice(PredefinedMarryTtsSpeechConfig.dfki_spike_hsmm_en_GB_male_hmm),
-            VoiceChoice(PredefinedMarryTtsSpeechConfig.dfki_obadiah_hsmm_en_GB_male_hmm),
-        )
-        */
-
         loadExistentWords()
 
         pane.wordEntriesTable.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) {
@@ -189,9 +173,6 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         showHtmlTextPreviewDialog(pane, "Source sentences of '${card.from}'", htmlWithHighlighting)
     }
 
-    //private val audioPlayer = JavaFxSoundPlayer(PlayingMode.Async)
-    //private val howJSayWebDownloadSpeechSynthesizer: HowJSayWebDownloadSpeechSynthesizer by lazy { HowJSayWebDownloadSpeechSynthesizer(audioPlayer) }
-
     private val voiceManager = VoiceManager()
 
     internal fun playSelectedWord() = currentWordsList.singleSelection?.let { playFrom(it) }
@@ -209,54 +190,6 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     }
 
     private fun playWord(text: String) = voiceManager.speak(text, settingsPane.playVoiceGender)
-
-    /*
-    private fun playWord_Old(text: String, voice: VoiceChoice) {
-        when (voice.synthesizer) {
-            PredefSpeechSynthesizer.MarryTTS -> {
-
-                val config: MarryTtsSpeechConfig? = PredefinedMarryTtsSpeechConfig.values()
-                    .find { it.config.voice_Selections == voice.voice || it.config.voice == voice.voice }
-                    ?.config
-
-                requireNotNull(config) { "MarryTTS config for $voice is not found." }
-
-                MarryTtsSpeechSynthesizer(config, audioPlayer).speak(text.trim())
-            }
-            PredefSpeechSynthesizer.Web -> {
-                when (voice.voice) {
-                    // TODO: refactor, use some Players list/map
-                    "howjsay.com" -> howJSayWebDownloadSpeechSynthesizer.speak(text.trim())
-                }
-            }
-        }
-    }
-
-    private fun updateSpeechSynthesizerAvailability() {
-
-        val deadMarryVoices: List<VoiceChoice> = PredefinedMarryTtsSpeechConfig.values()
-            .filter { it.config.locale.startsWith("en") }
-            .filterNot { testSpeechSynthesizer(it) }
-            .map { VoiceChoice(it) }
-
-        log.debug { "updateSpeechSynthesizerAvailability deadMarryVoices: $deadMarryVoices" }
-
-        Platform.runLater { settingsPane.deadVoices.clear(); settingsPane.deadVoices.addAll(deadMarryVoices) }
-    }
-
-    private fun testSpeechSynthesizer(voiceConfig: PredefinedMarryTtsSpeechConfig): Boolean {
-        val playerStub = object : AudioPlayer { override fun play(audioSource: AudioSource) { } }
-        return try {
-            MarryTtsSpeechSynthesizer(voiceConfig, playerStub).speak("apple")
-            log.debug { "MarryTTS ${voiceConfig.config.voice_Selections} is OK" }
-            true
-        }
-        catch (ex: Exception) {
-            log.debug("MarryTTS {} is failed", voiceConfig.config.voice_Selections, ex)
-            false
-        }
-    }
-    */
 
     private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
     private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = pane.warnAboutMissedBaseWordsModeDropDown.value

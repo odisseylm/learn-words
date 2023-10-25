@@ -9,25 +9,8 @@ import javafx.util.StringConverter
 import org.apache.commons.lang3.NotImplementedException
 
 
-/*
-enum class PredefSpeechSynthesizer {
-    MarryTTS,
-    Web,
-}
-
-data class VoiceChoice (
-    val synthesizer: PredefSpeechSynthesizer,
-    val voice: String,
-) {
-    constructor(marryTtsConf: PredefinedMarryTtsSpeechConfig) : this(PredefSpeechSynthesizer.MarryTTS, marryTtsConf.config.voice_Selections)
-}
-*/
-
 
 class SettingsPane : ToolBar() {
-
-    //internal val goodVoices: ObservableList<VoiceChoice> = FXCollections.observableArrayList()
-    //internal val deadVoices: ObservableSet<VoiceChoice> = FXCollections.observableSet()
 
     private val splitWordCountPerFileTextField = TextField("${settings.splitWordCountPerFile}")
         .also { it.prefColumnCount = 3 }
@@ -35,8 +18,6 @@ class SettingsPane : ToolBar() {
         .also { it.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT }
     private val voiceGenderDropDown = ComboBox<Gender?>()
         .also { it.items.setAll(listOf(null) + Gender.values()) }
-    //private val voiceChoicesDropDown = ComboBox<VoiceChoice>()
-    //    .also { it.prefWidth = 200.0; fillVoices(it) }
     private val sentenceEndRuleDropDown = ComboBox<SentenceEndRule>()
         .also { it.converter = SentenceEndRuleToStringConverter() }
         .also { it.items.addAll(SentenceEndRule.values()) }
@@ -56,8 +37,6 @@ class SettingsPane : ToolBar() {
             playWordOnSelectCheckBox,
             voiceGenderDropDown,
             stub(),
-            //Label("Voice"),
-            //voiceChoicesDropDown,
             stub(),
             Label("Sentence end"),
             sentenceEndRuleDropDown,
@@ -67,42 +46,9 @@ class SettingsPane : ToolBar() {
             warnAboutDuplicatesInOtherSetsCheckBox,
         )
 
-        //goodVoices.addListener( ListChangeListener { _ -> refreshDropDown(voiceChoicesDropDown) } )
-        //deadVoices.addListener( SetChangeListener  { _ -> refreshDropDown(voiceChoicesDropDown) } )
-
         playWordOnSelectCheckBox.isSelected = settings.autoPlay
     }
 
-    /*
-    private fun fillVoices(voiceChoicesDropDown: ComboBox<VoiceChoice>) {
-
-        val allMarryTtsVoices = PredefinedMarryTtsSpeechConfig.values().asSequence()
-            .sortedBy { it.config.voice_Selections.lowercase() }
-            .filter { voiceCfg -> voiceCfg.config.locale.startsWith("en") }
-            .map { voiceConf -> VoiceChoice(voiceConf) }
-            .toList()
-
-        val howjsayVoice = VoiceChoice(PredefSpeechSynthesizer.Web, "howjsay.com")
-
-        val toSelect: VoiceChoice = goodVoices.firstOr { allMarryTtsVoices.first() }
-
-        voiceChoicesDropDown.items.add(howjsayVoice)
-        voiceChoicesDropDown.items.addAll(allMarryTtsVoices)
-        voiceChoicesDropDown.selectionModel.select(toSelect)
-
-        voiceChoicesDropDown.converter = object : StringConverter<VoiceChoice>() {
-            override fun toString(value: VoiceChoice?): String {
-                val prefix = when (value) {
-                    in deadVoices -> "-"
-                    in goodVoices -> "+"
-                    else -> "  "
-                }
-                return if (value == null) "" else "$prefix${value.synthesizer.name} - ${value.voice}"
-            }
-            override fun fromString(string: String?): VoiceChoice = throw IllegalStateException("fromString should not be used.")
-        }
-    }
-    */
 
     private fun stub(width: Double = 6.0): Node = Label(" ").also { it.prefWidth = width }
 
