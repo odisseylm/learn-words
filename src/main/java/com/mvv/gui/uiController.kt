@@ -191,6 +191,8 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     private val audioPlayer = JavaFxSoundPlayer(PlayingMode.Async)
     private val howJSayWebDownloadSpeechSynthesizer: HowJSayWebDownloadSpeechSynthesizer by lazy { HowJSayWebDownloadSpeechSynthesizer(audioPlayer) }
 
+    private val voiceManager = VoiceManager()
+
     internal fun playSelectedWord() = currentWordsList.singleSelection?.let { playFrom(it) }
 
     private fun playFrom(card: CardWordEntry) {
@@ -204,7 +206,9 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             }
     }
 
-    private fun playWord(text: String, voice: VoiceChoice) {
+    private fun playWord(text: String, ignore: VoiceChoice) = voiceManager.speak(text)
+
+    private fun playWord_Old(text: String, voice: VoiceChoice) {
         when (voice.synthesizer) {
             PredefSpeechSynthesizer.MarryTTS -> {
 

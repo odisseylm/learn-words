@@ -11,7 +11,7 @@ Links:
 Commands:
  - exit: (quit)
  - available voices: (voice.list)
- - select voice: (voice_XXX) , for example (voice_us2_mbrola)
+ - select voice: (voice_XXX) , for example: (voice_us2_mbrola), (voice_cmu_us_ljm_cg)
  - Say: (SayText "Hello from Ubuntu")
  - (tts "story.txt" nil)
  - Say intro text using current voice: (intro)

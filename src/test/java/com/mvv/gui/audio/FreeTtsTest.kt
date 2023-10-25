@@ -156,6 +156,26 @@ class FreeTtsTest {
 
 
     @Test
+    @EnabledIf("isMbrolaExecutablePresent")
+    fun playMbrolaVoicesBy_sharingTheSameInstance_JavaSpeechSpeechSynthesizer() {
+        System.clearProperty("mbrola.base")
+        System.clearProperty("freetts.voices")
+
+        initFreeTts()
+        val voiceManager = VoiceManager.getInstance()
+
+        // Or does not work good with java FreeTTS or need to configure properly.
+        //JavaSpeechSpeechSynthesizer(voiceManager.getVoice("mbrola_en1"))
+        //    .speak("Welcome John!")
+
+        val javaSpeechSpeechSynthesizer = JavaSpeechSpeechSynthesizer(voiceManager.getVoice("mbrola_us2"))
+        javaSpeechSpeechSynthesizer.speak("Welcome John!")
+        javaSpeechSpeechSynthesizer.speak("Welcome John!")
+        javaSpeechSpeechSynthesizer.speak("Welcome John!")
+    }
+
+
+    @Test
     fun playBaseVoicesBy_FreeTtsSpeechSynthesizer() {
         System.clearProperty("mbrola.base")
         System.clearProperty("freetts.voices")
@@ -186,6 +206,64 @@ class FreeTtsTest {
         FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us1")).speak("Welcome John!")
         FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us2")).speak("Welcome John!")
         FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us3")).speak("Welcome John!")
+    }
+
+
+    @Test
+    @EnabledIf("isMbrolaExecutablePresent")
+    fun playMbrolaVoicesBy_repeatablyUsingNewInstanceEveryTime_FreeTtsSpeechSynthesizer() {
+        System.clearProperty("mbrola.base")
+        System.clearProperty("freetts.voices")
+
+        initFreeTts()
+        val voiceManager = VoiceManager.getInstance()
+
+        // Or does not work good with java FreeTTS or need to configure properly.
+        //FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_en1")).speak("Welcome John!")
+
+        FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us1")).speak("Welcome John!")
+        FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us1")).speak("Welcome John!")
+        FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us1")).speak("Welcome John!")
+    }
+
+
+    // T O D O: fails
+    @Test
+    @EnabledIf("isMbrolaExecutablePresent")
+    fun playMbrolaVoicesBy_repeatablySharingTheSameSynthesizerInstance_FreeTtsSpeechSynthesizer() {
+        System.clearProperty("mbrola.base")
+        System.clearProperty("freetts.voices")
+
+        initFreeTts()
+        val voiceManager = VoiceManager.getInstance()
+
+        // Or does not work good with java FreeTTS or need to configure properly.
+        //FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_en1")).speak("Welcome John!")
+
+        val voice = voiceManager.getVoice("mbrola_us1")
+        FreeTtsSpeechSynthesizer(voice).speak("Welcome John!")
+        FreeTtsSpeechSynthesizer(voice).speak("Welcome John!")
+        FreeTtsSpeechSynthesizer(voice).speak("Welcome John!")
+    }
+
+
+    // T O D O: fails
+    @Test
+    @EnabledIf("isMbrolaExecutablePresent")
+    fun playMbrolaVoicesBy_repeatablySharingTheSameVoiceInstance_FreeTtsSpeechSynthesizer() {
+        System.clearProperty("mbrola.base")
+        System.clearProperty("freetts.voices")
+
+        initFreeTts()
+        val voiceManager = VoiceManager.getInstance()
+
+        // Or does not work good with java FreeTTS or need to configure properly.
+        //FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_en1")).speak("Welcome John!")
+
+        val freeTtsSpeechSynthesizer = FreeTtsSpeechSynthesizer(voiceManager.getVoice("mbrola_us1"))
+        freeTtsSpeechSynthesizer.speak("Welcome John!")
+        freeTtsSpeechSynthesizer.speak("Welcome John!")
+        freeTtsSpeechSynthesizer.speak("Welcome John!")
     }
 
     companion object {

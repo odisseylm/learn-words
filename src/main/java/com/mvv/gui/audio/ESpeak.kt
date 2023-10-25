@@ -181,6 +181,9 @@ private fun executeAndReturnContent(vararg args: String): String {
 
 class ESpeakSpeechSynthesizer(private val voice: ESpeakVoice) : SpeechSynthesizer {
 
+    // eSpeak voice file is unique and name is not unique and in some cases is too general (for example, "en-french mb/mb-fr4-en")
+    override val shortDescription: String = "eSpeak ${voice.file.removePrefix("mb/")}"
+
     override fun speak(text: String) {
         val args = mutableListOf("espeak")
             .addParam("-v", voice.file) // name is not unique ?!

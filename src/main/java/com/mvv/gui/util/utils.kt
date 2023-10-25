@@ -39,3 +39,7 @@ fun <T> T.isOneOf(vararg values: T): Boolean = values.any { it == this }
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun <T> Iterable<T>.skipFirst(): List<T> = this.drop(1)
+
+
+inline fun doTry(block: ()->Unit): Boolean = try { block(); true } catch (_: Exception) { false }
+inline fun <T> doTry(block: ()->T): T? = try { block() } catch (_: Exception) { null }

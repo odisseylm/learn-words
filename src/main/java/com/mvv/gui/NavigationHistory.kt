@@ -139,7 +139,9 @@ fun installNavigationHistoryUpdates(cardsTable: TableView<CardWordEntry>, histor
     cardsTable.items.addListener(ListChangeListener {
         if (cardsTable.items.isEmpty())
             history.clear()
-        history.removeFromHistory(it.removed)
+
+        while (it.next())
+            if (it.wasRemoved()) history.removeFromHistory(it.removed)
     })
 
     fun updateLastSelectedByUserAction() = cardsTable.singleSelection?.also { history.visited(it) }

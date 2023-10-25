@@ -98,7 +98,7 @@ Speech synthesizers
      - https://github.com/espeak-ng/espeak-ng
    - https://espeak.sourceforge.net/commands.html
    - Use Mbrola voices
-     - Actually they should be present by default but not visible by `espeak --voices` and have wrong default parameters (you need to set 'sped' manually) ??
+     - Actually they should be present by default but not visible by `espeak --voices` and have wrong default parameters (you need to set 'speed' manually) ??
      - `espeak -v mb-us1 -p 20 -s 130 "Hello Marina!"`
      - https://robots.uc3m.es/installation-guides/install-espeak-mbrola.html
  - eSpeak-ng

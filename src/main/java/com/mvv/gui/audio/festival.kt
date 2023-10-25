@@ -106,6 +106,8 @@ class FestivalVoiceManager {
 
 class FestivalVoiceSpeechSynthesizer (private val voice: FestivalVoice) : SpeechSynthesizer {
 
+    override val shortDescription: String = "Festival ${voice.name}"
+
     override fun speak(text: String) {
         val inputPipedString =
                 "(voice_${voice.name})\n" +
@@ -128,7 +130,7 @@ class FestivalVoiceSpeechSynthesizer (private val voice: FestivalVoice) : Speech
 fun String.escapeText(): String =
     this
         .replace("\"", "＂") // "”")
-        .replace("'", "’")
+        //.replace("'", "’") // Why do I need it? We can  use such replacement only as they are wrapping word.
 
 
 private fun createExecutor(inputPipedString: String): Executor =

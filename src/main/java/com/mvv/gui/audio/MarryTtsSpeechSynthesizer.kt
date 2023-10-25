@@ -154,6 +154,8 @@ class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val a
 
     constructor(config: PredefinedMarryTtsSpeechConfig, audioPlayer: AudioPlayer) : this(config.config, audioPlayer)
 
+    override val shortDescription: String = "MarryTTS - ${config.voice_Selections}"
+
     override fun speak(text: String) {
 
         fun encode(s: String) = URLEncoder.encode(s, Charsets.UTF_8)

@@ -1,7 +1,6 @@
 package com.mvv.gui.audio
 
 import com.mvv.gui.util.containsOneOf
-import com.mvv.gui.util.isEven
 import com.mvv.gui.util.nullIfNotExists
 import com.mvv.gui.util.userHome
 import com.sun.speech.freetts.Age
@@ -106,6 +105,9 @@ private fun windowsProgramFilesDirs(): List<Path> =
 
 
 class FreeTtsSpeechSynthesizer(private val voice: com.sun.speech.freetts.Voice) : SpeechSynthesizer {
+
+    override val shortDescription: String = "Free TTS ${voice.name}"
+
     //@Synchronized (need to synchronize by voice but is it safe??)
     override fun speak(text: String) {
         voice.allocate()
@@ -123,6 +125,8 @@ class JavaSpeechSpeechSynthesizer(
     ) : SpeechSynthesizer {
 
     constructor(voice: com.sun.speech.freetts.Voice) : this(voice.toJavaxSpeechVoice(), voice.locale)
+
+    override val shortDescription: String = "Free TTS ${voice.name}"
 
     override fun speak(text: String) {
 
@@ -290,18 +294,3 @@ private fun Age?.toJavaSpeechVoiceAge(): Int = when (this) {
     else -> javax.speech.synthesis.Voice.AGE_DONT_CARE
 }
 */
-
-@Suppress("unused")
-class FixedForWindowsJavaStreamingAudioPlayer : com.sun.speech.freetts.audio.JavaStreamingAudioPlayer() {
-
-    override fun write(bytes: ByteArray?, offset: Int, size: Int): Boolean {
-        return super.write(bytes, offset, size)
-    }
-
-    override fun write(audioData: ByteArray): Boolean =
-        if (audioFormat.frameSize.isEven && !audioData.size.isEven)
-            super.write(audioData, 0, audioData.size  - 1)
-        else
-            super.write(audioData)
-
-}

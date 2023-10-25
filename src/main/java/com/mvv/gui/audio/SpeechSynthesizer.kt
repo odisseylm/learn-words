@@ -11,6 +11,9 @@ interface SpeechSynthesizer {
         if (!isSupported(text)) throw SpeechSynthesizerException(
             "SpeechSynthesizer ${this.javaClass.simpleName} does not support text [$text].")
     }
+
+    val shortDescription: String
+    val isAvailable: Boolean get() = true // TODO: Implement
 }
 
 

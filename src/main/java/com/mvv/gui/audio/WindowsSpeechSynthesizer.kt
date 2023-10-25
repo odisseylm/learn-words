@@ -71,6 +71,8 @@ class WindowsVoiceManager {
 
 class WindowsSpeechSynthesizer (private val voice: WindowsVoice) : SpeechSynthesizer {
 
+    override val shortDescription: String = "MS TTS ${voice.name.trim().removePrefix("Microsoft").removeSuffix("Desktop").trim()}"
+
     override fun speak(text: String) {
 
         val pumpStdOut = if (log.isDebugEnabled) System.out else null

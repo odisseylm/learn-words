@@ -22,6 +22,8 @@ class AbbyLingvoWebDownloadSpeechSynthesizer(audioPlayer: AudioPlayer) : Caching
     // html view-source:https://www.lingvolive.com/en-us/translate/en-ru/apple can be parsed
     // to find
 
+    override val shortDescription: String = "lingvolive.com (AbbyLingvo)"
+
     override fun isSupported(text: String): Boolean = text.isBlank() || isOneWordText(text)
     override fun validateSupport(text: String) = validateTextIsOneWord(text, this.javaClass.simpleName)
 }
