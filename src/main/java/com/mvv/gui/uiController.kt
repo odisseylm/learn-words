@@ -121,7 +121,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         currentWordsList.onContextMenuRequested = EventHandler { contextMenuController.updateItemsVisibility() }
 
         currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, _ ->
-            Platform.runLater { if (settingsPane.playWordOnSelect) playSelectedWord() } }
+            Platform.runLater { if (toPlayWordOnSelect) playSelectedWord() } }
 
         currentWordsList.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
             val card = currentWordsSelection.selectedItem
@@ -152,6 +152,11 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         installNavigationHistoryUpdates(currentWordsList, navigationHistory)
     }
+
+    private var toPlayWordOnSelect: Boolean
+        get() = settingsPane.playWordOnSelect
+        set(value) { settingsPane.playWordOnSelect = value }
+
 
     private fun onCardFromEdited(wordOrPhrase: String) {
         if (settingsPane.warnAboutDuplicatesInOtherSets) {
@@ -869,6 +874,11 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         val currentCardIndex = currentWords.items.indexOf(currentCard)
 
+        // We need this workaround because after adding new card current selected one looses focus, and we need to reselect it again...
+        // And to avoid unneeded word's autoplaying we disable playing and re-enable it again after re-selecting card.
+        val currentToPlayWordOnSelect = toPlayWordOnSelect
+        toPlayWordOnSelect = false
+
         currentWords.runWithScrollKeeping(
             {
                 // TODO: initially insert in proper place
@@ -880,6 +890,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
                 currentWords.selectItem(currentCard)
                 currentWords.edit(currentWords.items.indexOf(currentCard), tableColumn)
 
+                toPlayWordOnSelect = currentToPlayWordOnSelect
             })
 
         return newCard

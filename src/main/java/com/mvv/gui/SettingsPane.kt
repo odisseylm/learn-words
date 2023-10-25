@@ -106,7 +106,9 @@ class SettingsPane : ToolBar() {
     private fun stub(width: Double = 6.0): Node = Label(" ").also { it.prefWidth = width }
 
     val splitWordCountPerFile: Int get() = splitWordCountPerFileTextField.text.trim().toInt()
-    val playWordOnSelect: Boolean get() = playWordOnSelectCheckBox.isSelected
+    var playWordOnSelect: Boolean
+        get() = playWordOnSelectCheckBox.isSelected
+        set(value) { playWordOnSelectCheckBox.isSelected = value }
     val voice: VoiceChoice get() = voiceChoicesDropDown.selectionModel.selectedItem!!
     val sentenceEndRule: SentenceEndRule get() = sentenceEndRuleDropDown.selectionModel.selectedItem
     val autoRemoveIgnoredWords: Boolean get() = autoRemoveIgnoredCheckBox.isSelected
