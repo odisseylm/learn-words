@@ -40,7 +40,15 @@ data class MarryTtsSpeechConfig (
     val effect_FIRFilter_parameters: String = "type:3;fc1:500.0;fc2:2000.0",
     val effect_JetPilot_selected: String = "",
     val effect_JetPilot_parameters: String = "",
-)
+) : Voice {
+    override val shortDescription: String = voice
+    override val gender: Gender? = when {
+        voice_Selections.contains(" male ")    -> Gender.Male
+        voice_Selections.contains(" female ")  -> Gender.Female
+        voice_Selections.contains(" neutral ") -> Gender.Neutral
+        else -> null
+    }
+}
 
 
 @Suppress("unused", "EnumEntryName")
@@ -155,6 +163,7 @@ class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val a
     constructor(config: PredefinedMarryTtsSpeechConfig, audioPlayer: AudioPlayer) : this(config.config, audioPlayer)
 
     override val shortDescription: String = "MarryTTS - ${config.voice_Selections}"
+    override val voice: Voice = config
 
     override fun speak(text: String) {
 

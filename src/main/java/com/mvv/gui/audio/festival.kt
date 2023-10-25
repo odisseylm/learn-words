@@ -28,39 +28,43 @@ private val log = mu.KotlinLogging.logger {}
 
 
 data class FestivalVoice (
-    val name: String
-)
+    val name: String,
+    override val gender: Gender? = null,
+) : Voice {
+    override val shortDescription: String = name
+}
 
 
 private val predefinedVoicesList: List<FestivalVoice> = listOf(
-    FestivalVoice("ked_diphone"),
-    FestivalVoice("kal_diphone"),
-    FestivalVoice("rab_diphone"),
-    FestivalVoice("don_diphone"),
+    FestivalVoice("ked_diphone", Gender.Male),
+    FestivalVoice("kal_diphone", Gender.Male),
+    FestivalVoice("rab_diphone", Gender.Male),
+    FestivalVoice("don_diphone", Gender.Male),
     // mbrola
     // FestivalVoice("en1_mbrola"), broken
-    FestivalVoice("us1_mbrola"),
-    FestivalVoice("us2_mbrola"),
-    FestivalVoice("us3_mbrola"),
+    FestivalVoice("us1_mbrola", Gender.Female),
+    FestivalVoice("us2_mbrola", Gender.Male),
+    FestivalVoice("us3_mbrola", Gender.Male),
 
-    FestivalVoice("cmu_us_slp_cg"),
-    FestivalVoice("cmu_us_eey_cg"),
-    FestivalVoice("cmu_us_jmk_cg"),
-    FestivalVoice("cmu_us_aew_cg"),
-    FestivalVoice("cmu_us_awb_cg"),
-    FestivalVoice("cmu_us_gka_cg"),
+    FestivalVoice("cmu_us_slp_cg", Gender.Female),
+    FestivalVoice("cmu_us_eey_cg", Gender.Female),
+    FestivalVoice("cmu_us_jmk_cg", Gender.Male),
+    FestivalVoice("cmu_us_aew_cg", Gender.Male),
+    FestivalVoice("cmu_us_awb_cg", Gender.Male),
+    FestivalVoice("cmu_us_gka_cg", Gender.Male),
     //FestivalVoice("cmu_us_rms_cg"), // broken
-    FestivalVoice("cmu_us_lnh_cg"),
-    FestivalVoice("cmu_us_aup_cg"),
-    FestivalVoice("cmu_us_ljm_cg"),
-    FestivalVoice("cmu_us_ahw_cg"),
-    FestivalVoice("cmu_us_clb_cg"),
-    FestivalVoice("cmu_us_bdl_cg"),
-    FestivalVoice("cmu_us_rxr_cg"),
-    FestivalVoice("cmu_us_ksp_cg"),
-    FestivalVoice("cmu_us_fem_cg"),
-    FestivalVoice("cmu_us_axb_cg"),
-    FestivalVoice("cmu_us_slt_c"),
+    FestivalVoice("cmu_us_lnh_cg", Gender.Female),
+    FestivalVoice("cmu_us_aup_cg", Gender.Neutral), // It seems for me like gender-neutral :-)
+    FestivalVoice("cmu_us_ljm_cg", Gender.Female),
+    FestivalVoice("cmu_us_ahw_cg", Gender.Male),
+    FestivalVoice("cmu_us_clb_cg", Gender.Female),
+    FestivalVoice("cmu_us_bdl_cg", Gender.Male),
+    FestivalVoice("cmu_us_rxr_cg", Gender.Neutral), // It seems for me like gender-neutral :-)  It is like 'female' but too low.
+    FestivalVoice("cmu_us_slt_cg", Gender.Female),
+    FestivalVoice("cmu_us_ksp_cg", Gender.Male),
+    FestivalVoice("cmu_us_fem_cg", Gender.Male),
+    FestivalVoice("cmu_us_axb_cg", Gender.Female),
+    FestivalVoice("cmu_us_slt_c"), // ??? broken
     // all 'arctic' voices are broken (probably because they were designed for 2.0.1 but current festival version is 2.5)
     //FestivalVoice("nitech_us_jmk_arctic_hts"),
     //FestivalVoice("nitech_us_slt_arctic_hts"),
@@ -71,25 +75,25 @@ private val predefinedVoicesList: List<FestivalVoice> = listOf(
 )
 
 private val goodVoicesList: List<FestivalVoice> = listOf(
-    FestivalVoice("cmu_us_ljm_cg"), // ++
-    FestivalVoice("cmu_us_ahw_cg"), // ++ (a bit slow by default)
-    FestivalVoice("cmu_us_clb_cg"), // ++
+    FestivalVoice("cmu_us_ljm_cg", Gender.Female), // ++
+    FestivalVoice("cmu_us_ahw_cg", Gender.Male), // ++ (a bit slow by default)
+    FestivalVoice("cmu_us_clb_cg", Gender.Female), // ++
     //
-    FestivalVoice("cmu_us_eey_cg"),
-    FestivalVoice("cmu_us_jmk_cg"), // (a bit slow by default)
-    FestivalVoice("cmu_us_aew_cg"), // (a bit slow by default)
-    FestivalVoice("cmu_us_awb_cg"), // (a bit slow by default)
-    FestivalVoice("cmu_us_gka_cg"), // (a bit slow by default)
-    FestivalVoice("cmu_us_lnh_cg"), // (a bit slow by default)
-    FestivalVoice("cmu_us_aup_cg"), //
-    FestivalVoice("cmu_us_bdl_cg"),
-    FestivalVoice("cmu_us_rxr_cg"),
-    FestivalVoice("cmu_us_slt_cg"),
+    FestivalVoice("cmu_us_eey_cg", Gender.Female),
+    FestivalVoice("cmu_us_jmk_cg", Gender.Male),    // (a bit slow by default)
+    FestivalVoice("cmu_us_aew_cg", Gender.Male),    // (a bit slow by default)
+    FestivalVoice("cmu_us_awb_cg", Gender.Male),    // (a bit slow by default)
+    FestivalVoice("cmu_us_gka_cg", Gender.Male),    // (a bit slow by default)
+    FestivalVoice("cmu_us_lnh_cg", Gender.Female),  // (a bit slow by default)
+    FestivalVoice("cmu_us_aup_cg", Gender.Neutral), // It seems for me like gender-neutral :-)
+    FestivalVoice("cmu_us_bdl_cg", Gender.Male),
+    FestivalVoice("cmu_us_rxr_cg", Gender.Neutral), // It seems for me like gender-neutral :-)  It is like 'female' but too low.
+    FestivalVoice("cmu_us_slt_cg", Gender.Female),
     // mbrola
     // FestivalVoice("en1_mbrola"),// broken
-    FestivalVoice("us1_mbrola"),
-    FestivalVoice("us2_mbrola"),
-    FestivalVoice("us3_mbrola"),
+    FestivalVoice("us1_mbrola", Gender.Female),
+    FestivalVoice("us2_mbrola", Gender.Male),
+    FestivalVoice("us3_mbrola", Gender.Male),
 )
 
 class FestivalVoiceManager {
@@ -99,12 +103,12 @@ class FestivalVoiceManager {
     val goodVoices: List<FestivalVoice> get() = goodVoicesList
 
     val availableVoices: List<FestivalVoice> get() =
-        // TODO: impl, but I don't know how :-)
+        // T O D O: impl, but I don't know how :-)
         predefinedVoices
 }
 
 
-class FestivalVoiceSpeechSynthesizer (private val voice: FestivalVoice) : SpeechSynthesizer {
+class FestivalVoiceSpeechSynthesizer (override val voice: FestivalVoice) : SpeechSynthesizer {
 
     override val shortDescription: String = "Festival ${voice.name}"
 

@@ -1,6 +1,19 @@
 package com.mvv.gui.audio
 
 
+
+interface Voice {
+    // val name: String // I do not use 'name' since I do not know wht should be contained in it for different TTS.
+    val shortDescription: String // it is not unique
+    val gender: Gender?
+}
+
+
+internal data class SimpleVoice (
+    override val shortDescription: String,
+    override val gender: Gender?,
+) : Voice
+
 interface SpeechSynthesizer {
     @Throws(SpeechSynthesizerException::class)
     fun speak(text: String)
@@ -12,6 +25,7 @@ interface SpeechSynthesizer {
             "SpeechSynthesizer ${this.javaClass.simpleName} does not support text [$text].")
     }
 
+    val voice: Voice
     val shortDescription: String
     val isAvailable: Boolean get() = true // TODO: Implement
 }

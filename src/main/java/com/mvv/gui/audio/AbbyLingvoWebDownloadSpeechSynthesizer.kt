@@ -23,6 +23,7 @@ class AbbyLingvoWebDownloadSpeechSynthesizer(audioPlayer: AudioPlayer) : Caching
     // to find
 
     override val shortDescription: String = "lingvolive.com (AbbyLingvo)"
+    override val voice: Voice = SimpleVoice("abby", null)
 
     override fun isSupported(text: String): Boolean = text.isBlank() || isOneWordText(text)
     override fun validateSupport(text: String) = validateTextIsOneWord(text, this.javaClass.simpleName)

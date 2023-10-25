@@ -47,4 +47,14 @@ class FestivalTest {
             log.info("Testing voice '{}'", it.name)
             FestivalVoiceSpeechSynthesizer(it).speak("6 new wireless networks found")
         }
+
+    @Test
+    @Disabled("for manual launching")
+    fun playWithSpecificVoice() =
+        FestivalVoiceManager().predefinedVoices
+            .filter { it.name == "don_diphone" }
+            .forEach {
+                log.info("Testing voice '{}'", it.name)
+                FestivalVoiceSpeechSynthesizer(it).speak("6 new wireless networks found")
+            }
 }

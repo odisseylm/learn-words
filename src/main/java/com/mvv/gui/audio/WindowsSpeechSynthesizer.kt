@@ -17,10 +17,14 @@ data class WindowsVoice (
     val id: String,
     val name: String,
     val description: String,
-    val gender: Gender,
+    override val gender: Gender,
     val age: Age,
     val culture: String, // corresponds to Java locale
-) {
+) : Voice {
+
+    private val shortName: String = name.trim().removePrefix("Microsoft").removeSuffix("Desktop").trim()
+    override val shortDescription: String = shortName
+
     companion object {
         @Suppress("unused")
         enum class Age { Adult, Child, Senior, Teen, NotSet }
@@ -69,7 +73,7 @@ class WindowsVoiceManager {
 }
 
 
-class WindowsSpeechSynthesizer (private val voice: WindowsVoice) : SpeechSynthesizer {
+class WindowsSpeechSynthesizer (override val voice: WindowsVoice) : SpeechSynthesizer {
 
     override val shortDescription: String = "MS TTS ${voice.name.trim().removePrefix("Microsoft").removeSuffix("Desktop").trim()}"
 

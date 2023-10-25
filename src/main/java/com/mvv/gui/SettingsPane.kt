@@ -1,13 +1,7 @@
 package com.mvv.gui
 
-import com.mvv.gui.audio.PredefinedMarryTtsSpeechConfig
-import com.mvv.gui.util.firstOr
+import com.mvv.gui.audio.Gender
 import com.mvv.gui.words.SentenceEndRule
-import javafx.collections.FXCollections
-import javafx.collections.ListChangeListener
-import javafx.collections.ObservableList
-import javafx.collections.ObservableSet
-import javafx.collections.SetChangeListener
 import javafx.geometry.NodeOrientation
 import javafx.scene.Node
 import javafx.scene.control.*
@@ -15,6 +9,7 @@ import javafx.util.StringConverter
 import org.apache.commons.lang3.NotImplementedException
 
 
+/*
 enum class PredefSpeechSynthesizer {
     MarryTTS,
     Web,
@@ -26,19 +21,22 @@ data class VoiceChoice (
 ) {
     constructor(marryTtsConf: PredefinedMarryTtsSpeechConfig) : this(PredefSpeechSynthesizer.MarryTTS, marryTtsConf.config.voice_Selections)
 }
+*/
 
 
 class SettingsPane : ToolBar() {
 
-    internal val goodVoices: ObservableList<VoiceChoice> = FXCollections.observableArrayList()
-    internal val deadVoices: ObservableSet<VoiceChoice> = FXCollections.observableSet()
+    //internal val goodVoices: ObservableList<VoiceChoice> = FXCollections.observableArrayList()
+    //internal val deadVoices: ObservableSet<VoiceChoice> = FXCollections.observableSet()
 
     private val splitWordCountPerFileTextField = TextField("${settings.splitWordCountPerFile}")
         .also { it.prefColumnCount = 3 }
     private val playWordOnSelectCheckBox = CheckBox("Auto play word")
         .also { it.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT }
-    private val voiceChoicesDropDown = ComboBox<VoiceChoice>()
-        .also { it.prefWidth = 200.0; fillVoices(it) }
+    private val voiceGenderDropDown = ComboBox<Gender?>()
+        .also { it.items.setAll(listOf(null) + Gender.values()) }
+    //private val voiceChoicesDropDown = ComboBox<VoiceChoice>()
+    //    .also { it.prefWidth = 200.0; fillVoices(it) }
     private val sentenceEndRuleDropDown = ComboBox<SentenceEndRule>()
         .also { it.converter = SentenceEndRuleToStringConverter() }
         .also { it.items.addAll(SentenceEndRule.values()) }
@@ -56,9 +54,10 @@ class SettingsPane : ToolBar() {
             splitWordCountPerFileTextField,
             stub(),
             playWordOnSelectCheckBox,
+            voiceGenderDropDown,
             stub(),
-            Label("Voice"),
-            voiceChoicesDropDown,
+            //Label("Voice"),
+            //voiceChoicesDropDown,
             stub(),
             Label("Sentence end"),
             sentenceEndRuleDropDown,
@@ -68,12 +67,13 @@ class SettingsPane : ToolBar() {
             warnAboutDuplicatesInOtherSetsCheckBox,
         )
 
-        goodVoices.addListener( ListChangeListener { _ -> refreshDropDown(voiceChoicesDropDown) } )
-        deadVoices.addListener( SetChangeListener  { _ -> refreshDropDown(voiceChoicesDropDown) } )
+        //goodVoices.addListener( ListChangeListener { _ -> refreshDropDown(voiceChoicesDropDown) } )
+        //deadVoices.addListener( SetChangeListener  { _ -> refreshDropDown(voiceChoicesDropDown) } )
 
         playWordOnSelectCheckBox.isSelected = settings.autoPlay
     }
 
+    /*
     private fun fillVoices(voiceChoicesDropDown: ComboBox<VoiceChoice>) {
 
         val allMarryTtsVoices = PredefinedMarryTtsSpeechConfig.values().asSequence()
@@ -102,6 +102,7 @@ class SettingsPane : ToolBar() {
             override fun fromString(string: String?): VoiceChoice = throw IllegalStateException("fromString should not be used.")
         }
     }
+    */
 
     private fun stub(width: Double = 6.0): Node = Label(" ").also { it.prefWidth = width }
 
@@ -109,13 +110,15 @@ class SettingsPane : ToolBar() {
     var playWordOnSelect: Boolean
         get() = playWordOnSelectCheckBox.isSelected
         set(value) { playWordOnSelectCheckBox.isSelected = value }
-    val voice: VoiceChoice get() = voiceChoicesDropDown.selectionModel.selectedItem!!
+    val playVoiceGender: Gender? get() = voiceGenderDropDown.selectionModel.selectedItem
+    //val voice: VoiceChoice get() = voiceChoicesDropDown.selectionModel.selectedItem!!
     val sentenceEndRule: SentenceEndRule get() = sentenceEndRuleDropDown.selectionModel.selectedItem
     val autoRemoveIgnoredWords: Boolean get() = autoRemoveIgnoredCheckBox.isSelected
     val warnAboutDuplicatesInOtherSets: Boolean get() = warnAboutDuplicatesInOtherSetsCheckBox.isSelected
 }
 
 
+@Suppress("unused")
 private fun <T> refreshDropDown(comboBox: ComboBox<T>) {
 
     // If you know better way, please replace this peace of shi... with proper solution :-)

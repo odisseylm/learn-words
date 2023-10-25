@@ -31,6 +31,7 @@ class HowJSayWebDownloadSpeechSynthesizer(audioPlayer: AudioPlayer) : CachingSpe
     override fun validateSupport(text: String) = validateTextIsOneWord(text, this.javaClass.simpleName)
 
     override val shortDescription: String = "howjsay.com"
+    override val voice: Voice = SimpleVoice("howjsay.com", null)
 
     override fun validateFileContent(audioFilePath: Path, word: String) {
         super.validateFileContent(audioFilePath, word)

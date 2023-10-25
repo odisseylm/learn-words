@@ -12,8 +12,8 @@ import java.util.regex.Pattern
 import kotlin.text.Charsets.UTF_8
 
 
-data class ESpeakVoice(
-    val pty: Int, val language: String, val gender: Gender?,
+data class ESpeakVoice (
+    val pty: Int, val language: String, override val gender: Gender?,
     /** !! Name be not unique !! */
     val name: String,
     /** !! File seems to be unique !! */
@@ -33,7 +33,9 @@ data class ESpeakVoice(
     //-l <integer>   Line length. If not zero (which is the default), consider
     //               lines less than this length as end-of-clause
     val lineLength: Int? = null,
-) {
+) : Voice {
+
+    override val shortDescription: String = name
 
     companion object {
         // Strings:
@@ -179,7 +181,7 @@ private fun executeAndReturnContent(vararg args: String): String {
 }
 
 
-class ESpeakSpeechSynthesizer(private val voice: ESpeakVoice) : SpeechSynthesizer {
+class ESpeakSpeechSynthesizer(override val voice: ESpeakVoice) : SpeechSynthesizer {
 
     // eSpeak voice file is unique and name is not unique and in some cases is too general (for example, "en-french mb/mb-fr4-en")
     override val shortDescription: String = "eSpeak ${voice.file.removePrefix("mb/")}"

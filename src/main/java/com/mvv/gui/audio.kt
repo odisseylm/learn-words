@@ -49,9 +49,22 @@ class VoiceManager {
         }
 
 
-    fun speak(text: String) {
+    fun speak(text: String, voiceGender: Gender?) {
+
+        // I think that it would be better to use excluding surely unsuitable voices (black list instead of white list)
+        // because not all voices have gender property.
+        val toExcludeVoiceGender = when (voiceGender) {
+            Gender.Male    -> setOf(Gender.Female, Gender.Neutral)
+            Gender.Female  -> setOf(Gender.Male, Gender.Neutral)
+            Gender.Neutral -> setOf(Gender.Male, Gender.Female)
+            else -> emptySet() // nothing to exclude
+        }
+
         val fixedText = prepareText(text)
-        val suitableVoices = bestVoices.filter { it.isSupported(fixedText) }
+        val suitableVoices = bestVoices
+            .filter { it.isSupported(fixedText) }
+            .filter { it.voice.gender !in toExcludeVoiceGender }
+
         for (voice in suitableVoices) {
             if (doTry { voice.speak(fixedText) }) break
         }

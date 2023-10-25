@@ -104,15 +104,16 @@ private fun windowsProgramFilesDirs(): List<Path> =
         .toList()
 
 
-class FreeTtsSpeechSynthesizer(private val voice: com.sun.speech.freetts.Voice) : SpeechSynthesizer {
+class FreeTtsSpeechSynthesizer(private val freeTtsVoice: com.sun.speech.freetts.Voice) : SpeechSynthesizer {
 
-    override val shortDescription: String = "Free TTS ${voice.name}"
+    override val shortDescription: String = "Free TTS ${freeTtsVoice.name}"
+    override val voice: Voice get() = SimpleVoice(freeTtsVoice.name, freeTtsVoice.gender.toSpeechSynthesizerGender())
 
     //@Synchronized (need to synchronize by voice but is it safe??)
     override fun speak(text: String) {
-        voice.allocate()
-        voice.speak(text)
-        voice.deallocate()
+        freeTtsVoice.allocate()
+        freeTtsVoice.speak(text)
+        freeTtsVoice.deallocate()
     }
 }
 
@@ -120,24 +121,25 @@ class FreeTtsSpeechSynthesizer(private val voice: com.sun.speech.freetts.Voice) 
 
 /* This impl (for fun) uses only pure java-speech API. */
 class JavaSpeechSpeechSynthesizer(
-    private val voice: javax.speech.synthesis.Voice,
+    private val jsVoice: javax.speech.synthesis.Voice,
     private val locale: Locale, // it is desired to set, otherwise it will be set automatically in default (probably undesired) value :-(
     ) : SpeechSynthesizer {
+    override val voice: Voice = SimpleVoice(jsVoice.name, jsVoice.getSpeechSynthesizerGender())
 
     constructor(voice: com.sun.speech.freetts.Voice) : this(voice.toJavaxSpeechVoice(), voice.locale)
 
-    override val shortDescription: String = "Free TTS ${voice.name}"
+    override val shortDescription: String = "Free TTS ${jsVoice.name}"
 
     override fun speak(text: String) {
 
-        val modeDesc = SynthesizerModeDesc(null, null, locale, null, arrayOf(voice))
+        val modeDesc = SynthesizerModeDesc(null, null, locale, null, arrayOf(jsVoice))
 
         val synthesizer = Central.createSynthesizer(modeDesc)
         requireNotNull(synthesizer) { "java.speech.Synthesizer is not created." }
         cleanLastSynthesizerRef()
 
         synthesizer.allocate()
-        synthesizer.synthesizerProperties.voice = voice
+        synthesizer.synthesizerProperties.voice = jsVoice
 
         synthesizer.resume()
 
@@ -294,3 +296,19 @@ private fun Age?.toJavaSpeechVoiceAge(): Int = when (this) {
     else -> javax.speech.synthesis.Voice.AGE_DONT_CARE
 }
 */
+
+private fun javax.speech.synthesis.Voice.getSpeechSynthesizerGender(): com.mvv.gui.audio.Gender? = when (this.gender) {
+    javax.speech.synthesis.Voice.GENDER_MALE -> com.mvv.gui.audio.Gender.Male
+    javax.speech.synthesis.Voice.GENDER_FEMALE -> com.mvv.gui.audio.Gender.Female
+    javax.speech.synthesis.Voice.GENDER_NEUTRAL -> com.mvv.gui.audio.Gender.Neutral
+    javax.speech.synthesis.Voice.GENDER_DONT_CARE -> null
+    else -> null
+}
+
+private fun Gender.toSpeechSynthesizerGender(): com.mvv.gui.audio.Gender? = when (this) {
+    Gender.MALE -> com.mvv.gui.audio.Gender.Male
+    Gender.FEMALE -> com.mvv.gui.audio.Gender.Female
+    Gender.NEUTRAL -> com.mvv.gui.audio.Gender.Neutral
+    Gender.DONT_CARE -> null
+    else -> null
+}

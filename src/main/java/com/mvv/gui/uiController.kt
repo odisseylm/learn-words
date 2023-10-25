@@ -1,6 +1,5 @@
 package com.mvv.gui
 
-import com.mvv.gui.audio.*
 import com.mvv.gui.dictionary.AutoDictionariesLoader
 import com.mvv.gui.dictionary.CachedDictionary
 import com.mvv.gui.dictionary.Dictionary
@@ -73,10 +72,10 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     // we have to use lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
     private val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
 
-    init {
-        Timer("updateSpeechSynthesizersAvailabilityTimer", true)
-            .also { it.schedule(timerTask { updateSpeechSynthesizerAvailability() }, 15000, 15000) }
-    }
+    //init {
+    //    Timer("updateSpeechSynthesizersAvailabilityTimer", true)
+    //        .also { it.schedule(timerTask { updateSpeechSynthesizerAvailability() }, 15000, 15000) }
+    //}
 
     init {
         pane.initThemeAndStyles()
@@ -131,6 +130,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
                 showSourceSentences(card)
         }
 
+        /*
         settingsPane.goodVoices.setAll(
             // This voice is really the best for sentences, but sounds of single words are extremely ugly (too low).
             //VoiceChoice(VoiceConfigs.cmu_slt_hsmm_en_US_female_hmm),
@@ -140,6 +140,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             VoiceChoice(PredefinedMarryTtsSpeechConfig.dfki_spike_hsmm_en_GB_male_hmm),
             VoiceChoice(PredefinedMarryTtsSpeechConfig.dfki_obadiah_hsmm_en_GB_male_hmm),
         )
+        */
 
         loadExistentWords()
 
@@ -188,16 +189,17 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         showHtmlTextPreviewDialog(pane, "Source sentences of '${card.from}'", htmlWithHighlighting)
     }
 
-    private val audioPlayer = JavaFxSoundPlayer(PlayingMode.Async)
-    private val howJSayWebDownloadSpeechSynthesizer: HowJSayWebDownloadSpeechSynthesizer by lazy { HowJSayWebDownloadSpeechSynthesizer(audioPlayer) }
+    //private val audioPlayer = JavaFxSoundPlayer(PlayingMode.Async)
+    //private val howJSayWebDownloadSpeechSynthesizer: HowJSayWebDownloadSpeechSynthesizer by lazy { HowJSayWebDownloadSpeechSynthesizer(audioPlayer) }
 
     private val voiceManager = VoiceManager()
 
     internal fun playSelectedWord() = currentWordsList.singleSelection?.let { playFrom(it) }
 
     private fun playFrom(card: CardWordEntry) {
-        val voice = settingsPane.voice
-        CompletableFuture.runAsync { playWord(card.from.trim(), voice) }
+        //val voice = settingsPane.voice
+
+        CompletableFuture.runAsync { playWord(card.from.trim()) }
             .exceptionally {
                 val rootCause = ExceptionUtils.getRootCause(it)
                 //log.info { "Word [${card.from}] is not played => ${rootCause.javaClass.simpleName}: ${rootCause.message}" }
@@ -206,8 +208,9 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             }
     }
 
-    private fun playWord(text: String, ignore: VoiceChoice) = voiceManager.speak(text)
+    private fun playWord(text: String) = voiceManager.speak(text, settingsPane.playVoiceGender)
 
+    /*
     private fun playWord_Old(text: String, voice: VoiceChoice) {
         when (voice.synthesizer) {
             PredefSpeechSynthesizer.MarryTTS -> {
@@ -253,6 +256,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             false
         }
     }
+    */
 
     private val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
     private val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = pane.warnAboutMissedBaseWordsModeDropDown.value
