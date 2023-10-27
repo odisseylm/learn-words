@@ -722,11 +722,19 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         }
     }
 
-    fun addToDifficultSet() =
-        currentWordsSelection.selectedItems.forEach { it.predefinedSets += PredefinedSet.DifficultSense }
+    fun addToOrRemoveFromPredefinedSet(set: PredefinedSet) {
+        val cards = currentWordsSelection.selectedItems
+        if (cards.isEmpty()) return
 
-    fun addToListenSet() =
-        currentWordsSelection.selectedItems.forEach { it.predefinedSets += PredefinedSet.DifficultToListen }
+        val someCardsAreNotAddedToPredefSet = cards.any { set !in it.predefinedSets }
+
+        // For me this logic is more expected/desired.
+        // We can use just simple inversion logic.
+        val addOrRemoveAction = if (someCardsAreNotAddedToPredefSet) UpdateSet.Set else UpdateSet.Remove
+
+        currentWordsSelection.selectedItems.forEach {
+            updateSetProperty(it.predefinedSetsProperty, set, addOrRemoveAction) }
+    }
 
     internal fun moveSubTextToSeparateCard() {
         val focusOwner = pane.scene.focusOwner

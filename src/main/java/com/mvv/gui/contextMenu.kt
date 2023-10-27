@@ -3,6 +3,7 @@ package com.mvv.gui
 import com.mvv.gui.LearnWordsController.InsertPosition
 import com.mvv.gui.javafx.*
 import com.mvv.gui.words.CardWordEntry
+import com.mvv.gui.words.PredefinedSet
 import com.mvv.gui.words.WordCardStatus.TooManyExampleNewCardCandidates
 import com.mvv.gui.words.englishBaseWords
 import javafx.scene.control.ContextMenu
@@ -72,8 +73,8 @@ class ContextMenuController (val controller: LearnWordsController) {
             newMenuItem("Play", buttonIcon("icons/ear.png")) { controller.playSelectedWord() },
 
             SeparatorMenuItem(),
-            newMenuItem("Add to 'Difficult' Set") { controller.addToDifficultSet() },
-            newMenuItem("Add to 'Listen' Set") { controller.addToListenSet() },
+            newMenuItem("To 'Difficult' Set") { controller.addToOrRemoveFromPredefinedSet(PredefinedSet.DifficultSense)    },
+            newMenuItem("To 'Listen' Set")    { controller.addToOrRemoveFromPredefinedSet(PredefinedSet.DifficultToListen) },
 
             SeparatorMenuItem(),
             showSourceSentenceMenuItem,

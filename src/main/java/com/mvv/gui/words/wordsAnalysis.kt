@@ -115,5 +115,5 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         }
 
     }
-    log.info("### analyzeWordCards took {}ms", System.currentTimeMillis() - started)
+    log.debug("### analyzeWordCards took {}ms", System.currentTimeMillis() - started)
 }

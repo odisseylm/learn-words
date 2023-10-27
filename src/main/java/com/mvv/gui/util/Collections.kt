@@ -66,3 +66,8 @@ inline fun Int.ifIndexNotFound(altValue: Int): Int =
 
 inline fun Int.ifIndexNotFound(altValue: () -> Int): Int =
     if (this == -1) altValue() else this
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun Iterable<String>.filterNotEmpty(): List<String> = this.filter { it.isNotEmpty() }
+@Suppress("NOTHING_TO_INLINE")
+inline fun Iterable<String>.filterNotBlank(): List<String> = this.filter { it.isNotBlank() }
