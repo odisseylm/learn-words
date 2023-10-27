@@ -15,7 +15,7 @@ import javafx.scene.input.KeyCombination
 import javafx.scene.layout.FlowPane
 import javafx.util.Callback
 import javafx.util.converter.DefaultStringConverter
-
+import java.util.WeakHashMap
 
 
 open class WordCardsTable(val controller: LearnWordsController) : TableView<CardWordEntry>() {
@@ -53,6 +53,17 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
 
         fromWordCountColumn.graphic = Label("N").also { it.tooltip = Tooltip("Word count") }
         fromWordCountColumn.styleClass.add("fromWordCountColumn")
+
+        // Actually CardWordEntry.sortFromBy already contains needed data... but hot to access it from comparator??
+        val cachedCalculatedSortFromBy = WeakHashMap<String, String>()
+        fromColumn.comparator = Comparator<String> { o1, o2 ->
+            // TODO: original word should be first
+            // TODO: if one of word is original, they they should be compared by real full text
+            // TODO: if both words have 'base' started similarly they should be compared by real full text
+            val sortBy1 = cachedCalculatedSortFromBy.computeIfAbsent(o1) { it.calculateBaseOfFromForSorting() }
+            val sortBy2 = cachedCalculatedSortFromBy.computeIfAbsent(o2) { it.calculateBaseOfFromForSorting() }
+            sortBy1.compareTo(sortBy2)
+        }
 
         toColumn.id = "toColumn"
         toColumn.isEditable = true
@@ -181,7 +192,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
 
         fromColumn.isSortable = true
         fromColumn.sortType = TableColumn.SortType.ASCENDING
-        fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
+        //fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
 
         sortOrder.add(fromColumn)
 

@@ -1,11 +1,17 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.util.getOrEmpty
+import com.mvv.gui.util.logInfo
+import com.mvv.gui.util.startStopWatch
 import com.opencsv.*
+import org.apache.commons.lang3.StringUtils
 import java.io.FileReader
 import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Path
+
+
+private val log = mu.KotlinLogging.logger {}
 
 
 private fun memoWordCsvReader(fileReader: FileReader): CSVReader =
@@ -66,7 +72,7 @@ fun saveWordCardsIntoMemoWordCsv(file: Path, words: Iterable<CardWordEntry>) {
     if (!words.iterator().hasNext()) throw IllegalArgumentException("Nothing to save to [$file].")
     Files.createDirectories(file.parent)
 
-    words.toList().sortedBy { it.fromBase }
+    words.toList().sortedBy { it.sortFromBy }
 
     FileWriter(file.toFile(), Charsets.UTF_8)
         .use { fw ->
@@ -85,103 +91,108 @@ fun saveWordCardsIntoMemoWordCsv(file: Path, words: Iterable<CardWordEntry>) {
         }
 }
 
-private val CardWordEntry.fromBase: String get() = this.from
-    .lowercase()
-    .removePrefix("not to be ")
-    .removePrefix("not to ")
-    .removePrefix("to be ")
-    .removePrefix("to ")
+//val CardWordEntry.baseOfFromForSorting: String get() = this.from.baseOfFromForSorting
+fun String.calculateBaseOfFromForSorting(): String {
+    val sw = startStopWatch("calculateBaseOfFromForSorting(${this})")
 
-    .removePrefix("to have it ")
-    .removePrefix("to have the ")
-    .removePrefix("to have a ")
+    val from = this.lowercase().trim()
 
-    .removePrefix("to make it ")
-    .removePrefix("to make the ")
-    .removePrefix("to make a ")
+    //val unneededPrefix = possibleNonRelevantForSortingPrefixes.find { from.startsWith(it) }
+    val unneededPrefix = possibleNonRelevantForSortingPrefixes.find { StringUtils.startsWith(from, it) }
+        ?: return from
 
-    .removePrefix("to be on one's ")
-    .removePrefix("to be on ones ")
-    .removePrefix("to be on one ")
+    sw.logInfo(log)
 
-    .removePrefix("to be on smb's. ")
-    .removePrefix("to be on smb's ")
-    .removePrefix("to be on smbs ")
-    .removePrefix("to be on smb ")
+    var base = from.removePrefix(unneededPrefix)
+    if (base.isNotBlank()) return base
 
-    .removePrefix("to be in the ")
-    .removePrefix("to be on the ")
+    base = this.removePrefix("to be ").removePrefix("to ")
+    if (base.isNotBlank()) return base
 
-    .removePrefix("to be up ")
-    .removePrefix("to be under the ")
+    return from
+}
 
-    .removePrefix("to be up against ")
+// TODO: it should be dynamic and exclude some verbs if they are present in card's set (in base form)
+private val articles = listOf(
+    "one's", "ones", "one", "smb's.", "smb's", "smbs'", "smbs", "smb.", "smb",
+    "every", "one", "your", "mine", "one's own",
+    "front", "the next", "next",
+    "a short", "a long", "a high", "a low", "a full",
+    "short", "low", "thin", "long", "high", "full", "tall", "thick",
+    "a bad", "bad", "worse", "the worst",
+    "a good", "good", "better", "the best",
+    "a hard", "hard", "harder",
+    "the public","a public", "public",
+    "enough", "a common", "common",
+    "this", "that",
+    "it",
+    "the", "an", "a",
+)
+private fun String.replaceArticles(): List<String> =
+    if (this.contains("{art}"))
+        articles.map { this.replace("{art}", it) } + this.replace("{art}", "").replace("  ", " ")
+    else listOf(this)
 
-    .removePrefix("to be upon the ")
-    .removePrefix("to be upon a ")
-    .removePrefix("to be upon ")
+// TODO: it should be dynamic and exclude some verbs if they are present in card's set (in base form)
+private val baseVerbs = listOf(
+    "do", "be", "have", "have no", "get", "go", "make", "make no", "take", "give", "bring", "handle", "try",
+    "allow", "answer", "ask", "call", "carry", "come", "keep", "lack",
+)
+private fun String.replaceBaseVerb(): List<String> =
+    baseVerbs.map { this.replace("{verb}", it) } + this.replace("{verb}", "").replace("  ", " ")
+private fun String.replaceBaseVerbAndOthers(): List<String> =
+    this.replaceBaseVerb().flatMap { it.replacePrepositionsAndArticles() }
 
-    .removePrefix("against the ")
-    .removePrefix("against a ")
-    .removePrefix("against ")
+private fun String.replacePrepositions(): List<String> =
+    if (this.contains("{prep}")) prepositions.map { prep -> this.replace("{prep}", prep.asText) }
+    else listOf(this)
+private fun String.replacePrepositionsAndArticles(): List<String> =
+    this.replacePrepositions().flatMap { it.replaceArticles() }
 
-    .removePrefix("at a high ")
-    .removePrefix("at a low ")
-    .removePrefix("at a ")
 
-    .removePrefix("even with the ")
-    .removePrefix("even with a ")
+// TODO: temp
+private val temp22 = startStopWatch("creating possibleNonRelevantForSortingPrefixes ")
 
-    .removePrefix("for high ")
-    .removePrefix("for low ")
-    .removePrefix("for the ")
-    .removePrefix("for a ")
-    .removePrefix("for ")
+private val possibleNonRelevantForSortingPrefixes: List<String> = listOf(
+    "to {verb} to {prep} {art} ",
+    "to {verb} {prep} {art} ",
+    "to {verb} to {art} ",
+    "to {verb} {art} ",
 
-    .removePrefix("in high ")
-    .removePrefix("in low ")
-    .removePrefix("in the ")
-    .removePrefix("in a ")
-    .removePrefix("in ")
+    "not to be {art} ",
+    "not to {art} ",
+    "to {art} ",
 
-    .removePrefix("on high ")
-    .removePrefix("on low ")
-    .removePrefix("on the ")
-    .removePrefix("on a ")
-    .removePrefix("on ")
+    "even with {art} ",
+    "{prep} {art} ",
+    "on no ",
 
-    .removePrefix("off the ")
-    .removePrefix("off a ")
-    .removePrefix("off ")
+    "to {art} ",
+    "not to {art} ",
+    "not {prep} {art} ",
+    "not {art} ",
 
-    .removePrefix("of the ")
-    .removePrefix("of a ")
-    .removePrefix("of ")
+    "by all {art} ",
+    "all {art} ",
+    "and {art} ",
+    "or {art} ",
 
-    .removePrefix("all the ")
-    .removePrefix("the ")
-    .removePrefix("and ")
+    "{art} no ",
+    "{art} ",
+    "no ",
 
-    .removePrefix("at short ")
-    .removePrefix("at long ")
-    .removePrefix("at every ")
-    .removePrefix("at one ")
-    .removePrefix("at the ")
-    .removePrefix("at your ")
-    .removePrefix("at mine ")
-    .removePrefix("at an ")
-    .removePrefix("at a ")
-    .removePrefix("at ")
+    "beyond all ", "at short ", "only ",
 
-    .removePrefix("be ")
-    .removePrefix("beyond ")
-    .removePrefix("and ")
-    .removePrefix("and ")
-    .removePrefix("and ")
-    .removePrefix("a ")
-    .removePrefix("to ")
+    "what is the ", "what's the ",
+    )
+    .flatMap { it.replaceBaseVerbAndOthers() }
+    .filter { it.isNotEmpty() }
+    .distinct()
+    .sortedBy { -it.length }
+    .also {
+        temp22.logInfo(log)
+    }
 
-    .removePrefix("not ")
 
 
 private val minimizableToConversions: List<Pair<String, String>> = listOf(

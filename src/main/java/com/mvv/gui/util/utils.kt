@@ -39,6 +39,14 @@ fun <T> T.isOneOf(vararg values: T): Boolean = values.any { it == this }
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun <T> Iterable<T>.skipFirst(): List<T> = this.drop(1)
+//@Suppress("NOTHING_TO_INLINE")
+//inline fun <T> List<T>.skipFirst(): List<T> = this.subList(1, this.size)
+@Suppress("NOTHING_TO_INLINE") // TODO: this optimization works for PrefixFinder!!! But would be nice to not use 'size' for abstract list
+inline fun <T> List<T>.skipFirst(): List<T> = if (this.size == 1) emptyList() else this.subList(1, this.size)
+//@Suppress("NOTHING_TO_INLINE")
+//inline fun <T> List<T>.skipFirst(): List<T> =
+//    if (this is java.util.ArrayList) this.subList(1, this.size)
+//    else this.subList(1, this.size)
 
 
 inline fun doTry(block: ()->Unit): Boolean = try { block(); true } catch (_: Exception) { false }

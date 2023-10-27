@@ -17,6 +17,7 @@ import java.nio.file.Path
 class CardWordEntry {
     val fromProperty = SimpleStringProperty(this, "from", "")
     val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")
+    val sortFromByProperty = fromProperty.mapCached { it.calculateBaseOfFromForSorting() }
     val fromWordCountProperty = fromProperty.mapCached { it.trim().split(" ", "\t", "\n").size }
     val toProperty = SimpleStringProperty(this, "to", "")
     val transcriptionProperty = SimpleStringProperty(this, "transcription", "")
@@ -34,11 +35,13 @@ class CardWordEntry {
     val fileProperty = SimpleObjectProperty<Path>(this, "file", null)
 
     var from: String
-        get()      = fromProperty.get()
+        get()      = fromProperty.valueSafe
         set(value) = fromProperty.set(value)
     var fromWithPreposition: String
-        get()      = fromWithPrepositionProperty.get()
+        get()      = fromWithPrepositionProperty.valueSafe
         set(value) = fromWithPrepositionProperty.set(value)
+    val sortFromBy: String
+        get()      = sortFromByProperty.value
     val fromWordCount: Int
         get() = fromWordCountProperty.value
     var to: String

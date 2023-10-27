@@ -134,8 +134,8 @@ val prepositions: List<Preposition> = sequenceOf(
         // "because of", "instead of", "by virtue of", "for the sake of", "with regard to",
         "above", "across from", "around", "behind", "below", "between", "by", "beside", "near", "under",
         "close to", "in", "in front of", "next to", "on", "opposite", "over", "past",
-        "across", "along", "away from", "back to", "down", "from", "into", "off", "onto", "out of", "over",
-        "past", "round", "around", "through", "to", "towards", "under", "up",
+        "across", "along", "away from", "back to", "down", "down to", "from", "into", "off", "onto", "out of", "over",
+        "past", "round", "around", "through", "to", "towards", "under", "up", "up to",
         "after", "at", "before", "by", "during", "for", "from", "in", "on", "past", "since",
         "through", "till", "until", "within",
         "by", "with", "without", "on",
@@ -148,6 +148,7 @@ val prepositions: List<Preposition> = sequenceOf(
         "about", "at", "from", "for", "in", "of", "on", "to", "with",
     )
     .map { it.lowercase() }
+    .filter { it.isNotEmpty() }
     .distinct()
     .map { Preposition(it) }
     .sortedBy { -it.size }
