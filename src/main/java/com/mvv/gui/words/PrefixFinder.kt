@@ -62,7 +62,6 @@ class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTe
 
     fun findPrefix(phrase: String): String? {
 
-        //val sw = startStopWatch("findPrefix")
         val phraseFixed = phrase.lowercase().trim()
 
         var node = expressionsTree
@@ -82,8 +81,6 @@ class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTe
             node = wordNode
         }
 
-        //sw.debugInfo(log)
-
         return lastPrefix?.joinToString(" ")
     }
 
@@ -92,6 +89,7 @@ class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTe
         private fun prepareTemplates(prefixTemplates: Alt<Seq<String>>): Alt<Seq<Alt<Seq<String>>>> {
 
             val preps: Alt<Seq<String>> = prepositions.map { it.words }
+            // !!! seq("") MUST be at 1st position for optimization !!!
             val arts:  Alt<Seq<String>> = alt(seq("")) + articlesAndSimilar.map { it.split(' ') }
             val verbs: Alt<Seq<String>> = verbs.map { it.split(' ') }
 
@@ -111,7 +109,6 @@ class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTe
         }
     }
 
-    // TODO: optimize it (to have possibility to recreate it quickly)
     private fun buildTreeImpl(prefixTemplates: Alt<Seq<Alt<Seq<String>>>>) {
         for (prefixTemplate in prefixTemplates)
             addToTree(this.expressionsTree, prefixTemplate)
@@ -162,36 +159,17 @@ class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTe
 }
 
 
-// TODO: optimize
-/*
-private fun Seq<Alt<Seq<String>>>.remainingContainsEmpty(startFrom: Int): Boolean {
-
-    //if (true) return false // such impl add 5-10% performance boost   120-140ms vs 140-160
-
-    val it = this.listIterator(startFrom)
-
-    if (!it.hasNext()) return false
-
-    while (it.hasNext()) {
-        val v = it.next()
-        val containsEmpty: Boolean = v.any { words -> words.isEmpty() || words.contains("") }
-        if (!containsEmpty)
-            return false
-    }
-
-    return true
-}
-*/
 private fun Seq<Alt<Seq<String>>>.containsEmptyWord(): Boolean {
 
-    //if (true) return false // such impl add 5-10% performance boost   120-140ms vs 140-160
+    // Seems this short version is a bit slower... but I'm not totally sure.
+    //return this.any { altValues: Alt<Seq<String>> -> altValues.any { words: Seq<String> -> words.isEmpty() || words[0].isEmpty() } }
 
     val it = this.iterator()
     if (!it.hasNext()) return false
 
     while (it.hasNext()) {
-        val v: Alt<Seq<String>> = it.next()
-        val containsEmpty: Boolean = v.any { words: Seq<String> -> words.isEmpty() || words.contains("") }
+        val altValues: Alt<Seq<String>> = it.next()
+        val containsEmpty: Boolean = altValues.any { words: Seq<String> -> words.isEmpty() || words[0].isEmpty() }
         if (!containsEmpty)
             return false
     }
@@ -204,6 +182,7 @@ private fun String.removeRepeatableSpaces(): String {
     return this
 }
 
+// TODO: try to optimize it or collection type
 private fun Collection<PrefixWordTreeNode>.getChildByWord(word: String): PrefixWordTreeNode? =
     this.find { it.word == word }
 //private fun Set<PrefixWordTreeNode>.getChildByWord(word: String): PrefixWordTreeNode? =
@@ -214,8 +193,9 @@ private fun Collection<PrefixWordTreeNode>.getChildByWord(word: String): PrefixW
 private val emptyTreeSet: TreeSet<PrefixWordTreeNode> = TreeSet<PrefixWordTreeNode>()
 private fun TreeSet<PrefixWordTreeNode>.getChildByWord(word: String): PrefixWordTreeNode? {
     val searchKey = PrefixWordTreeNode(word, false) //, emptyTreeSet)
-    val ceil = this.ceiling(searchKey)  // least elt >= key
-    val floor = this.floor(searchKey)   // highest elt <= key
+    // TODO: 2 iterations, not good !!!
+    val ceil  = this.ceiling(searchKey)  // least elt >= key
+    val floor = this.floor(searchKey)    // highest elt <= key
     return if (ceil === floor) ceil else null
 }
 
