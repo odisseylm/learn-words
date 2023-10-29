@@ -257,3 +257,6 @@ class PrefixFinderTest {
     }
 
 }
+
+private fun <T> seq(vararg values: T): Seq<T> = listOf(*values)
+private fun <T> alt(vararg values: T): Alt<T> = listOf(*values)
