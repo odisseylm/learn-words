@@ -69,12 +69,12 @@ fun saveWordCardsIntoMemoWordCsv(file: Path, words: Iterable<CardWordEntry>) {
     if (!words.iterator().hasNext()) throw IllegalArgumentException("Nothing to save to [$file].")
     Files.createDirectories(file.parent)
 
-    words.toList().sortedBy { it.sortFromBy }
+    val sortedWords = words.toList().sortedBy { it.baseWordAndFromProperty.value }
 
     FileWriter(file.toFile(), Charsets.UTF_8)
         .use { fw ->
             val csvWriter = memoWordCsvWriter(fw)
-            words
+            sortedWords
                 .filter { it.from.isNotBlank() }
                 .forEach {
                     csvWriter.writeNext(arrayOf(

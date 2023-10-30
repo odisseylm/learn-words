@@ -420,6 +420,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
                 "srt"          -> loadFromSrt(filePath)
                 else           -> throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
+            .let { cards -> val features = enumSetOf(CardWordEntryFeatures.CalculateBaseWord); cards.map { it.copy(features) } }
             // T O D O: make it async, but it is not easy because there are change listeners which also call analyzeAllWords()
             // We need to do ANY/EVERY call to analyzeAllWords() async
             .also { analyzeAllWords(it) }

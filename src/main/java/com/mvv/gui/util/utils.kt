@@ -1,6 +1,7 @@
 package com.mvv.gui.util
 
 import javafx.application.Platform
+import java.util.EnumSet
 import java.util.TimerTask
 
 
@@ -57,3 +58,14 @@ inline fun doTry(block: ()->Unit): Boolean = try { block(); true } catch (_: Exc
 // It works only if specify type explicitly like ` doTry<Int> { 123 } ` :-(
 // T O D O: it should be rewritten in some way...
 inline fun <T> doTry(block: ()->T): T? = try { block() } catch (_: Exception) { null }
+
+
+fun <E: Enum<E>> enumSetOf(v: E): EnumSet<E> = EnumSet.of(v)
+
+/*
+inline fun Int.thenCompare(nextCompare: ()->Int): Int = if (this != 0) this else nextCompare()
+
+inline fun <T, F: Comparable<F>> compare(o1: T, o2: T, field: (T)->F): Int = field(o1).compareTo(field(o2))
+inline fun <T, F: Comparable<F>> Int.thenCompare(o1: T, o2: T, field: (T)->F): Int =
+    if (this != 0) this else field(o1).compareTo(field(o2))
+*/

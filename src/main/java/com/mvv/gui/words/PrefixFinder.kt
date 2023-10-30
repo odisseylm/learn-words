@@ -223,7 +223,11 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
 
     "beyond all", "at short", "only",
 
-    "what is the", "what's the",
+    "what a", "what the",
+    "what's a", "what's the",
+    "what is a", "what is the",
+
+    "who",
 )
     .distinct()
     .map { it.split(' ').filterNotBlank() }
@@ -237,7 +241,10 @@ private val verbs = listOf(
 )
 
 private val articlesAndSimilar = listOf(
-    "one's", "ones", "one", "smb's.", "smb's", "smbs'", "smbs", "smb.", "smb",
+    "one's", "ones", "one",
+    "smb's.", "smb's", "smbs'", "smbs", "smb.", "smb",
+    "smb's. a", "smb's a", "smbs' a", "smbs a", "smb. a", "smb a",
+    "smb's. the", "smb's the", "smbs' the", "smbs the", "smb. the", "smb the",
     "every", "one", "your", "mine", "one's own",
     "front", "the next", "next",
     "a short", "a long", "a high", "a low", "a full",

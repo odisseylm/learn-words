@@ -12,6 +12,10 @@
     -fx-alignment: center;
 }
 
+#currentWords .table-row-cell .baseOfFrom1CharColumn {
+    -fx-alignment: top-center;
+}
+
 
 /* Styling TranslationCount-Status column. */
 

@@ -15,12 +15,12 @@ import javafx.scene.input.KeyCombination
 import javafx.scene.layout.FlowPane
 import javafx.util.Callback
 import javafx.util.converter.DefaultStringConverter
-import java.util.WeakHashMap
 
 
 open class WordCardsTable(val controller: LearnWordsController) : TableView<CardWordEntry>() {
 
     internal val numberColumn           = TableColumn<CardWordEntry, Int>("No.")
+    private  val baseOfFrom1CharColumn  = TableColumn<CardWordEntry, BaseAndFrom>() //"B")
     internal val fromColumn             = TableColumn<CardWordEntry, String>("English")
     private  val fromWordCountColumn    = TableColumn<CardWordEntry, Int>() // "N")
     private  val statusesColumn         = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
@@ -42,28 +42,30 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         numberColumn.isSortable = false
         numberColumn.cellFactory = Callback { createIndexTableCell<CardWordEntry>(IndexStartFrom.One) }
 
+        baseOfFrom1CharColumn.id = "baseOfFrom1CharColumn"
+        baseOfFrom1CharColumn.isEditable = false
+        baseOfFrom1CharColumn.isSortable = true
+        baseOfFrom1CharColumn.cellValueFactory = Callback { p -> p.value.baseWordAndFromProperty }
+        baseOfFrom1CharColumn.cellFactory = Callback { ExTextFieldTableCell(
+            TextFieldType.TextField, DelegateStringConverter { it.base.firstOrNull()?.uppercase() ?: "" }, toolTipF = { it.base } ) }
+        baseOfFrom1CharColumn.graphic = Label("B").also { it.tooltip = Tooltip(
+            "Base word.\nUse this column to sort by 'base' word or use explicit sorting by 'From'.") }
+        baseOfFrom1CharColumn.styleClass.add("baseOfFrom1CharColumn")
+
         fromColumn.id = "fromColumn"
         fromColumn.isEditable = true
         fromColumn.cellValueFactory = Callback { p -> p.value.fromProperty }
         fromColumn.cellFactory = ExTextFieldTableCell.forStringTableColumn(TextFieldType.TextField)
 
+        fromColumn.isSortable = true
+        fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
+        fromColumn.sortType = TableColumn.SortType.ASCENDING
+
         fromWordCountColumn.id = "fromWordCountColumn"
         fromWordCountColumn.isEditable = false
         fromWordCountColumn.cellValueFactory = Callback { p -> p.value.fromWordCountProperty }
-
         fromWordCountColumn.graphic = Label("N").also { it.tooltip = Tooltip("Word count") }
         fromWordCountColumn.styleClass.add("fromWordCountColumn")
-
-        // Actually CardWordEntry.sortFromBy already contains needed data... but hot to access it from comparator??
-        val cachedCalculatedSortFromBy = WeakHashMap<String, String>()
-        fromColumn.comparator = Comparator<String> { o1, o2 ->
-            // TODO: original word should be first
-            // TODO: if one of word is original, they they should be compared by real full text
-            // TODO: if both words have 'base' started similarly they should be compared by real full text
-            val sortBy1 = cachedCalculatedSortFromBy.computeIfAbsent(o1) { it.calculateBaseOfFromForSorting() }
-            val sortBy2 = cachedCalculatedSortFromBy.computeIfAbsent(o2) { it.calculateBaseOfFromForSorting() }
-            sortBy1.compareTo(sortBy2)
-        }
 
         toColumn.id = "toColumn"
         toColumn.isEditable = true
@@ -178,6 +180,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
 
         // Impossible to move it to CSS ?!
         numberColumn.prefWidth = 40.0
+        baseOfFrom1CharColumn.prefWidth = 40.0
         fromColumn.prefWidth = 200.0
         fromWordCountColumn.prefWidth = 30.0
         statusesColumn.prefWidth = 50.0
@@ -190,11 +193,9 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         sourcePositionsColumn.prefWidth = 70.0
         sourceSentencesColumn.prefWidth = 300.0
 
-        fromColumn.isSortable = true
-        fromColumn.sortType = TableColumn.SortType.ASCENDING
-        //fromColumn.comparator = String.CASE_INSENSITIVE_ORDER
-
-        sortOrder.add(fromColumn)
+        //sortOrder.add(fromColumn)
+        sortOrder.add(baseOfFrom1CharColumn)
+        //this.sortPolicy
 
         // It is needed if SortedList is used as TableView items
         // ??? just needed :-) (otherwise warning in console)
@@ -211,6 +212,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
 
         this.columns.setAll(
             numberColumn,
+            baseOfFrom1CharColumn,
             fromColumn, fromWordCountColumn,
             statusesColumn,
             transcriptionColumn,

@@ -61,6 +61,7 @@ class ExTextFieldTableCell<S, T>
         converter: StringConverter<T>,
         private val customValueSetter: BeanPropertySetter<S,T>? = null,
         private val toolTipMode: ToolTipMode = ToolTipMode.Default,
+        private val toolTipF: ((T)->String)? = null,
         private val onEditCreate: (ExTextFieldTableCell<S,T>,TextInputControl)->Unit = { _,_ -> },
     )
 
@@ -142,7 +143,7 @@ class ExTextFieldTableCell<S, T>
     /** {@inheritDoc}  */
     public override fun updateItem(item: T, empty: Boolean) {
         super.updateItem(item, empty)
-        TextFieldTableCellUtils.updateItem(this, getConverter(), null, null, textField, toolTipMode)
+        TextFieldTableCellUtils.updateItem(this, getConverter(), null, null, textField, toolTipMode, toolTipF)
     }
 
     override fun computeMaxHeight(width: Double): Double {
@@ -223,7 +224,7 @@ class ExTextFieldTableCell<S, T>
             toolTipMode: ToolTipMode = ToolTipMode.Default,
             onEditCreate: (ExTextFieldTableCell<S,T>,TextInputControl)->Unit = { _,_ -> },
             ): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, null, toolTipMode, onEditCreate) }
+            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, null, toolTipMode, null, onEditCreate) }
 
         @Suppress("MemberVisibilityCanBePrivate")
         fun <S, T> forTableColumn(textFieldType: TextFieldType, converter: StringConverter<T>,
@@ -231,7 +232,7 @@ class ExTextFieldTableCell<S, T>
                                   toolTipMode: ToolTipMode = ToolTipMode.Default,
                                   onEditCreate: (ExTextFieldTableCell<S,T>,TextInputControl)->Unit = { _,_ -> },
                                   ): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, customValueSetter, toolTipMode, onEditCreate) }
+            Callback { _: TableColumn<S, T>? -> ExTextFieldTableCell(textFieldType, converter, customValueSetter, toolTipMode, null, onEditCreate) }
 
     } // companion end
 }
@@ -254,7 +255,9 @@ internal class TextFieldTableCellUtils {
             else converter.toString(cell.item)
 
 
-        fun <T> updateItem(cell: Cell<T>, converter: StringConverter<T>?, hbox: HBox?, graphic: Node?, textField: TextInputControl?, toolTipMode: ToolTipMode?) {
+        fun <T> updateItem(cell: Cell<T>, converter: StringConverter<T>?, hbox: HBox?, graphic: Node?,
+                           textField: TextInputControl?, toolTipMode: ToolTipMode? = null,
+                           toolTipF: ((T)->String)? = null) {
 
             if (cell.isEmpty) {
                 cell.text = null
@@ -275,8 +278,14 @@ internal class TextFieldTableCellUtils {
                     val itemText = getItemText(cell, converter)
                     cell.text = itemText
                     cell.graphic = graphic
-                    if (toolTipMode == ToolTipMode.ShowAllContent)
-                        cell.setToolTip(itemText, 400.0)
+                    val toolTipMaxWidth = 400.0
+
+                    when {
+                        toolTipF != null ->
+                            cell.setToolTip(toolTipF(cell.item), toolTipMaxWidth)
+                        toolTipMode == ToolTipMode.ShowAllContent ->
+                            cell.setToolTip(itemText, toolTipMaxWidth)
+                    }
                 }
             }
         }
