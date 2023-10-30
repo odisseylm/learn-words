@@ -1,11 +1,13 @@
 package com.mvv.gui.util
 
+import org.apache.commons.io.FileUtils
 import java.net.URI
 import java.net.URL
 import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.file.Files
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import java.time.Duration
@@ -37,6 +39,9 @@ fun downloadUrl_old(url: URL, timeout: Long): ByteArray =
 */
 
 fun downloadUrl(url: URL, settings: NetSettings = defaultNetSettings): ByteArray {
+
+    if (url.protocol == "file")
+        return Files.readAllBytes(FileUtils.toFile(url).toPath())
 
     val request: HttpRequest = HttpRequest.newBuilder()
         .uri(url.toURI())

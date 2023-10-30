@@ -10,73 +10,75 @@ import java.nio.file.Path
 
 private val log = mu.KotlinLogging.logger {}
 
+private val pf = PrefixFinder()
+
+fun String.calculateBaseOfFromForSorting_22(): String = pf.calculateBaseOfFromForSorting(this)
 
 class SortCardsTest {
 
     @Test
-    @DisplayName("calculateBaseOfFromForSorting")
-    fun test_calculateBaseOfFromForSorting() {
+    @DisplayName("calculateBaseOfFromForSorting_22")
+    fun test_calculateBaseOfFromForSorting_22() {
         val a = SoftAssertions()
 
-        a.assertThat("to allow credit".calculateBaseOfFromForSorting()).isEqualTo("credit")
-        a.assertThat(" \t \n to allow credit".calculateBaseOfFromForSorting()).isEqualTo("credit")
-        a.assertThat("TO ALLOW CREDIT".calculateBaseOfFromForSorting()).isEqualTo("credit")
+        a.assertThat("to allow credit".calculateBaseOfFromForSorting_22()).isEqualTo("credit")
+        a.assertThat(" \t \n to allow credit".calculateBaseOfFromForSorting_22()).isEqualTo("credit")
+        a.assertThat("TO ALLOW CREDIT".calculateBaseOfFromForSorting_22()).isEqualTo("credit")
 
-        a.assertThat("to be cut up".calculateBaseOfFromForSorting()).isEqualTo("cut up")
-        a.assertThat("to be in trouble".calculateBaseOfFromForSorting()).isEqualTo("trouble")
-        a.assertThat("to be off one's nut".calculateBaseOfFromForSorting()).isEqualTo("nut")
-        a.assertThat("to be on a roll".calculateBaseOfFromForSorting()).isEqualTo("roll")
-        a.assertThat("to be on the watch for".calculateBaseOfFromForSorting()).isEqualTo("watch for")
-        a.assertThat("to be up to".calculateBaseOfFromForSorting()).isEqualTo("to")
+        a.assertThat("to be cut up".calculateBaseOfFromForSorting_22()).isEqualTo("cut up")
+        a.assertThat("to be in trouble".calculateBaseOfFromForSorting_22()).isEqualTo("trouble")
+        a.assertThat("to be off one's nut".calculateBaseOfFromForSorting_22()).isEqualTo("nut")
+        a.assertThat("to be on a roll".calculateBaseOfFromForSorting_22()).isEqualTo("roll")
+        a.assertThat("to be on the watch for".calculateBaseOfFromForSorting_22()).isEqualTo("watch for")
+        a.assertThat("to be up to".calculateBaseOfFromForSorting_22()).isEqualTo("up to")
 
-        a.assertThat("to do smb. credit".calculateBaseOfFromForSorting()).isEqualTo("credit")
+        a.assertThat("to do smb. credit".calculateBaseOfFromForSorting_22()).isEqualTo("credit")
 
-        a.assertThat("to get a sleep".calculateBaseOfFromForSorting()).isEqualTo("sleep")
-        a.assertThat("to get enough sleep".calculateBaseOfFromForSorting()).isEqualTo("sleep")
-        a.assertThat("to get into trouble".calculateBaseOfFromForSorting()).isEqualTo("trouble")
-        a.assertThat("to get over the hump".calculateBaseOfFromForSorting()).isEqualTo("hump")
-        a.assertThat("to get the hump".calculateBaseOfFromForSorting()).isEqualTo("hump")
+        a.assertThat("to get a sleep".calculateBaseOfFromForSorting_22()).isEqualTo("sleep")
+        a.assertThat("to get enough sleep".calculateBaseOfFromForSorting_22()).isEqualTo("sleep")
+        a.assertThat("to get into trouble".calculateBaseOfFromForSorting_22()).isEqualTo("trouble")
+        a.assertThat("to get over the hump".calculateBaseOfFromForSorting_22()).isEqualTo("hump")
+        a.assertThat("to get the hump".calculateBaseOfFromForSorting_22()).isEqualTo("hump")
 
-        a.assertThat("to give the mitten".calculateBaseOfFromForSorting()).isEqualTo("mitten")
+        a.assertThat("to give the mitten".calculateBaseOfFromForSorting_22()).isEqualTo("mitten")
 
-        a.assertThat("to go into the question".calculateBaseOfFromForSorting()).isEqualTo("question")
-        a.assertThat("to go to the woods".calculateBaseOfFromForSorting()).isEqualTo("woods")
-        a.assertThat("to handle without mittens".calculateBaseOfFromForSorting()).isEqualTo("mittens")
-        a.assertThat("to have a common purse".calculateBaseOfFromForSorting()).isEqualTo("purse")
-        a.assertThat("to take smb. welcome".calculateBaseOfFromForSorting()).isEqualTo("welcome")
-        a.assertThat("to take the trouble".calculateBaseOfFromForSorting()).isEqualTo("trouble")
-        a.assertThat("to take the trouble".calculateBaseOfFromForSorting()).isEqualTo("trouble")
-        a.assertThat("to try one's luck".calculateBaseOfFromForSorting()).isEqualTo("luck")
+        a.assertThat("to go into the question".calculateBaseOfFromForSorting_22()).isEqualTo("question")
+        a.assertThat("to go to the woods".calculateBaseOfFromForSorting_22()).isEqualTo("woods")
+        a.assertThat("to handle without mittens".calculateBaseOfFromForSorting_22()).isEqualTo("mittens")
+        a.assertThat("to have a common purse".calculateBaseOfFromForSorting_22()).isEqualTo("purse")
+        a.assertThat("to take smb. welcome".calculateBaseOfFromForSorting_22()).isEqualTo("welcome")
+        a.assertThat("to take the trouble".calculateBaseOfFromForSorting_22()).isEqualTo("trouble")
+        a.assertThat("to take the trouble".calculateBaseOfFromForSorting_22()).isEqualTo("trouble")
+        a.assertThat("to try one's luck".calculateBaseOfFromForSorting_22()).isEqualTo("luck")
 
-        a.assertThat("a door to success".calculateBaseOfFromForSorting()).isEqualTo("door to success")
-        a.assertThat("out of doors".calculateBaseOfFromForSorting()).isEqualTo("doors")
-        a.assertThat("on the neck".calculateBaseOfFromForSorting()).isEqualTo("neck")
-        a.assertThat("on the neck".calculateBaseOfFromForSorting()).isEqualTo("neck")
-        a.assertThat("not for nuts".calculateBaseOfFromForSorting()).isEqualTo("nuts")
-        a.assertThat("not a snap".calculateBaseOfFromForSorting()).isEqualTo("snap")
-        a.assertThat("not a snap".calculateBaseOfFromForSorting()).isEqualTo("snap")
-        a.assertThat("under a spell".calculateBaseOfFromForSorting()).isEqualTo("spell")
-        a.assertThat("what's the trouble?".calculateBaseOfFromForSorting()).isEqualTo("trouble?")
-        a.assertThat("at present".calculateBaseOfFromForSorting()).isEqualTo("present")
-        a.assertThat("at present".calculateBaseOfFromForSorting()).isEqualTo("present")
-        a.assertThat("bad luck".calculateBaseOfFromForSorting()).isEqualTo("luck")
-        a.assertThat("by feel".calculateBaseOfFromForSorting()).isEqualTo("feel")
-        a.assertThat("front door".calculateBaseOfFromForSorting()).isEqualTo("door")
-        a.assertThat("good luck".calculateBaseOfFromForSorting()).isEqualTo("luck")
-        a.assertThat("good luck".calculateBaseOfFromForSorting()).isEqualTo("luck")
-        a.assertThat("next door".calculateBaseOfFromForSorting()).isEqualTo("door")
-        a.assertThat("next door".calculateBaseOfFromForSorting()).isEqualTo("door")
-        a.assertThat("up to the neck".calculateBaseOfFromForSorting()).isEqualTo("neck")
-        a.assertThat("to be on the watch for".calculateBaseOfFromForSorting()).isEqualTo("watch for")
+        a.assertThat("a door to success".calculateBaseOfFromForSorting_22()).isEqualTo("door to success")
+        a.assertThat("out of doors".calculateBaseOfFromForSorting_22()).isEqualTo("doors")
+        a.assertThat("on the neck".calculateBaseOfFromForSorting_22()).isEqualTo("neck")
+        a.assertThat("on the neck".calculateBaseOfFromForSorting_22()).isEqualTo("neck")
+        a.assertThat("not for nuts".calculateBaseOfFromForSorting_22()).isEqualTo("nuts")
+        a.assertThat("not a snap".calculateBaseOfFromForSorting_22()).isEqualTo("snap")
+        a.assertThat("not a snap".calculateBaseOfFromForSorting_22()).isEqualTo("snap")
+        a.assertThat("under a spell".calculateBaseOfFromForSorting_22()).isEqualTo("spell")
+        a.assertThat("what's the trouble?".calculateBaseOfFromForSorting_22()).isEqualTo("trouble?")
+        a.assertThat("at present".calculateBaseOfFromForSorting_22()).isEqualTo("present")
+        a.assertThat("at present".calculateBaseOfFromForSorting_22()).isEqualTo("present")
+        a.assertThat("bad luck".calculateBaseOfFromForSorting_22()).isEqualTo("luck")
+        a.assertThat("by feel".calculateBaseOfFromForSorting_22()).isEqualTo("feel")
+        a.assertThat("front door".calculateBaseOfFromForSorting_22()).isEqualTo("door")
+        a.assertThat("good luck".calculateBaseOfFromForSorting_22()).isEqualTo("luck")
+        a.assertThat("good luck".calculateBaseOfFromForSorting_22()).isEqualTo("luck")
+        a.assertThat("next door".calculateBaseOfFromForSorting_22()).isEqualTo("door")
+        a.assertThat("next door".calculateBaseOfFromForSorting_22()).isEqualTo("door")
+        a.assertThat("up to the neck".calculateBaseOfFromForSorting_22()).isEqualTo("neck")
+        a.assertThat("to be on the watch for".calculateBaseOfFromForSorting_22()).isEqualTo("watch for")
 
-        // TODO: ?? is it ok ??
-        a.assertThat("to go at".calculateBaseOfFromForSorting()).isEqualTo("at")
-        //a.assertThat("to go at".calculateBaseOfFromForSorting()).isEqualTo("at")
+        a.assertThat("to go at".calculateBaseOfFromForSorting_22()).isEqualTo("go at")
+        //a.assertThat("to go at".calculateBaseOfFromForSorting_22()).isEqualTo("at")
 
-        a.assertThat("on no account".calculateBaseOfFromForSorting()).isEqualTo("account")
-        a.assertThat("long odds".calculateBaseOfFromForSorting()).isEqualTo("odds")
-        a.assertThat("on one's own account".calculateBaseOfFromForSorting()).isEqualTo("account")
-        a.assertThat("to have one's own way".calculateBaseOfFromForSorting()).isEqualTo("way")
+        a.assertThat("on no account".calculateBaseOfFromForSorting_22()).isEqualTo("account")
+        a.assertThat("long odds".calculateBaseOfFromForSorting_22()).isEqualTo("odds")
+        a.assertThat("on one's own account".calculateBaseOfFromForSorting_22()).isEqualTo("account")
+        a.assertThat("to have one's own way".calculateBaseOfFromForSorting_22()).isEqualTo("way")
 
         a.assertAll()
     }
@@ -89,7 +91,7 @@ class SortCardsTest {
         log.info { "performanceTest => calculating started" }
         val sw = startStopWatch()
 
-        words.forEach { it.calculateBaseOfFromForSorting() }
+        words.forEach { it.calculateBaseOfFromForSorting_22() }
         log.info { "performanceTest => calculating completed (took ${sw.time}ms)" }
     }
 }

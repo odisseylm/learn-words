@@ -1,17 +1,14 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.util.getOrEmpty
-import com.mvv.gui.util.logInfo
-import com.mvv.gui.util.startStopWatch
 import com.opencsv.*
-import org.apache.commons.lang3.StringUtils
 import java.io.FileReader
 import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Path
 
 
-private val log = mu.KotlinLogging.logger {}
+//private val log = mu.KotlinLogging.logger {}
 
 
 private fun memoWordCsvReader(fileReader: FileReader): CSVReader =
@@ -91,108 +88,10 @@ fun saveWordCardsIntoMemoWordCsv(file: Path, words: Iterable<CardWordEntry>) {
         }
 }
 
-//val CardWordEntry.baseOfFromForSorting: String get() = this.from.baseOfFromForSorting
-fun String.calculateBaseOfFromForSorting(): String {
-    val sw = startStopWatch("calculateBaseOfFromForSorting(${this})")
-
-    val from = this.lowercase().trim()
-
-    //val unneededPrefix = possibleNonRelevantForSortingPrefixes.find { from.startsWith(it) }
-    val unneededPrefix = possibleNonRelevantForSortingPrefixes.find { StringUtils.startsWith(from, it) }
-        ?: return from
-
-    sw.logInfo(log)
-
-    var base = from.removePrefix(unneededPrefix)
-    if (base.isNotBlank()) return base
-
-    base = this.removePrefix("to be ").removePrefix("to ")
-    if (base.isNotBlank()) return base
-
-    return from
-}
-
-// TODO: it should be dynamic and exclude some verbs if they are present in card's set (in base form)
-private val articles = listOf(
-    "one's", "ones", "one", "smb's.", "smb's", "smbs'", "smbs", "smb.", "smb",
-    "every", "one", "your", "mine", "one's own",
-    "front", "the next", "next",
-    "a short", "a long", "a high", "a low", "a full",
-    "short", "low", "thin", "long", "high", "full", "tall", "thick",
-    "a bad", "bad", "worse", "the worst",
-    "a good", "good", "better", "the best",
-    "a hard", "hard", "harder",
-    "the public","a public", "public",
-    "enough", "a common", "common",
-    "this", "that",
-    "it",
-    "the", "an", "a",
-)
-private fun String.replaceArticles(): List<String> =
-    if (this.contains("{art}"))
-        articles.map { this.replace("{art}", it) } + this.replace("{art}", "").replace("  ", " ")
-    else listOf(this)
-
-// TODO: it should be dynamic and exclude some verbs if they are present in card's set (in base form)
-private val baseVerbs = listOf(
-    "do", "be", "have", "have no", "get", "go", "make", "make no", "take", "give", "bring", "handle", "try",
-    "allow", "answer", "ask", "call", "carry", "come", "keep", "lack",
-)
-private fun String.replaceBaseVerb(): List<String> =
-    baseVerbs.map { this.replace("{verb}", it) } + this.replace("{verb}", "").replace("  ", " ")
-private fun String.replaceBaseVerbAndOthers(): List<String> =
-    this.replaceBaseVerb().flatMap { it.replacePrepositionsAndArticles() }
-
-private fun String.replacePrepositions(): List<String> =
-    if (this.contains("{prep}")) prepositions.map { prep -> this.replace("{prep}", prep.asText) }
-    else listOf(this)
-private fun String.replacePrepositionsAndArticles(): List<String> =
-    this.replacePrepositions().flatMap { it.replaceArticles() }
-
-
-// TODO: temp
-private val temp22 = startStopWatch("creating possibleNonRelevantForSortingPrefixes ")
-
-private val possibleNonRelevantForSortingPrefixes: List<String> = listOf(
-    "to {verb} to {prep} {art} ",
-    "to {verb} {prep} {art} ",
-    "to {verb} to {art} ",
-    "to {verb} {art} ",
-
-    "not to be {art} ",
-    "not to {art} ",
-    "to {art} ",
-
-    "even with {art} ",
-    "{prep} {art} ",
-    "on no ",
-
-    "to {art} ",
-    "not to {art} ",
-    "not {prep} {art} ",
-    "not {art} ",
-
-    "by all {art} ",
-    "all {art} ",
-    "and {art} ",
-    "or {art} ",
-
-    "{art} no ",
-    "{art} ",
-    "no ",
-
-    "beyond all ", "at short ", "only ",
-
-    "what is the ", "what's the ",
-    )
-    .flatMap { it.replaceBaseVerbAndOthers() }
-    .filter { it.isNotEmpty() }
-    .distinct()
-    .sortedBy { -it.length }
-    .also {
-        temp22.logInfo(log)
-    }
-
+// TODO: it should be dynamic and exclude some verbs/prepositions/etc if they are present in card's set (in base form)
+// TODO: PrefixFinder should not be global
+private val temporaryGlobalPF = PrefixFinder()
+fun String.calculateBaseOfFromForSorting(): String = temporaryGlobalPF.calculateBaseOfFromForSorting(this)
 
 
 private val minimizableToConversions: List<Pair<String, String>> = listOf(
