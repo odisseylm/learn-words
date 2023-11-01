@@ -27,12 +27,10 @@ private inline fun <T> seq(first: T, other: Seq<T>): Seq<T> {
 private inline fun <T> alt(value: T): Alt<T> = singletonList(value)
 
 
-class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTemplates: Alt<Seq<Alt<Seq<String>>>>) /*: AbstractObservable<Any>()*/ {
+class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTemplates: Alt<Seq<Alt<Seq<String>>>>, val ignoredInPrefix: Set<String> = emptySet()) /*: AbstractObservable<Any>()*/ {
 
     constructor(toIgnoreInPrefix: Set<String> = emptySet())
-            : this(prepareTemplates(possibleNonRelevantForSortingPrefixTemplates, toIgnoreInPrefix)) { }
-
-    val ignoredInPrefix: Set<String> get() = emptySet() // TODO("Impl")
+            : this(prepareTemplates(possibleNonRelevantForSortingPrefixTemplates, toIgnoreInPrefix), toIgnoreInPrefix)
 
     private val expressionsTree: PrefixWordTreeNode = buildTreeImpl(prefixTemplates)
 
