@@ -1,7 +1,6 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.util.filterNotBlank
-import com.mvv.gui.util.skipFirst
+import com.mvv.gui.util.*
 import org.apache.commons.lang3.NotImplementedException
 import org.apache.commons.lang3.math.NumberUtils.max
 import java.util.Collections.singletonList
@@ -9,7 +8,7 @@ import java.util.function.BiFunction
 import java.util.function.Function
 
 
-//private val log = mu.KotlinLogging.logger {}
+private val log = mu.KotlinLogging.logger {}
 
 
 internal typealias Alt<T> = List<T> // Alt = alternative (OR) values of words/phrases/sequences
@@ -28,15 +27,22 @@ private inline fun <T> seq(first: T, other: Seq<T>): Seq<T> {
 private inline fun <T> alt(value: T): Alt<T> = singletonList(value)
 
 
-class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTemplates: Alt<Seq<Alt<Seq<String>>>>) {
+class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTemplates: Alt<Seq<Alt<Seq<String>>>>) /*: AbstractObservable<Any>()*/ {
 
-    constructor() : this(prepareTemplates(possibleNonRelevantForSortingPrefixTemplates)) { }
+    constructor(toIgnoreInPrefix: Set<String> = emptySet())
+            : this(prepareTemplates(possibleNonRelevantForSortingPrefixTemplates, toIgnoreInPrefix)) { }
 
-    private val expressionsTree: PrefixWordTreeNode = PrefixWordTreeNode("")
+    val ignoredInPrefix: Set<String> get() = emptySet() // TODO("Impl")
 
-    init {
-        buildTreeImpl(prefixTemplates)
-    }
+    private val expressionsTree: PrefixWordTreeNode = buildTreeImpl(prefixTemplates)
+
+    ///** For internal usage only to support Observable change listeners. */
+    //override fun getValue(): Any = expressionsTree
+    //
+    //// !!! This method uses only predefined prefix templates and IGNORES
+    //fun rebuildPrefixTree(toIgnoreInPrefix: Set<String>) {
+    //    expressionsTree = buildTreeImpl(prepareTemplates(possibleNonRelevantForSortingPrefixTemplates, toIgnoreInPrefix))
+    //}
 
     fun removePrefix(phrase: String): String {
         val prefix = findPrefix(phrase)
@@ -83,9 +89,15 @@ class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTe
         return lastPrefix?.joinToString(" ")
     }
 
-    private fun buildTreeImpl(prefixTemplates: Alt<Seq<Alt<Seq<String>>>>) {
+    private fun buildTreeImpl(prefixTemplates: Alt<Seq<Alt<Seq<String>>>>): PrefixWordTreeNode {
+        val sw = startStopWatch("${this.javaClass.simpleName}.buildTree()")
+
+        val rootNode = PrefixWordTreeNode("")
         for (prefixTemplate in prefixTemplates)
-            addToTree(this.expressionsTree, prefixTemplate)
+            addToTree(rootNode, prefixTemplate)
+
+        sw.logInfo(log)
+        return rootNode
     }
 
     private fun addToTree(parentTreeNode: PrefixWordTreeNode, prefixTemplatePart: Seq<Alt<Seq<String>>>) {
@@ -133,12 +145,14 @@ class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTe
 
     companion object {
         @Suppress("SameParameterValue")
-        private fun prepareTemplates(prefixTemplates: Alt<Seq<String>>): Alt<Seq<Alt<Seq<String>>>> {
+        private fun prepareTemplates(prefixTemplates: Alt<Seq<String>>, toIgnoreInPrefix: Iterable<String>): Alt<Seq<Alt<Seq<String>>>> {
 
-            val preps: Alt<Seq<String>> = prepositions.map { it.words }
+            val toIgnoreInPrefixLC = toIgnoreInPrefix.map { it.lowercase() }.toSet()
+
+            val preps: Alt<Seq<String>> = prepositions.map { it.words }.excludeIgnoredWords(toIgnoreInPrefixLC)
             // !!! seq("") MUST be at 1st position for optimization !!!
-            val arts:  Alt<Seq<String>> = alt(seq("")) + articlesAndSimilar.map { it.split(' ') }
-            val verbs: Alt<Seq<String>> = verbs.map { it.split(' ') }
+            val arts:  Alt<Seq<String>> = alt(seq("")) + articlesAndSimilar.map { it.split(' ') }.excludeIgnoredWords(toIgnoreInPrefixLC)
+            val verbs: Alt<Seq<String>> = verbs.map { it.split(' ') }.excludeIgnoredWords(toIgnoreInPrefixLC)
 
             val preparedPrefixTemplates = prefixTemplates.map { prefixTemplate ->
                 val prefixTemplateParts: Seq<Alt<Seq<String>>> = prefixTemplate.map {
@@ -187,10 +201,9 @@ private fun Seq<Alt<Seq<String>>>.containsEmptyWord(): Boolean {
     return true
 }
 
-private fun String.removeRepeatableSpaces(): String {
-    //TODO: ("Not yet implemented")
-    return this
-}
+
+private fun Alt<Seq<String>>.excludeIgnoredWords(toIgnoreWords: Set<String>): Alt<Seq<String>> =
+    this.filterNot { it.any { word -> word in toIgnoreWords } }
 
 
 private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = sequenceOf(
@@ -198,6 +211,23 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
     "to {verb} {prep} {art}",
     "to {verb} to {art}",
     "to {verb} {art}",
+
+    /*
+    "{verb} to {prep} {art}",
+    "{verb} {prep} {art}",
+    "{verb} to {art}",
+    "{verb} {art}",
+
+    "he {verb} to {prep} {art}",
+    "he {verb} {prep} {art}",
+    "he {verb} to {art}",
+    "he {verb} {art}",
+
+    "it {verb} to {prep} {art}",
+    "it {verb} {prep} {art}",
+    "it {verb} to {art}",
+    "it {verb} {art}",
+    */
 
     "not to be {art}",
     "not to {art}",
@@ -222,6 +252,7 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
     "no",
 
     "beyond all", "at short", "only",
+    "all of a", "all on",
 
     "what a", "what the",
     "what's a", "what's the",
@@ -234,10 +265,38 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
     .toList()
 
 
-
+/**
+ *  It contains only verbs which can be used very often.
+ *  Do NOT include too many words there, because it may degrade performance of PrefixFinder creation.
+ */
 private val verbs = listOf(
-    "do", "be", "have", "have no", "get", "go", "make", "make no", "take", "give", "bring", "handle", "try",
-    "allow", "answer", "ask", "call", "carry", "come", "keep", "lack",
+    "do", "does", "be", "is", "have", "has", "have no", "has no", "get", "gets", "go", "goes",
+    "can", "could", "may", "might", "must", "shall", "should",
+
+    "add", "allow", "answer", "appear", "ask",
+    "become", "begin", "believe", "break", "bring", "build", "buy",
+    "call", "carry", "change", "clean", "close",
+    "come", "consider", "continue", "cook", "count", "cost", "cover", "create", "cut",
+    "dance", "decide", "die", "dream", "drink", "drive",
+    "eat", "expect", "explain",
+    "fall", "feel", "find", "finish", "flow", "fly", "follow", "forget",
+    "gain", "get", "give", "grow",
+    "handle", "happen", "hang", "hear", "help", "hold",
+    "include",
+    "keep", "kill", "know",
+    "lack", "lead", "learn", "leave", "let", "like", "live", "listen", "lose", "look", "love",
+    "make", "make no", "mean", "meet", "move",
+    "need",
+    "offer", "open",
+    "pay", "pass", "pick", "play", "provide", "pull", "put",
+    "raise", "require", "relax", "remain", "remember", "report", "ride", "run", "reach", "read",
+    "say", "see", "seem", "sell", "send", "serve", "set", "show", "sing", "sit", "ski",
+    "sleep", "speak", "spend", "stand", "start", "stay", "stop", "swim", "suggest",
+    "take", "talk", "tell", "think", "try",
+    "tell", "think", "try to keep", "teach", "turn", //"travel",
+    "understand", "use",
+    "visit",
+    "wait", "walk", "want", "watch", "win", "work", "write", "would",
 )
 
 private val articlesAndSimilar = listOf(
@@ -246,12 +305,23 @@ private val articlesAndSimilar = listOf(
     "smb's. a", "smb's a", "smbs' a", "smbs a", "smb. a", "smb a",
     "smb's. the", "smb's the", "smbs' the", "smbs the", "smb. the", "smb the",
     "every", "one", "your", "mine", "one's own",
+    "daily",
+    "forbidden",
+    "slightly",
     "front", "the next", "next",
-    "a short", "a long", "a high", "a low", "a full",
-    "short", "low", "thin", "long", "high", "full", "tall", "thick",
+    "a short", "short",
+    "a long", "long",
+    "a high", "high",
+    "a low", "low",
+    "a full", "full",
+    "a big", "big", "a large", "large", "a small", "small", "a tiny", "tiny",
+    "a tall", "tall",
+    "a thick", "thick", "a thin", "thin",
     "a bad", "bad", "worse", "the worst",
     "a good", "good", "better", "the best",
     "a hard", "hard", "harder",
+    "a great", "great",
+    "a half", "half",
     "the public","a public", "public",
     "enough", "a common", "common",
     "this", "that",

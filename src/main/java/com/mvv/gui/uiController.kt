@@ -41,9 +41,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
     //private val projectDirectory = getProjectDirectory(this.javaClass)
 
-    private val _allDictionaries: List<Dictionary> = if (isReadOnly) emptyList()
-                                                     else AutoDictionariesLoader().load() // HardcodedDictionariesLoader().load()
-    internal val dictionary = CachedDictionary(DictionaryComposition(_allDictionaries))
+    internal val dictionary: Dictionary by lazy { CachedDictionary( DictionaryComposition(loadDictionaries()) ) }
 
     internal val navigationHistory = NavigationHistory()
 
@@ -72,15 +70,36 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     // we have to use lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
     private val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
 
+    @Volatile
+    private var prefixFinder = PrefixFinder(emptyList())
+    private val baseWordExtractor: BaseWordExtractor = object : BaseWordExtractor {
+        override fun extractBaseWord(phrase: String): String =
+            prefixFinder.calculateBaseOfFromForSorting(phrase).firstWord
+    }
+
+    // TODO: move somewhere and use also other kinds of white spaces
+    private val String.firstWord: String get() = this.substringBefore(' ', this)
+
+    private fun rebuildPrefixFinder() {
+        // only words without phrases
+        val cards = currentWords.toList()
+        val onlyPureWords = cards.map { it.from }
+            .filterNotBlank()
+            .filterNot { it.containsWhiteSpaceInMiddle() }.toSet()
+
+        if (this.prefixFinder.ignoredInPrefix != onlyPureWords) {
+            CompletableFuture.runAsync { rebuildPrefixFinderImpl(onlyPureWords) }
+        }
+    }
+
+    private fun rebuildPrefixFinderImpl(onlyPureWords: Set<String>) {
+        this.prefixFinder = PrefixFinder(onlyPureWords)
+        Platform.runLater { currentWords.toList().forEach { it.baseWordOfFromProperty.resetCachedValue() } }
+    }
+
 
     init {
         pane.initThemeAndStyles()
-
-        log.info("Used dictionaries\n" +
-                _allDictionaries.mapIndexed { i, d -> "${i + 1} $d" }.joinToString("\n") +
-                "\n---------------------------------------------------\n\n"
-        )
-
 
         val currentWordsLabelText = "File/Clipboard (%d words)"
         currentWords.addListener(ListChangeListener { pane.wordEntriesLabel.text = currentWordsLabelText.format(it.list.size) })
@@ -133,7 +152,18 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             if (wordOrPhrase.isNotBlank()) Platform.runLater { onCardFromEdited(wordOrPhrase) }
         }
 
-        pane.addIsShownHandler { CompletableFuture.runAsync { allWordCardSetsManager.reloadAllSets() } }
+        pane.addIsShownHandler {
+            // We use delay to get frame be shown before CPU will be busy with background tasks.
+            runLaterWithDelay(1000) { CompletableFuture.runAsync {
+
+                // TODO: use some background task indicator
+
+                rebuildPrefixFinderImpl(emptySet())
+
+                this.dictionary.find("apple") // load dictionaries lazy
+
+                allWordCardSetsManager.reloadAllSets()
+        } } }
 
         installNavigationHistoryUpdates(currentWordsList, navigationHistory)
     }
@@ -142,6 +172,21 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         get() = settingsPane.playWordOnSelect
         set(value) { settingsPane.playWordOnSelect = value }
 
+    /** Adds change listeners and other controller features. */
+    private fun CardWordEntry.adjustCard(): CardWordEntry =
+        this.copy(this@LearnWordsController.baseWordExtractor).also { addChangeCardListener(it) }
+
+    private fun loadDictionaries() =
+        if (isReadOnly) emptyList()
+        else {
+            AutoDictionariesLoader().load().also { dicts -> // HardcodedDictionariesLoader().load()
+                log.info(
+                    "Used dictionaries\n" +
+                            dicts.mapIndexed { i, d -> "${i + 1} $d" }.joinToString("\n") +
+                            "\n---------------------------------------------------\n\n"
+                )
+            }
+        }
 
     private fun onCardFromEdited(wordOrPhrase: String) {
         if (settingsPane.warnAboutDuplicatesInOtherSets) {
@@ -149,6 +194,8 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             if (foundInOtherSets.isNotEmpty())
                 showThisWordsInOtherSetsPopup(wordOrPhrase, foundInOtherSets)
         }
+
+        rebuildPrefixFinder()
     }
 
     private fun showThisWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
@@ -233,7 +280,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
                 // select new base word to edit it immediately
                 if (currentWordsSelection.selectedItems.size <= 1) {
                     currentWordsSelection.clearSelection()
-                    currentWordsSelection.select(newBaseWordCard.also { addChangeCardListener(it) })
+                    currentWordsSelection.select(newBaseWordCard.adjustCard())
                 }
             }
         }
@@ -420,15 +467,14 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
                 "srt"          -> loadFromSrt(filePath)
                 else           -> throw IllegalArgumentException("Unexpected file extension [${filePath}]")
             }
-            .let { cards -> val features = enumSetOf(CardWordEntryFeatures.CalculateBaseWord); cards.map { it.copy(features) } }
-            // T O D O: make it async, but it is not easy because there are change listeners which also call analyzeAllWords()
-            // We need to do ANY/EVERY call to analyzeAllWords() async
+            // Probably we need to do ANY/EVERY call to analyzeAllWords() async
             .also { analyzeAllWords(it) }
+            .map { it.adjustCard() }
 
             currentWords.setAll(words)
-            currentWordsList.sort()
 
-            addChangeCardListener(words)
+            rebuildPrefixFinder()
+            currentWordsList.sort()
 
             RecentDocuments().addRecent(filePath)
 
@@ -445,9 +491,6 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             if (bean is CardWordEntry) reanalyzeOnlyWords(bean)
         }
     }
-
-    private fun addChangeCardListener(cards: Iterable<CardWordEntry>) =
-        cards.forEach { addChangeCardListener(it) }
 
     private fun addChangeCardListener(card: CardWordEntry) {
         card.fromProperty.addListener(changeCardListener)
@@ -473,9 +516,11 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     fun loadFromClipboard() {
         val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) ignoredWords else emptySet()
         val words = extractWordsFromClipboard(Clipboard.getSystemClipboard(), settingsPane.sentenceEndRule, toIgnoreWords)
-            .also { addChangeCardListener(it) }
+            .map { it.adjustCard() }
 
         currentWords.addAll(words)
+        rebuildPrefixFinder()
+
         reanalyzeAllWords()
     }
 
@@ -543,7 +588,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         selected?.also {
             val pos = currentWordsList.selectionModel.selectedIndex
-            val cloned: CardWordEntry = selected.copy().also { addChangeCardListener(it) }
+            val cloned: CardWordEntry = selected.copy().adjustCard()
 
             currentWordsList.runWithScrollKeeping { currentWordsList.items.add(pos, cloned) }
         }
@@ -565,7 +610,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         }
 
         if (positionToInsert != -1) {
-            val newCardWordEntry = CardWordEntry("", "").also { addChangeCardListener(it) }
+            val newCardWordEntry = CardWordEntry("", "").adjustCard()
 
             if (currentWordsList.editingCell?.row != -1)
                 currentWordsList.edit(-1, null)
@@ -772,10 +817,8 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
     internal fun moveSubTextToSeparateCard(editor: TextInputControl, item: CardWordEntry, tableColumn: TableColumn<CardWordEntry, String>) {
         createCardFromSelectionOrCurrentLine(editor, tableColumn, item, currentWordsList)
-            ?.also {
-                reanalyzeOnlyWords(it)
-                addChangeCardListener(it)
-            }
+            ?.also { reanalyzeOnlyWords(it) }
+            ?.adjustCard()
     }
 
     internal fun moveSubTextToExamplesAndSeparateCard(editor: TextInputControl, item: CardWordEntry, tableColumn: TableColumn<CardWordEntry, String>) {
@@ -793,7 +836,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         val selectionOrCurrentLine = textInput.selectionOrCurrentLine
         if (selectionOrCurrentLine.isBlank()) return null
 
-        val newCard: CardWordEntry = selectionOrCurrentLine.parseToCard() ?: return null
+        val newCard: CardWordEntry = selectionOrCurrentLine.parseToCard()?.adjustCard() ?: return null
 
         if (textInput.selectedText.isEmpty()) {
             textInput.selectRange(textInput.selectionOrCurrentLineRange)

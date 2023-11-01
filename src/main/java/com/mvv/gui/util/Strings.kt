@@ -164,6 +164,71 @@ fun <T: CharSequence> T?.trimToNull(): T? =
     if (this.isNullOrBlank()) null else this
 
 
+enum class SpaceCharPolicy { KeepExistent, UseSpaceOnly }
+
+fun String.removeRepeatableSpaces(spaceCharPolicy: SpaceCharPolicy = SpaceCharPolicy.KeepExistent): String {
+
+    val useOnlySpaceAsWhiteSpaceChar: Boolean = (spaceCharPolicy === SpaceCharPolicy.UseSpaceOnly)
+
+    var processFromIndex = -1
+    var lastCharIsSpaceChar = false
+
+    for (i in this.indices) {
+        val ch = this[i]
+
+        if (ch.isWhitespace()) {
+            if (lastCharIsSpaceChar) {
+                processFromIndex = i
+                break
+            }
+
+            if (useOnlySpaceAsWhiteSpaceChar && ch != ' ') {
+                processFromIndex = i
+                break
+            }
+
+            lastCharIsSpaceChar = true
+        }
+        else lastCharIsSpaceChar = false
+    }
+
+    if (processFromIndex == -1) return this
+
+    val result = StringBuilder(this.length)
+    result.appendRange(this, 0, processFromIndex)
+    if (useOnlySpaceAsWhiteSpaceChar && result.isNotEmpty()
+        && result.last().isWhitespace() && result.last() != ' ')
+        result[result.length - 1] = ' '
+
+    for (i in processFromIndex until this.length) {
+        val ch = this[i]
+
+        @Suppress("LiftReturnOrAssignment")
+        if (ch.isWhitespace()) {
+            if (!lastCharIsSpaceChar) result.append( if (useOnlySpaceAsWhiteSpaceChar) ' ' else ch )
+            lastCharIsSpaceChar = true
+        }
+        else {
+            result.append(ch)
+            lastCharIsSpaceChar = false
+        }
+    }
+
+    return result.toString()
+}
+
+
+// TODO: optimize to avoid trim
+fun String.containsWhiteSpaceInMiddle(): Boolean = this.trim().containsWhiteSpace()
+
+fun String.containsWhiteSpace(): Boolean {
+    for (i in this.indices) {
+        if (this[i].isWhitespace()) return true
+    }
+    return false
+}
+
+
 val String.lastChar: Char get() {
     require(this.isNotEmpty()) { "Empty string."}
     return this[this.length - 1]

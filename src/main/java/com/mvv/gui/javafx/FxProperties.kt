@@ -3,11 +3,11 @@ package com.mvv.gui.javafx
 import com.sun.javafx.binding.ExpressionHelper
 import javafx.beans.InvalidationListener
 import javafx.beans.property.ReadOnlyProperty
+import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.beans.value.WritableObjectValue
 import org.apache.commons.lang3.NotImplementedException
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.reflect.KMutableProperty0
 
 
@@ -82,20 +82,18 @@ private val emptyObservable: ObservableValue<*> = object : ObservableValue<Any> 
     override fun getValue(): Any = ""
 }
 
-fun <S,T> ObservableValue<S>.mapCached(map: (S)->T): ObservableValue<T> = this.mapCached(map, emptyObservable)
+interface CacheableObservableValue<T> : ObservableValue<T> {
+    fun resetCachedValue()
+}
 
-fun <S,T> ObservableValue<S>.mapCached(map: (S)->T, otherDependent: ObservableValue<*>, vararg otherDependents: ObservableValue<*>): ObservableValue<T> {
+
+fun <S,T> ObservableValue<S>.mapCached(map: (S)->T): CacheableObservableValue<T> = this.mapCached(map, emptyObservable)
+
+fun <S,T> ObservableValue<S>.mapCached(map: (S)->T, otherDependent: ObservableValue<*>, vararg otherDependents: ObservableValue<*>): CacheableObservableValue<T> {
 
     var ref: T? = null
 
-    fun addListeners(obs: ObservableValue<*>) {
-        obs.addListener(InvalidationListener { ref = null })
-        obs.addListener { _, _, _ -> ref = map(this.value) }
-    }
-
-    addListeners(this)
-    addListeners(otherDependent)
-    otherDependents.forEach { addListeners(it) }
+    val resultObs = SimpleObjectProperty<T>()
 
     val cachedMapper: (S)->T = {
         val currentRefValue = ref
@@ -107,10 +105,26 @@ fun <S,T> ObservableValue<S>.mapCached(map: (S)->T, otherDependent: ObservableVa
         }
     }
 
-    return this.map(cachedMapper)
+    fun addListeners(obs: ObservableValue<*>) {
+        obs.addListener(InvalidationListener { ref = null })
+        obs.addListener { _, _, _ -> ref = null; resultObs.set(cachedMapper(this.value)) }
+    }
+
+    resultObs.set(cachedMapper(this.value))
+
+    addListeners(this)
+    addListeners(otherDependent)
+    otherDependents.forEach { addListeners(it) }
+
+    return ObservableCacheableValueWrapper(resultObs) {
+        ref = null
+        resultObs.set(cachedMapper(this.value))
+    }
 }
 
 
+/*
+// T O D O: remove 'atomic' versions since JavaFX properties are not thread-safe at all
 fun <S,T> ObservableValue<S>.mapCachedAtomic(map: (S)->T): ObservableValue<T> = this.mapCachedAtomic(map, emptyObservable)
 
 fun <S,T> ObservableValue<S>.mapCachedAtomic(map: (S)->T, otherDependent: ObservableValue<*>, vararg otherDependents: ObservableValue<*>): ObservableValue<T> {
@@ -132,6 +146,7 @@ fun <S,T> ObservableValue<S>.mapCachedAtomic(map: (S)->T, otherDependent: Observ
 
     return this.map(cachedMapper)
 }
+*/
 
 
 class ReadOnlyWrapper<S,T> (private val delegate: ObservableValue<out S>, private val mapper: (S)->T) : ObservableValue<T> {
@@ -195,4 +210,18 @@ abstract class AbstractObservable<T> : ObservableValue<T> {
      * The default implementation is empty.
      */
     protected open fun invalidated() { }
+}
+
+
+open class ObservableValueWrapper<T> (private val delegate: ObservableValue<T>) : ObservableValue<T> {
+    override fun addListener(listener: ChangeListener<in T>?) = delegate.addListener(listener)
+    override fun addListener(listener: InvalidationListener?) = delegate.addListener(listener)
+    override fun removeListener(listener: InvalidationListener?) = delegate.removeListener(listener)
+    override fun removeListener(listener: ChangeListener<in T>?) = delegate.removeListener(listener)
+    override fun getValue(): T = delegate.value
+}
+
+
+class ObservableCacheableValueWrapper<T> (delegate: ObservableValue<T>, private val resetCachedValueF: ()->Unit) : ObservableValueWrapper<T>(delegate), CacheableObservableValue<T> {
+    override fun resetCachedValue() = resetCachedValueF()
 }

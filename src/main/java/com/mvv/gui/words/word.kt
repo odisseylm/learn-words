@@ -1,10 +1,10 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.isGoodLearnCardCandidate
+import com.mvv.gui.javafx.CacheableObservableValue
 import com.mvv.gui.javafx.mapCached
 import com.mvv.gui.parseToCard
 import com.mvv.gui.util.containsEnglishLetters
-import com.mvv.gui.words.CardWordEntryFeatures.CalculateBaseWord
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.value.ObservableValue
@@ -15,20 +15,23 @@ import java.nio.file.Path
 //private val log = mu.KotlinLogging.logger {}
 
 
-enum class CardWordEntryFeatures { CalculateBaseWord }
+interface BaseWordExtractor {
+    fun extractBaseWord(phrase: String): String
+}
 
-class CardWordEntry (from: String, to: String, val features: Set<CardWordEntryFeatures> = emptySet()) {
+
+class CardWordEntry (from: String, to: String, /*val features: Set<CardWordEntryFeatures> = emptySet(),*/ private val baseWordExtractor: BaseWordExtractor? = null) {
     val fromProperty = SimpleStringProperty(this, "from", "")
     val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")
 
-    private val baseWordOfFromProperty: ObservableValue<String> = fromProperty.let { fromProp ->
-        if (CalculateBaseWord in features)
-            fromProp.mapCached { it.calculateBaseOfFromForSorting().firstWord }
-        else fromProp
+    val baseWordOfFromProperty: CacheableObservableValue<String> = fromProperty.let { fromProp ->
+        fromProp.mapCached { baseWordExtractor?.extractBaseWord(it) ?: it }
     }
 
     // Synthetic property for sorting because there is no way to pass Comparator<Card> for specific table column (we can use only Comparator<String>).
-    val baseWordAndFromProperty: ObservableValue<BaseAndFrom> = baseWordOfFromProperty.mapCached { baseOfFrom -> BaseAndFrom(baseOfFrom, fromProperty.value) }
+    val baseWordAndFromProperty: CacheableObservableValue<BaseAndFrom> = baseWordOfFromProperty.mapCached { baseOfFrom ->
+        BaseAndFrom(baseOfFrom, fromProperty.value)
+    }
 
     val fromWordCountProperty = fromProperty.mapCached { it.trim().split(" ", "\t", "\n").size }
     val toProperty = SimpleStringProperty(this, "to", "")
@@ -104,8 +107,8 @@ class CardWordEntry (from: String, to: String, val features: Set<CardWordEntryFe
         "CardWordEntry(from='$from', to='${to.take(20)}...', statuses=$statuses," +
                 " translationCount=$translationCount, transcription='$transcription', examples='${examples.take(10)}...')"
 
-    fun copy(features: Set<CardWordEntryFeatures>? = null): CardWordEntry =
-        CardWordEntry(this.from, this.to, features ?: this.features)
+    fun copy(baseWordExtractor: BaseWordExtractor? = null): CardWordEntry =
+        CardWordEntry(this.from, this.to, baseWordExtractor ?: this.baseWordExtractor)
             .also {
                 it.fromWithPreposition = this.fromWithPreposition
                 it.transcription   = this.transcription
@@ -119,8 +122,6 @@ class CardWordEntry (from: String, to: String, val features: Set<CardWordEntryFe
 
 }
 
-
-private val String.firstWord: String get() = this.substringBefore(' ', this)
 
 val cardWordEntryComparator: Comparator<CardWordEntry> = Comparator.comparing({ it.from }, String.CASE_INSENSITIVE_ORDER)
 

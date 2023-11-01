@@ -211,7 +211,7 @@ class PrefixFinderTest {
     }
 
     @Test
-    fun aaa() {
+    fun simplePrefixFinding() {
         val src: List<List<List<List<String>>>> = alt(
             //listOf(listOf(listOf("to")), listOf(listOf(listOf("have"))), listOf(listOf(listOf("a", "common"))))
             seq(

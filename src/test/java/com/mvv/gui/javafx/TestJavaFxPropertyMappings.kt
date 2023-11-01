@@ -38,6 +38,7 @@ class TestJavaFxPropertyMappings {
         log.info { obj.count2Property.value }
     }
 
+    /*
     @Test
     fun testObservablePropertyMapCachedAtomic() {
         val obj = TempBean()
@@ -50,11 +51,12 @@ class TestJavaFxPropertyMappings {
         log.info { obj.count3Property.value }
         log.info { obj.count3Property.value }
     }
+    */
 
     private class TempBean {
         val baseProperty = SimpleStringProperty(this, "base", "11")
         val countProperty:  ObservableValue<Int> = baseProperty.map { log.info { "calculate count" }; it.toInt() }
         val count2Property: ObservableValue<Int> = baseProperty.mapCached { log.info { "calculate count (by cached)" }; it.toInt() }
-        val count3Property: ObservableValue<Int> = baseProperty.mapCachedAtomic { log.info { "calculate count (by atomic cache)" }; it.toInt() }
+        //val count3Property: ObservableValue<Int> = baseProperty.mapCachedAtomic { log.info { "calculate count (by atomic cache)" }; it.toInt() }
     }
 }

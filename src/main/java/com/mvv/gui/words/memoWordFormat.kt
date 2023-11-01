@@ -88,11 +88,6 @@ fun saveWordCardsIntoMemoWordCsv(file: Path, words: Iterable<CardWordEntry>) {
         }
 }
 
-// TODO: it should be dynamic and exclude some verbs/prepositions/etc if they are present in card's set (in base form)
-// TODO: PrefixFinder should not be global
-private val temporaryGlobalPF = PrefixFinder()
-fun String.calculateBaseOfFromForSorting(): String = temporaryGlobalPF.calculateBaseOfFromForSorting(this)
-
 
 private val minimizableToConversions: List<Pair<String, String>> = listOf(
         listOf("что-либо", "чего-либо", "чему-либо", "чем-либо", "чём-либо") to "ч-л",
