@@ -221,7 +221,7 @@ class PrefixFinderTest {
                 //alt(wordsSeq("a")),
             )
         )
-        val pf = PrefixFinder(src) //, emptySet(), true)
+        val pf = PrefixFinder(src, emptySet(), true)
         log.info { pf }
 
         //assertThat(pf.findPrefix("to have a bar")).isEqualTo("to have a")
@@ -256,9 +256,7 @@ class PrefixFinderTest {
         }
     }
 
-    /*
     @Test
-    @Disabled("for manual testing")
     fun test54545() {
         //val pf = PrefixFinder(alt("to {verb} {prep} {art}".split(' ')))
         val pf = PrefixFinder(alt("to {verb} {art}".split(' ')))
@@ -267,14 +265,13 @@ class PrefixFinderTest {
     }
 
     @Test
-    @Disabled("for manual testing")
     fun test54546() {
         val pf = PrefixFinder(alt("to {verb} {prep} {art}".split(' ')))
         //val p = pf.findPrefix("to go into a question")
         assertThat(pf.findPrefix("to go into question")).isEqualTo("to go into")
         assertThat(pf.findPrefix("to go into the question")).isEqualTo("to go into the")
     }
-    */
+
 }
 
 private fun <T> seq(vararg values: T): Seq<T> = listOf(*values)

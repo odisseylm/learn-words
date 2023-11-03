@@ -1,6 +1,7 @@
 package com.mvv.gui.util
 
 import javafx.application.Platform
+import java.util.Collections.singletonList
 import java.util.EnumSet
 import java.util.TimerTask
 
@@ -69,3 +70,56 @@ inline fun <T, F: Comparable<F>> compare(o1: T, o2: T, field: (T)->F): Int = fie
 inline fun <T, F: Comparable<F>> Int.thenCompare(o1: T, o2: T, field: (T)->F): Int =
     if (this != 0) this else field(o1).compareTo(field(o2))
 */
+
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun areAllNull(v1: Any?): Boolean = (v1 == null)
+@Suppress("NOTHING_TO_INLINE")
+inline fun areAllNull(v1: Any?, v2: Any?): Boolean =
+    (v1 == null) && (v2 == null)
+@Suppress("NOTHING_TO_INLINE")
+inline fun areAllNull(v1: Any?, v2: Any?, v3: Any?): Boolean =
+    (v1 == null) && (v2 == null) && (v3 == null)
+@Suppress("NOTHING_TO_INLINE")
+inline fun areAllNull(v1: Any?, v2: Any?, v3: Any?, v4: Any?): Boolean =
+    (v1 == null) && (v2 == null) && (v3 == null) && (v4 == null)
+
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T, L: MutableCollection<T>> L.addNotNull(v: T?) { if (v != null) this.add(v) }
+
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T> listOfNonNulls(v1: T?): List<T> = if (v1 == null) emptyList() else singletonList(v1)
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T> listOfNonNulls(v1: T?, v2: T?): List<T> =
+    if (v1 != null && v2 != null) listOf(v1, v2)
+    else if (v1 != null) singletonList(v1)
+    else if (v2 != null) singletonList(v2)
+    else emptyList()
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T> listOfNonNulls(v1: T?, v2: T?, v3: T?): List<T> =
+    if (areAllNull(v1, v2, v3)) emptyList()
+    else ArrayList<T>(3).also {
+        it.addNotNull(v1)
+        it.addNotNull(v2)
+        it.addNotNull(v3)
+    }
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T> listOfNonNulls(v1: T?, v2: T?, v3: T?, v4: T?): List<T> =
+    if (areAllNull(v1, v2, v3, v4)) emptyList()
+    else ArrayList<T>(4).also {
+        it.addNotNull(v1)
+        it.addNotNull(v2)
+        it.addNotNull(v3)
+        it.addNotNull(v4)
+    }
+
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T, L: List<T>> L.subList(fromIndex: Int): List<T> = this.subList(fromIndex, this.size)
+//@Suppress("NOTHING_TO_INLINE")
+//inline fun <T, L: MutableList<T>> L.mutableSubList(fromIndex: Int): MutableList<T> = this.subList(fromIndex, this.size)
+
+
+
