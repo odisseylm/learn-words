@@ -667,6 +667,10 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         splitFilesDir.createDirectories()
         saveSplitWordCards(filePath, currentWords, splitFilesDir, settingsPane.splitWordCountPerFile)
 
+        // without phrases
+        val onlyWords = words.filterNot { it.from.containsWhiteSpaceInMiddle() }
+        saveSplitWordCards(filePath.parent.resolve(filePath.baseWordsFilename + "_OnlyWords.csv"), onlyWords, splitFilesDir, settingsPane.splitWordCountPerFile)
+
         resetDocumentIsDirty()
     }
 
