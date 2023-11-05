@@ -74,7 +74,8 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     private var prefixFinder = PrefixFinder(emptyList())
     private val baseWordExtractor: BaseWordExtractor = object : BaseWordExtractor {
         override fun extractBaseWord(phrase: String): String =
-            prefixFinder.calculateBaseOfFromForSorting(phrase).firstWord
+            prefixFinder.calculateBaseOfFromForSorting(phrase)
+                .firstWord.removeSuffixesRepeatably("!", ".", "?").toString()
     }
 
     // TODO: move somewhere and use also other kinds of white spaces

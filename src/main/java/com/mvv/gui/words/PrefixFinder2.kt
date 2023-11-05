@@ -148,6 +148,7 @@ internal fun TreeNode.findMatchedPrefix(phrase: String): String? {
     val words = phrase.lowercase().trim()
         .removeRepeatableSpaces()
         .removeSuffixesRepeatably("!", ".", "?")
+        .trimEnd()
         .split(' ', '\n', '\t')
 
     val matchedPrefixSequence = doSearchMatchedPrefixSequence(words, this, null, null, null)
@@ -377,6 +378,11 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
     "{pp} {verb} {prep} {art}",
     "{pp} {verb} to {art}",
     "{pp} {verb} {art}",
+
+    "{verb} {pp} to {prep} {art}",
+    "{verb} {pp} {prep} {art}",
+    "{verb} {pp} to {art}",
+    "{verb} {pp} {art}",
 
     "let {pp}",
     "let {pp} {verb}",

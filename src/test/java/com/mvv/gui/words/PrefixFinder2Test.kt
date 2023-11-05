@@ -191,11 +191,13 @@ class PrefixFinder2Test {
         run {
             a.assertThat(defaultPrefixFinder.removeMatchedPrefix("let me go")).isEqualTo("")
             a.assertThat(defaultPrefixFinder.removeMatchedPrefix("let me go!")).isEqualTo("!")
+            //a.assertThat(defaultPrefixFinder.removeMatchedPrefix("is it a go?")).isEqualTo("!")
         }
 
         run {
             val pfWithIgnores = PrefixFinder(setOf("go"))
             a.assertThat(pfWithIgnores.removeMatchedPrefix("let me go!")).isEqualTo("go!")
+            a.assertThat(defaultPrefixFinder.removeMatchedPrefix("is it a go?")).isEqualTo("go?")
         }
 
         a.assertAll()
