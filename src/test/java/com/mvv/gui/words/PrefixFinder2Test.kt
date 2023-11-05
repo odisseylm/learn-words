@@ -95,7 +95,7 @@ class PrefixFinder2Test {
 
         val sw = startStopWatch("PrefixFinder creation")
 
-        val pf = PrefixFinder_New()
+        val pf = PrefixFinder()
         sw.logInfo(log)
 
 
@@ -170,16 +170,48 @@ class PrefixFinder2Test {
         a.assertThat(pf.removeMatchedPrefix("on one's own account")).isEqualTo("account")
         a.assertThat(pf.removeMatchedPrefix("to have one's own way")).isEqualTo("way")
 
+        a.assertThat(pf.removeMatchedPrefix("not to have a look in with smb.")).isEqualTo("look in with smb.")
+        // a.assertThat(pf.removeMatchedPrefix("to be held in respect")).isEqualTo("respect") // TODO: add support of 2nd and 3rd verb forms
+        a.assertThat(pf.removeMatchedPrefix("hold on a minute!")).isEqualTo("minute!")
+        a.assertThat(pf.removeMatchedPrefix("to hold an event")).isEqualTo("event")
+        //a.assertThat(pf.removeMatchedPrefix("let me go!")).isEqualTo("look in with smb.")
+        a.assertThat(pf.removeMatchedPrefix("in many ways")).isEqualTo("ways")
+
         asw.logInfo(log)
 
         a.assertAll()
     }
 
     @Test
+    fun testWithIgnored() {
+        val a = SoftAssertions()
+
+        val defaultPrefixFinder = PrefixFinder()
+
+        run {
+            a.assertThat(defaultPrefixFinder.removeMatchedPrefix("let me go")).isEqualTo("")
+            a.assertThat(defaultPrefixFinder.removeMatchedPrefix("let me go!")).isEqualTo("!")
+        }
+
+        run {
+            val pfWithIgnores = PrefixFinder(setOf("go"))
+            a.assertThat(pfWithIgnores.removeMatchedPrefix("let me go!")).isEqualTo("go!")
+        }
+
+        a.assertAll()
+    }
+
+    @Test
+    fun testWithAdditionalSpaceChars() {
+        val pf = PrefixFinder()
+        assertThat(pf.removeMatchedPrefix(" \t \n lEt me \t go \n to hOmE!?")).isEqualTo("hOmE!?")
+    }
+
+    @Test
     fun findPrefix_22() {
 
         val swCreation = startStopWatch("PrefixFinder creation")
-        val pf = PrefixFinder_New()
+        val pf = PrefixFinder()
         swCreation.logInfo(log)
 
 
@@ -259,7 +291,7 @@ class PrefixFinder2Test {
 
         val sw = startStopWatch("PrefixFinder creation")
 
-        val pf = PrefixFinder_New()
+        val pf = PrefixFinder()
         sw.logInfo(log)
 
 
@@ -290,8 +322,8 @@ class PrefixFinder2Test {
     @Test
     @Disabled("for manual debug")
     fun debugTest() {
-        val pf = PrefixFinder_New()
-        //val pf = PrefixFinder_New(listOf(
+        val pf = PrefixFinder()
+        //val pf = PrefixFinder(listOf(
         //    listOf("to", "{verb}", "{art}"),
         //    listOf("to", "{verb}", "{prep}"),
         //    listOf("to", "abc", "def"),
@@ -312,7 +344,7 @@ class PrefixFinder2Test {
                 //alt(wordsSeq("a")),
             )
         )
-        val pf = PrefixFinder_New(src, emptySet())
+        val pf = PrefixFinder(src, emptySet())
         log.info { pf }
 
         //assertThat(pf.findMatchedPrefix("to have a bar")).isEqualTo("to have a")
@@ -329,7 +361,7 @@ class PrefixFinder2Test {
 
         if (ri.currentRepetition == 1) {
             val creatingSW = startStopWatch("performanceTest => creating PrefixFinder")
-            val pf = PrefixFinder_New()
+            val pf = PrefixFinder()
             creatingSW.logInfo(log)
 
             log.info { "performanceTest => calculating started" }
@@ -342,7 +374,7 @@ class PrefixFinder2Test {
             val count = 20
             val sw = startStopWatch("performanceTest => creating PrefixFinder $count times")
 
-            for (i in 1..count) PrefixFinder_New()
+            for (i in 1..count) PrefixFinder()
 
             sw.logInfo(log)
             log.info { "Average creation time is ${sw.time / count}ms." }
@@ -367,7 +399,7 @@ class PrefixFinder2Test {
 
             val sw = startStopWatch("performanceTest => processing phrases ${allPhrases.size}")
 
-            val pf = PrefixFinder_New()
+            val pf = PrefixFinder()
             allPhrases.forEach { pf.calculateBaseOfFromForSorting(it) }
 
             sw.logInfo(log)

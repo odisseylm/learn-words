@@ -85,10 +85,14 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         val cards = currentWords.toList()
         val onlyPureWords = cards.map { it.from }
             .filterNotBlank()
-            .filterNot { it.containsWhiteSpaceInMiddle() }.toSet()
+            .filterNot { it.containsWhiteSpaceInMiddle() }
+            .toSet()
 
-        if (this.prefixFinder.ignoredInPrefix != onlyPureWords) {
-            CompletableFuture.runAsync { rebuildPrefixFinderImpl(onlyPureWords) }
+        if (this.prefixFinder.ignoredWords != onlyPureWords) {
+            // Rebuilding PrefixFinder_New is very fast - no need to use separate thread
+            //CompletableFuture.runAsync { rebuildPrefixFinderImpl(onlyPureWords) }
+
+            rebuildPrefixFinderImpl(onlyPureWords)
         }
     }
 

@@ -1,14 +1,22 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.util.filterNotBlank
-import com.mvv.gui.util.listOfNonNulls
-import com.mvv.gui.util.removeRepeatableSpaces
-import com.mvv.gui.util.subList
+import com.mvv.gui.util.*
 
 
-class PrefixFinder_New (
+/**
+ * Complicated tree based a prefix finder which uses shared subtrees
+ * for verbs, pronouns, prepositions, articles-and-others.
+ * Such approach probably makes search a bit slower,
+ * but it allows to build tree (or rebuild to exclude 'ignored' words) very quickly.
+ * For using shared trees we need wrap shared trees with delegate tree node.
+ * If we successfully completed search by all leafs of shared tree
+ * we continue search using child nodes of delegate tree node.
+ * Variable/param 'toContinueFromNodeAfterShared' is used to keep delegate tree node reference
+ * while we follow over leaves of shared tree.
+ */
+class PrefixFinder (
     patternTemplates: Alt<Seq<String>>,
-    ignoredWords: Collection<String>,
+    val ignoredWords: Collection<String>,
     ) {
 
     constructor(ignoredWords: Collection<String> = emptySet()) : this(possibleNonRelevantForSortingPrefixTemplates, ignoredWords)
@@ -42,12 +50,13 @@ class PrefixFinder_New (
 }
 
 
-// The shortest IDs to minimize equals
-// These nodes are 'word' of root node of shared READONLY (because they are shared) trees.
+// The shortest IDs to minimize equals.
+// These nodes are 'word' of root node of shared readonly trees (readonly because they are shared).
 internal const val verbsSharedNodeName = "{v}"
 internal const val artsSharedNodeName = "{a}"
 internal const val prepositionsSharedNodeName = "{p}"
-//internal val sharedNodeNames: Array<String> = arrayOf(verbsSharedNodeName, artsSharedNodeName, prepositionsSharedNodeName)
+internal const val pronounsSharedNodeName = "{pp}"
+//internal val sharedNodeNames: Array<String> = arrayOf(verbsSharedNodeName, artsSharedNodeName, prepositionsSharedNodeName, pronounsSharedNodeName)
 
 
 
@@ -95,56 +104,25 @@ internal class TreeNode private constructor (
     internal fun getChildNode(word: String): TreeNode? = this.children[word]
     internal fun hasChildNodes(): Boolean = this.children.isNotEmpty()
 
-    //internal fun TreeNode?.childAsTreeNodeRes(word: String): TreeNodeRes? {
-    //    if (this == null) null
-    //
-    //    this.shared.sharedId
-    //
-    //    if (this == null) null else TreeNodeRes(this, this.asNextNode)
-    //}
-
-    /*
-    fun findAllChildNodes(word: String): List<TreeNode> {
-        val child1 = children[word]
-
-        val delegate1 = children[delegateToArtsSharedNodeName]
-        val delegate2 = children[delegateToVerbsSharedNodeName]
-        val delegate3 = children[delegateToPrefixesSharedNodeName]
-
-        return listOfNonNulls(child1, child2, child3, child4)
-    }
-    */
-
-    /*
-    fun findSharedChildNodes(word: String): List<TreeNodeRes> {
-        //val child1 = children[word]
-
-        val delegate1 = children[artsSharedNodeName]
-        val delegate2 = children[verbsSharedNodeName]
-        val delegate3 = children[prefixesSharedNodeName]
-
-        val sharedRes1 = delegate1?.sharedChildAsTreeNodeRes(word)
-        val sharedRes2 = delegate2?.sharedChildAsTreeNodeRes(word)
-        val sharedRes3 = delegate3?.sharedChildAsTreeNodeRes(word)
-
-        return listOfNonNulls(sharedRes1, sharedRes2, sharedRes3)
-    }
-    */
-
     fun findChildNodes(word: String): List<TreeNodeRes> {
+
+        if (children.isEmpty()) return emptyList()
+
         val child1 = children[word]
         val child1Res = child1?.let { TreeNodeRes(it, null) }
 
-        // We can use there list but I decide to unwrap possible loops to improve performance.
+        // We can use there list, but I decide to unwrap possible loops to improve performance.
         val delegate1 = children[artsSharedNodeName]
         val delegate2 = children[verbsSharedNodeName]
         val delegate3 = children[prepositionsSharedNodeName]
+        val delegate4 = children[pronounsSharedNodeName]
 
         val sharedRes1 = delegate1?.sharedChildAsTreeNodeRes(word)
         val sharedRes2 = delegate2?.sharedChildAsTreeNodeRes(word)
         val sharedRes3 = delegate3?.sharedChildAsTreeNodeRes(word)
+        val sharedRes4 = delegate4?.sharedChildAsTreeNodeRes(word)
 
-        return listOfNonNulls(child1Res, sharedRes1, sharedRes2, sharedRes3)
+        return listOfNonNulls(child1Res, sharedRes1, sharedRes2, sharedRes3, sharedRes4)
     }
 }
 
@@ -167,20 +145,24 @@ internal fun TreeNode?.sharedChildAsTreeNodeRes(word: String): TreeNodeRes? {
 
 
 internal fun TreeNode.findMatchedPrefix(phrase: String): String? {
-    val words = phrase.lowercase().trim().removeRepeatableSpaces().split(' ', '\n', '\t')
+    val words = phrase.lowercase().trim()
+        .removeRepeatableSpaces()
+        .removeSuffixesRepeatably("!", ".", "?")
+        .split(' ', '\n', '\t')
+
     val matchedPrefixSequence = doSearchMatchedPrefixSequence(words, this, null, null, null)
     return matchedPrefixSequence.ifEmpty { null }?.joinToString(" ")
 }
 
-internal fun doSearchMatchedPrefixSequence(words: List<String>, initialNode: TreeNode, initialEndNodeAfterShared: TreeNode?,
+internal fun doSearchMatchedPrefixSequence(words: List<String>, initialRootNode: TreeNode, initialToContinueFromNodeAfterShared: TreeNode?,
                                            initialAllPrefixWords: List<String>?, initialMatchedLastPrefix: List<String>?): List<String> {
 
-    var node = initialNode
+    var node = initialRootNode
 
     var allPrefixWords: MutableList<String>? = null
     var matchedLastPrefix: List<String>? = initialMatchedLastPrefix
 
-    var endNodeAfterShared: TreeNode? = initialEndNodeAfterShared
+    var toContinueFromNodeAfterShared: TreeNode? = initialToContinueFromNodeAfterShared
 
     for (i in words.indices) {
 
@@ -191,15 +173,15 @@ internal fun doSearchMatchedPrefixSequence(words: List<String>, initialNode: Tre
         // If it is shared last leaf we need to continue processing nodes after shared.
         if (!node.hasChildNodes()) {
 
-            if (endNodeAfterShared == null) {
+            if (toContinueFromNodeAfterShared == null) {
                 matchedLastPrefix = allPrefixWords ?: initialAllPrefixWords
 
                 return matchedLastPrefix ?: emptyList()
             }
 
             else {
-                node = endNodeAfterShared
-                endNodeAfterShared = null
+                node = toContinueFromNodeAfterShared
+                toContinueFromNodeAfterShared = null
 
                 childNodes = node.findChildNodes(word)
 
@@ -213,10 +195,10 @@ internal fun doSearchMatchedPrefixSequence(words: List<String>, initialNode: Tre
 
         if (childNodes.isEmpty()) {
 
-            if (endNodeAfterShared != null) {
+            if (toContinueFromNodeAfterShared != null) {
                 if (node.canBeEnd === NodeType.CanBeEndOfShared) {
-                    childNodes = endNodeAfterShared.findChildNodes(word)
-                    endNodeAfterShared = null
+                    childNodes = toContinueFromNodeAfterShared.findChildNodes(word)
+                    toContinueFromNodeAfterShared = null
 
                     if (childNodes.isEmpty())
                         // end of prefix (last tree node)
@@ -250,11 +232,11 @@ internal fun doSearchMatchedPrefixSequence(words: List<String>, initialNode: Tre
             node = childNode.node
 
             if (childNode.nextNode != null) {
-                require(endNodeAfterShared == null) {
+                require(toContinueFromNodeAfterShared == null) {
                     "Expects only one endNodeAfterShared or child.nextNode is present at any time" +
-                            " (childNodes[0].nextNode: ${childNode.nextNode}, endNodeAfterShared: ${endNodeAfterShared})" }
+                            " (childNodes[0].nextNode: ${childNode.nextNode}, endNodeAfterShared: ${toContinueFromNodeAfterShared})" }
 
-                endNodeAfterShared = childNode.nextNode
+                toContinueFromNodeAfterShared = childNode.nextNode
             }
 
             continue
@@ -273,10 +255,9 @@ internal fun doSearchMatchedPrefixSequence(words: List<String>, initialNode: Tre
 
                 val nextNode = childNode.node
                 val nextEndNodeAfterShared = if (childNode.nextNode != null) {
-                    require(endNodeAfterShared == null) {
+                    require(toContinueFromNodeAfterShared == null) {
                         "Expects when we find shared node, the previous shared nod is already processed and its previous endNodeAfterShared is set to null" +
-                                " (childNode.nextNode: ${childNode.nextNode}, current endNodeAfterShared: ${endNodeAfterShared})"
-                    }
+                                " (childNode.nextNode: ${childNode.nextNode}, current toContinueFromNodeAfterShared: ${toContinueFromNodeAfterShared})" }
 
                     childNode.nextNode
                 } else null
@@ -295,10 +276,12 @@ internal fun doSearchMatchedPrefixSequence(words: List<String>, initialNode: Tre
 
 private fun Iterable<TreeNodeRes>.canBeEndOfPrefix(): Boolean = this.any { it.node.canBeEnd === NodeType.CanBeEndOfPrefix }
 
-private fun buildSharedTree(sequences: Alt<Seq<String>>, rootNodeName: String, toIgnoreWords: Set<String>): TreeNode {
+private fun buildSharedTree(sequences: Alt<Seq<String>>, rootNodeName: String, toIgnoreWords: Set<String>, toLowerCase: Boolean = false): TreeNode {
     val rootNode = TreeNode(rootNodeName)
 
-    for (seq in sequences) {
+    val fixedSequences = if (toLowerCase) sequences.map { seq -> seq.map { it.lowercase() } } else sequences
+
+    for (seq in fixedSequences) {
 
         val toIgnore = seq.isEmpty() || seq.any { word -> word in toIgnoreWords }
         if (toIgnore) continue
@@ -320,6 +303,7 @@ internal class BuildContext (toIgnoreWords: Iterable<String>) {
     val artsSharedTree = buildSharedTree(articlesAndSimilar, artsSharedNodeName, this.toIgnoreWords)
     val prepositionsSharedTree = buildSharedTree(prepositions.map { it.words }, prepositionsSharedNodeName, this.toIgnoreWords)
     val verbsSharedTree = buildSharedTree(verbs, verbsSharedNodeName, this.toIgnoreWords)
+    val pronounsSharedTree = buildSharedTree(pronouns, pronounsSharedNodeName, this.toIgnoreWords)
 }
 
 internal fun buildPrefixesMatchTree(patterns: Alt<Seq<String>>, toIgnoreWords: Iterable<String>): TreeNode {
@@ -338,6 +322,7 @@ internal fun buildPrefixesMatchTree(patterns: Alt<Seq<String>>, toIgnoreWords: I
                 artsSharedNodeName,         "{art}"  -> node.addChildNode(SharedWrapper(context.artsSharedTree))
                 verbsSharedNodeName,        "{verb}" -> node.addChildNode(SharedWrapper(context.verbsSharedTree))
                 prepositionsSharedNodeName, "{prep}" -> node.addChildNode(SharedWrapper(context.prepositionsSharedTree))
+                pronounsSharedNodeName               -> node.addChildNode(SharedWrapper(context.pronounsSharedTree))
                 else -> node.addChildNode(word)
             }
         }
@@ -365,25 +350,41 @@ private fun Sequence<String>.splitToWords(): Alt<Seq<String>> =
 
 
 private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = sequenceOf(
-    "to {verb} to {prep} {art}",
-    "to {verb} {prep} {art}",
-    "to {verb} to {art}",
-    "to {verb} {art}",
+    "{verb}",
+    "{verb} no",
+    "{verb} no {art}",
 
-    "{verb} to {prep} {art}",
-    "{verb} {prep} {art}",
-    "{verb} to {art}",
     "{verb} {art}",
+    "{verb} {prep} {art}",
 
-    "he {verb} to {prep} {art}",
-    "he {verb} {prep} {art}",
-    "he {verb} to {art}",
-    "he {verb} {art}",
+    "{verb} to {art}",
+    "{verb} to {prep} {art}",
 
-    "it {verb} to {prep} {art}",
-    "it {verb} {prep} {art}",
-    "it {verb} to {art}",
-    "it {verb} {art}",
+    "to {verb}",
+    "to {verb} no",
+    "to {verb} no {art}",
+
+    "to {verb} {art}",
+    "to {verb} {prep} {art}",
+    "not to {verb} {art}",
+    "not to {verb} {prep} {art}",
+
+    "to {verb} to",
+    "to {verb} to {art}",
+    "to {verb} to {prep} {art}",
+
+    "{pp} {verb} to {prep} {art}",
+    "{pp} {verb} {prep} {art}",
+    "{pp} {verb} to {art}",
+    "{pp} {verb} {art}",
+
+    "let {pp}",
+    "let {pp} {verb}",
+    "let {pp} to {verb}",
+    "let {pp} {verb} {art}",
+    "let {pp} to {verb} {art}",
+    "let {pp} {verb} {prep} {art}",
+    "let {pp} to {verb} {prep} {art}",
 
     "not to be {art}",
     "not to {art}",
@@ -407,14 +408,19 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
     "{art}",
     "no",
 
+    "{art} few",
+    "{art} many",
+
     "beyond all", "at short", "only",
     "all of a", "all on",
 
     "what a", "what the",
     "what's a", "what's the",
     "what is a", "what is the",
+    "what is he",
 
-    "who",
+    "new",
+    "{pp}",
 ).splitToWords()
 
 
@@ -429,8 +435,8 @@ private val verbs: Alt<Seq<String>> = sequenceOf(
     "dance", "decide", "die", "dream", "drink", "drive",
     "eat", "expect", "explain",
     "fall", "feel", "find", "finish", "flow", "fly", "follow", "forget",
-    "gain", "get", "give", "grow",
-    "handle", "happen", "hang", "hear", "help", "hold",
+    "gain", "get", "give", "grow", "guess",
+    "handle", "happen", "hang", "hear", "help", "hit", "hold",
     "include",
     "keep", "kill", "know",
     "lack", "lead", "learn", "leave", "let", "like", "live", "listen", "lose", "look", "love",
@@ -464,7 +470,8 @@ private val articlesAndSimilar: Alt<Seq<String>> = sequenceOf(
     "a high", "high",
     "a low", "low",
     "a full", "full",
-    "a big", "big", "a large", "large", "a small", "small", "a tiny", "tiny",
+    "a big", "big", "a large", "large",
+    "a small", "small", "a tiny", "tiny", "a little", "little",
     "a tall", "tall",
     "a thick", "thick", "a thin", "thin",
     "a bad", "bad", "worse", "the worst",
@@ -474,10 +481,57 @@ private val articlesAndSimilar: Alt<Seq<String>> = sequenceOf(
     "a half", "half",
     "the public","a public", "public",
     "enough", "a common", "common",
-    "this", "that",
-    "it",
+
+    // Personal pronouns
+    // Subject Pronouns
+    "i", "you", "he", "she", "it", "we", "you", "they",
+    // Object pronouns
+    "me", "you", "him", "her", "it", "us", "you", "them",
+    // Possessive pronouns
+    "mine", "yours", "his", "hers", "its", "ours", "yours", "theirs",
+
+    // Demonstrative pronouns
+    "this", "these", "that", "those",
+    // Interrogative pronouns
+    "who", "whom", "which", "what",
+    // Relative pronouns
+    "who", "whom", "that", "which", "whoever", "whichever", "whomever",
+    // Indefinite pronouns
+    "all", "another", "any", "anybody", "anyone", "anything", "each", "everybody", "everyone", "everything",
+    "few", "many", "nobody", "none", "one", "several", "some", "somebody", "and someone",
+    // Reflexive pronouns
+    "myself", "yourself", "himself", "herself", "ourselves", "yourselves", "themselves",
+
+    // articles
     "the", "an", "a",
 ).splitToWords()
 
+
+//private val subjectPronouns = sequenceOf("I", "you", "he", "she", "it", "we", "you", "they").splitToWords()
+//private val objectPronouns = sequenceOf("me", "you", "him", "her", "it", "us", "you", "them").splitToWords()
+//private val possessivePronouns = sequenceOf("mine", "yours", "his", "hers", "its", "ours", "yours", "theirs").splitToWords()
+//private val interrogativePronouns = sequenceOf("who", "whom", "which", "what").splitToWords()
+
+private val pronouns = sequenceOf(
+    // Personal pronouns
+    // Subject Pronouns
+    "i", "you", "he", "she", "it", "we", "you", "they",
+    // Object pronouns
+    "me", "you", "him", "her", "it", "us", "you", "them",
+    // Possessive pronouns
+    "mine", "yours", "his", "hers", "its", "ours", "yours", "theirs",
+
+    // Demonstrative pronouns
+    "this", "these", "that", "those",
+    // Interrogative pronouns
+    "who", "whom", "which", "what",
+    // Relative pronouns
+    "who", "whom", "that", "which", "whoever", "whichever", "whomever",
+    // Indefinite pronouns
+    "all", "another", "any", "anybody", "anyone", "anything", "each", "everybody", "everyone", "everything",
+    "few", "many", "nobody", "none", "one", "several", "some", "somebody", "and someone",
+    // Reflexive pronouns
+    "myself", "yourself", "himself", "herself", "ourselves", "yourselves", "themselves",
+).splitToWords()
 
 //private val maxExpectedNodesCount = max(verbs.size, articlesAndSimilar.size, prepositions.size)

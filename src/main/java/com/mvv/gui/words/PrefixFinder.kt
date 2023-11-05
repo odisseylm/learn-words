@@ -27,7 +27,20 @@ private inline fun <T> seq(first: T, other: Seq<T>): Seq<T> {
 private inline fun <T> alt(value: T): Alt<T> = singletonList(value)
 
 
-class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTemplates: Alt<Seq<Alt<Seq<String>>>>, val ignoredInPrefix: Set<String> = emptySet()) /*: AbstractObservable<Any>()*/ {
+/**
+ * Simple (but optimized) tree based a prefix finder.
+ * It performs very fast search.
+ * But creation is very expensive because too many tree nodes are created.
+ * As optimization shared trees (tree nodes) for ENDING '{prep} {art}','{prep}','{art}' can be used.
+ *
+ * But now there is another new PrefixFinder impl which can use (and uses) shared trees (for '{prep}','{art}', '{verb}', so on) at any place,
+ * and because of using shared trees it recreates full search tree very fast.
+ *
+ * Of course search by new impl can be a bit slower than PrefixFinder_Old, since it uses much more complicated algorithm (with delegation and recursion).
+ * BUT test show a bit another unexpected result:
+ *  search by PrefixFinder_Old = 0.0632ms, search by new PrefixFinder = 0.015ms !?!, and I cannot explain this strange unlogical result!
+ */
+class PrefixFinder_Old internal constructor(@Suppress("SameParameterValue") prefixTemplates: Alt<Seq<Alt<Seq<String>>>>, val ignoredInPrefix: Set<String> = emptySet()) /*: AbstractObservable<Any>()*/ {
 
     constructor(toIgnoreInPrefix: Set<String> = emptySet())
             : this(prepareTemplates(possibleNonRelevantForSortingPrefixTemplates, toIgnoreInPrefix), toIgnoreInPrefix)
@@ -66,6 +79,8 @@ class PrefixFinder internal constructor(@Suppress("SameParameterValue") prefixTe
     fun findPrefix(phrase: String): String? {
 
         val phraseFixed = phrase.lowercase().trim()
+            .removeRepeatableSpaces()
+            .removeSuffixesRepeatably("!", ".", "?").trimEnd()
 
         var node = expressionsTree
         val words = phraseFixed.split(' ').filterNotBlank()

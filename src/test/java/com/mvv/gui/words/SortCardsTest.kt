@@ -10,6 +10,7 @@ import java.nio.file.Path
 
 private val log = mu.KotlinLogging.logger {}
 
+//private val pf = PrefixFinder_Old()
 private val pf = PrefixFinder()
 
 fun String.calculateBaseOfFromForSorting_22(): String = pf.calculateBaseOfFromForSorting(this)

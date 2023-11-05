@@ -14,14 +14,14 @@ import java.nio.file.Path
 private val log = mu.KotlinLogging.logger {}
 
 
-class PrefixFinderTest {
+class PrefixFinderOldTest {
 
     @Test
     fun findPrefix() {
 
         val sw = startStopWatch("PrefixFinder creation")
 
-        val pf = PrefixFinder()
+        val pf = PrefixFinder_Old()
         sw.logInfo(log)
 
 
@@ -100,10 +100,37 @@ class PrefixFinderTest {
     }
 
     @Test
+    fun testWithIgnored() {
+        val a = SoftAssertions()
+
+        val defaultPrefixFinder = PrefixFinder_Old()
+
+        run {
+            a.assertThat(defaultPrefixFinder.removePrefix("to go")).isEqualTo("")
+            a.assertThat(defaultPrefixFinder.removePrefix("to go!")).isEqualTo("!")
+        }
+
+        run {
+            val pfWithIgnores = PrefixFinder_Old(setOf("gO"))
+            a.assertThat(pfWithIgnores.removePrefix("to go!")).isEqualTo("go!")
+
+            a.assertThat(pfWithIgnores.ignoredInPrefix).isEqualTo(setOf("gO"))
+        }
+
+        a.assertAll()
+    }
+
+    @Test
+    fun testWithAdditionalSpaceChars() {
+        val pf = PrefixFinder_Old()
+        assertThat(pf.removePrefix(" \t to \n go \n to hOmE!?")).isEqualTo("hOmE!?")
+    }
+
+    @Test
     fun findPrefix_22() {
 
         val swCreation = startStopWatch("PrefixFinder creation")
-        val pf = PrefixFinder()
+        val pf = PrefixFinder_Old()
         swCreation.logInfo(log)
 
 
@@ -183,7 +210,7 @@ class PrefixFinderTest {
 
         val sw = startStopWatch("PrefixFinder creation")
 
-        val pf = PrefixFinder()
+        val pf = PrefixFinder_Old()
         sw.logInfo(log)
 
 
@@ -221,7 +248,7 @@ class PrefixFinderTest {
                 //alt(wordsSeq("a")),
             )
         )
-        val pf = PrefixFinder(src) //, emptySet(), true)
+        val pf = PrefixFinder_Old(src) //, emptySet(), true)
         log.info { pf }
 
         //assertThat(pf.findPrefix("to have a bar")).isEqualTo("to have a")
@@ -237,7 +264,7 @@ class PrefixFinderTest {
 
         if (ri.currentRepetition == 1) {
             val creatingSW = startStopWatch("performanceTest => creating PrefixFinder")
-            val pf = PrefixFinder()
+            val pf = PrefixFinder_Old()
             creatingSW.logInfo(log)
 
             log.info { "performanceTest => calculating started" }
@@ -247,12 +274,38 @@ class PrefixFinderTest {
         }
 
         if (ri.currentRepetition == ri.totalRepetitions) {
-            val count = 20
+            val count = 5
             val sw = startStopWatch("performanceTest => creating PrefixFinder $count times")
-            for (i in 1..count) PrefixFinder()
+            for (i in 1..count) PrefixFinder_Old()
             sw.logInfo(log)
 
             log.info { "Average creation time is ${sw.time / count}ms." }
+        }
+
+        if (ri.currentRepetition == ri.totalRepetitions) {
+            val count = 10_000
+            val phrases = listOf(
+                "to do smb. credit",
+                "to get a sleep",
+                "to get enough sleep",
+                "to get into trouble",
+                "to get over the hump",
+                "to get the hump",
+                "to give the mitten",
+                "to go into the question",
+                "to go to the woods",
+                "to handle without mittens",
+            )
+
+            val allPhrases = (0 until count/phrases.size).flatMap { phrases }
+
+            val sw = startStopWatch("performanceTest => processing phrases ${allPhrases.size}")
+
+            val pf = PrefixFinder_Old()
+            allPhrases.forEach { pf.calculateBaseOfFromForSorting(it) }
+
+            sw.logInfo(log)
+            log.info { "Average extracting prefix time is ${sw.time.toDouble() / count}ms." }
         }
     }
 

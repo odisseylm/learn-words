@@ -153,4 +153,31 @@ class UtilsTest {
 
         assertThatCode { doTry<Int> { f1() } }.doesNotThrowAnyException()
     }
+
+    @Test
+    fun test_enumSetOf() {
+        assertThat(enumSetOf(TestEnum123.Val1)).containsExactly(TestEnum123.Val1)
+        assertThat(enumSetOf(TestEnum123.Val2)).containsExactly(TestEnum123.Val2)
+    }
+
+    @Test
+    fun test_areAllNull() {
+        assertThat(areAllNull(null)).isTrue()
+        assertThat(areAllNull(null, null)).isTrue()
+        assertThat(areAllNull(null, null, null)).isTrue()
+        assertThat(areAllNull(null, null, null, null)).isTrue()
+        assertThat(areAllNull(null, null, null, null, null)).isTrue()
+    }
+
+    @Test
+    fun test_listOfNonNulls() {
+        assertThat(listOfNonNulls(null)).isEmpty()
+        assertThat(listOfNonNulls(null, null)).isEmpty()
+        assertThat(listOfNonNulls(null, null, null)).isEmpty()
+        assertThat(listOfNonNulls(null, null, null, null)).isEmpty()
+        assertThat(listOfNonNulls(null, null, null, null, null)).isEmpty()
+    }
 }
+
+
+private enum class TestEnum123 { Val1, Val2 }

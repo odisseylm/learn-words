@@ -83,6 +83,9 @@ inline fun areAllNull(v1: Any?, v2: Any?, v3: Any?): Boolean =
 @Suppress("NOTHING_TO_INLINE")
 inline fun areAllNull(v1: Any?, v2: Any?, v3: Any?, v4: Any?): Boolean =
     (v1 == null) && (v2 == null) && (v3 == null) && (v4 == null)
+@Suppress("NOTHING_TO_INLINE")
+inline fun areAllNull(v1: Any?, v2: Any?, v3: Any?, v4: Any?, v5: Any?): Boolean =
+    (v1 == null) && (v2 == null) && (v3 == null) && (v4 == null) && (v5 == null)
 
 
 @Suppress("NOTHING_TO_INLINE")
@@ -113,6 +116,16 @@ inline fun <T> listOfNonNulls(v1: T?, v2: T?, v3: T?, v4: T?): List<T> =
         it.addNotNull(v2)
         it.addNotNull(v3)
         it.addNotNull(v4)
+    }
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T> listOfNonNulls(v1: T?, v2: T?, v3: T?, v4: T?, v5: T?): List<T> =
+    if (areAllNull(v1, v2, v3, v4, v5)) emptyList()
+    else ArrayList<T>(4).also {
+        it.addNotNull(v1)
+        it.addNotNull(v2)
+        it.addNotNull(v3)
+        it.addNotNull(v4)
+        it.addNotNull(v5)
     }
 
 
