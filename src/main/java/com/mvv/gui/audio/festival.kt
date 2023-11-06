@@ -1,9 +1,12 @@
 package com.mvv.gui.audio
 
 import com.mvv.gui.util.commandLine
-import org.apache.commons.exec.DefaultExecutor
-import org.apache.commons.exec.Executor
-import org.apache.commons.exec.PumpStreamHandler
+import com.mvv.gui.util.doTry
+import com.mvv.gui.util.executeCommandWithOutput
+import org.apache.commons.exec.*
+import org.apache.commons.lang3.SystemUtils.IS_OS_LINUX
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit
 import kotlin.text.Charsets.UTF_8
 
 
@@ -108,11 +111,29 @@ class FestivalVoiceManager {
 }
 
 
+private val isFestivalCommandPresent: Boolean by lazy {
+    IS_OS_LINUX && (
+               doTry({ executeCommandWithOutput("which", "festival") }, "")        .trim().endsWith("/festival")
+            || doTry({ executeCommandWithOutput("command", "-v", "festival") }, "").trim().endsWith("/festival")
+    )
+}
+
 class FestivalVoiceSpeechSynthesizer (override val voice: FestivalVoice) : SpeechSynthesizer {
 
     override val shortDescription: String = "Festival ${voice.name}"
 
+    override fun toString(): String = shortDescription
+
+    private val processDestroyer = LastProcessDestroyer()
+
+    override fun interrupt() = processDestroyer.destroyAllProcesses()
+
     override fun speak(text: String) {
+
+        log.debug { "Speak by ${this.shortDescription} ${this.hashCode()}, prevProcesses: ${processDestroyer.size()}" }
+
+        processDestroyer.destroyAllProcesses()
+
         val inputPipedString =
                 "(voice_${voice.name})\n" +
                 "(SayText \"${text.escapeText()}\")\n" +
@@ -121,6 +142,10 @@ class FestivalVoiceSpeechSynthesizer (override val voice: FestivalVoice) : Speec
         log.debug { "Festival input: \n$inputPipedString" }
 
         val executor = createExecutor(inputPipedString)
+
+        //executor.watchdog = ExecuteWatchdog(15_000L)
+        executor.processDestroyer = processDestroyer
+
         val exitCode = executor.execute(commandLine("festival", "--pipe"))
 
         // TODO: in case of error inside inputPipedString,
@@ -128,6 +153,8 @@ class FestivalVoiceSpeechSynthesizer (override val voice: FestivalVoice) : Speec
         //       Need to determine such errors.
         require(exitCode == 0) { "Error of speaking by festival." }
     }
+
+    override val isAvailable: Boolean get() = isFestivalCommandPresent
 }
 
 
@@ -141,3 +168,23 @@ private fun createExecutor(inputPipedString: String): Executor =
     DefaultExecutor().also {
         it.streamHandler = PumpStreamHandler(System.out, System.err, inputPipedString.byteInputStream(UTF_8))
     }
+
+private class LastProcessDestroyer : ProcessDestroyer {
+    private val processes: MutableList<Process> = CopyOnWriteArrayList() // really does not matter which kind of thread-safe list is used
+
+    override fun add(process: Process): Boolean = this.processes.add(process)
+    override fun remove(process: Process): Boolean = this.processes.remove(process)
+    override fun size(): Int = this.processes.size
+
+    fun destroyAllProcesses() {
+        processes.forEach {
+            it.descendants().forEach { subProcess ->
+                subProcess.destroyForcibly()
+                subProcess.onExit().get(5, TimeUnit.SECONDS)
+            }
+
+            it.destroyForcibly()
+            it.onExit().get(5, TimeUnit.SECONDS)
+        }
+    }
+}

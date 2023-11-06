@@ -130,6 +130,8 @@ class JavaSpeechSpeechSynthesizer(
 
     override val shortDescription: String = "Free TTS ${jsVoice.name}"
 
+    override fun toString(): String = "${javaClass.simpleName} $shortDescription"
+
     override fun speak(text: String) {
 
         val modeDesc = SynthesizerModeDesc(null, null, locale, null, arrayOf(jsVoice))
@@ -196,7 +198,7 @@ class MbrolaVoiceDirectory(private val mbrolaBaseDir: Path? = null) : VoiceDirec
             MbrolaVoice(
                 mbrolaBinary, mbrolaBaseDir, "en1",
                 "en1", //pitch 82 117
-                150.0f, 100.0f, 12.0f, // TODO: it may be wrong!? Need to validate in some way.
+                150.0f, 100.0f, 12.0f, // T O D O: it may be wrong!? Need to validate in some way.
                 "mbrola_en1",
                 Gender.MALE, Age.YOUNGER_ADULT, "MBROLA Voice en1", Locale.ENGLISH, "general", "mbrola",
                 lexicon,

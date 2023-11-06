@@ -3,6 +3,9 @@ package com.mvv.gui
 import com.mvv.gui.audio.*
 import com.mvv.gui.util.doTry
 import com.mvv.gui.words.fixFrom
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.atomic.AtomicReference
 
 
 private val log = mu.KotlinLogging.logger {}
@@ -48,8 +51,28 @@ class VoiceManager {
             emptyList()
         }
 
+    private val lastPlayer = AtomicReference<SpeechSynthesizer>()
+
+    // Ideally it would be nice/better to use BlockingQueue with size = 1 and with the policy to keep only the latest item.
+    private val playTasksQueue: BlockingQueue<Runnable> = ArrayBlockingQueue(100)
+    private val executorThread = Thread {
+            while (true)
+                playTasksQueue.take()
+                    .also { doTry { it.run() } }
+        }
+        .also { it.isDaemon = true; it.name = "Speak words executor" }
+
+    @Synchronized
+    private fun makeSureExecutorIsStarted() {
+        if (!executorThread.isAlive) executorThread.start()
+    }
 
     fun speak(text: String, voiceGender: Gender?) {
+
+        makeSureExecutorIsStarted()
+
+        // let's try to stop previous playing... but it may not be supported
+        lastPlayer.get()?.interrupt()
 
         // I think that it would be better to use excluding surely unsuitable voices (black list instead of white list)
         // because not all voices have gender property.
@@ -65,9 +88,13 @@ class VoiceManager {
             .filter { it.isSupported(fixedText) }
             .filter { it.voice.gender !in toExcludeVoiceGender }
 
-        for (voice in suitableVoices) {
+        playTasksQueue.clear()
+        playTasksQueue.put { playImpl(suitableVoices, fixedText) }
+    }
+
+    private fun playImpl(suitableVoices: List<SpeechSynthesizer>, fixedText: String) {
+        for (voice in suitableVoices)
             if (doTry { voice.speak(fixedText) }) break
-        }
     }
 }
 

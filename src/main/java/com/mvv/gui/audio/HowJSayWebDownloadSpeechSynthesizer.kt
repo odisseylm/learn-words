@@ -33,6 +33,8 @@ class HowJSayWebDownloadSpeechSynthesizer(audioPlayer: AudioPlayer) : CachingSpe
     override val shortDescription: String = "howjsay.com"
     override val voice: Voice = SimpleVoice("howjsay.com", null)
 
+    override fun toString(): String = javaClass.simpleName
+
     override fun validateFileContent(audioFilePath: Path, word: String) {
         super.validateFileContent(audioFilePath, word)
 

@@ -59,6 +59,7 @@ inline fun doTry(block: ()->Unit): Boolean = try { block(); true } catch (_: Exc
 // It works only if specify type explicitly like ` doTry<Int> { 123 } ` :-(
 // T O D O: it should be rewritten in some way...
 inline fun <T> doTry(block: ()->T): T? = try { block() } catch (_: Exception) { null }
+inline fun <T> doTry(block: ()->T, altValue: T): T = try { block() } catch (_: Exception) { altValue }
 
 
 fun <E: Enum<E>> enumSetOf(v: E): EnumSet<E> = EnumSet.of(v)

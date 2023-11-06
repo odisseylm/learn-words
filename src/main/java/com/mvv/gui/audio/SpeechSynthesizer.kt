@@ -18,6 +18,9 @@ interface SpeechSynthesizer {
     @Throws(SpeechSynthesizerException::class)
     fun speak(text: String)
 
+    /** Optional. Not implemnted/supported by default. */
+    fun interrupt() { }
+
     fun isSupported(text: String): Boolean = true
     @Throws(SpeechSynthesizerException::class)
     fun validateSupport(text: String) {

@@ -96,6 +96,10 @@ class WindowsSpeechSynthesizer (override val voice: WindowsVoice) : SpeechSynthe
             .execute(commandLine("PowerShell")) // , "-Encoding", "UTF8"))
         require(exitCode == 0) { "Failed to launch windows speech synthesizer (exitCode = $exitCode)." }
     }
+
+    // In general it is not enough, because it may no be enabled in Windows Registry for any applications.
+    // See enable instructions in README.md
+    override val isAvailable: Boolean get() = IS_OS_WINDOWS
 }
 
 
