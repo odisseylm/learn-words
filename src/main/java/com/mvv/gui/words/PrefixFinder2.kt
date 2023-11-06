@@ -384,6 +384,9 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
     "{verb} {pp} to {art}",
     "{verb} {pp} {art}",
 
+    "{verb} {pp} {verb} {art}",
+    "{verb} {pp} {verb} {prep} {art}",
+
     "let {pp}",
     "let {pp} {verb}",
     "let {pp} to {verb}",
@@ -431,7 +434,7 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
 
 
 private val verbs: Alt<Seq<String>> = sequenceOf(
-    "do", "does", "be", "is", "have", "has", "have no", "has no", "get", "gets", "go", "goes",
+    "do", "does", "be", "is", "are", "have", "has", "have no", "has no", "get", "gets", "go", "gone", "went", "goes", "going",
     "can", "could", "may", "might", "must", "shall", "should",
 
     "add", "allow", "answer", "appear", "ask",
@@ -495,6 +498,8 @@ private val articlesAndSimilar: Alt<Seq<String>> = sequenceOf(
     "me", "you", "him", "her", "it", "us", "you", "them",
     // Possessive pronouns
     "mine", "yours", "his", "hers", "its", "ours", "yours", "theirs",
+
+    "my", "his", "her", "their", "its",
 
     // Demonstrative pronouns
     "this", "these", "that", "those",

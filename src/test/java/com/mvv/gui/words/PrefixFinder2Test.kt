@@ -176,6 +176,7 @@ class PrefixFinder2Test {
         a.assertThat(pf.removeMatchedPrefix("to hold an event")).isEqualTo("event")
         //a.assertThat(pf.removeMatchedPrefix("let me go!")).isEqualTo("look in with smb.")
         a.assertThat(pf.removeMatchedPrefix("in many ways")).isEqualTo("ways")
+        a.assertThat(pf.removeMatchedPrefix("are you going my way?")).isEqualTo("way?")
 
         asw.logInfo(log)
 

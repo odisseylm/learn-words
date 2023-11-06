@@ -90,9 +90,9 @@ class PrefixFinder
             val wordNodes = node.getWordNodes(w)
 
             /*
-            var wordNode = node.getChildByWord(w) // TODO: !!! we need to perform search by also by delegate/shared and return the best result
+            var wordNode = node.getChildByWord(w) // T O D O: !!! we need to perform search by also by delegate/shared and return the best result
 
-            // TODO: !!! we need to perform search by also by delegate/shared and return the best result
+            // T O D O: !!! we need to perform search by also by delegate/shared and return the best result
 
             val nodeHasChildren = node.children.isNotEmpty()
             if (nodeHasChildren) {
