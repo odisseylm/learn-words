@@ -19,8 +19,7 @@ import javafx.collections.transformation.SortedList
 import javafx.event.EventHandler
 import javafx.geometry.Point2D
 import javafx.scene.control.*
-import javafx.scene.input.Clipboard
-import javafx.scene.input.MouseEvent
+import javafx.scene.input.*
 import javafx.stage.FileChooser
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.commons.text.StringEscapeUtils.escapeHtml4
@@ -150,8 +149,6 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
                 showSourceSentences(card)
         }
 
-        loadExistentWords()
-
         pane.wordEntriesTable.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) {
             val wordOrPhrase = it.newValue
             if (wordOrPhrase.isNotBlank()) Platform.runLater { onCardFromEdited(wordOrPhrase) }
@@ -171,6 +168,8 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         } } }
 
         installNavigationHistoryUpdates(currentWordsList, navigationHistory)
+
+        loadExistentWords()
     }
 
     private var toPlayWordOnSelect: Boolean
@@ -764,6 +763,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             saveWordsToTxtFile(ignoredWordsFile, ignoredWords)
     }
 
+    // TODO: do it async and use some task indicator
     private fun loadExistentWords() {
         loadIgnored()
         allProcessedWords.setAll(loadWordsFromAllExistentDictionaries(null))

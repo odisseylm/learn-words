@@ -46,6 +46,17 @@ fun <S> TableView<S>.selectItem(item: S) {
 }
 
 
+/** Selects and scrolls to this item. */
+fun <S> TableView<S>.selectItem(rowIndex: Int) {
+    val table = this
+    table.selectionModel.clearSelection()
+    table.selectionModel.select(rowIndex)
+
+    if (rowIndex != -1 && !table.visibleRows.contains(rowIndex))
+        table.scrollTo(rowIndex)
+}
+
+
 enum class IndexStartFrom { Zero, One }
 
 fun <S> createIndexTableCell(startFrom: IndexStartFrom): TableCell<S,Int> =

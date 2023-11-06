@@ -222,6 +222,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
             sourcePositionsColumn, sourceSentencesColumn,
         )
 
+        addAltScrollingBinding()
         addKeyBindings()
 
         // T O D O: probably this should be adjustable via check-box??
@@ -247,6 +248,25 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         addGlobalKeyBinding(this, KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.CONTROL_DOWN)) { startEditingTranscription() }
         addGlobalKeyBinding(this, KeyCodeCombination(KeyCode.DIGIT3, KeyCombination.CONTROL_DOWN)) { startEditingTo() }
         addGlobalKeyBinding(this, KeyCodeCombination(KeyCode.DIGIT4, KeyCombination.CONTROL_DOWN)) { startEditingRemarks() }
+    }
+
+    private fun addAltScrollingBinding() {
+        addLocalKeyBinding(this, KeyCodeCombination(KeyCode.DOWN, KeyCombination.ALT_DOWN)) {
+            val current = this.selectionModel.selectedIndex
+            if (current >= 0 && current < this.items.lastIndex) {
+                val nextRowIndex = current + 1
+                this.selectItem(nextRowIndex)
+                this.scrollTo(this.visibleRows.first + 1)
+            }
+        }
+        addLocalKeyBinding(this, KeyCodeCombination(KeyCode.UP, KeyCombination.ALT_DOWN)) {
+            val current = this.selectionModel.selectedIndex
+            if (current >= 1) {
+                val prevRowIndex = current - 1
+                this.selectItem(prevRowIndex)
+                this.scrollTo(this.visibleRows.first - 1)
+            }
+        }
     }
 
     internal fun toggleTextSelectionCaseOrLowerCaseRow() {
