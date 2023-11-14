@@ -80,7 +80,7 @@ class PrefixFinder_Old internal constructor(@Suppress("SameParameterValue") pref
 
         val phraseFixed = phrase.lowercase().trim()
             .removeRepeatableSpaces()
-            .removeSuffixesRepeatably("!", ".", "?")
+            .removeSuffixesRepeatably("!", ".", "?", "…")
             .trimEnd()
 
         var node = expressionsTree

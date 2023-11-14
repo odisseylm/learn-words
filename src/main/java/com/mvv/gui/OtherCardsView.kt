@@ -2,20 +2,20 @@ package com.mvv.gui
 
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
-import com.mvv.gui.util.addOnceEventHandler
 import com.mvv.gui.words.CardWordEntry
 import com.mvv.gui.words.baseWordsFilename
 import javafx.geometry.Point2D
 import javafx.scene.Node
 import javafx.scene.control.Label
+import javafx.scene.control.PopupControl
 import javafx.scene.control.TableColumn
 import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
+import javafx.scene.text.Text
+import javafx.scene.text.TextFlow
 import javafx.stage.Window
-import javafx.stage.WindowEvent
 import javafx.util.Callback
 import java.nio.file.Path
-
 
 
 class OtherCardsViewPopup :
@@ -73,43 +73,7 @@ class OtherCardsViewPopup :
         this.word  = wordOrPhrase
         this.cards = cards.map { it.card }
 
-        // for non-popup impl
-        if (this.isResizable && this.width > 100 || this.height > 20) {
-
-            val prevW = this.width; val prevH = this.height
-
-            this.show() // Stage.show() sets size to pref size
-
-            // let's keep old bounds (or otherwise, lets change x/y too)
-            this.width = prevW; this.height = prevH
-            return
-        }
-
-        if (this.width > 0 || this.height > 0) {
-            this.show(parentWindow, getPos())
-            return
-        }
-
-        // I do not know how to calculate desired x/y at this time, because
-        // I do not know how to calculate 'calculated' pref size
-        // and sizeToScene() does not work till window is showing (in contrast with Swing Window.pack() which works before real showing window)
-        content.prefWidth  = 1.0
-        content.prefHeight = 1.0
-
-        addOnceEventHandler(WindowEvent.WINDOW_SHOWN) {
-
-            val useComputedSize = javafx.scene.layout.Region.USE_COMPUTED_SIZE
-            content.prefWidth  = useComputedSize
-            content.prefHeight = useComputedSize
-
-            sizeToScene()
-
-            val pos = getPos()
-            x = pos.x
-            y = pos.y
-        }
-
-        show(parentWindow, getPos())
+        this.showPopup(parentWindow, RelocationPolicy.CalculateOnlyOnce, getPos)
     }
 }
 
@@ -140,5 +104,47 @@ private class OtherWordCardsTable(controller: LearnWordsController) : WordCardsT
             exampleCountColumn,
             examplesColumn,
         )
+    }
+}
+
+
+class LightOtherCardsViewPopup : PopupControl() {
+    private val content = BorderPane().also {
+        it.style = ("-fx-border-style: solid;" // " inside;"
+                + "-fx-border-width: 1;"
+                + "-fx-border-color: yellow;"
+                + "-fx-padding: 4 4 4 4;"
+                )
+    }
+
+    private val textFlow = TextFlow()
+        .also { content.center = it }
+
+    init {
+        this.sceneRoot = content
+
+        //content.maxWidth  = 500.0
+        //content.maxHeight = 200.0
+
+        sizeToScene()
+    }
+
+    fun show(parentWindow: Window, wordOrPhrase: String, cards: List<SearchEntry>, getPos: () -> Point2D) {
+
+        textFlow.children.clear()
+
+        cards.forEach { card ->
+            if (textFlow.children.isNotEmpty()) textFlow.children.add(Text("\n"))
+
+            textFlow.children.addAll(
+                Label("Word [$wordOrPhrase] is already present in the set '"),
+                Label(card.file.baseWordsFilename).also { it.style = "-fx-font-weight: bold;" },
+                Label("'"),
+            )
+        }
+
+        content.requestLayout()
+
+        this.showPopup(parentWindow, RelocationPolicy.AlwaysRecalculate, getPos)
     }
 }

@@ -147,7 +147,7 @@ internal fun TreeNode?.sharedChildAsTreeNodeRes(word: String): TreeNodeRes? {
 internal fun TreeNode.findMatchedPrefix(phrase: String): String? {
     val words = phrase.lowercase().trim()
         .removeRepeatableSpaces()
-        .removeSuffixesRepeatably("!", ".", "?")
+        .removeSuffixesRepeatably("!", ".", "?", "…")
         .trimEnd()
         .split(' ', '\n', '\t')
 
@@ -374,10 +374,12 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
     "to {verb} to {art}",
     "to {verb} to {prep} {art}",
 
-    "{pp} {verb} to {prep} {art}",
+    "{pp} {verb} {art}",
     "{pp} {verb} {prep} {art}",
     "{pp} {verb} to {art}",
-    "{pp} {verb} {art}",
+    "{pp} {verb} to {prep} {art}",
+    "{pp} {verb} not {art}",
+    "{pp} {verb} not {prep} {art}",
 
     "{verb} {pp} to {prep} {art}",
     "{verb} {pp} {prep} {art}",
@@ -486,6 +488,7 @@ private val articlesAndSimilar: Alt<Seq<String>> = sequenceOf(
     "a bad", "bad", "worse", "the worst",
     "a good", "good", "better", "the best",
     "a hard", "hard", "harder",
+    "a heavy", "heavy",
     "a great", "great",
     "a half", "half",
     "the public","a public", "public",

@@ -18,6 +18,8 @@ import javafx.scene.control.TableView
 class ContextMenuController (val controller: LearnWordsController) {
     val contextMenu = ContextMenu()
 
+    private val mergeMenuItem = newMenuItem("Merge", buttonIcon("icons/merge.png")) { controller.mergeSelected() }
+
     private val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
         buttonIcon("/icons/icons8-layers-16-with-plus.png")) {
         controller.addBaseWordsInSetForSelected() }
@@ -50,6 +52,9 @@ class ContextMenuController (val controller: LearnWordsController) {
                 controller.insertWordCard(InsertPosition.Below) },
             newMenuItem("Toggle/lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
                 controller.toggleTextSelectionCaseOrLowerCaseRow() },
+
+            SeparatorMenuItem(),
+            mergeMenuItem,
 
             SeparatorMenuItem(),
             newMenuItem("To ignore >>", buttonIcon("icons/removememory_tsk.png")) { // rem_co.png removememory_tsk.png
@@ -90,6 +95,9 @@ class ContextMenuController (val controller: LearnWordsController) {
 
     fun updateItemsVisibility() {
         contextMenu.items.forEach { it.isVisible = true }
+
+        val selectedCards = this.selectedCards
+        mergeMenuItem.isVisible = controller.isSelectionMergingAllowed()
 
         showSourceSentenceMenuItem.isVisible = selectedCard?.sourceSentences?.isNotBlank() ?: false
         updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)

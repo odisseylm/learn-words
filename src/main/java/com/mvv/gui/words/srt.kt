@@ -20,13 +20,19 @@ fun loadOnlyTextFromSrt(reader: Reader): String {
                 line.isEmpty() -> { }
                 line.isSrtNumber -> { }
                 line.isSrtTimeStampsLine -> { }
-                else -> result.append(line).append('\n')
+                else -> result.append(line.removeHtmlTags()).append('\n')
             }
         }
     }
 
     return result.toString()
 }
+
+private fun String.removeHtmlTags(): String =
+    this.replace("<i>", "").replace("</i>", "")
+        .replace("<b>", "").replace("</b>", "")
+        .replace(" ♪ ", " ").replace("♪", "")
+
 
 // Example: 00:23:03,281 --> 00:23:05,681
 internal val String.isSrtTimeStampsLine: Boolean get() {

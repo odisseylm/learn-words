@@ -21,11 +21,11 @@ import javafx.geometry.Point2D
 import javafx.scene.control.*
 import javafx.scene.input.*
 import javafx.stage.FileChooser
+import javafx.stage.Stage
+import javafx.stage.WindowEvent
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.commons.text.StringEscapeUtils.escapeHtml4
 import java.io.File
-import java.io.Reader
-import java.io.StringReader
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
@@ -58,23 +58,24 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
     private var currentWordsFile: Path? = null
 
+    val cellEditorStates = WeakHashMap<Pair<TableColumn<CardWordEntry,*>, CardWordEntry>, CellEditorState>()
+
     private val toolBarController2 = ToolBarControllerBig(this)
     private val settingsPane = SettingsPane()
     private val toolBar2 = ToolBar2(this).also {
         it.nextPrevWarningWord.addSelectedWarningsChangeListener { _, _, _ -> recalculateWarnedWordsCount() } }
 
-    val cellEditorStates = WeakHashMap<Pair<TableColumn<CardWordEntry,*>, CardWordEntry>, CellEditorState>()
-
     private val allWordCardSetsManager = AllWordCardSetsManager()
     // we have to use lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
     private val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
+    private val lightOtherCardsViewPopup: LightOtherCardsViewPopup by lazy { LightOtherCardsViewPopup() }
 
     @Volatile
     private var prefixFinder = PrefixFinder(emptyList())
     private val baseWordExtractor: BaseWordExtractor = object : BaseWordExtractor {
         override fun extractBaseWord(phrase: String): String =
             prefixFinder.calculateBaseOfFromForSorting(phrase)
-                .firstWord.removeSuffixesRepeatably("!", ".", "?").toString()
+                .firstWord.removeSuffixesRepeatably("!", ".", "?", "…").toString()
     }
 
     // TODO: move somewhere and use also other kinds of white spaces
@@ -138,8 +139,18 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         currentWordsList.contextMenu = contextMenuController.contextMenu
         currentWordsList.onContextMenuRequested = EventHandler { contextMenuController.updateItemsVisibility() }
 
-        currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, _ ->
-            Platform.runLater { if (toPlayWordOnSelect) playSelectedWord() } }
+        currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, card ->
+            Platform.runLater { if (toPlayWordOnSelect) playSelectedWord() }
+            Platform.runLater {
+
+                val wordOrPhrase = card?.from
+                val foundInOtherSets = wordOrPhrase?.let { allWordCardSetsManager.findBy(wordOrPhrase) } ?: emptyList()
+                if (wordOrPhrase != null && foundInOtherSets.isNotEmpty())
+                    showThisWordsInLightOtherSetsPopup(wordOrPhrase, foundInOtherSets)
+                else
+                    lightOtherCardsViewPopup.hide()
+            }
+        }
 
         currentWordsList.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
             val card = currentWordsSelection.selectedItem
@@ -166,6 +177,15 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
                 allWordCardSetsManager.reloadAllSets()
         } } }
+
+        pane.addIsShownHandler {
+            val window = pane.scene.window
+
+            window.addEventHandler(WindowEvent.WINDOW_HIDDEN) { hidePopups() }
+            if (window is Stage)
+                window.iconifiedProperty().addListener { _, _, minimized ->
+                    if (minimized) hidePopups() }
+        }
 
         installNavigationHistoryUpdates(currentWordsList, navigationHistory)
 
@@ -202,6 +222,11 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         rebuildPrefixFinder()
     }
 
+    private fun hidePopups() {
+        lightOtherCardsViewPopup.hide()
+        otherCardsViewPopup.hide()
+    }
+
     private fun showThisWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
         val mainWnd = pane.scene.window
 
@@ -209,6 +234,17 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             val xOffset = 20.0;  val yOffset = 50.0
             Point2D(
                 mainWnd.x + mainWnd.width - otherCardsViewPopup.width - xOffset,
+                mainWnd.y + yOffset)
+        }
+    }
+
+    private fun showThisWordsInLightOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
+        val mainWnd = pane.scene.window
+
+        lightOtherCardsViewPopup.show(mainWnd, wordOrPhrase, cards) {
+            val xOffset = 20.0;  val yOffset = 50.0
+            Point2D(
+                mainWnd.x + mainWnd.width - lightOtherCardsViewPopup.width - xOffset,
                 mainWnd.y + yOffset)
         }
     }
@@ -295,10 +331,9 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
 
     fun removeSelected() {
-        val selectedSafeCopy = currentWordsSelection.selectedItems.toList()
+        val toRemoveSafeCopy = currentWordsSelection.selectedItems.toList()
         currentWordsSelection.clearSelection()
-        currentWordsList.runWithScrollKeeping {
-            currentWords.removeAll(selectedSafeCopy) }
+        currentWordsList.runWithScrollKeeping { removeCards(toRemoveSafeCopy) }
     }
 
     private fun analyzeAllWords(allWords: Iterable<CardWordEntry>) =
@@ -343,11 +378,12 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         val toRemove = currentWords.asSequence()
             .filter { word -> ignoredWordsSorted.contains(word.from) }
             .toList()
-        currentWordsList.runWithScrollKeeping { currentWords.removeAll(toRemove) }
+        currentWordsList.runWithScrollKeeping { removeCards(toRemove) }
     }
 
     fun removeWordsFromOtherSetsFromCurrentWords() =
         removeWordsFromOtherSetsFromCurrentWords(currentWords, this.currentWordsFile)
+            .also { removeChangeCardListener(it) }
 
     enum class LoadType {
         /** In case of open action this file will/can/should be overwritten.  */
@@ -456,6 +492,9 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         validateCurrentDocumentIsSaved("New document")
 
         currentWords.clear()
+        navigationHistory.clear()
+        cellEditorStates.clear()
+        rebuildPrefixFinder()
         updateCurrentWordsFile(null)
         resetDocumentIsDirty()
     }
@@ -508,17 +547,34 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         card.sourceSentencesProperty.addListener(changeCardListener)
     }
 
-    private fun loadFromSrt(filePath: Path) =
-        extractWordsFromFile(filePath, SentenceEndRule.ByEndingDot) { StringReader(loadOnlyTextFromSrt(it)) }
+    private fun removeChangeCardListener(cards: Iterable<CardWordEntry>) =
+        cards.forEach { removeChangeCardListener(it) }
 
-    @Suppress("SameParameterValue")
-    private fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule, preProcessor: (Reader)->Reader = { it }): List<CardWordEntry> {
-        val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) this.ignoredWords else emptySet()
-        return mergeDuplicates(extractWordsFromFile(filePath, sentenceEndRule, toIgnoreWords, preProcessor))
+    private fun removeChangeCardListener(card: CardWordEntry) {
+        card.fromProperty.removeListener(changeCardListener)
+        card.fromWithPrepositionProperty.removeListener(changeCardListener)
+        card.toProperty.removeListener(changeCardListener)
+        card.transcriptionProperty.removeListener(changeCardListener)
+        card.examplesProperty.removeListener(changeCardListener)
+        card.statusesProperty.removeListener(changeCardListener)
+        card.predefinedSetsProperty.removeListener(changeCardListener)
+        card.sourcePositionsProperty.removeListener(changeCardListener)
+        card.sourceSentencesProperty.removeListener(changeCardListener)
     }
 
+    private fun loadFromSrt(filePath: Path): List<CardWordEntry> {
+        val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) this.ignoredWords.toIgnoreCaseSet() else emptySet()
+        return extractWordsFromSrtFileAndMerge(filePath, toIgnoreWords)
+    }
+
+    //@Suppress("SameParameterValue")
+    //private fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule, preProcessor: (Reader)->Reader = { it }): List<CardWordEntry> {
+    //    val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) this.ignoredWords.toIgnoreCaseSet() else emptySet()
+    //    return extractWordsFromFileAndMerge(filePath, sentenceEndRule, toIgnoreWords, preProcessor)
+    //}
+
     fun loadFromClipboard() {
-        val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) ignoredWords else emptySet()
+        val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) ignoredWords.toIgnoreCaseSet() else emptySet()
         val words = extractWordsFromClipboard(Clipboard.getSystemClipboard(), settingsPane.sentenceEndRule, toIgnoreWords)
             .map { it.adjustCard() }
 
@@ -531,7 +587,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
     fun moveSelectedToIgnored() {
 
-        val selectedWords = currentWordsSelection.selectedItems.toList()
+        val selectedWords = currentWordsSelection.selectedItems.toList() // safe copy
 
         log.debug("selectedWords: {} moved to IGNORED.", selectedWords)
 
@@ -542,7 +598,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         currentWordsList.runWithScrollKeeping {
             currentWordsSelection.clearSelection()
-            currentWords.removeAll(selectedWords)
+            removeCards(selectedWords)
         }
     }
 
@@ -569,7 +625,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             currentWordsSelection.clearSelection()
             sw.logInfo(log, "clearSelection")
 
-            currentWords.removeAll(selectedWords)
+            removeCards(selectedWords)
             sw.logInfo(log, "removeAll(selectedWords)")
         }
     }
@@ -594,7 +650,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             val pos = currentWordsList.selectionModel.selectedIndex
             val cloned: CardWordEntry = selected.copy().adjustCard()
 
-            currentWordsList.runWithScrollKeeping { currentWordsList.items.add(pos, cloned) }
+            currentWordsList.runWithScrollKeeping { currentWords.add(pos, cloned) }
         }
     }
 
@@ -911,8 +967,39 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         val wordsSet: Set<String> = words.toSortedSet(String.CASE_INSENSITIVE_ORDER)
 
         val cardsToRemove = currentWords.filter { it.from in wordsSet }
+
         // Let's try to remove as one bulk operation to minimize notifications hell.
-        currentWords.removeAll(cardsToRemove)
+        removeCards(cardsToRemove)
+    }
+
+    private fun removeCards(toRemove: List<CardWordEntry>) {
+        currentWords.removeAll(toRemove)
+        removeChangeCardListener(toRemove)
+    }
+
+    fun isSelectionMergingAllowed(): Boolean {
+        val selectedCards = currentWordsSelection.selectedItems
+        if (selectedCards.size != 2) return false
+
+        val from1baseWord = selectedCards[0].baseWordOfFromProperty.value.firstWord
+        val from2baseWord = selectedCards[1].baseWordOfFromProperty.value.firstWord
+
+        return from1baseWord.startsWith(from2baseWord) || from2baseWord.startsWith(from1baseWord)
+    }
+
+    fun mergeSelected() {
+        val selectedCards = currentWordsSelection.selectedItems.toList() // safe copy
+
+        val merged = mergeCards(selectedCards).adjustCard()
+        // currentWordsSelection.selectedIndex is not used because it returns the most recently selected item.
+        val firstCardIndex = currentWords.indexOf(selectedCards[0])
+
+        currentWordsList.runWithScrollKeeping {
+            removeCards(selectedCards)
+            currentWords.add(firstCardIndex, merged)
+
+            reanalyzeOnlyWords(merged)
+        }
     }
 
 }

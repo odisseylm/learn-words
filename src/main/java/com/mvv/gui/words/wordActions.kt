@@ -2,6 +2,7 @@ package com.mvv.gui.words
 
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.extractExamples
+import com.mvv.gui.util.readBytes
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
 import javafx.collections.ObservableList
@@ -10,6 +11,8 @@ import javafx.scene.input.ClipboardContent
 import javafx.scene.input.DataFormat
 import java.io.FileReader
 import java.io.Reader
+import java.io.StringReader
+import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Optional
@@ -17,6 +20,7 @@ import java.util.TreeMap
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 import kotlin.io.path.notExists
+import kotlin.math.min
 import kotlin.streams.asSequence
 
 
@@ -131,13 +135,13 @@ internal fun extractWordsFromText_Old(content: CharSequence, ignoredWords: Colle
         .toList()
 
 
-internal fun extractWordsFromText_New(content: CharSequence, sentenceEndRule: SentenceEndRule, ignoredWords: Collection<String>): List<CardWordEntry> =
+internal fun extractWordsFromText_New(content: CharSequence, sentenceEndRule: SentenceEndRule, ignoredWords: Set<String>): List<CardWordEntry> =
     TextParserEx(sentenceEndRule)
         .parse(content)
         .asSequence()
         .flatMap { extractNeededWords(it) }
         .flatMap { it.toCardWordEntries() }
-        .filter  { !ignoredWords.contains(it.from) }
+        .filter  { it.from !in ignoredWords }
         .toList()
 
 
@@ -161,11 +165,11 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
 
 
     val card = CardWordEntry(
-        cards.first().from,
+        cards.merge(" ")  { it.from },
         cards.merge("\n") { it.to },
     )
 
-    card.fromWithPreposition = cards.merge("\n") { it.fromWithPreposition }
+    card.fromWithPreposition = cards.merge("  ") { it.fromWithPreposition }
     card.transcription    = cards.merge(" ")  { it.transcription }
     card.examples         = cards.merge("\n") { it.examples }
     card.statuses         = cards.mergeSet    { it.statuses }
@@ -173,6 +177,7 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
     card.sourcePositions  = cards.mergeList   { it.sourcePositions }
     card.sourceSentences  = cards.merge("\n") { it.sourceSentences }
     card.missedBaseWords  = cards.mergeList   { it.missedBaseWords }
+    card.file  = cards.map { it.file }.firstOrNull()
 
     return card
 }
@@ -241,12 +246,32 @@ private fun List<Token>.containsWordSequence(tokenSequenceIndex: Int, wordSequen
 }
 
 
-internal fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule, ignoredWords: Collection<String>, preProcessor: (Reader)-> Reader): List<CardWordEntry> =
-    preProcessor(FileReader(filePath.toFile(), Charsets.UTF_8))
+internal fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule, ignoredWords: Set<String>, preProcessor: (Reader)-> Reader): List<CardWordEntry> =
+    preProcessor(FileReader(filePath.toFile(), predictFileEncoding(filePath)))
         .use { r -> extractWordsFromText_New(r.readText(), sentenceEndRule, ignoredWords) } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
 
+private fun predictFileEncoding(filePath: Path): Charset {
+    val bytes = filePath.readBytes(min(10U, Files.size(filePath).toUInt()))
 
-internal fun extractWordsFromClipboard(clipboard: Clipboard, sentenceEndRule: SentenceEndRule, ignoredWords: Collection<String>): List<CardWordEntry> {
+    val feByte = 0xFE.toByte()
+    val ffByte = 0xFF.toByte()
+
+    return if (bytes.size >= 2 && (
+                   (bytes[0] == feByte && bytes[1] == ffByte)
+                || (bytes[1] == feByte && bytes[0] == ffByte)))
+           Charsets.UTF_16
+           else Charsets.UTF_8
+}
+
+internal fun extractWordsFromFileAndMerge(filePath: Path, sentenceEndRule: SentenceEndRule, toIgnoreWords: Set<String>, preProcessor: (Reader)->Reader = { it }): List<CardWordEntry> =
+    mergeDuplicates(extractWordsFromFile(filePath, sentenceEndRule, toIgnoreWords, preProcessor))
+
+internal fun extractWordsFromSrtFileAndMerge(filePath: Path, toIgnoreWords: Set<String>): List<CardWordEntry> =
+    extractWordsFromFileAndMerge(filePath, SentenceEndRule.ByEndingDot, toIgnoreWords) { StringReader(loadOnlyTextFromSrt(it)) }
+
+
+
+internal fun extractWordsFromClipboard(clipboard: Clipboard, sentenceEndRule: SentenceEndRule, ignoredWords: Set<String>): List<CardWordEntry> {
 
     val content = clipboard.getContent(DataFormat.PLAIN_TEXT)
 
@@ -291,7 +316,7 @@ internal fun loadWordsFromAllExistentDictionaries(baseWordsFilename: String?): L
 }
 
 
-fun removeWordsFromOtherSetsFromCurrentWords(currentWords: MutableList<CardWordEntry>, currentWordsFile: Path?) {
+fun removeWordsFromOtherSetsFromCurrentWords(currentWords: MutableList<CardWordEntry>, currentWordsFile: Path?): List<CardWordEntry> {
 
     val toRemove = loadWordsFromAllExistentDictionaries(currentWordsFile?.baseWordsFilename)
     val toRemoveAsSet = toRemove.asSequence()
@@ -303,4 +328,6 @@ fun removeWordsFromOtherSetsFromCurrentWords(currentWords: MutableList<CardWordE
 
     // perform removing as ONE operation to minimize change events
     currentWords.removeAll(currentToRemove)
+
+    return currentToRemove
 }

@@ -520,7 +520,7 @@ private val wordDelimiters = arrayOf(
 
 private val wordCharDelimiters = charArrayOf(
     ' ', '\n', '\r', '\t',
-    ',', ';', ':', '!', '?',
+    ',', ';', ':', '!', '?', '…',
     // '.',
     // '\'',
     '=', '—',

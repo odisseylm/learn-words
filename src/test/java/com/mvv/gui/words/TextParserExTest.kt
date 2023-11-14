@@ -574,7 +574,7 @@ class TextParserExTest {
             wordEntry(".", 25, resultingSentence),
         )
 
-        val cards: List<CardWordEntry> = extractWordsFromText_New(text, SentenceEndRule.ByEndingDot, emptyList())
+        val cards: List<CardWordEntry> = extractWordsFromText_New(text, SentenceEndRule.ByEndingDot, emptySet())
 
         assertThat(cards.map { it.from })
             .containsExactly(

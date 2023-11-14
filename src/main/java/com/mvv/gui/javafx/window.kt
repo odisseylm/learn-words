@@ -1,6 +1,8 @@
 package com.mvv.gui.javafx
 
 import com.mvv.gui.initThemeAndStyles
+import com.mvv.gui.util.addOnceEventHandler
+import javafx.application.Platform
 import javafx.geometry.Point2D
 import javafx.geometry.Rectangle2D
 import javafx.scene.Node
@@ -10,10 +12,12 @@ import javafx.scene.control.PopupControl
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.MouseEvent
+import javafx.scene.layout.Region
+import javafx.scene.layout.Region.USE_COMPUTED_SIZE
 import javafx.stage.PopupWindow
 import javafx.stage.Stage
 import javafx.stage.Window
-
+import javafx.stage.WindowEvent
 
 
 fun addWindowMovingFeature(stage: Stage, hang: Node) {
@@ -163,6 +167,7 @@ var Stage.sceneRoot: Parent?
 fun PopupWindow.show(parentWindow: Window, pos: Point2D) = this.show(parentWindow, pos.x, pos.y)
 fun Stage.show(parentWindow: Window, pos: Point2D) = this.show(parentWindow, pos.x, pos.y)
 
+@Suppress("UnusedReceiverParameter")
 val PopupWindow.isResizable: Boolean get() = false
 
 
@@ -182,4 +187,87 @@ fun Stage.show(parentWindow: Window, x: Double, y: Double, asPopup: Boolean = tr
     this.x = x
     this.y = y
     this.show()
+}
+
+
+enum class RelocationPolicy { AlwaysRecalculate, CalculateOnlyOnce }
+
+
+fun Stage.showPopup(parentWindow: Window, relocationPolicy: RelocationPolicy, getPos: ()-> Point2D) =
+    this.showPopupImpl(
+        relocationPolicy,
+        getPos,
+        { this.show() },
+        { val pos = getPos(); this.show(parentWindow, pos.x, pos.y, true ) },
+        { this.isResizable })
+
+fun PopupControl.showPopup(parentWindow: Window, relocationPolicy: RelocationPolicy, getPos: ()-> Point2D) =
+    this.showPopupImpl(
+        relocationPolicy,
+        getPos,
+        { this.show(parentWindow) },
+        { val pos = getPos(); this.show(parentWindow, pos.x, pos.y) },
+        { this.isResizable })
+
+private fun Window.showPopupImpl(
+    relocationPolicy: RelocationPolicy,
+    getPos: ()-> Point2D,
+    setVisibleAgain: ()->Unit, // if it was already created and was already shown
+    showInitially: ()->Unit,
+    isResizable: ()->Boolean,
+) {
+
+    if (relocationPolicy === RelocationPolicy.CalculateOnlyOnce) {
+        // for non-popup impl
+        if (isResizable() && (this.width > 100 || this.height > 20)) {
+
+            val prevW = this.width
+            val prevH = this.height
+
+            setVisibleAgain() // Stage.show() sets size to pref size
+
+            // let's keep old bounds (or otherwise, lets change x/y too)
+            this.width = prevW; this.height = prevH
+            return
+        }
+
+        if (this.width > 0 || this.height > 0) {
+
+            showInitially()
+            return
+        }
+    }
+    else if (relocationPolicy === RelocationPolicy.AlwaysRecalculate) {
+
+        sizeToScene()
+
+        showInitially()
+
+        // to surely use proper position after deferred doing (unfortunately) layout
+        Platform.runLater(showInitially)
+        return
+    }
+
+    val content = this.scene.root as Region
+
+    // I do not know how to calculate desired x/y at this time, because
+    // I do not know how to calculate 'calculated' pref size
+    // and sizeToScene() does not work till window is showing (in contrast with Swing Window.pack() which works before real showing window)
+    content.prefWidth  = 1.0
+    content.prefHeight = 1.0
+
+    addOnceEventHandler(WindowEvent.WINDOW_SHOWN) {
+
+        val useComputedSize = USE_COMPUTED_SIZE
+        content.prefWidth  = useComputedSize
+        content.prefHeight = useComputedSize
+
+        sizeToScene()
+
+        val pos = getPos()
+        x = pos.x
+        y = pos.y
+    }
+
+    showInitially()
 }

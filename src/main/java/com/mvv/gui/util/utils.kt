@@ -1,9 +1,9 @@
 package com.mvv.gui.util
 
 import javafx.application.Platform
+import java.util.*
 import java.util.Collections.singletonList
-import java.util.EnumSet
-import java.util.TimerTask
+import kotlin.collections.ArrayList
 
 
 private val log = mu.KotlinLogging.logger {}
@@ -63,6 +63,8 @@ inline fun <T> doTry(block: ()->T, altValue: T): T = try { block() } catch (_: E
 
 
 fun <E: Enum<E>> enumSetOf(v: E): EnumSet<E> = EnumSet.of(v)
+fun <E: Enum<E>> enumSetOf(v1: E, v2: E): EnumSet<E> = EnumSet.of(v1, v2)
+fun <E: Enum<E>> enumSetOf(v1: E, v2: E, v3: E): EnumSet<E> = EnumSet.of(v1, v2, v3)
 
 /*
 inline fun Int.thenCompare(nextCompare: ()->Int): Int = if (this != 0) this else nextCompare()
@@ -72,6 +74,11 @@ inline fun <T, F: Comparable<F>> Int.thenCompare(o1: T, o2: T, field: (T)->F): I
     if (this != 0) this else field(o1).compareTo(field(o2))
 */
 
+fun Iterable<String>.toIgnoreCaseSet(): NavigableSet<String> {
+    val set = TreeSet(String.CASE_INSENSITIVE_ORDER)
+    set.addAll(this)
+    return set
+}
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun areAllNull(v1: Any?): Boolean = (v1 == null)
