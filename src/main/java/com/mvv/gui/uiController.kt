@@ -22,6 +22,7 @@ import javafx.scene.control.*
 import javafx.scene.input.*
 import javafx.stage.FileChooser
 import javafx.stage.Stage
+import javafx.stage.Window
 import javafx.stage.WindowEvent
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.commons.text.StringEscapeUtils.escapeHtml4
@@ -78,8 +79,6 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
                 .firstWord.removeSuffixesRepeatably("!", ".", "?", "…").toString()
     }
 
-    // TODO: move somewhere and use also other kinds of white spaces
-    private val String.firstWord: String get() = this.substringBefore(' ', this)
 
     private fun rebuildPrefixFinder() {
         // only words without phrases
@@ -141,15 +140,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, card ->
             Platform.runLater { if (toPlayWordOnSelect) playSelectedWord() }
-            Platform.runLater {
-
-                val wordOrPhrase = card?.from
-                val foundInOtherSets = wordOrPhrase?.let { allWordCardSetsManager.findBy(wordOrPhrase) } ?: emptyList()
-                if (wordOrPhrase != null && foundInOtherSets.isNotEmpty())
-                    showThisWordsInLightOtherSetsPopup(wordOrPhrase, foundInOtherSets)
-                else
-                    lightOtherCardsViewPopup.hide()
-            }
+            Platform.runLater { showWarningAboutSelectedCardExistInOtherSet() }
         }
 
         currentWordsList.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
@@ -185,11 +176,23 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             if (window is Stage)
                 window.iconifiedProperty().addListener { _, _, minimized ->
                     if (minimized) hidePopups() }
+
+            window.focusedProperty().addListener { _,_,_ -> Platform.runLater { hidePopups() } }
         }
 
         installNavigationHistoryUpdates(currentWordsList, navigationHistory)
 
         loadExistentWords()
+    }
+
+    private fun showWarningAboutSelectedCardExistInOtherSet() {
+        val selectedWordOrPhrase = currentWordsList.singleSelection?.from ?: ""
+
+        val foundInOtherSets = allWordCardSetsManager.findBy(selectedWordOrPhrase)
+        if (foundInOtherSets.isNotEmpty())
+            showThisWordsInLightOtherSetsPopup(selectedWordOrPhrase, foundInOtherSets)
+        else
+            lightOtherCardsViewPopup.hide()
     }
 
     private var toPlayWordOnSelect: Boolean
@@ -222,14 +225,22 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         rebuildPrefixFinder()
     }
 
-    private fun hidePopups() {
-        lightOtherCardsViewPopup.hide()
-        otherCardsViewPopup.hide()
+    // timeout is needed because JavaFX window takes focus with some delay
+    private fun hidePopups() = runLaterWithDelay(250) { hidePopupsImpl() }
+
+    private fun hidePopupsImpl() {
+        val isOneOfAppWindowActive = pane.scene.window.isActive || otherCardsViewPopup.isActive || lightOtherCardsViewPopup.isActive
+
+        if (!isOneOfAppWindowActive) {
+            lightOtherCardsViewPopup.hide()
+            otherCardsViewPopup.hide()
+        }
     }
 
     private fun showThisWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
         val mainWnd = pane.scene.window
 
+        lightOtherCardsViewPopup.hide()
         otherCardsViewPopup.show(mainWnd, wordOrPhrase, cards) {
             val xOffset = 20.0;  val yOffset = 50.0
             Point2D(
@@ -843,7 +854,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         // We can use just simple inversion logic.
         val addOrRemoveAction = if (someCardsAreNotAddedToPredefSet) UpdateSet.Set else UpdateSet.Remove
 
-        currentWordsSelection.selectedItems.forEach {
+        cards.forEach {
             updateSetProperty(it.predefinedSetsProperty, set, addOrRemoveAction) }
     }
 
@@ -1056,13 +1067,13 @@ internal fun String.findWordToHighlight(tryToHighlightWord: String): String {
         { it.removeSuffix(" to").removeSuffix("y") },
         { it.removeSuffix(" to").removeSuffix("ly") },
 
-        { it.removePrefix("to ").firstWord() },
-        { it.removePrefix("to be ").firstWord() },
-        { it.removePrefix("to ").firstWord().removeSuffix("e") },
-        { it.removePrefix("to ").firstWord().removeSuffix("le") },
-        { it.removePrefix("to ").firstWord().removeSuffix("y") },
-        { it.removePrefix("to ").firstWord().removeSuffix("ly") },
-        { it.removePrefix("to be ").firstWord().removeSuffix("s") },
+        { it.removePrefix("to ").firstWord },
+        { it.removePrefix("to be ").firstWord },
+        { it.removePrefix("to ").firstWord.removeSuffix("e") },
+        { it.removePrefix("to ").firstWord.removeSuffix("le") },
+        { it.removePrefix("to ").firstWord.removeSuffix("y") },
+        { it.removePrefix("to ").firstWord.removeSuffix("ly") },
+        { it.removePrefix("to be ").firstWord.removeSuffix("s") },
     )
 
     return preparations.firstNotNullOfOrNull { prep ->
@@ -1071,7 +1082,7 @@ internal fun String.findWordToHighlight(tryToHighlightWord: String): String {
     } ?: word
 }
 
-private fun String.firstWord(): String {
+private val String.firstWord: String get() {
     val s = this.trim()
     val endIndex = s.indexOfOneOfChars(" \n\t")
     return if (endIndex == -1) s else s.substring(0, endIndex)
@@ -1154,6 +1165,9 @@ fun String.parseToCard(): CardWordEntry? {
     return CardWordEntry(from, to)
 }
 
+
+private val Window.isActive: Boolean get() =
+    this.isShowing && this.isFocused
 
 data class CellEditorState (
     val scrollLeft: Double,

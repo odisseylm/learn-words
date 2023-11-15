@@ -583,11 +583,6 @@ private fun addToTree(parentTreeNode: PrefixWordTreeNode, prefixTemplatePart: Se
         val firstWord = wordsSequence[0]
         val wordsCount = wordsSequence.size
 
-        if (firstWord == "allow")
-            Math.random()
-        if (firstWord == "a")
-            Math.random()
-
         if (wordsCount == 1 && context != null) {
             if (firstWord == "{prep-art-node}") {
                 parentTreeNode.addTreeNode(context.prepsAndArtsAsTree)

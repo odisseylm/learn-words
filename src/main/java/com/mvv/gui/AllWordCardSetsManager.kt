@@ -90,6 +90,8 @@ class AllWordCardSetsManager : AutoCloseable {
     // TODO: try to return read-only cards
     fun findBy(wordOrPhrase: String): List<SearchEntry> {
 
+        if (wordOrPhrase.isBlank()) return emptyList()
+
         val toSearch = wordOrPhrase.lowercase().trim()
 
         val byExactMatch = searchWordEntries[toSearch] ?: emptyList()

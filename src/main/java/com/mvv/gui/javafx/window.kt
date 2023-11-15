@@ -193,13 +193,17 @@ fun Stage.show(parentWindow: Window, x: Double, y: Double, asPopup: Boolean = tr
 enum class RelocationPolicy { AlwaysRecalculate, CalculateOnlyOnce }
 
 
-fun Stage.showPopup(parentWindow: Window, relocationPolicy: RelocationPolicy, getPos: ()-> Point2D) =
+fun Stage.showPopup(parentWindow: Window, relocationPolicy: RelocationPolicy, getPos: ()-> Point2D) {
+
+    if (this.isIconified) this.isIconified = false
+
     this.showPopupImpl(
         relocationPolicy,
         getPos,
         { this.show() },
-        { val pos = getPos(); this.show(parentWindow, pos.x, pos.y, true ) },
+        { val pos = getPos(); this.show(parentWindow, pos.x, pos.y, true) },
         { this.isResizable })
+}
 
 fun PopupControl.showPopup(parentWindow: Window, relocationPolicy: RelocationPolicy, getPos: ()-> Point2D) =
     this.showPopupImpl(
