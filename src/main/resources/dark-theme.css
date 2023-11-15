@@ -7,8 +7,13 @@
 */
 
 .root{
+    -fx-base: #2D2D30;
+    -fx-color: #2D2D30;
     -fx-background-color: #2D2D30;
     background-color: #2D2D30;
+
+    -fx-text-fill: #AFB1B3;
+    -fx-foreground-color: #AFB1B3;
 }
 
 

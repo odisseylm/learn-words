@@ -47,13 +47,6 @@ class OtherCardsViewPopup :
 
         this.sceneRoot = content
 
-        // temp
-        //val w: Any = this
-        //@Suppress("KotlinConstantConditions")
-        //if (w is javafx.stage.Stage) {
-        //    w.isResizable = true
-        //}
-
         sizeToScene()
 
         addWindowMovingFeature(this, titleBar)
@@ -110,12 +103,7 @@ private class OtherWordCardsTable(controller: LearnWordsController) : WordCardsT
 
 class LightOtherCardsViewPopup : PopupControl() {
     private val content = BorderPane().also {
-        // TODO: move styles to CSS
-        it.style = ("-fx-border-style: solid;" // " inside;"
-                + "-fx-border-width: 1;"
-                + "-fx-border-color: yellow;"
-                + "-fx-padding: 4 4 4 4;"
-                )
+        it.styleClass.add("otherCardsViewPopupContent")
     }
 
     private val textFlow = TextFlow()
@@ -123,10 +111,6 @@ class LightOtherCardsViewPopup : PopupControl() {
 
     init {
         this.sceneRoot = content
-
-        //content.maxWidth  = 500.0
-        //content.maxHeight = 200.0
-
         sizeToScene()
     }
 

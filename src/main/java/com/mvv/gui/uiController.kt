@@ -253,7 +253,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         val mainWnd = pane.scene.window
 
         lightOtherCardsViewPopup.show(mainWnd, wordOrPhrase, cards) {
-            val xOffset = 20.0;  val yOffset = 50.0
+            val xOffset = 20.0;  val yOffset = 80.0
             Point2D(
                 mainWnd.x + mainWnd.width - lightOtherCardsViewPopup.width - xOffset,
                 mainWnd.y + yOffset)

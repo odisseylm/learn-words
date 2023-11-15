@@ -208,3 +208,18 @@
 .cardDuplicatesContainer {
     -fx-padding: 2 4 4 4;
 }
+
+.otherCardsViewPopupContent {
+    -fx-border-style: solid;
+    -fx-border-width: 1;
+    -fx-border-color: -fx-foreground-color;
+    -fx-padding: 4 4 4 4;
+
+    /* Actually using shadow adds some kind of blinking.
+       If it disturb you, please remove/comment below lines.
+
+       See modena.css for predefined vars.
+     */
+    -fx-background-color: -fx-base;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 10, 0, 5, 5);
+}
