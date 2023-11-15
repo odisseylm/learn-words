@@ -41,11 +41,11 @@ class ToolBarController (val controller: LearnWordsController) {
 
         Label("  "),
 
-        newButton("Add all missed base words", "Add all possible missed base words.", buttonIcon("/icons/icons8-layers-16-with-plus.png")) {
+        newButton("Add all missed base words", "Add all possible missed base words", buttonIcon("/icons/icons8-layers-16-with-plus.png")) {
             controller.addAllBaseWordsInSet() },
-        newButton("No base word", "Ignore warning 'no base word in set'.", buttonIcon("/icons/icons8-layers-16-with-cross.png")) {
+        newButton("No base word", "Ignore warning 'no base word in set'", buttonIcon("/icons/icons8-layers-16-with-cross.png")) {
             controller.ignoreNoBaseWordInSet() },
-        newButton("Add transcriptions", "Add missed transcription.", buttonIcon("/icons/transcription-1.png")) {
+        newButton("Add transcriptions", "Add missed transcription", buttonIcon("/icons/transcription-1.png")) {
             controller.addTranscriptions() },
     )
 
@@ -88,13 +88,13 @@ class ToolBarControllerBig (val controller: LearnWordsController) {
             controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
 
         stub(),
-        new24xButton("Add base", "Add all possible missed base words.",
+        new24xButton("Add base", "Add all possible missed base words",
             button24xIcon("/icons/big/add-base-words-with-plus.png")) { controller.addAllBaseWordsInSet() },
-        new24xButton("No base", "Ignore warning 'no base word in set'.",
+        new24xButton("No base", "Ignore warning 'no base word in set'",
             button24xIcon("/icons/big/add-base-words-with-cross.png")) { controller.ignoreNoBaseWordInSet() },
 
         stub(),
-        new24xButton("Refresh", "Sort & Refresh'.",
+        new24xButton("Refresh", "Sort & Refresh",
             button24xIcon("/icons/big/iu_update_obj_24.png")) {
             controller.currentWordsList.sort(); controller.currentWordsList.refresh() },
 
