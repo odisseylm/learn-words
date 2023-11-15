@@ -76,16 +76,20 @@ fun showConfirmation(parent: Node, msg: String, title: String, vararg buttonType
 
 
 @Suppress("unused")
-fun showTextAreaPreviewDialog(parent: Node, title: String, textAreaContent: String, wrapText: Boolean = true) {
+fun showTextAreaPreviewDialog(parent: Node, title: String, textAreaContent: String, wrapText: Boolean = true,
+                              width: Double? = null, height: Double? = null) {
     val dialog = Dialog<Unit>()
     dialog.title = title
     val type = ButtonType("Ok", ButtonBar.ButtonData.OK_DONE)
 
     dialog.dialogPane.content = BorderPane(
-            TextArea(textAreaContent).also { it.isWrapText = wrapText }
+            TextArea(textAreaContent).also { it.isWrapText = wrapText; it.isEditable = false }
         )
         .also { it.padding = Insets(0.0, 4.0, 0.0, 4.0) }
     dialog.dialogPane.buttonTypes.add(type)
+
+    if (width != null)  dialog.width  = width
+    if (height != null) dialog.height = height
 
     dialog.isResizable = true
     initDialogParentAndModality(dialog, parent)

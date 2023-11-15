@@ -18,6 +18,7 @@ import javafx.scene.control.TableView
 class ContextMenuController (val controller: LearnWordsController) {
     val contextMenu = ContextMenu()
 
+    private val cloneMenuItem = newMenuItem("Clone") { controller.cloneWordCard() }
     private val mergeMenuItem = newMenuItem("Merge", buttonIcon("icons/merge.png")) { controller.mergeSelected() }
 
     private val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
@@ -37,13 +38,22 @@ class ContextMenuController (val controller: LearnWordsController) {
     private val showSourceSentenceMenuItem = newMenuItem("Show source sentences", buttonIcon("icons/receiptstext.png")) {
         this.selectedCard?.also { controller.showSourceSentences(it) } }
 
+    private val playWordMenuItem = newMenuItem("Play", buttonIcon("icons/ear.png")) { controller.playSelectedWord() }
+
+    private val translateByGoogleMenuItem = newMenuItem("Translate by Google", buttonIcon("icons/gt-02.png")) {
+        selectedCard?.from?.also { openGoogleTranslate(it) } }
+    private val translateByAbbyMenuItem = newMenuItem("Translate by Abby", buttonIcon("icons/abby-icon-01.png")) {
+        selectedCard?.from?.also { openAbbyLingvoTranslate(it) } }
+    private val showInitialTranslationMenuItem = newMenuItem("Initial translation") { controller.showInitialTranslationOfSelected() }
+
+
     private val currentWordsList: TableView<CardWordEntry> get() = controller.currentWordsList
 
     init { fillContextMenu() }
 
     private fun fillContextMenu() {
         val menuItems = listOf(
-            newMenuItem("Clone") { controller.cloneWordCard() },
+            cloneMenuItem,
 
             SeparatorMenuItem(),
             newMenuItem("Insert above", buttonIcon("/icons/insertAbove-01.png")) {
@@ -64,10 +74,9 @@ class ContextMenuController (val controller: LearnWordsController) {
             translateMenuItem,
 
             SeparatorMenuItem(),
-            newMenuItem("Translate by Google", buttonIcon("icons/gt-02.png")) {
-                selectedCard?.from?.also { openGoogleTranslate(it) } },
-            newMenuItem("Translate by Abby", buttonIcon("icons/abby-icon-01.png")) {
-                selectedCard?.from?.also { openAbbyLingvoTranslate(it) } },
+            translateByGoogleMenuItem,
+            translateByAbbyMenuItem,
+            showInitialTranslationMenuItem,
 
             SeparatorMenuItem(),
             ignoreNoBaseWordMenuItem,
@@ -75,7 +84,7 @@ class ContextMenuController (val controller: LearnWordsController) {
             addMissedBaseWordsMenuItem,
 
             SeparatorMenuItem(),
-            newMenuItem("Play", buttonIcon("icons/ear.png")) { controller.playSelectedWord() },
+            playWordMenuItem,
 
             SeparatorMenuItem(),
             newMenuItem("To 'Difficult' Set") { controller.addToOrRemoveFromPredefinedSet(PredefinedSet.DifficultSense)    },
@@ -97,12 +106,21 @@ class ContextMenuController (val controller: LearnWordsController) {
         contextMenu.items.forEach { it.isVisible = true }
 
         val selectedCards = this.selectedCards
+        val onlyOneCardIsSelected = selectedCards.size == 1
+
+        cloneMenuItem.isVisible = onlyOneCardIsSelected
         mergeMenuItem.isVisible = controller.isSelectionMergingAllowed()
 
         showSourceSentenceMenuItem.isVisible = selectedCard?.sourceSentences?.isNotBlank() ?: false
         updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
         updateAddMissedBaseWordsMenuItem(addMissedBaseWordsMenuItem)
         updateTranslateMenuItem(translateMenuItem)
+
+        playWordMenuItem.isVisible = onlyOneCardIsSelected
+
+        translateByGoogleMenuItem.isVisible = onlyOneCardIsSelected
+        translateByAbbyMenuItem.isVisible = onlyOneCardIsSelected
+        showInitialTranslationMenuItem.isVisible = onlyOneCardIsSelected
 
         ignoreTooManyExampleCardCandidatesMenuItem.isVisible = selectedCards.any {
             TooManyExampleNewCardCandidates in it.statuses }

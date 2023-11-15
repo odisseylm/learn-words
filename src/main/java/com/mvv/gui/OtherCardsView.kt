@@ -110,6 +110,7 @@ private class OtherWordCardsTable(controller: LearnWordsController) : WordCardsT
 
 class LightOtherCardsViewPopup : PopupControl() {
     private val content = BorderPane().also {
+        // TODO: move styles to CSS
         it.style = ("-fx-border-style: solid;" // " inside;"
                 + "-fx-border-width: 1;"
                 + "-fx-border-color: yellow;"

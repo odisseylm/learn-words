@@ -385,6 +385,14 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         currentWordsList.refresh()
     }
 
+    fun showInitialTranslationOfSelected() {
+        val card = currentWordsList.singleSelection ?: return
+
+        val translated = dictionary.translateWord(card.from.trim())
+        showTextAreaPreviewDialog(currentWordsList, "Translation of '${card.from}'",
+            translated.to + "\n" + translated.examples, wrapText = true, width = 400.0, height = 400.0)
+    }
+
     internal fun removeIgnoredFromCurrentWords() {
         val toRemove = currentWords.asSequence()
             .filter { word -> ignoredWordsSorted.contains(word.from) }
