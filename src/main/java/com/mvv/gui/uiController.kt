@@ -12,6 +12,7 @@ import javafx.application.Platform
 import javafx.beans.property.ReadOnlyProperty
 import javafx.beans.property.StringPropertyBase
 import javafx.beans.value.ChangeListener
+import javafx.beans.value.WritableValue
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
@@ -391,6 +392,29 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         val translated = dictionary.translateWord(card.from.trim())
         showTextAreaPreviewDialog(currentWordsList, "Translation of '${card.from}'",
             translated.to + "\n" + translated.examples, wrapText = true, width = 400.0, height = 400.0)
+    }
+
+    fun addInitialTranslationOfSelected() {
+        val card = currentWordsList.singleSelection ?: return
+
+        val translated = dictionary.translateWord(card.from.trim())
+
+        addToCardProp(card, translated) { it.toProperty }
+        addToCardProp(card, translated) { it.examplesProperty }
+        addToCardProp(card, translated) { it.transcriptionProperty }
+
+        reanalyzeOnlyWords(card)
+    }
+
+    private fun addToCardProp(card: CardWordEntry, addFromCard: CardWordEntry, prop: (CardWordEntry)->WritableValue<String>) {
+        val cardProp = prop(card)
+        val cardPropValue = cardProp.value
+        val valueToAdd    = prop(addFromCard).value
+
+        if (cardPropValue == valueToAdd) return
+
+        if (cardPropValue.isNotBlank()) cardProp.value += "\n\n"
+        cardProp.value += valueToAdd
     }
 
     internal fun removeIgnoredFromCurrentWords() {
