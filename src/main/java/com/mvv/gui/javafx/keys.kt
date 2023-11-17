@@ -1,5 +1,6 @@
 package com.mvv.gui.javafx
 
+import javafx.event.EventHandler
 import javafx.event.EventType
 import javafx.scene.Node
 import javafx.scene.Scene
@@ -25,7 +26,6 @@ fun <C: Node> addLocalKeyBindings(control: C, keyEventTypes: Set<EventType<KeyEv
     if (scene != null)
         addLocalKeyBindingsImpl(control, scene, keyEventTypes, keyBindings)
     else
-        // T O D O: would be nice to add protection from repeated call
         // We use some timeout to make sure that menu accelerators are already set up (to avoid repeating action's calls).
         control.sceneProperty().addListener { _,_, newScene ->
             if (newScene != null) runLaterWithDelay(250L) { addLocalKeyBindingsImpl(control, newScene, keyEventTypes, keyBindings) } }
@@ -37,12 +37,30 @@ private fun <C: Node> addLocalKeyBindingsImpl(control: C, scene: Scene, keyEvent
         val rootKeyCombinations: Set<KeyCombination> = scene.accelerators.keys
         val notRegisteredYetKeyBindings = keyBindings.filterNot { it.key in rootKeyCombinations }
 
-        control.addEventHandler(keyEventType) {
-            notRegisteredYetKeyBindings.forEach { (keyBinding, action) -> if (keyBinding.match(it)) action(control) }
+        notRegisteredYetKeyBindings.forEach { (keyBinding, action) ->
+            addKeyBindingEventHandler(control, keyEventType, keyBinding, action)
         }
     }
 
+private fun <C : Node> addKeyBindingEventHandler(control: C, keyEventType: EventType<KeyEvent>, keyBinding: KeyCombination, action: (C)->Unit) {
+    @Suppress("UNCHECKED_CAST")
+    val keyBindingsMap = control.properties.computeIfAbsent("com.mvv.localKeyBindings") {
+        HashMap<KeyBindingEventHandlerMapKey, EventHandler<KeyEvent>>() } as MutableMap<KeyBindingEventHandlerMapKey, EventHandler<KeyEvent>>
 
+    val key = KeyBindingEventHandlerMapKey(keyEventType, keyBinding)
+    if (!keyBindingsMap.containsKey(key)) {
+
+        val keyHandler: EventHandler<KeyEvent> = EventHandler { if (keyBinding.match(it)) action(control) }
+        keyBindingsMap[key] = keyHandler // using map (instead of set) allows removing handler later if/when it is needed
+        control.addEventHandler(keyEventType, keyHandler)
+    }
+}
+
+
+data class KeyBindingEventHandlerMapKey (
+    val eventType: EventType<KeyEvent>,
+    val keyBinding: KeyCombination, // KeyCombination has equals/hashCode
+)
 
 
 fun <C: Node> addGlobalKeyBinding(control: C, keyBinding: KeyCombination, action: (C)-> Unit) =
