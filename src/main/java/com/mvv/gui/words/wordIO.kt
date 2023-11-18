@@ -19,6 +19,11 @@ val ignoredWordsFile: Path = dictDirectory.resolve(ignoredWordsFilename)
 
 const val maxMemoCardWordCount = 300
 
+val CsvFormat.fileNameEnding: String get() = when (this) {
+    CsvFormat.Internal -> internalWordCardsFileExt
+    CsvFormat.MemoWord -> memoWordFileExt
+}
+
 val Path.isMemoWordFile: Boolean get() = this.name.lowercase().endsWith(memoWordFileExt.lowercase())
 val Path.isInternalCsvFormat: Boolean get() {
     val lowerFilename = this.name.lowercase()
@@ -72,7 +77,7 @@ fun saveWordCards(file: Path, format: CsvFormat, words: Iterable<CardWordEntry>)
 
 // -----------------------------------------------------------------------------
 
-fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Path, portionSize: Int) =
+fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Path, portionSize: Int, fileFormat: CsvFormat) =
     words
         .asSequence()
         .windowed(portionSize, portionSize, true)
@@ -81,6 +86,5 @@ fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Pa
             //val folder = file.parent.resolve("split")
             val numberSuffix = "%02d".format(i + 1)
 
-            //saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${internalWordCardsFileExt}"), CsvFormat.Internal, cardWordEntries)
-            saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${memoWordFileExt}"), CsvFormat.MemoWord, cardWordEntries)
+            saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${fileFormat.fileNameEnding}"), fileFormat, cardWordEntries)
         }

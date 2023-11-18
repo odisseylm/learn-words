@@ -768,11 +768,11 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         }
 
         splitFilesDir.createDirectories()
-        saveSplitWordCards(filePath, currentWords, splitFilesDir, settingsPane.splitWordCountPerFile)
+        saveSplitWordCards(filePath, currentWords, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
 
         // without phrases
         val onlyWords = words.filterNot { it.from.containsWhiteSpaceInMiddle() }
-        saveSplitWordCards(filePath.parent.resolve(filePath.baseWordsFilename + "_OnlyWords.csv"), onlyWords, splitFilesDir, settingsPane.splitWordCountPerFile)
+        saveSplitWordCards(filePath.parent.resolve(filePath.baseWordsFilename + "_OnlyWords.csv"), onlyWords, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
 
         resetDocumentIsDirty()
     }
@@ -802,21 +802,22 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         val df = SimpleDateFormat("yyyyMMdd-HHmmss")
         val splitFilesDir = filePath.parent.resolve("split-${df.format(Date())}")
 
-        val defaultSplitWordCountPerFile = settingsPane.splitWordCountPerFile
+        //val defaultSplitWordCountPerFile = settingsPane.splitWordCountPerFile
         val strSplitWordCountPerFile = showTextInputDialog(pane,
             "Current words will be split into several files and put into directory $splitFilesDir.\n" +
                     "Please, enter word count for every file.", "Splitting current words",
-            "$defaultSplitWordCountPerFile")
+            //"$defaultSplitWordCountPerFile")
+            "")
 
         strSplitWordCountPerFile.ifPresent {
             try {
                 val wordCountPerFile: Int = it.toInt()
-                require(wordCountPerFile >= 1) { "Word count should be positive value." }
+                require(wordCountPerFile >= 20) { "Word count should be positive value." }
 
-                require(wordCountPerFile <= maxMemoCardWordCount) {
-                    "Word count should be less than 300 since memo-word supports only $maxMemoCardWordCount sized word sets." }
+                //require(wordCountPerFile <= maxMemoCardWordCount) {
+                //    "Word count should be less than 300 since memo-word supports only $maxMemoCardWordCount sized word sets." }
 
-                saveSplitWordCards(filePath, words, splitFilesDir, wordCountPerFile)
+                saveSplitWordCards(filePath, words, splitFilesDir, wordCountPerFile, CsvFormat.Internal)
             }
             catch (ex: Exception) {
                 log.error(ex) { "Splitting words error: ${ex.message}" }
