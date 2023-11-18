@@ -441,9 +441,9 @@ private val verbs: Alt<Seq<String>> = sequenceOf(
 
     "add", "allow", "answer", "appear", "ask",
     "become", "begin", "believe", "break", "bring", "build", "buy",
-    "call", "carry", "change", "clean", "close",
+    "call", "carry", "cast", "catch", "change", "clean", "close",
     "come", "consider", "continue", "cook", "count", "cost", "cover", "create", "cut",
-    "dance", "decide", "die", "dream", "drink", "drive",
+    "dance", "decide", "die", "draw", "dream", "drink", "drive",
     "eat", "expect", "explain",
     "fall", "feel", "find", "finish", "flow", "fly", "follow", "forget",
     "gain", "get", "give", "grow", "guess",
@@ -462,7 +462,7 @@ private val verbs: Alt<Seq<String>> = sequenceOf(
     "tell", "think", "try to keep", "teach", "turn", "travel",
     "understand", "use",
     "visit",
-    "wait", "walk", "want", "watch", "win", "work", "write", "would",
+    "wait", "walk", "want","waste", "watch", "win", "work", "write", "would",
 ).splitToWords()
 
 

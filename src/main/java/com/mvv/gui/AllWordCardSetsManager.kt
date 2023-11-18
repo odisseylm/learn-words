@@ -102,7 +102,7 @@ class AllWordCardSetsManager : AutoCloseable {
         val matched3 = if (toSearch.startsWith("to "))
             searchWordEntries[toSearch.removePrefix("to ")] ?: emptyList() else emptyList()
 
-        return (byExactMatch + matched2 + matched3).ignoreEntriesFromFile(this.ignoredFile)
+        return (byExactMatch + matched2 + matched3).distinct().ignoreEntriesFromFile(this.ignoredFile)
     }
 
     private fun List<SearchEntry>.ignoreEntriesFromFile(ignoredFile: Path?): List<SearchEntry> =
@@ -146,7 +146,7 @@ class WordsData (
 }
 
 
-class SearchEntry (
+data class SearchEntry (
     val file: Path,
     val card: CardWordEntry,
 ) {

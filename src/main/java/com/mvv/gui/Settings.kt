@@ -71,7 +71,7 @@ private fun Properties.getInt(propName: String): Int? = this.getProperty(propNam
 
 private val recentFilesFile = userHome.resolve(".learn-words/recents.txt")
 private val recentDirectoriesFile = userHome.resolve(".learn-words/recentDirs.txt")
-private val recentCount = 5
+private const val recentCount = 10 // T O D O: move to config
 
 class RecentDocuments {
 
