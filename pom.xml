@@ -98,7 +98,7 @@
     <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
     <spotify.dockerfile-maven-plugin.version>1.4.13</spotify.dockerfile-maven-plugin.version>
     <groovy-maven-plugin.version>2.1.1</groovy-maven-plugin.version>
-    <javafx.version>20.0.2</javafx.version>
+    <javafx.version>22-ea+16</javafx.version>
   </properties>
 
 
