@@ -19,7 +19,7 @@ private val log = KotlinLogging.logger {}
 //
 internal var <S> TableView<S>.viewPortAbsoluteOffset: Double?
     get() = this.virtualFlow?.absoluteOffsetValue
-    set(value) { value?.let { this.setViewPortAbsoluteOffsetImpl(value) } }
+    set(value) { value?.let { this.setViewPortAbsoluteOffsetImpl(value, -1, null) } }
 
 internal val <S> TableView<S>.virtualFlow: VirtualFlow<*>? get() = lookupAll("VirtualFlow")
     .filterIsInstance<VirtualFlow<*>>()
@@ -40,7 +40,8 @@ enum class SetViewPortAbsoluteOffsetMode {
 
 
 internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
-    absoluteOffset: Double, nextAction: ()->Unit = { }, setMode: SetViewPortAbsoluteOffsetMode = ImmediatelyAndLater
+    absoluteOffset: Double, visibleFirstRowIndex: Int, visibleFirstRowItem: S?,
+    nextAction: ()->Unit = { }, setMode: SetViewPortAbsoluteOffsetMode = ImmediatelyAndLater
 ) {
 
     val virtualFlow = this.virtualFlow
@@ -49,11 +50,35 @@ internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
         return
     }
 
-    fixEstimatedContentHeight(absoluteOffset)
+    val selectedItem: S? = this.selectionModel.selectedItem
+
+    val contentHeightIsFixed = fixEstimatedContentHeight(absoluteOffset)
 
     fun setAdjustPosIml(pos: Double) {
         virtualFlow.absoluteOffsetValue = pos
-        virtualFlow.callAdjustPosition()
+
+        if (contentHeightIsFixed)
+            virtualFlow.callAdjustPosition()
+        else {
+            var scrolled = false
+
+            val newVisibleFirstRowItemIndex = if (visibleFirstRowItem == null) -1 else this.items.indexOf(visibleFirstRowItem)
+            if (newVisibleFirstRowItemIndex > 0) {
+                virtualFlow.scrollTo(newVisibleFirstRowItemIndex)
+                scrolled = true
+            }
+
+            if (visibleFirstRowIndex > 0 && !scrolled) {
+                virtualFlow.scrollTo(visibleFirstRowIndex)
+                scrolled = true
+            }
+
+            val selectedIndex = this.items.indexOf(selectedItem)
+            if (selectedIndex > 0 && !scrolled) {
+                virtualFlow.scrollTo(selectedIndex)
+                //scrolled = true
+            }
+        }
     }
 
     // !!! These IFs cannot be replaced with 'when' !!!
@@ -88,8 +113,11 @@ internal fun <S> TableView<S>.setViewPortAbsoluteOffsetImpl(
 // For that reason we need to recalculate it properly.
 // The simplest known for me solution is just scroll over all items/rows to recalculate them again.
 // T O D O: unsafe method with scrolling over all rows, we need to find better way
-private fun <S> TableView<S>.fixEstimatedContentHeight(desiredAbsoluteOffset: Double) {
+private fun <S> TableView<S>.fixEstimatedContentHeight(desiredAbsoluteOffset: Double): Boolean {
     //val safeItemsCopy = this.items.toList()
+
+    // Otherwise it take too much time
+    if (this.selectionModel.selectedIndex > 500) return false
 
     // It does not work
     //val virtualFlow = this.virtualFlow
@@ -105,6 +133,7 @@ private fun <S> TableView<S>.fixEstimatedContentHeight(desiredAbsoluteOffset: Do
     //safeItemsCopy.forEach { this.scrollTo(it) }
 
     sw.logInfo(log) // TODO: takes too much time if table is not small (1000 rows)
+    return true
 }
 
 
@@ -120,12 +149,15 @@ fun <R, S> TableView<S>.runWithScrollKeeping(action: (RestoreScrollPositionFunct
 fun <R, S> TableView<S>.runWithScrollKeeping(action: (RestoreScrollPositionFunction)->R, nextAction: ()->Unit): R {
 
     val prevViewPortOffset = this.viewPortAbsoluteOffset
+    val visibleFirstRowIndex = this.visibleRows.first
+    val visibleFirstRowItem = this.items.elementAtOrNull(this.visibleRows.first)
+
     val restoreScrollPositionFunction: RestoreScrollPositionFunction = {
         prevViewPortOffset?.let {
-            this.setViewPortAbsoluteOffsetImpl(prevViewPortOffset, { }, Immediately) } }
+            this.setViewPortAbsoluteOffsetImpl(prevViewPortOffset, visibleFirstRowIndex, visibleFirstRowItem, { }, Immediately) } }
 
     return try { action(restoreScrollPositionFunction) }
            finally { prevViewPortOffset?.let {
-               this.setViewPortAbsoluteOffsetImpl(prevViewPortOffset, nextAction, ImmediatelyAndLater) }
+               this.setViewPortAbsoluteOffsetImpl(prevViewPortOffset, visibleFirstRowIndex, visibleFirstRowItem, nextAction, ImmediatelyAndLater) }
            }
 }
