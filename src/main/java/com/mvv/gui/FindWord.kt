@@ -1,7 +1,7 @@
 package com.mvv.gui
 
-import com.mvv.gui.javafx.newButton
-import com.mvv.gui.javafx.selectItem
+import com.mvv.gui.javafx.*
+import com.mvv.gui.util.startsWithOneOf
 import com.mvv.gui.words.CardWordEntry
 import javafx.event.EventHandler
 import javafx.event.EventType
@@ -28,16 +28,41 @@ class FindWord (private val currentWords: TableView<CardWordEntry>)  {
 
     private fun findAndSelectWord() {
         val toFind = editor.text.trim().lowercase()
-        if (toFind.isNotEmpty()) {
-            val fittingCard = currentWords.items.find { it.from.startsWith(toFind, ignoreCase = true) }
-            if (fittingCard != null) {
-                currentWords.selectItem(fittingCard)
+        if (toFind.isBlank()) return
 
-                val selectEvent = SelectEvent(fittingCard, currentWords)
-                selectEventHandlers.forEach { it.handle(selectEvent) }
+        var searchFrom = 0
+
+        if (currentWords.hasSelection) {
+
+            val singleSelectedIndex = currentWords.singleSelectionIndex
+            if (singleSelectedIndex != -1 && matchedByPrefix(currentWords.items[singleSelectedIndex], toFind))
+                searchFrom = singleSelectedIndex + 1
+
+            if (searchFrom == 0) {
+                val firstSelectedIndex: Int = currentWords.selectionModel.selectedIndices.minOrNull() ?: -1
+                if (firstSelectedIndex != -1 && matchedByPrefix(currentWords.items[firstSelectedIndex], toFind))
+                    searchFrom = firstSelectedIndex + 1
             }
         }
+
+        val fittingCard = findByPrefix(toFind, searchFrom)
+        if (fittingCard != null) {
+            currentWords.selectItem(fittingCard)
+
+            val selectEvent = SelectEvent(fittingCard, currentWords)
+            selectEventHandlers.forEach { it.handle(selectEvent) }
+        }
     }
+
+    private fun findByPrefix(toFind: String, searchFrom: Int): CardWordEntry? {
+        val asPrefixes = toFindAsPrefixes(toFind)
+        return currentWords.items.asSequence()
+            .drop(searchFrom)
+            .find { it.from.startsWithOneOf(asPrefixes, ignoreCase = true) }
+    }
+    private fun matchedByPrefix(card: CardWordEntry, toFind: String): Boolean =
+        card.from.startsWithOneOf(toFindAsPrefixes(toFind), ignoreCase = true)
+    private fun toFindAsPrefixes(toFind: String) = listOf(toFind, "to $toFind", "to be $toFind")
 
     fun addSelectEventHandler(handler: EventHandler<SelectEvent<CardWordEntry>>) {
         selectEventHandlers.add(handler)

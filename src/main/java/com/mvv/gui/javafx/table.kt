@@ -21,9 +21,14 @@ val <S> TableView<S>.editingItem: S? get() {
 }
 
 
+val <T> TableView<T>.hasSelection: Boolean get() = this.selectionModel.selectedItems.isNotEmpty()
 val <T> TableView<T>.singleSelection: T? get() {
     val selected = this.selectionModel.selectedItems
     return if (selected.size == 1) selected.first() else null
+}
+val TableView<*>.singleSelectionIndex: Int get() {
+    val selected = this.selectionModel.selectedItems
+    return if (selected.size == 1) this.selectionModel.selectedIndex else -1
 }
 
 
