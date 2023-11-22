@@ -2,6 +2,7 @@ package com.mvv.gui.words
 
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.extractExamples
+import com.mvv.gui.util.filterNotEmpty
 import com.mvv.gui.util.readBytes
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
@@ -165,7 +166,7 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
 
 
     val card = CardWordEntry(
-        cards.merge(" ")  { it.from },
+        mergeFrom(cards.map { it.from }),
         cards.merge("\n") { it.to },
     )
 
@@ -182,6 +183,28 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
     return card
 }
 
+private fun mergeFrom(froms: List<String>): String {
+
+    val suffixes = listOf("s", "d", "'s", "es", "ed", "ing")
+
+    var merged = froms.map { it.lowercase() }.filterNotEmpty().distinct().joinToString(" ")
+
+    if (froms.size == 2) {
+        val first  = froms[0]
+        val second = froms[1]
+
+        if (first == second) return first
+
+        // T O D O: add support of 2nd/3rd form of irregular verbs
+
+        for (suffix in suffixes) {
+            if ((first + suffix).equals(second, ignoreCase = true)) merged = first
+            if (first.equals(second + suffix, ignoreCase = true)) merged = second
+        }
+    }
+
+    return merged
+}
 
 private data class WordInternal (
     val word: WordEntry,

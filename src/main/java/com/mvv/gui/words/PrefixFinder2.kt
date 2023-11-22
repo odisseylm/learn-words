@@ -303,7 +303,8 @@ internal class BuildContext (toIgnoreWords: Iterable<String>) {
 
     val artsSharedTree = buildSharedTree(articlesAndSimilar, artsSharedNodeName, this.toIgnoreWords)
     val prepositionsSharedTree = buildSharedTree(prepositions.map { it.words }, prepositionsSharedNodeName, this.toIgnoreWords)
-    val verbsSharedTree = buildSharedTree(verbs, verbsSharedNodeName, this.toIgnoreWords)
+    // TODO: add 2nd, 3rd, 's forms
+    val verbsSharedTree = buildSharedTree(commonVerbs, verbsSharedNodeName, this.toIgnoreWords)
     val pronounsSharedTree = buildSharedTree(pronouns, pronounsSharedNodeName, this.toIgnoreWords)
 }
 
@@ -344,7 +345,7 @@ private inline fun <T, L: MutableList<T>> L?.makeSureNotNullOr(initialValues: Li
     this ?: if (initialValues != null) ArrayList(initialValues) else  mutableListOf()
 
 
-private fun Sequence<String>.splitToWords(): Alt<Seq<String>> =
+fun Sequence<String>.splitToWords(): Alt<Seq<String>> =
     this.distinct()
         .map { it.split(' ').filterNotBlank() }
         .toList()
@@ -435,6 +436,7 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
 ).splitToWords()
 
 
+/*
 private val verbs: Alt<Seq<String>> = sequenceOf(
     "do", "does", "be", "is", "are", "have", "has", "have no", "has no", "get", "gets", "go", "gone", "went", "goes", "going",
     "can", "could", "may", "might", "must", "shall", "should",
@@ -464,6 +466,7 @@ private val verbs: Alt<Seq<String>> = sequenceOf(
     "visit",
     "wait", "walk", "want","waste", "watch", "win", "work", "write", "would",
 ).splitToWords()
+*/
 
 
 private val articlesAndSimilar: Alt<Seq<String>> = sequenceOf(

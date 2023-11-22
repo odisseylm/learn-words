@@ -60,4 +60,38 @@ class StringsTest {
 
         a.assertAll()
     }
+
+    @Test
+    @DisplayName("startsWithOneOf")
+    fun test_startsWithOneOf() {
+        val a = SoftAssertions()
+
+        a.assertThat("abc".startsWithOneOf("ab")).isTrue
+        a.assertThat("abc".startsWithOneOf("abc")).isTrue
+        a.assertThat("abc".startsWithOneOf("abc 1")).isFalse
+
+        a.assertThat("abc".startsWithOneOf("aB", ignoreCase = true)).isTrue
+        a.assertThat("abc".startsWithOneOf("aBc", ignoreCase = true)).isTrue
+        a.assertThat("abc".startsWithOneOf("aBc 1", ignoreCase = true)).isFalse
+
+        a.assertThat("abc".startsWithOneOf("aB", ignoreCase = false)).isFalse
+        a.assertThat("abc".startsWithOneOf("aBc", ignoreCase = false)).isFalse
+        a.assertThat("abc".startsWithOneOf("aBc 1", ignoreCase = false)).isFalse
+
+        // ------------------------------------------------------------------------------
+
+        a.assertThat("abc".startsWithOneOf(listOf("ab"))).isTrue
+        a.assertThat("abc".startsWithOneOf(listOf("abc"))).isTrue
+        a.assertThat("abc".startsWithOneOf(listOf("abc 1"))).isFalse
+
+        a.assertThat("abc".startsWithOneOf(listOf("aB"), ignoreCase = true)).isTrue
+        a.assertThat("abc".startsWithOneOf(listOf("aBc"), ignoreCase = true)).isTrue
+        a.assertThat("abc".startsWithOneOf(listOf("aBc 1"), ignoreCase = true)).isFalse
+
+        a.assertThat("abc".startsWithOneOf(listOf("aB"), ignoreCase = false)).isFalse
+        a.assertThat("abc".startsWithOneOf(listOf("aBc"), ignoreCase = false)).isFalse
+        a.assertThat("abc".startsWithOneOf(listOf("aBc 1"), ignoreCase = false)).isFalse
+
+        a.assertAll()
+    }
 }

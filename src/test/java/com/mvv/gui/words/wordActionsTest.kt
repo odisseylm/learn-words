@@ -3,6 +3,7 @@ package com.mvv.gui.words
 import com.mvv.gui.util.enumSetOf
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
@@ -199,7 +200,7 @@ class WordActionsTest {
 
         val a = SoftAssertions()
 
-        a.assertThat(merged.from).isEqualTo("angel Angeles")
+        a.assertThat(merged.from).isEqualTo("angel")
         a.assertThat(merged.to).isEqualTo(card1.to + "\n" + card2.to)
         a.assertThat(merged.transcription).isEqualTo("[transcr1] [transcr2]")
         a.assertThat(merged.examples).isEqualTo(card1.examples + "\n" + card2.examples)
@@ -210,10 +211,27 @@ class WordActionsTest {
         a.assertThat(merged.sourcePositions).isEqualTo(listOf(101, 102, 103, 104))
         a.assertThat(merged.sourceSentences).isEqualTo(card1.sourceSentences + "\n" + card2.sourceSentences)
 
+
+        fun cards(vararg froms: String) = froms.map { CardWordEntry(it, "") }
+
+       a.assertThat(mergeCards(cards("angel", "")).from).isEqualTo("angel")
+
+        a.assertThat(mergeCards(cards("angel", "angel")).from).isEqualTo("angel")
+
+        a.assertThat(mergeCards(cards("angel", "angels")).from).isEqualTo("angel")
+        a.assertThat(mergeCards(cards("angels", "angel")).from).isEqualTo("angel")
+
+        a.assertThat(mergeCards(cards("Angel", "angels")).from).isEqualTo("Angel")
+        a.assertThat(mergeCards(cards("Angels", "angel")).from).isEqualTo("angel")
+
+        a.assertThat(mergeCards(cards("eat", "eating")).from).isEqualTo("eat")
+        a.assertThat(mergeCards(cards("eating", "eat")).from).isEqualTo("eat")
+
         a.assertAll()
     }
 
     @Test
+    @Disabled("for manual debug")
     fun fromSrt() {
         val a = SoftAssertions()
 

@@ -8,6 +8,9 @@ fun <S: CharSequence> S.endsWithOneOf(vararg suffixes: String): Boolean = endsWi
 fun <S: CharSequence> S.startsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.startsWith(it) }
 fun <S: CharSequence> S.startsWithOneOf(vararg suffixes: String): Boolean = this.startsWithOneOf(suffixes.asIterable())
 
+fun <S: CharSequence> S.startsWithOneOf(suffixes: Iterable<String>, ignoreCase: Boolean): Boolean = suffixes.any { this.startsWith(it, ignoreCase) }
+fun <S: CharSequence> S.startsWithOneOf(vararg suffixes: String, ignoreCase: Boolean): Boolean = this.startsWithOneOf(suffixes.asIterable(), ignoreCase)
+
 fun <S: CharSequence> S.containsOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.contains(it) }
 fun <S: CharSequence> S.containsOneOf(vararg suffixes: String): Boolean = this.containsOneOf(suffixes.asIterable())
 
