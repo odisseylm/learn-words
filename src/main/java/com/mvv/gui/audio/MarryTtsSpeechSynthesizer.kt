@@ -1,6 +1,8 @@
 package com.mvv.gui.audio
 
+import com.mvv.gui.util.doTry
 import com.mvv.gui.util.downloadUrl
+import com.mvv.gui.util.downloadUrlText
 import java.net.URLEncoder
 
 
@@ -135,7 +137,8 @@ enum class PredefinedMarryTtsSpeechConfig (val config: MarryTtsSpeechConfig) {
     //    locale = "en_GB",
     //)),
 
-    // Bad voice
+    // ?Bad?Good? voice
+    // Good with `docker run -it -p 59125:59125 synesthesiam/marytts:5.2`
     cmu_rms_hsmm_en_US_male_hmm (MarryTtsSpeechConfig(
         voice = "cmu-rms-hsmm",
         voice_Selections = "cmu-rms-hsmm en_US male hmm",
@@ -155,6 +158,11 @@ enum class PredefinedMarryTtsSpeechConfig (val config: MarryTtsSpeechConfig) {
         voice_Selections = "ac-irina-hsmm ru female hmm",
         locale = "ru",
     )),
+}
+
+
+class MarryTtsVoiceManager {
+    val predefinedVoices: List<MarryTtsSpeechConfig> get() = PredefinedMarryTtsSpeechConfig.values().map { it.config }
 }
 
 
@@ -273,4 +281,10 @@ class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val a
 
         audioPlayer.play(AudioSource(soundBytes))
     }
+
+    //override fun interrupt() T O D O: implement
+
+    override val isAvailable: Boolean get() =
+            doTry({ downloadUrlText("http://localhost:59125/documentation.html") }, "")
+                .contains("MARY")
 }

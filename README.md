@@ -74,6 +74,7 @@ Speech synthesizers
  - MaryTTS
    - https://github.com/marytts/marytts
    - http://mary.dfki.de/
+   - To test/play just open http://localhost:59125/
    - Configuration
      - https://projectnaomi.com/plugins/ttss/marytts/
    - Forks

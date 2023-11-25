@@ -1,12 +1,14 @@
 package com.mvv.gui.util
 
 import org.apache.commons.io.FileUtils
+import java.io.IOException
 import java.net.URI
 import java.net.URL
 import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.charset.Charset
 import java.nio.file.Files
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -38,10 +40,47 @@ fun downloadUrl_old(url: URL, timeout: Long): ByteArray =
         .use { it.readAllBytes() }
 */
 
-fun downloadUrl(url: URL, settings: NetSettings = defaultNetSettings): ByteArray {
+fun downloadUrl(url: URL, settings: NetSettings = defaultNetSettings): ByteArray =
+    downloadUrlContent(url, settings).bytes
 
-    if (url.protocol == "file")
-        return Files.readAllBytes(FileUtils.toFile(url).toPath())
+
+fun downloadUrlText(url: String, settings: NetSettings = defaultNetSettings): String =
+    downloadUrlText(URL(url), settings)
+fun downloadUrlText(url: URI, settings: NetSettings = defaultNetSettings): String =
+    downloadUrlText(url.toURL(), settings)
+fun downloadUrlText(url: URL, settings: NetSettings = defaultNetSettings): String {
+
+    val content = downloadUrlContent(url, settings)
+    val contentTypeStr: String = (content.headers["Content-Type"] ?: content.headers["content-type"])
+        ?.first()?.lowercase()
+        ?: throw IOException("No Content-Type header.")
+
+    if (!contentTypeStr.startsWith("text/")) throw IOException("Content is not text (content type is [$contentTypeStr]).")
+
+    val contentCharSet = contentTypeStr.substringAfter("charset=", "UTF-8").trim()
+
+    return String(content.bytes, Charset.forName(contentCharSet))
+}
+
+
+
+class Content (
+    val bytes: ByteArray,
+    val headers: Map<String, List<String>>,
+)
+
+fun downloadUrlContent(url: URL, settings: NetSettings = defaultNetSettings): Content {
+
+    if (url.protocol == "file") {
+        val ext = url.file.substringAfter(".", "").lowercase()
+        val headers: Map<String, List<String>> = when (ext) {
+            "txt" -> mapOf("Content-Type" to listOf("text/plain"))
+            "htm", "html" -> mapOf("Content-Type" to listOf("text/html"))
+            else -> emptyMap()
+        }
+
+        return Content(Files.readAllBytes(FileUtils.toFile(url).toPath()), headers)
+    }
 
     val request: HttpRequest = HttpRequest.newBuilder()
         .uri(url.toURI())
@@ -60,7 +99,7 @@ fun downloadUrl(url: URL, settings: NetSettings = defaultNetSettings): ByteArray
         .build()
         .send(request, HttpResponse.BodyHandlers.ofByteArray())
 
-    return httpResponse.body()
+    return Content(httpResponse.body(), httpResponse.headers().map())
 }
 
 fun urlEncode(text: String): String = URLEncoder.encode(text, Charsets.UTF_8)

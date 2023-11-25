@@ -3,6 +3,7 @@ package com.mvv.gui.util
 import javafx.application.Platform
 import java.util.*
 import java.util.Collections.singletonList
+import kotlin.Comparator
 import kotlin.collections.ArrayList
 
 
@@ -143,4 +144,11 @@ inline fun <T, L: List<T>> L.subList(fromIndex: Int): List<T> = this.subList(fro
 //inline fun <T, L: MutableList<T>> L.mutableSubList(fromIndex: Int): MutableList<T> = this.subList(fromIndex, this.size)
 
 
+fun <T> treeSet(comparator: Comparator<T>, vararg items: T): TreeSet<T> {
+    val set = TreeSet<T>(comparator)
+    set.addAll(items.asIterable())
+    return set
+}
 
+fun treeStringCaseInsensitiveSet(vararg items: String): TreeSet<String> =
+    treeSet(String.CASE_INSENSITIVE_ORDER, *items)
