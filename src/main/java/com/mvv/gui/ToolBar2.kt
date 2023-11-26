@@ -10,6 +10,7 @@ class ToolBar2 (controller: LearnWordsController) : ToolBar() {
 
     val nextPrevWarningWord = NextPrevWarningWord(controller.currentWordsList)
     private val findWord = FindWord(controller.currentWordsList)
+    private val findWordInOtherSets = FindWordInOtherSets(controller)
     private val navigation = NavigationHistoryPane(controller.currentWordsList, controller.navigationHistory, ToolBarButtonType.Small)
 
     init {
@@ -20,6 +21,8 @@ class ToolBar2 (controller: LearnWordsController) : ToolBar() {
             findWord.pane,
             stub(),
             navigation,
+            stub(),
+            findWordInOtherSets.pane,
         )
 
         findWord.addSelectEventHandler { controller.navigationHistory.visited(it.item) }

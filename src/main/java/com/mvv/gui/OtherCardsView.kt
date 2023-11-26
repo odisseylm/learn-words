@@ -25,7 +25,7 @@ class OtherCardsViewPopup :
     private val controller = LearnWordsController(isReadOnly = true) // TODO: use light version without modification logic
     private val cardsTable = OtherWordCardsTable(controller).also { it.id = "currentWords" }
 
-    private val wordLabel = Label().also { it.styleClass.add("cardDuplicatesTitle") }
+    private val captionLabel = Label().also { it.styleClass.add("cardDuplicatesTitle") }
     private val content = BorderPane(cardsTable).also { it.styleClass.add("cardDuplicatesContainer") }
     private val titleBar: Node
 
@@ -36,7 +36,7 @@ class OtherCardsViewPopup :
             .also { it.style = " -fx-padding: 0; -fx-background-color: transparent; -fx-border-insets: 0; -fx-border-width: 0; " }
 
         titleBar = BorderPane().also { title ->
-            title.left  = wordLabel
+            title.left  = captionLabel
             title.right = closeButton
         }
 
@@ -57,14 +57,14 @@ class OtherCardsViewPopup :
         get() = cardsTable.items
         set(value) { cardsTable.items.setAll(value) }
 
-    var word: String
-        get() = wordLabel.properties["word"] as String? ?: ""
-        set(value) { wordLabel.properties["word"] = value; wordLabel.text = "Word '$value' already exists in other sets" }
+    var caption: String
+        get() = captionLabel.text
+        set(value) { captionLabel.text = value }
 
-    fun show(parentWindow: Window, wordOrPhrase: String, cards: List<SearchEntry>, getPos: ()-> Point2D) {
+    fun show(parentWindow: Window, title: String, cards: List<SearchEntry>, getPos: ()-> Point2D) {
 
-        this.word  = wordOrPhrase
-        this.cards = cards.map { it.card }
+        this.caption = title
+        this.cards   = cards.map { it.card }
 
         this.showPopup(parentWindow, RelocationPolicy.CalculateOnlyOnce, getPos)
     }

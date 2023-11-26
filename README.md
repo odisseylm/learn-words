@@ -203,6 +203,8 @@ Speech synthesizers
    - `say "hello"`
  - ?? Verbify-TTS https://github.com/MattePalte/Verbify-TTS
    - https://github.com/TensorSpeech
+ - huggingface
+   - 
 
 
 

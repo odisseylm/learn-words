@@ -1,6 +1,7 @@
 package com.mvv.gui
 
 import com.mvv.gui.util.startStopWatch
+import com.mvv.gui.util.startsWithOneOf
 import com.mvv.gui.util.timerTask
 import com.mvv.gui.words.*
 import java.nio.file.Files
@@ -12,6 +13,14 @@ import kotlin.io.path.name
 
 
 private val log = mu.KotlinLogging.logger {}
+
+
+enum class MatchMode {
+    Exact,
+    ByPrefix,
+    Contains,
+    //ByMask,
+}
 
 
 class AllWordCardSetsManager : AutoCloseable {
@@ -88,21 +97,68 @@ class AllWordCardSetsManager : AutoCloseable {
     }
 
     // TODO: try to return read-only cards
-    fun findBy(wordOrPhrase: String): List<SearchEntry> {
+    fun findBy(wordOrPhrase: String, matchMode: MatchMode): List<SearchEntry> {
 
         if (wordOrPhrase.isBlank()) return emptyList()
 
         val toSearch = wordOrPhrase.lowercase().trim()
 
-        val byExactMatch = searchWordEntries[toSearch] ?: emptyList()
+        return when (matchMode) {
+            MatchMode.Exact    -> findByExactMatch(toSearch)
+            MatchMode.ByPrefix -> findByPrefix(toSearch)
+            MatchMode.Contains -> findByContains(toSearch)
+        }
+    }
+
+    private fun findByExactMatch(toSearch: String): List<SearchEntry> {
+
+        // to keep the same ref for all searches
+        val searchWordEntriesRef = searchWordEntries
+
+        val byExactMatch = searchWordEntriesRef[toSearch] ?: emptyList()
         if (byExactMatch.size >= 5) return byExactMatch.ignoreEntriesFromFile(this.ignoredFile)
 
         val matched2 = if (toSearch.startsWith("to be "))
-            searchWordEntries[toSearch.removePrefix("to be ")] ?: emptyList() else emptyList()
+            searchWordEntriesRef[toSearch.removePrefix("to be ")] ?: emptyList() else emptyList()
         val matched3 = if (toSearch.startsWith("to "))
-            searchWordEntries[toSearch.removePrefix("to ")] ?: emptyList() else emptyList()
+            searchWordEntriesRef[toSearch.removePrefix("to ")] ?: emptyList() else emptyList()
 
         return (byExactMatch + matched2 + matched3).distinct().ignoreEntriesFromFile(this.ignoredFile)
+    }
+
+    private fun findByPrefix(wordOrPhrase: String): List<SearchEntry> {
+
+        // Actually it is needed only for possible verbs, and we can avoid it (for some cases) when we sure it is not verb.
+        val toSearchPrefix = if (wordOrPhrase.startsWith("to ")) listOf(wordOrPhrase) else listOf(wordOrPhrase, "to $wordOrPhrase", "to be $wordOrPhrase")
+
+        // to keep the same ref for all searches
+        val searchWordEntriesRef = searchWordEntries
+
+        val matchedKeys = searchWordEntriesRef.keys
+            .filter { it.startsWithOneOf(toSearchPrefix) }
+
+        val found: List<SearchEntry> = matchedKeys.map { searchWordEntriesRef[it] }
+            .filterNotNull()
+            .flatten()
+            .distinct()
+
+        return found.ignoreEntriesFromFile(this.ignoredFile)
+    }
+
+    private fun findByContains(wordOrPhrase: String): List<SearchEntry> {
+
+        // to keep the same ref for all searches
+        val searchWordEntriesRef = searchWordEntries
+
+        val matchedKeys = searchWordEntriesRef.keys
+            .filter { keyAsWord -> keyAsWord.contains(wordOrPhrase) }
+
+        val found: List<SearchEntry> = matchedKeys
+            .mapNotNull { searchWordEntriesRef[it] }
+            .flatten()
+            .distinct()
+
+        return found.ignoreEntriesFromFile(this.ignoredFile)
     }
 
     private fun List<SearchEntry>.ignoreEntriesFromFile(ignoredFile: Path?): List<SearchEntry> =

@@ -67,10 +67,11 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     private val toolBar2 = ToolBar2(this).also {
         it.nextPrevWarningWord.addSelectedWarningsChangeListener { _, _, _ -> recalculateWarnedWordsCount() } }
 
-    private val allWordCardSetsManager = AllWordCardSetsManager()
+    internal val allWordCardSetsManager = AllWordCardSetsManager()
     // we have to use lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
     private val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
     private val lightOtherCardsViewPopup: LightOtherCardsViewPopup by lazy { LightOtherCardsViewPopup() }
+    private val foundCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
 
     @Volatile
     private var prefixFinder = PrefixFinder(emptyList())
@@ -189,7 +190,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     private fun showWarningAboutSelectedCardExistInOtherSet() {
         val selectedWordOrPhrase = currentWordsList.singleSelection?.from ?: ""
 
-        val foundInOtherSets = allWordCardSetsManager.findBy(selectedWordOrPhrase)
+        val foundInOtherSets = allWordCardSetsManager.findBy(selectedWordOrPhrase, MatchMode.Exact)
         if (foundInOtherSets.isNotEmpty())
             showThisWordsInLightOtherSetsPopup(selectedWordOrPhrase, foundInOtherSets)
         else
@@ -218,7 +219,8 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
     private fun onCardFromEdited(wordOrPhrase: String) {
         if (settingsPane.warnAboutDuplicatesInOtherSets) {
-            val foundInOtherSets = allWordCardSetsManager.findBy(wordOrPhrase)
+            // TODO: remove ending 'something', 'smt', so on to avoid duplicates with and without smt, smb, etc.
+            val foundInOtherSets = allWordCardSetsManager.findBy(wordOrPhrase, MatchMode.Exact)
             if (foundInOtherSets.isNotEmpty())
                 showThisWordsInOtherSetsPopup(wordOrPhrase, foundInOtherSets)
         }
@@ -242,11 +244,22 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         val mainWnd = pane.scene.window
 
         lightOtherCardsViewPopup.hide()
-        otherCardsViewPopup.show(mainWnd, wordOrPhrase, cards) {
+        otherCardsViewPopup.show(mainWnd, "Word '$wordOrPhrase' already exists in other sets", cards) {
             val xOffset = 20.0;  val yOffset = 50.0
             Point2D(
                 mainWnd.x + mainWnd.width - otherCardsViewPopup.width - xOffset,
                 mainWnd.y + yOffset)
+        }
+    }
+
+    internal fun showSpecifiedWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
+        val mainWnd = pane.scene.window
+
+        foundCardsViewPopup.show(mainWnd, "'$wordOrPhrase' in other sets", cards) {
+            val xOffset = 20.0;  val yOffset = 50.0
+            Point2D(
+                mainWnd.x + mainWnd.width - foundCardsViewPopup.width - xOffset,
+                mainWnd.y + mainWnd.height - foundCardsViewPopup.height - yOffset)
         }
     }
 
