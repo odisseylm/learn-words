@@ -1,14 +1,14 @@
 package com.mvv.gui
 
-import com.mvv.gui.util.startStopWatch
-import com.mvv.gui.util.startsWithOneOf
-import com.mvv.gui.util.timerTask
+import com.mvv.gui.util.*
 import com.mvv.gui.words.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import kotlin.io.path.name
 
 
@@ -29,16 +29,22 @@ class AllWordCardSetsManager : AutoCloseable {
     var ignoredFile: Path? = null
 
     @Volatile
-    private var sets: Map<Path, WordsData> = mutableMapOf()
+    private var sets: Map<Path, WordsData> = mapOf()
     @Volatile
     private var searchWordEntries: Map<String, List<SearchEntry>> = mutableMapOf()
 
     private val updatePeriod = Duration.ofSeconds(30)
 
     private val updateTimer = Timer("AllSetsManager", true).also {
-        it.schedule(timerTask { reloadAllSets() }, updatePeriod.toMillis(), updatePeriod.toMillis()) }
+        it.schedule(timerTask { reloadAllSetsAsync() }, updatePeriod.toMillis(), updatePeriod.toMillis()) }
 
-    fun reloadAllSets() {
+    private val updatesExecutor: ExecutorService by lazy { Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "AllWordCardSetsManager updater").also { it.isDaemon = true }
+    } }
+
+    fun reloadAllSetsAsync() { updatesExecutor.submit { reloadAllSets() } }
+
+    private fun reloadAllSets() {
         val sw = startStopWatch()
 
         val ignoredFileBaseName = this.ignoredFile?.baseWordsFilename
@@ -62,8 +68,8 @@ class AllWordCardSetsManager : AutoCloseable {
             .toSet()
 
         log.debug { "Verification to reload all dictionaries" +
-                " removedSetFiles: $removedSetFiles, addedSetFiles: $addedSetFiles," +
-                " toUpdatedSetsFromFiles: $toUpdatedSetsFromFiles " }
+                " removedSetFiles: $removedSetFiles, addedSetFiles(${addedSetFiles.size}): $addedSetFiles," +
+                " toUpdatedSetsFromFiles(${toUpdatedSetsFromFiles.size}): $toUpdatedSetsFromFiles " }
 
         if (removedSetFiles.isEmpty() && addedSetFiles.isEmpty() && toUpdatedSetsFromFiles.isEmpty()) return
 
@@ -90,7 +96,7 @@ class AllWordCardSetsManager : AutoCloseable {
             }
             .groupBy({ it.first }, { it.second })
 
-        log.info { "All sets are updated (files: $toUpdatedSetsFromFiles) (took ${sw.time}ms)" }
+        log.info { "All sets are updated (files(${toUpdatedSetsFromFiles.size}): $toUpdatedSetsFromFiles) (took ${sw.time}ms)" }
 
         this.sets = currentExistentSets
         this.searchWordEntries = currentSearchWordEntries
@@ -137,8 +143,8 @@ class AllWordCardSetsManager : AutoCloseable {
         val matchedKeys = searchWordEntriesRef.keys
             .filter { it.startsWithOneOf(toSearchPrefix) }
 
-        val found: List<SearchEntry> = matchedKeys.map { searchWordEntriesRef[it] }
-            .filterNotNull()
+        val found: List<SearchEntry> = matchedKeys
+            .mapNotNull { searchWordEntriesRef[it] }
             .flatten()
             .distinct()
 
@@ -224,12 +230,181 @@ private fun CardWordEntry.getAllSearchableWords(): List<String> {
         allSearchWords.add(fromKey1.removePrefix("to "))
     }
 
-    val translations = this.to.splitToToTranslations()
+    val translations = this.to.lowercase()
+        .splitToToTranslations()
+        .flatMap { it.splitTranslation() }
         .flatMap { getFromSubWords(it.trim().lowercase()) }
         .distinct()
     translations.forEach { allSearchWords.add(it) }
 
     return allSearchWords
+}
+
+
+private val CharSequence.wordCount: Int get() = this.trim().split(" ", "\t", "\n").size
+
+private val CharSequence.isVerb: Boolean get() {
+    val fixed = this.trimEnd()
+    return fixed.endsWithOneOf("ть", "ться")
+}
+
+private val CharSequence.isOneWordVerb: Boolean get() = this.wordCount == 1 && this.isVerb
+
+private val CharSequence.isVerbEnd: Boolean get() {
+    val fixed = this.trimEnd()
+    return fixed.endsWith("ся")
+}
+
+private val CharSequence.isAdjective: Boolean get() {
+    val fixed = this.trimEnd()//.lowercase()
+    return fixed.isNotEmpty() && (fixed[fixed.length - 1] == 'й') &&
+           fixed.endsWithOneOf("ый", "ий", "ой", "ин", "ын", "ов", "ей", "от")
+}
+
+internal fun String.splitTranslation(): List<String> =
+    this.splitTranslationImpl(true)
+        .map { it.trim() }
+        .distinct()
+
+private fun String.splitTranslationImpl(processChildren: Boolean): List<String> {
+
+    val result = mutableListOf(this)
+
+    val splitByBrackets = this.splitByBrackets()
+
+    result.add(
+        splitByBrackets.filter { it.withoutBrackets && it.asTextOnly().isNotBlank() }.joinToString(" ") { it.asTextOnly().trim() }
+    )
+
+    if (splitByBrackets.size == 2) {
+
+        val part1 = splitByBrackets[0]
+        val part1Text = part1.asTextOnly()
+
+        val part2 = splitByBrackets[1]
+        val part2Text = part2.asTextOnly()
+
+        if (part1.withoutBrackets && part2.inBrackets
+            && part1Text.wordCount == 1 && part2Text.wordCount == 1
+            && ((part1Text.isVerb && part2Text.isVerb) || (part1Text.isAdjective && part2Text.isAdjective)))
+            result.add(part2Text.toString())
+
+        else if (part1.withoutBrackets && part2.inBrackets
+            && part1Text.isOneWordVerb && part2Text.isVerbEnd
+        ) {
+            result.add(part1Text.toString())
+            val part1Trimmed = part1Text.trim()
+            result.add("${part1Trimmed}${part2Text}")
+            result.add("${part1Trimmed}${part2.asSubContent()}") // with verb end in brackets
+        }
+    }
+
+    val splitByBrackets2 =  splitByBrackets.filter { it.asTextOnly().isNotBlank() }
+    if (splitByBrackets2.size == 3) {
+
+        val part1 = splitByBrackets2[0]
+        val part1Text = part1.asTextOnly()
+
+        val part2 = splitByBrackets2[1]
+        val part2Text = part2.asTextOnly()
+
+        val part3 = splitByBrackets2[2]
+        val part3Text = part3.asTextOnly()
+
+        if (part1.withoutBrackets && part2.inBrackets && part3.inBrackets
+            && part1Text.isOneWordVerb && part2Text.isVerbEnd
+        ) {
+            result.add("${part1Text}${part2.asSubContent()}")
+            result.add("${part1Text}${part2Text}")
+
+            if (processChildren) {
+                val part3TextStr = part3Text.toString()
+                val part3Parts: List<Part> = part3TextStr.splitByBrackets()
+                if ((part3Parts.size == 1 && part3Parts[0].asTextOnly().isOneWordVerb)
+                    || (part3Parts.size == 2 && part3Parts[0].asTextOnly().isOneWordVerb && part3Parts[1].asTextOnly().isVerbEnd)
+                ) {
+                    result.addAll(part3TextStr.splitTranslationImpl(false))
+                }
+            }
+        }
+    }
+
+    return result.distinct()
+}
+
+data class Part (
+    val content: String,
+    val inBrackets: Boolean,
+    // content
+    val from: Int,
+    /** Exclusive */
+    val to: Int,
+    // bracket indices
+    val openBracketIndex: Int,
+    val closingBracketIndex: Int,
+
+) {
+    fun asSubContent(): CharSequence = if (inBrackets) content.subSequence(openBracketIndex, closingBracketIndex + 1)
+                                            else content.subSequence(from, to)
+    fun asTextOnly(): CharSequence = content.subSequence(from, to)
+
+    companion object {
+        fun inBrackets(
+            content: String,
+            // bracket indices
+            openBracketIndex: Int,
+            closingBracketIndex: Int,
+        ) = Part(content, true, openBracketIndex + 1, closingBracketIndex, openBracketIndex, closingBracketIndex)
+        fun withoutBrackets(
+            content: String,
+            from: Int,
+            /** Exclusive */
+            to: Int,
+        ) = Part(content, false, from, to, -1, -1)
+    }
+}
+
+val Part.withoutBrackets: Boolean get() = !this.inBrackets
+
+internal fun String.splitByBrackets(): List<Part> {
+
+    val parts = mutableListOf<Part>()
+    var bracketLevel = 0
+    var bracketPartStart = -1
+    var withoutBracketPartStart = 0
+
+    for (i in this.indices) {
+        val ch = this[i]
+
+        if (ch == '(') {
+            bracketLevel++
+
+            if (bracketLevel == 1) {
+                if (i > withoutBracketPartStart) {
+                    parts.add(Part.withoutBrackets(this, withoutBracketPartStart, i))
+                    withoutBracketPartStart = -1
+                }
+
+                bracketPartStart = i
+            }
+        }
+
+        if (ch == ')') {
+            bracketLevel--
+
+            if (bracketLevel == 0) {
+                parts.add(Part.inBrackets(this, bracketPartStart, i))
+                bracketPartStart = -1
+                withoutBracketPartStart = i + 1
+            }
+        }
+    }
+
+    if (withoutBracketPartStart != -1 && withoutBracketPartStart < this.lastIndex) {
+        parts.add(Part.withoutBrackets(this, withoutBracketPartStart, this.length))
+    }
+
+    return parts
 }
 
 

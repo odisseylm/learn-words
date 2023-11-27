@@ -11,6 +11,7 @@ import javafx.scene.control.PopupControl
 import javafx.scene.control.TableColumn
 import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
+import javafx.scene.layout.Region
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
 import javafx.stage.Window
@@ -27,6 +28,7 @@ class OtherCardsViewPopup :
 
     private val captionLabel = Label().also { it.styleClass.add("cardDuplicatesTitle") }
     private val content = BorderPane(cardsTable).also { it.styleClass.add("cardDuplicatesContainer") }
+    val contentComponent: Region = content
     private val titleBar: Node
 
     init {

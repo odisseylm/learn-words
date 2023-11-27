@@ -67,11 +67,14 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     private val toolBar2 = ToolBar2(this).also {
         it.nextPrevWarningWord.addSelectedWarningsChangeListener { _, _, _ -> recalculateWarnedWordsCount() } }
 
-    internal val allWordCardSetsManager = AllWordCardSetsManager()
+    internal val allWordCardSetsManager: AllWordCardSetsManager by lazy { AllWordCardSetsManager() }
     // we have to use lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
     private val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
     private val lightOtherCardsViewPopup: LightOtherCardsViewPopup by lazy { LightOtherCardsViewPopup() }
-    private val foundCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
+    private val foundCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup().also {
+        it.contentComponent.maxWidth  = 650.0
+        it.contentComponent.maxHeight = 500.0
+    } }
 
     @Volatile
     private var prefixFinder = PrefixFinder(emptyList())
@@ -110,11 +113,8 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         val currentWordsLabelText = "File/Clipboard (%d words)"
         currentWords.addListener(ListChangeListener { pane.wordEntriesLabel.text = currentWordsLabelText.format(it.list.size) })
 
-        currentWords.addListener(ListChangeListener { markDocumentIsDirty(); reanalyzeAllWords() })
-
         val ignoredWordsLabelText = "Ignored words (%d)"
         ignoredWords.addListener(ListChangeListener { pane.ignoredWordsLabel.text = ignoredWordsLabelText.format(it.list.size) })
-
 
         pane.ignoredWordsList.items = ignoredWordsSorted
 
@@ -123,18 +123,26 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         pane.allProcessedWordsList.items = SortedList(allProcessedWords, String.CASE_INSENSITIVE_ORDER)
 
-
-        addGlobalKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
-            if (!currentWordsList.isEditing) copySelectedWord() } })
-
-        addKeyBindings()
-
-        pane.warnAboutMissedBaseWordsModeDropDown.onAction = EventHandler { reanalyzeAllWords() }
-
         pane.topPane.children.add(0, MenuController(this).fillMenu())
         pane.topPane.children.add(toolBarController2.toolBar)
         pane.topPane.children.add(settingsPane)
         pane.topPane.children.add(toolBar2)
+
+        currentWordsList.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
+            val card = currentWordsSelection.selectedItem
+            val tableColumn = currentWordsSelection.selectedCells?.getOrNull(0)?.tableColumn
+
+            if (ev.clickCount >= 2 && card != null && tableColumn.isOneOf(currentWordsList.sourceSentencesColumn, currentWordsList.numberColumn))
+                showSourceSentences(card)
+        }
+
+        if (!isReadOnly) initNonReadOnly()
+    }
+
+    private fun initNonReadOnly() {
+        currentWords.addListener(ListChangeListener { markDocumentIsDirty(); reanalyzeAllWords() })
+
+        pane.warnAboutMissedBaseWordsModeDropDown.onAction = EventHandler { reanalyzeAllWords() }
 
         val contextMenuController = ContextMenuController(this)
         currentWordsList.contextMenu = contextMenuController.contextMenu
@@ -145,17 +153,25 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             Platform.runLater { showWarningAboutSelectedCardExistInOtherSet() }
         }
 
-        currentWordsList.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
-            val card = currentWordsSelection.selectedItem
-            val tableColumn = currentWordsSelection.selectedCells?.getOrNull(0)?.tableColumn
-
-            if (ev.clickCount >= 2 && card != null && tableColumn.isOneOf(currentWordsList.sourceSentencesColumn, currentWordsList.numberColumn))
-                showSourceSentences(card)
-        }
-
         pane.wordEntriesTable.fromColumn.addEventHandler(TableColumn.editCommitEvent<CardWordEntry,String>()) {
             val wordOrPhrase = it.newValue
             if (wordOrPhrase.isNotBlank()) Platform.runLater { onCardFromEdited(wordOrPhrase) }
+        }
+
+        addGlobalKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
+            if (!currentWordsList.isEditing) copySelectedWord() } })
+
+        addKeyBindings()
+
+        pane.addIsShownHandler {
+            val window = pane.scene.window
+
+            window.addEventHandler(WindowEvent.WINDOW_HIDDEN) { hidePopups() }
+            if (window is Stage)
+                window.iconifiedProperty().addListener { _, _, minimized ->
+                    if (minimized) hidePopups() }
+
+            window.focusedProperty().addListener { _,_,_ -> Platform.runLater { hidePopups() } }
         }
 
         pane.addIsShownHandler {
@@ -168,19 +184,8 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
                 this.dictionary.find("apple") // load dictionaries lazy
 
-                allWordCardSetsManager.reloadAllSets()
-        } } }
-
-        pane.addIsShownHandler {
-            val window = pane.scene.window
-
-            window.addEventHandler(WindowEvent.WINDOW_HIDDEN) { hidePopups() }
-            if (window is Stage)
-                window.iconifiedProperty().addListener { _, _, minimized ->
-                    if (minimized) hidePopups() }
-
-            window.focusedProperty().addListener { _,_,_ -> Platform.runLater { hidePopups() } }
-        }
+                allWordCardSetsManager.reloadAllSetsAsync()
+            } } }
 
         installNavigationHistoryUpdates(currentWordsList, navigationHistory)
 
@@ -533,7 +538,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         updateTitle()
 
         allWordCardSetsManager.ignoredFile = filePath
-        CompletableFuture.runAsync { allWordCardSetsManager.reloadAllSets() }
+        allWordCardSetsManager.reloadAllSetsAsync()
     }
 
     private fun updateTitle() {
