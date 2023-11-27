@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.DisplayName
 
+
 class AllWordCardSetsManagerTest {
 
     @Test
@@ -15,7 +16,7 @@ class AllWordCardSetsManagerTest {
 
         a.assertThat(" страшный ".splitTranslation()).containsExactly("страшный")
         a.assertThat(" страшный человек ".splitTranslation()).containsExactly("страшный человек")
-        a.assertThat(" страшный  человек ".splitTranslation()).containsExactly("страшный  человек")
+        a.assertThat(" страшный  человек ".splitTranslation()).containsExactly("страшный человек")
 
         a.assertAll()
     }
@@ -24,10 +25,10 @@ class AllWordCardSetsManagerTest {
     @DisplayName("splitTranslation skipMiddleWordsInBrackets")
     fun test_splitTranslation_skipMiddleWordsInBrackets() {
         assertThat(" страшный  (ужасный)  человек".splitTranslation())
-            .containsExactlyInAnyOrder("страшный  (ужасный)  человек", "страшный человек")
+            .containsExactlyInAnyOrder("страшный (ужасный) человек", "страшный человек")
 
         assertThat(" страшный  (ужасный)  (какой-то текст)  человек ".splitTranslation())
-            .containsExactlyInAnyOrder("страшный  (ужасный)  (какой-то текст)  человек", "страшный человек")
+            .containsExactlyInAnyOrder("страшный (ужасный) (какой-то текст) человек", "страшный человек")
     }
 
     @Test
@@ -35,6 +36,13 @@ class AllWordCardSetsManagerTest {
     fun test_splitTranslation_twoAdjectives() {
         assertThat("страшный (ужасный)".splitTranslation())
             .containsExactlyInAnyOrder("страшный (ужасный)", "страшный", "ужасный")
+    }
+
+    @Test
+    @DisplayName("splitTranslation 3 adjectives")
+    fun test_splitTranslation_threeAdjectives() {
+        assertThat(" страшный (ужасный жуткий) ".splitTranslation())
+            .containsExactlyInAnyOrder("страшный (ужасный жуткий)", "страшный", "ужасный", "жуткий")
     }
 
     @Test
@@ -48,6 +56,70 @@ class AllWordCardSetsManagerTest {
                 "доверять", "доверять(ся)", "доверяться",
                 // second
                 "полагать", "полагать(ся)", "полагаться",
+            )
+    }
+
+    @Test
+    @DisplayName("splitTranslation verbCase2_0")
+    fun test_splitTranslation_verbCase2_0() {
+        assertThat(" доверяться (полагаться опираться) ".splitTranslation())
+            .containsExactlyInAnyOrder(
+                // full unchanged string
+                "доверяться (полагаться опираться)",
+                // first
+                "доверяться",
+                // second
+                "полагаться",
+                // third
+                "опираться",
+            )
+    }
+
+    @Test
+    @DisplayName("splitTranslation verbCase2_1")
+    fun test_splitTranslation_verbCase2_1() {
+        assertThat(" доверять(ся) (полагаться опираться) ".splitTranslation())
+            .containsExactlyInAnyOrder(
+                // full unchanged string
+                "доверять(ся) (полагаться опираться)",
+                // first
+                "доверять", "доверять(ся)", "доверяться",
+                // second
+                "полагаться",
+                // third
+                "опираться",
+            )
+    }
+
+    @Test
+    @DisplayName("splitTranslation verbCase2_2")
+    fun test_splitTranslation_verbCase2_2() {
+        assertThat(" доверять(ся) (полагать опирать) ".splitTranslation())
+            .containsExactlyInAnyOrder(
+                // full unchanged string
+                "доверять(ся) (полагать опирать)",
+                // first
+                "доверять", "доверять(ся)", "доверяться",
+                // second
+                "полагать",
+                // third
+                "опирать",
+            )
+    }
+
+    @Test
+    @DisplayName("splitTranslation verbCase3")
+    fun test_splitTranslation_verbCase3() {
+        assertThat(" доверять(ся) (полагать(ся) опирать(ся)) ".splitTranslation())
+            .containsExactlyInAnyOrder(
+                // full unchanged string
+                "доверять(ся) (полагать(ся) опирать(ся))",
+                // first
+                "доверять", "доверять(ся)", "доверяться",
+                // second
+                "полагать", "полагать(ся)", "полагаться",
+                // third
+                "опирать", "опирать(ся)", "опираться",
             )
     }
 

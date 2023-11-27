@@ -241,36 +241,40 @@ private fun CardWordEntry.getAllSearchableWords(): List<String> {
 }
 
 
-private val CharSequence.wordCount: Int get() = this.trim().split(" ", "\t", "\n").size
-
 private val CharSequence.isVerb: Boolean get() {
     val fixed = this.trimEnd()
     return fixed.endsWithOneOf("ть", "ться")
 }
+private val Part.isVerb: Boolean get() = this.asTextOnly().isVerb
+
 
 private val CharSequence.isOneWordVerb: Boolean get() = this.wordCount == 1 && this.isVerb
+private val Part.isOneWordVerb: Boolean get() = this.asTextOnly().wordCount == 1 && this.isVerb
 
-private val CharSequence.isVerbEnd: Boolean get() {
+private val CharSequence.isOptionalVerbEnd: Boolean get() {
     val fixed = this.trimEnd()
-    return fixed.endsWith("ся")
+    return fixed == "ся"
 }
+private val Part.isOptionalVerbEnd: Boolean get() = this.asTextOnly().isOptionalVerbEnd
 
 private val CharSequence.isAdjective: Boolean get() {
     val fixed = this.trimEnd()//.lowercase()
     return fixed.isNotEmpty() && (fixed[fixed.length - 1] == 'й') &&
            fixed.endsWithOneOf("ый", "ий", "ой", "ин", "ын", "ов", "ей", "от")
 }
+//private val Part.isAdjective: Boolean get() = this.asTextOnly().isAdjective
+
 
 internal fun String.splitTranslation(): List<String> =
-    this.splitTranslationImpl(true)
-        .map { it.trim() }
+    this.trim().splitTranslationImpl(true)
+        .map { it.toString().trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly) }
         .distinct()
 
-private fun String.splitTranslationImpl(processChildren: Boolean): List<String> {
+private fun String.splitTranslationImpl(processChildren: Boolean): List<CharSequence> {
 
-    val result = mutableListOf(this)
+    val result = mutableListOf<CharSequence>(this)
 
-    val splitByBrackets = this.splitByBrackets()
+    val splitByBrackets = this.splitByBrackets().filter { it.asTextOnly().isNotBlank() }
 
     result.add(
         splitByBrackets.filter { it.withoutBrackets && it.asTextOnly().isNotBlank() }.joinToString(" ") { it.asTextOnly().trim() }
@@ -284,46 +288,89 @@ private fun String.splitTranslationImpl(processChildren: Boolean): List<String> 
         val part2 = splitByBrackets[1]
         val part2Text = part2.asTextOnly()
 
+        // case: "страшный (ужасный)"
         if (part1.withoutBrackets && part2.inBrackets
             && part1Text.wordCount == 1 && part2Text.wordCount == 1
             && ((part1Text.isVerb && part2Text.isVerb) || (part1Text.isAdjective && part2Text.isAdjective)))
-            result.add(part2Text.toString())
+            result.add(part2Text)
 
+        // case: "доверять(ся) (полагать(ся))"
         else if (part1.withoutBrackets && part2.inBrackets
-            && part1Text.isOneWordVerb && part2Text.isVerbEnd
+            && part1Text.isOneWordVerb && part2Text.isOptionalVerbEnd
         ) {
             result.add(part1Text.toString())
+
             val part1Trimmed = part1Text.trim()
             result.add("${part1Trimmed}${part2Text}")
-            result.add("${part1Trimmed}${part2.asSubContent()}") // with verb end in brackets
+            result.add("${part1Trimmed}(${part2Text})")
+        }
+
+        // case: " страшный (ужасный жуткий) "
+        else if (part1.withoutBrackets && part2.inBrackets
+            && part1Text.wordCount == 1 && part2Text.wordCount > 1
+            && (part1Text.isAdjective && part2Text.isAdjective)) {
+
+            val subItems = part2Text.toString().splitTranslationImpl(false).flatMap { it.splitToWords() }
+            // case: " страшный (ужасный жуткий) "
+            if (subItems.all { it.isAdjective })
+                result.addAll(subItems)
+        }
+
+        // case: " доверяться (полагаться опираться) "
+        else if (part1.withoutBrackets && part2.inBrackets
+            && part1Text.isOneWordVerb && part2Text.wordCount > 1 && part2Text.isVerb) {
+
+            val subItems = part2Text.toString().splitTranslationImpl(false).flatMap { it.splitToWords() }
+
+            // case: " доверяться (полагаться опираться) "
+            if (subItems.isNotEmpty() && subItems.all { it.isVerb })
+                result.addAll(subItems)
         }
     }
 
-    val splitByBrackets2 =  splitByBrackets.filter { it.asTextOnly().isNotBlank() }
-    if (splitByBrackets2.size == 3) {
+    if (splitByBrackets.size == 3) {
 
-        val part1 = splitByBrackets2[0]
+        val part1 = splitByBrackets[0]
         val part1Text = part1.asTextOnly()
 
-        val part2 = splitByBrackets2[1]
+        val part2 = splitByBrackets[1]
         val part2Text = part2.asTextOnly()
 
-        val part3 = splitByBrackets2[2]
+        val part3 = splitByBrackets[2]
         val part3Text = part3.asTextOnly()
 
         if (part1.withoutBrackets && part2.inBrackets && part3.inBrackets
-            && part1Text.isOneWordVerb && part2Text.isVerbEnd
+            && part1Text.isOneWordVerb && part2Text.isOptionalVerbEnd
         ) {
-            result.add("${part1Text}${part2.asSubContent()}")
             result.add("${part1Text}${part2Text}")
+            result.add("${part1Text}(${part2Text})")
 
             if (processChildren) {
                 val part3TextStr = part3Text.toString()
-                val part3Parts: List<Part> = part3TextStr.splitByBrackets()
-                if ((part3Parts.size == 1 && part3Parts[0].asTextOnly().isOneWordVerb)
-                    || (part3Parts.size == 2 && part3Parts[0].asTextOnly().isOneWordVerb && part3Parts[1].asTextOnly().isVerbEnd)
-                ) {
+                val part3Parts: List<Part> = part3TextStr.splitByBrackets().filter { it.asTextOnly().isNotBlank() }
+
+                // case: "доверять(ся) (полагать(ся))"
+                if ((part3Parts.size == 1 && part3Parts[0].isOneWordVerb)
+                    || (part3Parts.size == 2 && part3Parts[0].isOneWordVerb && part3Parts[1].isOptionalVerbEnd))
                     result.addAll(part3TextStr.splitTranslationImpl(false))
+
+                // case: " доверять(ся) (полагать(ся) опирать(ся)) "
+                else if (part3Parts.isNotEmpty() && part3Parts.all { it.isVerb || it.isOptionalVerbEnd }) {
+
+                    val allWords = part3Parts.flatMap { it.asTextOnly().splitToWords() }
+                    var lastVerb: String? = null
+
+                    for (w in allWords) {
+                        if (w.isOptionalVerbEnd) {
+                            if (lastVerb != null) {
+                                result.add(lastVerb + w)
+                                result.add("$lastVerb($w)")
+                            }
+                        } else {
+                            result.add(w)
+                            lastVerb = w
+                        }
+                    }
                 }
             }
         }
@@ -331,6 +378,7 @@ private fun String.splitTranslationImpl(processChildren: Boolean): List<String> 
 
     return result.distinct()
 }
+
 
 data class Part (
     val content: String,
@@ -342,10 +390,9 @@ data class Part (
     // bracket indices
     val openBracketIndex: Int,
     val closingBracketIndex: Int,
-
 ) {
     fun asSubContent(): CharSequence = if (inBrackets) content.subSequence(openBracketIndex, closingBracketIndex + 1)
-                                            else content.subSequence(from, to)
+                                                  else content.subSequence(from, to)
     fun asTextOnly(): CharSequence = content.subSequence(from, to)
 
     companion object {

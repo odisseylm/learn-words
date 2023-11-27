@@ -1,9 +1,6 @@
 package com.mvv.gui.audio
 
-import com.mvv.gui.util.NetSettings
-import com.mvv.gui.util.downloadUrl
-import com.mvv.gui.util.firstOrThrow
-import com.mvv.gui.util.userHome
+import com.mvv.gui.util.*
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -76,6 +73,4 @@ fun validateTextIsOneWord(text: String, synthesizerName: String) {
         throw ExpressionIsNotSupportedException("$synthesizerName does not support long text.")
 }
 
-fun isOneWordText(text: String): Boolean = text.trim().wordCount == 1
-
-private val String.wordCount: Int get() = this.trim().split(" ", "\t", "\n").size
+fun isOneWordText(text: String): Boolean = text.wordCount == 1
