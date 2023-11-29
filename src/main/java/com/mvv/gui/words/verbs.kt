@@ -2,10 +2,10 @@ package com.mvv.gui.words
 
 
 val commonVerbs: Alt<Seq<String>> = sequenceOf(
-    // TODO: keep there only base/infinitive forms and create 2nd/3rd/s forms dynamically
+    // TODO: keep there only base/infinitive forms and create 2nd/3rd/s/ing forms dynamically
     "do", "does",
     "be", "is", "are",
-    "have", "has", "have no", "has no",
+    "have", "has", "have no", "has no", "had", "had no",
     "get", "gets", "go", "gone", "went", "goes", "going",
     "can", "could", "may", "might", "must", "shall", "should",
 
@@ -47,7 +47,7 @@ class VerbForms (
         fun parse(items: List<String>): VerbForms = VerbForms(
             items[0],
             items[1].split("/").toList(),
-            items[1].split("/").toList(),
+            items[2].split("/").toList(),
         )
     }
 }
@@ -466,10 +466,11 @@ val irregularVerbs: List<VerbForms> = irregularVerbs_RawList.chunked(3)
     //.filterNot { it[0] == "be" || it[0].startsWith("be/") }
     .map { VerbForms.parse(it) }
 
+
+/*
 private val irregularVerbsMap: Map<String, VerbForms> = irregularVerbs.associateBy { it.base }
 
 
-/*
 fun getProbably2ndVerbForm(infinitive: String): List<String> {
 
     var pastParticiple = irregularVerbsMap[infinitive]?.pastParticiple

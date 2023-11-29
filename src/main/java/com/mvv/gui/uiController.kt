@@ -76,12 +76,16 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         it.contentComponent.maxHeight = 500.0
     } }
 
+    private val englishVerbs = EnglishVerbs()
     @Volatile
     private var prefixFinder = PrefixFinder(emptyList())
     private val baseWordExtractor: BaseWordExtractor = object : BaseWordExtractor {
-        override fun extractBaseWord(phrase: String): String =
-            prefixFinder.calculateBaseOfFromForSorting(phrase)
-                .firstWord.removeSuffixesRepeatably("!", ".", "?", "…").toString()
+        override fun extractBaseWord(phrase: String): String {
+            val baseWords = prefixFinder.calculateBaseOfFromForSorting(phrase)
+            val firstWordOfBase = baseWords.firstWord.removeSuffixesRepeatably("!", ".", "?", "…").toString()
+            // TODO: use EnglishVerbs.getInfinitive() when it is implemented properly
+            return englishVerbs.getIrregularInfinitive(firstWordOfBase) ?: firstWordOfBase
+        }
     }
 
 

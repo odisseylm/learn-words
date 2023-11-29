@@ -382,6 +382,14 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
     "{pp} {verb} not {art}",
     "{pp} {verb} not {prep} {art}",
 
+    // for past perfect tense
+    "{pp} {verb} {verb} {art}",
+    "{pp} {verb} {verb} {prep} {art}",
+    "{pp} {verb} {verb} to {art}",
+    "{pp} {verb} {verb} to {prep} {art}",
+    "{pp} {verb} {verb} not {art}",
+    "{pp} {verb} {verb} not {prep} {art}",
+
     "{verb} {pp} to {prep} {art}",
     "{verb} {pp} {prep} {art}",
     "{verb} {pp} to {art}",
