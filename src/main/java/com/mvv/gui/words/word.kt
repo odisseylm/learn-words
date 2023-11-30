@@ -47,6 +47,7 @@ class CardWordEntry (from: String, to: String, /*val features: Set<CardWordEntry
     val sourcePositionsProperty = SimpleObjectProperty<List<Int>>(this, "sourcePositions", emptyList())
     val sourceSentencesProperty = SimpleStringProperty(this, "sourceSentences", "")
 
+    @Transient // optional, used only in search results
     val fileProperty = SimpleObjectProperty<Path>(this, "file", null)
 
     var from: String
@@ -57,6 +58,8 @@ class CardWordEntry (from: String, to: String, /*val features: Set<CardWordEntry
         set(value) = fromWithPrepositionProperty.set(value)
     val fromWordCount: Int
         get() = fromWordCountProperty.value
+    val baseWordOfFrom: String
+        get() = baseWordOfFromProperty.value ?: ""
     var to: String
         get()      = toProperty.get()
         set(value) = toProperty.set(value)

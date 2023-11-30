@@ -22,7 +22,6 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 import kotlin.io.path.notExists
 import kotlin.math.min
-import kotlin.streams.asSequence
 
 
 private val log = mu.KotlinLogging.logger {}
@@ -312,11 +311,12 @@ internal fun extractWordsFromClipboard(clipboard: Clipboard, sentenceEndRule: Se
 
 
 
-
 fun getAllExistentSetFiles(includeMemoWordFile: Boolean, toIgnoreBaseWordsFilename: String?): List<Path> {
     if (dictDirectory.notExists()) return emptyList()
-    return Files.list(dictDirectory)
+
+    return dictDirectory.toFile().walkTopDown()
         .asSequence()
+        .map { it.toPath() }
         .filter { it.isRegularFile() }
         .filter { it != ignoredWordsFile }
         .filter { it.isInternalCsvFormat || (includeMemoWordFile && it.isMemoWordFile) }

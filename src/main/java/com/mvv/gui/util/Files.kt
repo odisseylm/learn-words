@@ -33,3 +33,8 @@ fun Path.readBytes(bytesCount: UInt): ByteArray =
         IOUtils.read(it, buffer)
         buffer
     }
+
+
+class PathCaseInsensitiveComparator : Comparator<Path> {
+    override fun compare(o1: Path, o2: Path): Int = String.CASE_INSENSITIVE_ORDER.compare(o1.toString(), o2.toString())
+}

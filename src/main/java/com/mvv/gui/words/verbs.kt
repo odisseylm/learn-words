@@ -3,6 +3,10 @@ package com.mvv.gui.words
 
 val commonVerbs: Alt<Seq<String>> = sequenceOf(
     // TODO: keep there only base/infinitive forms and create 2nd/3rd/s/ing forms dynamically
+    //
+    // TODO: add negatives like
+    //       "shouldn't" "couldn't" "wouldn't" "mightn't" "mustn't" "wasn't" so on
+    //
     "do", "does",
     "be", "is", "are",
     "have", "has", "have no", "has no", "had", "had no",

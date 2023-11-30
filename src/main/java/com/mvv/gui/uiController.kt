@@ -20,11 +20,14 @@ import javafx.collections.transformation.SortedList
 import javafx.event.EventHandler
 import javafx.geometry.Point2D
 import javafx.scene.control.*
-import javafx.scene.input.*
+import javafx.scene.control.ButtonBar.ButtonData
+import javafx.scene.input.Clipboard
+import javafx.scene.input.MouseEvent
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import javafx.stage.Window
 import javafx.stage.WindowEvent
+import javafx.util.StringConverter
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.commons.text.StringEscapeUtils.escapeHtml4
 import java.io.File
@@ -391,6 +394,100 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
     private fun copySelectedWord() = copyWordsToClipboard(currentWordsSelection.selectedItems)
 
+    fun selectByBaseWord() {
+        val baseWordOfFrom = currentWordsList.singleSelection?.baseWordOfFrom ?: return
+
+        val toSelect = currentWords.filtered { it.baseWordOfFrom.startsWith(baseWordOfFrom) }
+        toSelect.forEach { currentWordsList.selectionModel.select(it) }
+    }
+
+    fun copySelectToOtherSet() {
+        try { copySelectToOtherSetImpl() }
+        catch (ex: Exception) {
+            log.error(ex) { "Error of copying selected cards to other set file." }
+            showInfoAlert(currentWordsList, "Error of copying selected cards to other set file.\n\n${ex.message}")
+        }
+    }
+
+    private fun copySelectToOtherSetImpl() {
+
+        val selected = currentWordsSelection.selectedItems
+        if (selected.isEmpty()) return
+
+        val currentWordsFile = this.currentWordsFile // local safe ref
+        val currentWordsFileParent = currentWordsFile?.parent ?: dictDirectory
+
+        val otherSetsFiles = allWordCardSetsManager.allCardSets.sortedWith(PathCaseInsensitiveComparator())
+        val allOtherSetsParents = otherSetsFiles.map { it.parent }.distinct()
+        val commonAllOtherSetsSubParent = if (allOtherSetsParents.size == 1) allOtherSetsParents[0]
+                                          else allOtherSetsParents.minByOrNull { it.nameCount } ?: currentWordsFileParent
+
+        val allSetsParentsAreParentOfCurrent = (allOtherSetsParents.size == 1) && (allOtherSetsParents[0] == currentWordsFileParent)
+
+        val pathToSetNameConv = object : StringConverter<Path>() {
+            override fun toString(value: Path?): String = when {
+                allSetsParentsAreParentOfCurrent -> value?.baseWordsFilename
+                else -> value?.toString()?.removePrefix(commonAllOtherSetsSubParent.toString())?.removePrefix("/")
+            } ?: ""
+            override fun fromString(string: String?): Path? = if (string.isNullOrBlank()) null else Path.of(string.trim())
+        }
+
+        val destFileOrSetName = showDropDownDialog(currentWordsList, "Select cards' set to copy cards to", otherSetsFiles, pathToSetNameConv, true)
+            ?: return
+
+        val destFilePath =
+            if (destFileOrSetName.exists()) destFileOrSetName
+            else {
+                if (destFileOrSetName.isInternalCsvFormat)
+                    commonAllOtherSetsSubParent.resolve(destFileOrSetName)
+                else {
+                    val setName = destFileOrSetName.toString()
+                    require(!setName.endsWithOneOf(internalWordCardsFileExt, plainWordsFileExt)) {
+                        "Please, specify set name or full absolute path to set file."}
+
+                    currentWordsFileParent.resolve(setName.withFileExt(internalWordCardsFileExt))
+                }
+            }
+
+        require(destFilePath.isInternalCsvFormat && !destFilePath.isMemoWordFile) {
+            "It looks strange to load/save data in memo-word format [$destFilePath]." }
+
+        val existentCards = if (destFilePath.exists()) loadWordCards(destFilePath) else emptyList()
+
+        val duplicates = verifyDuplicates(existentCards, selected)
+
+        val cardToSave: List<CardWordEntry> =
+            if (duplicates.duplicatedByOnlyFrom.isNotEmpty()) {
+                val similarFrom = duplicates.duplicatedByOnlyFrom.map { it.from }.sorted()
+                val showDuplicateCount = 2 //7
+                val showDuplicatePadding = "  "
+                val similarFromStr = similarFrom
+                    .joinToString("\n", "", "", showDuplicateCount, "$showDuplicatePadding...") {
+                        "$showDuplicatePadding'$it'" }
+
+                val mergeButton = ButtonType("Merge", ButtonData.OTHER)
+                val skipButton  = ButtonType("Skip", ButtonData.OTHER)
+
+                val res = showConfirmation(currentWordsList,
+                    "This set already contains similar ${duplicates.duplicatedByOnlyFrom.size} cards:\n" +
+                        "${similarFromStr}\n\n" +
+                        "Do you want to merge them or skip?",
+                    "Copy cards to other set",
+                    ButtonType.CANCEL, mergeButton, skipButton,
+                )
+
+                if (res.isEmpty || res.get() == ButtonType.CANCEL) return
+
+                when (res.get()) {
+                    skipButton  -> existentCards + selected.skipCards(duplicates.fullDuplicates, duplicates.duplicatedByOnlyFrom)
+                    mergeButton -> mergeCards(existentCards, selected.skipCards(duplicates.fullDuplicates))
+                    else        -> throw IllegalStateException("Unexpected button [${res.get()}]")
+                }
+            }
+            else existentCards + selected.skipCards(duplicates.fullDuplicates)
+
+        saveWordsImpl(cardToSave, destFilePath)
+    }
 
     fun translateSelected() =
         currentWordsSelection.selectedItems.doIfNotEmpty {
@@ -767,11 +864,14 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     // enum class WordsOrder { ORIGINAL, SORTED }
 
     private fun saveCurrentWords() = doSaveCurrentWords { filePath ->
-        val words = currentWords
+        RecentDocuments().addRecent(filePath.useFilenameSuffix(internalWordCardsFileExt))
+        saveWordsImpl(currentWords, filePath)
+        resetDocumentIsDirty()
+    }
 
+    private fun saveWordsImpl(words: List<CardWordEntry>, filePath: Path) {
         val internalFormatFile = filePath.useFilenameSuffix(internalWordCardsFileExt)
         saveWordCards(internalFormatFile, CsvFormat.Internal, words)
-        RecentDocuments().addRecent(internalFormatFile)
 
         val memoWordFile = filePath.useFilenameSuffix(memoWordFileExt)
         if (words.size <= maxMemoCardWordCount)
@@ -790,13 +890,11 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         }
 
         splitFilesDir.createDirectories()
-        saveSplitWordCards(filePath, currentWords, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
+        saveSplitWordCards(filePath, words, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
 
         // without phrases
         val onlyWords = words.filterNot { it.from.containsWhiteSpaceInMiddle() }
         saveSplitWordCards(filePath.parent.resolve(filePath.baseWordsFilename + "_OnlyWords.csv"), onlyWords, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
-
-        resetDocumentIsDirty()
     }
 
     private fun doSaveCurrentWords(saveAction:(Path)->Unit) {
@@ -1070,6 +1168,14 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
 }
 
+private fun List<CardWordEntry>.skipCards(toSkip: Set<CardWordEntry>): List<CardWordEntry> =
+    this.filterNot { it in toSkip }
+private fun List<CardWordEntry>.skipCards(toSkip1: Set<CardWordEntry>, toSkip2: Set<CardWordEntry>): List<CardWordEntry> =
+    this.filterNot { it in toSkip1 || it in toSkip2 }
+private fun mergeCards(existentCards: List<CardWordEntry>, newCards: List<CardWordEntry>): List<CardWordEntry> {
+    val all = (existentCards + newCards).groupBy { it.from.lowercase() }
+    return all.values.map { cardsWitTheSameFrom -> mergeCards(cardsWitTheSameFrom).also { it.from = cardsWitTheSameFrom.first().from } }
+}
 
 internal fun String.highlightWords(wordOrPhrase: String, color: String): String {
 
@@ -1229,3 +1335,36 @@ data class CellEditorState (
     val scrollTop: Double,
     val caretPosition: Int,
 )
+
+
+
+internal class VerifyDuplicatesResult (
+    // they should be ignored
+    val fullDuplicates: Set<CardWordEntry>,
+    // they should be skipped or merged
+    val duplicatedByOnlyFrom: Set<CardWordEntry>,
+)
+
+internal fun verifyDuplicates(existentCards: List<CardWordEntry>, newCards: List<CardWordEntry>): VerifyDuplicatesResult {
+
+    val existentCardsAsMap = existentCards.groupBy { it.from.lowercase() }
+
+    val fullDuplicates = newCards.filter { newCard ->
+        val existentCardsWithThisFrom = existentCardsAsMap[newCard.from.lowercase()] ?: return@filter false
+
+        existentCardsWithThisFrom.any {
+                    it.to == newCard.to && it.transcription == newCard.transcription && it.examples == newCard.examples
+                    // old/new predefinedSets should/desired be merged
+                    //
+                    // We can ignore 'statuses', 'sourcePositions', 'sourceSentences'.
+        }
+    }.toSet()
+
+    val partialDuplicates = newCards
+        .filterNot { it in fullDuplicates }
+        .filter { newCard -> existentCardsAsMap[newCard.from.lowercase()] != null }
+        .toSet()
+
+    return VerifyDuplicatesResult(fullDuplicates, partialDuplicates)
+}
+

@@ -21,6 +21,9 @@ class ContextMenuController (val controller: LearnWordsController) {
     private val cloneMenuItem = newMenuItem("Clone") { controller.cloneWordCard() }
     private val mergeMenuItem = newMenuItem("Merge", buttonIcon("icons/merge.png")) { controller.mergeSelected() }
 
+    private val selectByBaseWordMenuItem = newMenuItem("Select by base word") { controller.selectByBaseWord() }
+    private val copySelectedToOtherSetMenuItem = newMenuItem("Copy selected cards to other set") { controller.copySelectToOtherSet() }
+
     private val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
         buttonIcon("/icons/icons8-layers-16-with-plus.png")) {
         controller.addBaseWordsInSetForSelected() }
@@ -62,6 +65,12 @@ class ContextMenuController (val controller: LearnWordsController) {
                 controller.insertWordCard(InsertPosition.Above) },
             newMenuItem("Insert below", buttonIcon("/icons/insertBelow-01.png")) {
                 controller.insertWordCard(InsertPosition.Below) },
+
+            SeparatorMenuItem(),
+            selectByBaseWordMenuItem,
+            copySelectedToOtherSetMenuItem,
+
+            SeparatorMenuItem(),
             newMenuItem("Toggle/lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
                 controller.toggleTextSelectionCaseOrLowerCaseRow() },
 
@@ -116,6 +125,9 @@ class ContextMenuController (val controller: LearnWordsController) {
         cloneMenuItem.isVisible = onlyOneCardIsSelected
         mergeMenuItem.isVisible = controller.isSelectionMergingAllowed()
 
+        updateSelectByBaseWordMenuItem()
+        copySelectedToOtherSetMenuItem.isVisible = currentWordsList.selectionModel.selectedItems.size > 1
+
         showSourceSentenceMenuItem.isVisible = selectedCard?.sourceSentences?.isNotBlank() ?: false
         updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
         updateAddMissedBaseWordsMenuItem(addMissedBaseWordsMenuItem)
@@ -167,6 +179,12 @@ class ContextMenuController (val controller: LearnWordsController) {
                  "Translate '${selectedCards[0].from}'"
             else "Translate selected"
         menuItem.text = menuItemText
+    }
+
+    private fun updateSelectByBaseWordMenuItem() {
+        val baseWord = currentWordsList.selectionModel.selectedItem?.baseWordOfFrom
+        selectByBaseWordMenuItem.isVisible = !baseWord.isNullOrBlank()
+        selectByBaseWordMenuItem.text = "Select cards with base word '${baseWord}*'"
     }
 
     private val selectedCard: CardWordEntry? get() = currentWordsList.singleSelection

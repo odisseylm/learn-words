@@ -1,6 +1,7 @@
 package com.mvv.gui.javafx
 
 import com.mvv.gui.util.urlEncode
+import javafx.application.Platform
 import javafx.concurrent.Worker
 import javafx.event.EventHandler
 import javafx.geometry.Insets
@@ -13,6 +14,7 @@ import javafx.scene.input.ContextMenuEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.web.WebView
 import javafx.stage.Modality
+import javafx.util.StringConverter
 import java.util.*
 
 
@@ -192,3 +194,43 @@ fun openGoogleTranslate(text: String) =
 fun openAbbyLingvoTranslate(text: String) =
     // hm... strange Abby site does not process '+' as space char, need to escape it as '%20'
     openWebBrowser("https://www.lingvolive.com/en-us/translate/en-ru/${urlEncode(text).replace("+", "%20")}")
+
+
+fun <T> showDropDownDialog(
+    parent: Node, title: String, items: List<T>, converter: StringConverter<T>,
+    hasEditor: Boolean,
+    width: Double? = null, height: Double? = null,
+): T? {
+
+    // We can replace it by javafx.scene.control.ChoiceDialog
+    // I just didn't know about it :-)
+    //
+    val dialog = Dialog<T>()
+    dialog.title = title
+
+    val comboBox = ComboBox<T>().also {
+        it.items.setAll(items)
+        it.isEditable = hasEditor
+        it.converter  = converter
+
+        Platform.runLater { it.requestFocus() }
+    }
+
+    dialog.dialogPane.content = BorderPane(comboBox)
+    dialog.dialogPane.buttonTypes.addAll(
+        ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE),
+        ButtonType("Ok", ButtonBar.ButtonData.OK_DONE),
+    )
+
+    if (width  != null) dialog.width  = width
+    if (height != null) dialog.height = height
+
+    dialog.isResizable = true
+    initDialogParentAndModality(dialog, parent)
+
+    dialog.setResultConverter { buttonType ->
+        if (buttonType.buttonData == ButtonBar.ButtonData.OK_DONE) comboBox.selectionModel.selectedItem else null
+    }
+
+    return dialog.showAndWait().orElse(null)
+}

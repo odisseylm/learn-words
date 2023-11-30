@@ -1,6 +1,7 @@
 package com.mvv.gui
 
 import com.mvv.gui.javafx.*
+import com.mvv.gui.util.lastChar
 import com.mvv.gui.util.startsWithOneOf
 import com.mvv.gui.words.CardWordEntry
 import javafx.event.EventHandler
@@ -27,7 +28,7 @@ class FindWord (private val currentWords: TableView<CardWordEntry>)  {
     val pane = HBox().also { it.children.addAll(editor, goButton) }
 
     private fun findAndSelectWord() {
-        val toFind = editor.text.trim().lowercase()
+        val toFind = editor.text.lowercase()
         if (toFind.isBlank()) return
 
         var searchFrom = 0
@@ -56,12 +57,17 @@ class FindWord (private val currentWords: TableView<CardWordEntry>)  {
 
     private fun findByPrefix(toFind: String, searchFrom: Int): CardWordEntry? {
         val asPrefixes = toFindAsPrefixes(toFind)
+        val searchByExact = toFind.isNotBlank() && toFind.lastChar == ' '
+        val exactToFind = toFind.trim()
+
         return currentWords.items.asSequence()
             .drop(searchFrom)
-            .find { it.from.startsWithOneOf(asPrefixes, ignoreCase = true) }
+            .find { it.from.startsWithOneOf(asPrefixes, ignoreCase = true) ||
+                    (searchByExact && it.from.equals(exactToFind, ignoreCase = true)) }
     }
     private fun matchedByPrefix(card: CardWordEntry, toFind: String): Boolean =
-        card.from.startsWithOneOf(toFindAsPrefixes(toFind), ignoreCase = true)
+        card.from.startsWithOneOf(toFindAsPrefixes(toFind), ignoreCase = true) ||
+                (toFind.isNotBlank() && toFind.lastChar == ' ' && card.from.equals(toFind.trim(), ignoreCase = true))
     private fun toFindAsPrefixes(toFind: String) = listOf(toFind, "to $toFind", "to be $toFind")
 
     fun addSelectEventHandler(handler: EventHandler<SelectEvent<CardWordEntry>>) {

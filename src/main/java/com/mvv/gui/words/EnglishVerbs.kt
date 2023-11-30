@@ -31,9 +31,11 @@ class EnglishVerbs {
 
         val infinite = when {
             verb.endsWith("yied") -> verb.removeSuffix("ied")
+            // exception 'died'
+            verb == "died"        -> "die"
             verb.endsWith("ied")  -> verb.removeSuffix("ied") + "y"
 
-            verb.endsWithOneOf("yed", "ued", "ained", "ched", "nted", "ived")
+            verb.endsWithOneOf("yed", "ued", "ained", "ched", "nted", "ived", "ayed", "rned")
                  -> verb.removeSuffix("ed")
             else -> null
         }

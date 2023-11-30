@@ -152,3 +152,6 @@ fun <T> treeSet(comparator: Comparator<T>, vararg items: T): TreeSet<T> {
 
 fun treeStringCaseInsensitiveSet(vararg items: String): TreeSet<String> =
     treeSet(String.CASE_INSENSITIVE_ORDER, *items)
+
+
+//inline fun <T, R : Comparable<R>> Iterable<T>.minBy(selector: (T) -> R): T = this.minByOrNull(selector)!!

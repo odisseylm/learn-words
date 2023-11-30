@@ -48,8 +48,7 @@ class AllWordCardSetsManager : AutoCloseable {
         val sw = startStopWatch()
 
         val ignoredFileBaseName = this.ignoredFile?.baseWordsFilename
-        val allExistentSetFiles =
-            getAllExistentSetFiles(includeMemoWordFile = false, toIgnoreBaseWordsFilename = ignoredFileBaseName).toSet()
+        val allExistentSetFiles = getAllExistentSetFiles(includeMemoWordFile = false, toIgnoreBaseWordsFilename = ignoredFileBaseName).toSet()
 
         val prevSets = this.sets
 
@@ -169,6 +168,8 @@ class AllWordCardSetsManager : AutoCloseable {
 
     private fun List<SearchEntry>.ignoreEntriesFromFile(ignoredFile: Path?): List<SearchEntry> =
         this.filter { it.file != ignoredFile }
+
+    val allCardSets: List<Path> get() = this.sets.keys.toList()
 
     override fun close() = updateTimer.cancel()
 }

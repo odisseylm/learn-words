@@ -9,6 +9,7 @@ import kotlin.io.path.name
 
 enum class CsvFormat { Internal, MemoWord }
 
+// TODO: rename and move to Settings
 val dictDirectory: Path = userHome.resolve("english/words")
 
 const val internalWordCardsFileExt = ".csv"

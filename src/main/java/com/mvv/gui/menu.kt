@@ -89,6 +89,8 @@ class MenuController (val controller: LearnWordsController) {
                 controller.ignoreTooManyExampleCardCandidates() },
 
             SeparatorMenuItem(),
+            newMenuItem("Update all sets indices") {
+                controller.allWordCardSetsManager.reloadAllSetsAsync() },
             newMenuItem("Sort & Refresh", buttonIcon("/icons/iu_update_obj.png")) {
                 controller.currentWordsList.sort()
                 controller.currentWordsList.refresh()
