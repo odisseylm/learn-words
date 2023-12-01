@@ -266,14 +266,14 @@ private val CharSequence.isAdjective: Boolean get() {
 //private val Part.isAdjective: Boolean get() = this.asTextOnly().isAdjective
 
 
-internal fun String.splitTranslation(): List<String> =
+internal fun CharSequence.splitTranslation(): List<String> =
     this.trim().splitTranslationImpl(true)
         .map { it.toString().trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly) }
         .distinct()
 
-private fun String.splitTranslationImpl(processChildren: Boolean): List<CharSequence> {
+private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<CharSequence> {
 
-    val result = mutableListOf<CharSequence>(this)
+    val result = mutableListOf(this)
 
     val splitByBrackets = this.splitByBrackets().filter { it.asTextOnly().isNotBlank() }
 
@@ -382,7 +382,7 @@ private fun String.splitTranslationImpl(processChildren: Boolean): List<CharSequ
 
 
 data class Part (
-    val content: String,
+    val content: CharSequence,
     val inBrackets: Boolean,
     // content
     val from: Int,
@@ -398,13 +398,13 @@ data class Part (
 
     companion object {
         fun inBrackets(
-            content: String,
+            content: CharSequence,
             // bracket indices
             openBracketIndex: Int,
             closingBracketIndex: Int,
         ) = Part(content, true, openBracketIndex + 1, closingBracketIndex, openBracketIndex, closingBracketIndex)
         fun withoutBrackets(
-            content: String,
+            content: CharSequence,
             from: Int,
             /** Exclusive */
             to: Int,
@@ -414,7 +414,7 @@ data class Part (
 
 val Part.withoutBrackets: Boolean get() = !this.inBrackets
 
-internal fun String.splitByBrackets(): List<Part> {
+internal fun CharSequence.splitByBrackets(): List<Part> {
 
     val parts = mutableListOf<Part>()
     var bracketLevel = 0

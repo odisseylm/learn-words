@@ -1309,7 +1309,7 @@ fun CardWordEntry.isGoodLearnCardCandidate(): Boolean {
 }
 
 
-fun String.parseToCard(): CardWordEntry? {
+fun CharSequence.parseToCard(): CardWordEntry? {
 
     val text = this.trim().removePrefix(";").removeSuffix(";").trim()
 

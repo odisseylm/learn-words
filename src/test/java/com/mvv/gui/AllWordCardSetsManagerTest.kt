@@ -185,6 +185,22 @@ class AllWordCardSetsManagerTest {
     }
 
     @Test
+    @DisplayName("splitTranslation verbCase3_1")
+    fun test_splitTranslation_verbCase3_1() {
+        assertThat(" доверять(ся) (полагать(ся), опирать(ся)) ".splitTranslation())
+            .containsExactlyInAnyOrder(
+                // full unchanged string
+                "доверять(ся) (полагать(ся), опирать(ся))",
+                // first
+                "доверять", "доверять(ся)", "доверяться",
+                // second
+                "полагать", "полагать(ся)", "полагаться",
+                // third
+                "опирать", "опирать(ся)", "опираться",
+            )
+    }
+
+    @Test
     @DisplayName("splitTranslation verbCase4")
     fun test_splitTranslation_verbCase4() {
         val a = SoftAssertions()

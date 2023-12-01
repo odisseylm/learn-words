@@ -127,6 +127,7 @@ fun fixFrom(from: String): String {
 
 
 // Not optimized but very-very simple approach :-)
+// TODO: rewrite it using for-each and remove all unneeded chars in effective way
 fun formatWordOrPhraseToMemoWordFormat(wordOrPhrase: String): String =
     wordOrPhrase
         .replace('"', '\'')
