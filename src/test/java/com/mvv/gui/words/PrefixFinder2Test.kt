@@ -95,7 +95,7 @@ class PrefixFinder2Test {
 
         val sw = startStopWatch("PrefixFinder creation")
 
-        val pf = PrefixFinder()
+        val pf = englishPrefixFinder()
         sw.logInfo(log)
 
 
@@ -189,7 +189,7 @@ class PrefixFinder2Test {
     fun testWithIgnored() {
         val a = SoftAssertions()
 
-        val defaultPrefixFinder = PrefixFinder()
+        val defaultPrefixFinder = englishPrefixFinder()
 
         run {
             a.assertThat(defaultPrefixFinder.removeMatchedPrefix("let me go")).isEqualTo("")
@@ -198,7 +198,7 @@ class PrefixFinder2Test {
         }
 
         run {
-            val pfWithIgnores = PrefixFinder(setOf("go"))
+            val pfWithIgnores = englishPrefixFinder(setOf("go"))
             a.assertThat(pfWithIgnores.removeMatchedPrefix("let me go!")).isEqualTo("go!")
             a.assertThat(defaultPrefixFinder.removeMatchedPrefix("is it a go?")).isEqualTo("go?")
         }
@@ -208,7 +208,7 @@ class PrefixFinder2Test {
 
     @Test
     fun testWithAdditionalSpaceChars() {
-        val pf = PrefixFinder()
+        val pf = englishPrefixFinder()
         assertThat(pf.removeMatchedPrefix(" \t \n lEt me \t go \n to hOmE!?")).isEqualTo("hOmE!?")
     }
 
@@ -216,7 +216,7 @@ class PrefixFinder2Test {
     fun findPrefix_22() {
 
         val swCreation = startStopWatch("PrefixFinder creation")
-        val pf = PrefixFinder()
+        val pf = englishPrefixFinder()
         swCreation.logInfo(log)
 
 
@@ -296,7 +296,7 @@ class PrefixFinder2Test {
 
         val sw = startStopWatch("PrefixFinder creation")
 
-        val pf = PrefixFinder()
+        val pf = englishPrefixFinder()
         sw.logInfo(log)
 
 
@@ -327,7 +327,7 @@ class PrefixFinder2Test {
     @Test
     @Disabled("for manual debug")
     fun debugTest() {
-        val pf = PrefixFinder()
+        val pf = englishPrefixFinder()
         //val pf = PrefixFinder(listOf(
         //    listOf("to", "{verb}", "{art}"),
         //    listOf("to", "{verb}", "{prep}"),
@@ -366,7 +366,7 @@ class PrefixFinder2Test {
 
         if (ri.currentRepetition == 1) {
             val creatingSW = startStopWatch("performanceTest => creating PrefixFinder")
-            val pf = PrefixFinder()
+            val pf = englishPrefixFinder()
             creatingSW.logInfo(log)
 
             log.info { "performanceTest => calculating started" }
@@ -379,7 +379,7 @@ class PrefixFinder2Test {
             val count = 20
             val sw = startStopWatch("performanceTest => creating PrefixFinder $count times")
 
-            for (i in 1..count) PrefixFinder()
+            for (i in 1..count) englishPrefixFinder()
 
             sw.logInfo(log)
             log.info { "Average creation time is ${sw.time / count}ms." }
@@ -404,7 +404,7 @@ class PrefixFinder2Test {
 
             val sw = startStopWatch("performanceTest => processing phrases ${allPhrases.size}")
 
-            val pf = PrefixFinder()
+            val pf = englishPrefixFinder()
             allPhrases.forEach { pf.calculateBaseOfFromForSorting(it) }
 
             sw.logInfo(log)
@@ -417,3 +417,6 @@ class PrefixFinder2Test {
 
 //private fun <T> seq(vararg values: T): Seq<T> = listOf(*values)
 //private fun <T> alt(vararg values: T): Alt<T> = listOf(*values)
+
+private fun TreeNode.findMatchedPrefix(phrase: String): String? = this.findMatchedSubSequence(phrase, Direction.Forward)
+private fun SubSequenceFinder.removeMatchedPrefix(phrase: String): String = this.removeMatchedSubSequence(phrase)

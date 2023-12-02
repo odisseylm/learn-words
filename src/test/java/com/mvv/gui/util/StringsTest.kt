@@ -94,4 +94,22 @@ class StringsTest {
 
         a.assertAll()
     }
+
+    @Test
+    @DisplayName("removeSuffixCaseInsensitive")
+    fun test_removeSuffixCaseInsensitive() {
+        val a = SoftAssertions()
+
+        a.assertThat("abcdf".removeSuffixCaseInsensitive("df")).isEqualTo("abc")
+        a.assertThat("abcDf".removeSuffixCaseInsensitive("df")).isEqualTo("abc")
+        a.assertThat("abcdF".removeSuffixCaseInsensitive("DF")).isEqualTo("abc")
+
+        a.assertThat("abcdf".asCharSequence().removeSuffixCaseInsensitive("df")).isEqualTo("abc")
+        a.assertThat("abcDf".asCharSequence().removeSuffixCaseInsensitive("df")).isEqualTo("abc")
+        a.assertThat("abcdF".asCharSequence().removeSuffixCaseInsensitive("DF")).isEqualTo("abc")
+
+        a.assertAll()
+    }
 }
+
+private fun String.asCharSequence(): CharSequence = this

@@ -270,6 +270,8 @@ internal fun CharSequence.splitTranslation(): List<String> =
     this.trim().splitTranslationImpl(true)
         .map { it.toString().trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly) }
         .distinct()
+        .flatMap { listOf(it, it.removeOptionalTranslationEnding()) }
+        .distinct()
 
 private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<CharSequence> {
 
@@ -380,6 +382,11 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
     return result.distinct()
 }
 
+
+private val russianOptionalTrailingFinder = russianOptionalTrailingFinder()
+
+private fun String.removeOptionalTranslationEnding(): String =
+    russianOptionalTrailingFinder.removeMatchedSubSequence(this)
 
 data class Part (
     val content: CharSequence,

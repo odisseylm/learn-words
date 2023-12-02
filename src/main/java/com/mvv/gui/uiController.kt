@@ -81,7 +81,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
     private val englishVerbs = EnglishVerbs()
     @Volatile
-    private var prefixFinder = PrefixFinder(emptyList())
+    private var prefixFinder = englishPrefixFinder(emptyList())
     private val baseWordExtractor: BaseWordExtractor = object : BaseWordExtractor {
         override fun extractBaseWord(phrase: String): String {
             val baseWords = prefixFinder.calculateBaseOfFromForSorting(phrase)
@@ -109,7 +109,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     }
 
     private fun rebuildPrefixFinderImpl(onlyPureWords: Set<String>) {
-        this.prefixFinder = PrefixFinder(onlyPureWords)
+        this.prefixFinder = englishPrefixFinder(onlyPureWords)
         Platform.runLater { currentWords.toList().forEach { it.baseWordOfFromProperty.resetCachedValue() } }
     }
 
@@ -155,7 +155,7 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
         currentWordsList.contextMenu = contextMenuController.contextMenu
         currentWordsList.onContextMenuRequested = EventHandler { contextMenuController.updateItemsVisibility() }
 
-        currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, card ->
+        currentWordsList.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             Platform.runLater { if (toPlayWordOnSelect) playSelectedWord() }
             Platform.runLater { showWarningAboutSelectedCardExistInOtherSet() }
         }

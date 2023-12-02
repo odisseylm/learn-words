@@ -15,12 +15,10 @@ fun <S: CharSequence> S.containsOneOf(suffixes: Iterable<String>): Boolean = suf
 fun <S: CharSequence> S.containsOneOf(vararg suffixes: String): Boolean = this.containsOneOf(suffixes.asIterable())
 
 
+fun CharSequence.removeSuffixCaseInsensitive(suffix: CharSequence): CharSequence =
+    if (this.endsWith(suffix, ignoreCase = true)) this.subSequence(0, this.length - suffix.length) else this
 fun String.removeSuffixCaseInsensitive(suffix: String): String =
-    when {
-        this.endsWith(suffix) -> this.removeSuffix(suffix)
-        this.lowercase().endsWith(suffix.lowercase()) -> this.substring(0, this.length - suffix.length)
-        else -> this
-    }
+    if (this.endsWith(suffix, ignoreCase = true)) this.substring(0, this.length - suffix.length) else this
 
 
 fun CharSequence.removeSuffixesRepeatably(vararg suffixes: String): CharSequence {
@@ -61,7 +59,7 @@ fun CharSequence.removeCharSuffixesRepeatably(suffixes: String): CharSequence {
 
         if (prefix.isEmpty) return s
 
-        s = s.substring(0, s.length - 1)
+        s = s.subSequence(0, s.length - 1)
     } while (true)
 }
 
@@ -76,7 +74,7 @@ fun CharSequence.removeCharPrefixesRepeatably(prefixes: String): CharSequence {
 
         if (prefix.isEmpty) return s
 
-        s = s.substring(1)
+        s = s.subSequence(1, s.length)
     } while (true)
 }
 

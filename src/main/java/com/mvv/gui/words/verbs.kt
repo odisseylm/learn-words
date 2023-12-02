@@ -1,7 +1,7 @@
 package com.mvv.gui.words
 
 
-val commonVerbs: Alt<Seq<String>> = sequenceOf(
+val englishCommonVerbs: Alt<Seq<String>> = sequenceOf(
     // TODO: keep there only base/infinitive forms and create 2nd/3rd/s/ing forms dynamically
     //
     // TODO: add negatives like
