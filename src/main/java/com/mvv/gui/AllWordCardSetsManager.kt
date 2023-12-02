@@ -201,9 +201,16 @@ class WordsData (
     }
     */
 
+    private fun String.removeOptionalTrailingPronoun(): String {
+        val s1 = englishOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, SubSequenceFinderOptions(false))
+        val s2 = russianOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, SubSequenceFinderOptions(false))
+
+        return if (s1.length < s2.length) s1 else s2
+    }
+
     private fun splitByAllWords(): Map<String, List<CardWordEntry>> {
         return wordEntries
-            .flatMap { card -> card.getAllSearchableWords().map { Pair(it, card) } }
+            .flatMap { card -> card.getAllSearchableWords().flatMap { listOf(it, it.removeOptionalTrailingPronoun()) }.distinct().map { Pair(it, card) } }
             .groupBy( { it.first }, { it.second } )
     }
 }
@@ -383,10 +390,11 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
 }
 
 
+private val russianOptionalTrailingFinderOptions = SubSequenceFinderOptions(true)
 private val russianOptionalTrailingFinder = russianOptionalTrailingFinder()
 
 private fun String.removeOptionalTranslationEnding(): String =
-    russianOptionalTrailingFinder.removeMatchedSubSequence(this)
+    russianOptionalTrailingFinder.removeMatchedSubSequence(this, russianOptionalTrailingFinderOptions)
 
 data class Part (
     val content: CharSequence,

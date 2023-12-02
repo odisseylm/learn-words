@@ -1,10 +1,12 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.test.useAssertJSoftAssertions
 import com.mvv.gui.util.logInfo
 import com.mvv.gui.util.startStopWatch
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.RepetitionInfo
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -325,6 +327,22 @@ class EnglishSubSequenceFinderTest {
 
 
     @Test
+    @DisplayName("removeOptionalTrailingPronouns")
+    fun test_removeOptionalTrailingPronouns() {
+
+        fun String.removeOptionalTrailingPronoun(): String =
+            englishOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, SubSequenceFinderOptions(false))
+
+        useAssertJSoftAssertions {
+            assertThat("cut something".removeOptionalTrailingPronoun()).isEqualTo("cut")
+            assertThat("to cut something".removeOptionalTrailingPronoun()).isEqualTo("to cut")
+            assertThat("to cut 555".removeOptionalTrailingPronoun()).isEqualTo("to cut 555")
+            assertThat("to cut bla-bla".removeOptionalTrailingPronoun()).isEqualTo("to cut bla-bla")
+        }
+    }
+
+
+    @Test
     @Disabled("for manual debug")
     fun debugTest() {
         val pf = englishPrefixFinder()
@@ -418,5 +436,8 @@ class EnglishSubSequenceFinderTest {
 //private fun <T> seq(vararg values: T): Seq<T> = listOf(*values)
 //private fun <T> alt(vararg values: T): Alt<T> = listOf(*values)
 
-private fun TreeNode.findMatchedPrefix(phrase: String): String? = this.findMatchedSubSequence(phrase, Direction.Forward)
-private fun SubSequenceFinder.removeMatchedPrefix(phrase: String): String = this.removeMatchedSubSequence(phrase)
+private val subSequenceFinderOptions = SubSequenceFinderOptions(true)
+private fun TreeNode.findMatchedPrefix(phrase: String): String? =
+    this.findMatchedSubSequence(phrase, Direction.Forward, subSequenceFinderOptions.cleanPunctuationAtEndOfSentence)
+private fun SubSequenceFinder.removeMatchedPrefix(phrase: String): String =
+    this.removeMatchedSubSequence(phrase, subSequenceFinderOptions)

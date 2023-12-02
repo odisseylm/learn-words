@@ -1,8 +1,12 @@
 package com.mvv.gui.words
 
 
+// T O D O: 'optional' not correct name (what is correctly optional?). Need to rename it.
 fun russianOptionalTrailingFinder(): SubSequenceFinder =
     SubSequenceFinder(russianOptionalEndingsTemplates, Direction.Backward, emptyList(), optionalRussianTrailingRules)
+
+fun russianOptionalTrailingPronounsFinder(): SubSequenceFinder =
+    SubSequenceFinder(russianOptionalEndingsPronounsTemplates, Direction.Backward, emptyList(), optionalRussianTrailingRules)
 
 
 private val russianOptionalEndingsTemplates: Alt<Seq<String>> = sequenceOf(
@@ -13,6 +17,13 @@ private val russianOptionalEndingsTemplates: Alt<Seq<String>> = sequenceOf(
     "{prep} {art}",
     "{prep} {art} {pp}",
     "{prep} {pp} {art}",
+).splitToWords()
+
+
+// !!! without prepositions !!! prepositions should be kept !!!
+private val russianOptionalEndingsPronounsTemplates: Alt<Seq<String>> = sequenceOf(
+    "{pp}",
+    "{art}",
 ).splitToWords()
 
 
@@ -413,6 +424,10 @@ private val russianPronouns: Alt<Seq<String>> = sequenceOf(
     "чей-либо", "чьего́-либо", "чьему́-либо", "чьего́-либо/чей-либо", "чьи́м-либо", "чьём-либо", "о чьём-либо",
     "чей-нибудь", "чьего́-нибудь", "чьему́-нибудь", "чьего́-нибудь/чей-нибудь", "чьи́м-нибудь", "чьём-нибудь", "о чьём-нибудь",
 
+    "чьё/чье", "чьего́", "чьему́", "чьё", "чьи́м", "чьём/чьем",
+    "чья́", "чье́й", "чье́й", "чью́", "чье́й/чье́ю", "чье́й",
+    "чьи́", "чьи́х", "чьи́м", "чьи́х/чьи́", "чьи́ми", "чьи́х",
+
     "который", "которого", "которому", "которого", "которым", "о котором", "котором",
     "некоторый", "некоторого", "некоторому", "некоторого", "некоторым", "о некотором", "некотором",
     "который-либо", "которого-либо", "которому-либо", "которого-либо", "которым-либо", "о котором-либо", "котором-либо",
@@ -461,3 +476,6 @@ private val optionalRussianTrailingRules = SubSequenceLanguageRules(
     emptyList(),
     russianPronouns,
 )
+
+
+val russianOptionalTrailingPronounsFinder: SubSequenceFinder = russianOptionalTrailingPronounsFinder()

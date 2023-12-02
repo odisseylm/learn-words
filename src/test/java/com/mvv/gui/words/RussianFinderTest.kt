@@ -8,6 +8,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 
+private fun SubSequenceFinder.removeMatchedSubSequence(phrase: String): String =
+    this.removeMatchedSubSequence(phrase, SubSequenceFinderOptions(true))
+
 class RussianFinderTest {
     private val f = russianOptionalTrailingFinder()
 
@@ -26,6 +29,14 @@ class RussianFinderTest {
             assertThat(f.removeMatchedSubSequence("удержать т.п.")).isEqualTo("удержать")
             assertThat(f.removeMatchedSubSequence("столовое серебро, т.п.")).isEqualTo("столовое серебро,")
             //assertThat(f.removeMatchedSubSequence("столовое серебро, тому подобное")).isEqualTo("столовое серебро, тому подобное")
+
+            val notCleanPunctuationAtEndOfSentenceOptions = SubSequenceFinderOptions(false)
+            assertThat(f.removeMatchedSubSequence("удержать т.п.", notCleanPunctuationAtEndOfSentenceOptions)).isEqualTo("удержать")
+            assertThat(f.removeMatchedSubSequence("столовое серебро, т.п.", notCleanPunctuationAtEndOfSentenceOptions)).isEqualTo("столовое серебро,")
+
+            val cleanPunctuationAtEndOfSentenceOptions = SubSequenceFinderOptions(true)
+            assertThat(f.removeMatchedSubSequence("удержать т.п.", cleanPunctuationAtEndOfSentenceOptions)).isEqualTo("удержать")
+            assertThat(f.removeMatchedSubSequence("столовое серебро, т.п.", cleanPunctuationAtEndOfSentenceOptions)).isEqualTo("столовое серебро,")
         }
     }
 

@@ -85,12 +85,11 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
     private val baseWordExtractor: BaseWordExtractor = object : BaseWordExtractor {
         override fun extractBaseWord(phrase: String): String {
             val baseWords = prefixFinder.calculateBaseOfFromForSorting(phrase)
-            val firstWordOfBase = baseWords.firstWord.removeSuffixesRepeatably("!", ".", "?", "…").toString()
+            val firstWordOfBase = baseWords.firstWord.removeCharSuffixesRepeatably("!.?…").toString()
             // TODO: use EnglishVerbs.getInfinitive() when it is implemented properly
             return englishVerbs.getIrregularInfinitive(firstWordOfBase) ?: firstWordOfBase
         }
     }
-
 
     private fun rebuildPrefixFinder() {
         // only words without phrases
@@ -229,10 +228,13 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             }
         }
 
+    private fun String.removeEnglishTrailingPronoun(): String =
+        englishOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, SubSequenceFinderOptions(false))
+
     private fun onCardFromEdited(wordOrPhrase: String) {
         if (settingsPane.warnAboutDuplicatesInOtherSets) {
-            // TODO: remove ending 'something', 'smt', so on to avoid duplicates with and without smt, smb, etc.
-            val foundInOtherSets = allWordCardSetsManager.findBy(wordOrPhrase, MatchMode.Exact)
+            val fixedWordOrPhrase = wordOrPhrase.removeEnglishTrailingPronoun()
+            val foundInOtherSets = allWordCardSetsManager.findBy(fixedWordOrPhrase, MatchMode.Exact)
             if (foundInOtherSets.isNotEmpty())
                 showThisWordsInOtherSetsPopup(wordOrPhrase, foundInOtherSets)
         }

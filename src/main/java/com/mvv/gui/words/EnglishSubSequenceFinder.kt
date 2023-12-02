@@ -3,10 +3,12 @@ package com.mvv.gui.words
 import com.mvv.gui.util.*
 
 
+private val findMatchedPrefixOptions = SubSequenceFinderOptions(true)
+
 fun SubSequenceFinder.findMatchedPrefix(phrase: String): String? {
     require(this.direction == Direction.Forward) {
         "findMatchedPrefix() should be used only with 'forward' SubSequenceFinder." }
-    return this.findMatchedSubSequence(phrase)
+    return this.findMatchedSubSequence(phrase, findMatchedPrefixOptions)
 }
 
 
@@ -125,9 +127,14 @@ private val englishPossibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>
 
 private val englishArticlesAndSimilar: Alt<Seq<String>> = sequenceOf(
     "one's", "ones", "one",
-    "somebody's", "somebody", "smb's.", "smb's", "smbs'", "smbs", "smb.", "smb",
+
+    "somebody's", "somebody", "smb's.", "smb.'s", "smb's", "smbs'", "smbs", "smb.", "smb",
     "somebody's a", "somebody a", "smb's. a", "smb's a", "smbs' a", "smbs a", "smb. a", "smb a",
     "somebody's the", "somebody the", "smb's. the", "smb's the", "smbs' the", "smbs the", "smb. the", "smb the",
+
+    "smth.'s", "smth's.", "smt.'s", "smt's.", "something's",
+    "smth.", "smth", "smt.", "smt", "something",
+
     "every", "one", "your", "mine", "one's own",
     "daily",
     "forbidden",
@@ -208,3 +215,14 @@ private val englishLanguageRules = SubSequenceLanguageRules(
     englishCommonVerbs,
     englishPronouns,
 )
+
+
+fun englishOptionalTrailingPronounsFinder(): SubSequenceFinder =
+    SubSequenceFinder(englishOptionalEndingsPronounsTemplates, Direction.Backward, emptyList(), englishLanguageRules)
+
+private val englishOptionalEndingsPronounsTemplates: Alt<Seq<String>> = sequenceOf(
+    "{pp}",
+    "{art}",
+).splitToWords()
+
+val englishOptionalTrailingPronounsFinder: SubSequenceFinder = englishOptionalTrailingPronounsFinder()

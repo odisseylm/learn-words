@@ -50,32 +50,24 @@ fun CharSequence.removePrefixesRepeatably(vararg prefixes: String): CharSequence
 
 
 fun CharSequence.removeCharSuffixesRepeatably(suffixes: String): CharSequence {
-    var s = this
+    for (i in this.length - 1 downTo 0) {
+        val ch = this[i]
+        val isPrefixChar = ch in suffixes
 
-    do {
-        val prefix = suffixes.chars()
-            .filter { s.endsWith(it.toChar()) }
-            .findFirst()
-
-        if (prefix.isEmpty) return s
-
-        s = s.subSequence(0, s.length - 1)
-    } while (true)
+        if (!isPrefixChar) return this.subSequence(0, i + 1)
+    }
+    return this
 }
 
 
 fun CharSequence.removeCharPrefixesRepeatably(prefixes: String): CharSequence {
-    var s = this
+    for (i in indices) {
+        val ch = this[i]
+        val isPrefixChar = ch in prefixes
 
-    do {
-        val prefix = prefixes.chars()
-            .filter { s.startsWith(it.toChar()) }
-            .findFirst()
-
-        if (prefix.isEmpty) return s
-
-        s = s.subSequence(1, s.length)
-    } while (true)
+        if (!isPrefixChar) return this.subSequence(i, this.length)
+    }
+    return this
 }
 
 

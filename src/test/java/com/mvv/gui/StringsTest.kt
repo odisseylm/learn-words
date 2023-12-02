@@ -1,5 +1,6 @@
 package com.mvv.gui
 
+import com.mvv.gui.test.useAssertJSoftAssertions
 import com.mvv.gui.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
@@ -86,8 +87,13 @@ class StringsTest {
 
     @Test
     fun removeCharPrefixesRepeatably() {
-        assertThat("” Human Resources have teeth".removeCharPrefixesRepeatably("\"”“ \n\t"))
-            .isEqualTo("Human Resources have teeth")
+        useAssertJSoftAssertions {
+            assertThat("” Human Resources have teeth".removeCharPrefixesRepeatably("\"”“ \n\t"))
+                .isEqualTo("Human Resources have teeth")
+
+            assertThat("”\n ” \t \n Human Resources have teeth".removeCharPrefixesRepeatably("\"”“ \n\t"))
+                .isEqualTo("Human Resources have teeth")
+        }
     }
 
 

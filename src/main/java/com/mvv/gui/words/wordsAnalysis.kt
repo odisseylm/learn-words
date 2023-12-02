@@ -51,7 +51,16 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
     val started = System.currentTimeMillis()
     log.debug("### analyzeWordCards")
 
-    val allWordCardsMap: Map<String, List<CardWordEntry>> = allWordCards.groupBy { it.from.trim().lowercase() }
+    fun String.removeOptionalTrailingPronoun(): String = englishOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, SubSequenceFinderOptions(false))
+
+    val allWordCardsMap: Map<String, List<CardWordEntry>> = allWordCards
+        .flatMap {
+            val fromLCTrimmed = it.from.trim().lowercase()
+            listOf(Pair(fromLCTrimmed, it), Pair(fromLCTrimmed.removePrefix("to ").trim(), it)) }
+        .flatMap {
+            listOf(it, Pair(it.first.removeOptionalTrailingPronoun(), it.second)) }
+        .groupBy({ it.first }, { it.second })
+        .mapValues { it.value.distinct() }
 
 
     fun <T> WritableObjectValue<Set<T>>.update(value: T, toSet: Boolean): Boolean =
@@ -69,7 +78,7 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         val statuses = card.statuses
 
 
-        val hasDuplicate = (allWordCardsMap[fromLowerTrimmed]?.size ?: 0) >= 2
+        val hasDuplicate = (allWordCardsMap[fromLowerTrimmed.removePrefix("to ").removeOptionalTrailingPronoun()]?.size ?: 0) >= 2
         statusesProperty.update(Duplicates, hasDuplicate)
 
         val noTranslation = from.isNotBlank() && to.isBlank()

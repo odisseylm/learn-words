@@ -5,6 +5,14 @@ import com.mvv.gui.util.*
 
 enum class Direction { Forward, Backward }
 
+fun List<String>.bypassDirection(direction: Direction): List<String> = when (direction) {
+    Direction.Forward -> this
+    Direction.Backward -> this.reversed()
+}
+
+data class SubSequenceFinderOptions (
+    val cleanPunctuationAtEndOfSentence: Boolean,
+)
 
 /**
  * Complicated tree based a prefix finder which uses shared subtrees
@@ -26,11 +34,11 @@ open class SubSequenceFinder (
 
     private val rootNode: TreeNode = buildPrefixesMatchTree(patternTemplates, direction, ignoredWords, languageRules)
 
-    fun findMatchedSubSequence(phrase: String): String? =
-        rootNode.findMatchedSubSequence(phrase, direction)
+    fun findMatchedSubSequence(phrase: String, options: SubSequenceFinderOptions): String? =
+        rootNode.findMatchedSubSequence(phrase, direction, options.cleanPunctuationAtEndOfSentence)
 
-    fun removeMatchedSubSequence(phrase: String): String {
-        val matchedSubSequenceStr = findMatchedSubSequence(phrase)
+    fun removeMatchedSubSequence(phrase: String, options: SubSequenceFinderOptions): String {
+        val matchedSubSequenceStr = findMatchedSubSequence(phrase, options)
             ?: return phrase
 
         val s = phrase.trim().removeRepeatableSpaces()
@@ -137,13 +145,14 @@ internal fun TreeNode?.sharedChildAsTreeNodeRes(word: String): TreeNodeRes? {
 }
 
 
-internal fun TreeNode.findMatchedSubSequence(phrase: String, direction: Direction): String? {
+internal fun TreeNode.findMatchedSubSequence(phrase: String, direction: Direction, cleanPunctuationAtEndOfSentence: Boolean): String? {
 
-    var phraseFixed = phrase
+    var phraseFixed: CharSequence = phrase
         .lowercase().trim()
         .removeRepeatableSpaces()
-        .removeCharSuffixesRepeatably("!?…")
-        .trimEnd()
+
+    if (cleanPunctuationAtEndOfSentence)
+        phraseFixed = phraseFixed.removeCharSuffixesRepeatably("!?…").trimEnd()
 
     val lastWord = phraseFixed.lastWord()
         ?: return null
@@ -151,18 +160,17 @@ internal fun TreeNode.findMatchedSubSequence(phrase: String, direction: Directio
     if (lastWord.endsWith('.')) {
         val matchedLastWord = doSearchMatchedPrefixSequence(listOf(lastWord), this, null, null, null)
         val lastWordIsSpecial = matchedLastWord.isNotEmpty()
-        if (!lastWordIsSpecial) {
+        if (!lastWordIsSpecial && cleanPunctuationAtEndOfSentence) {
             phraseFixed = phraseFixed.removeCharSuffixesRepeatably(".")
         }
     }
 
-    val words = phraseFixed.splitToWords()
-        .let { if (direction == Direction.Backward) it.reversed() else it }
+    val words = phraseFixed.splitToWords().bypassDirection(direction)
 
     val matchedPrefixSequence = doSearchMatchedPrefixSequence(words, this, null, null, null)
     return matchedPrefixSequence
         .ifEmpty { null }
-        ?.let { if (direction == Direction.Backward) it.reversed() else it }
+        ?.bypassDirection(direction)
         ?.joinToString(" ")
 }
 
@@ -299,7 +307,7 @@ private fun buildSharedTree(sequences: Alt<Seq<String>>, rootNodeName: String, d
         if (toIgnore) continue
 
         var node: TreeNode = rootNode
-        val wordSeq = seq.let { if (direction == Direction.Backward) it.reversed() else it }
+        val wordSeq = seq.bypassDirection(direction)
 
         for (word in wordSeq) {
             node = node.addChildNode(word)
@@ -340,10 +348,8 @@ internal fun buildPrefixesMatchTree(patterns: Alt<Seq<String>>, direction: Direc
         val toIgnore = pattern.isEmpty() || pattern.any { word -> word in context.toIgnoreWords }
         if (toIgnore) continue
 
-        val patterWordsSeq = if (direction == Direction.Backward) pattern.reversed() else pattern
-
         var node: TreeNode = rootNode
-        for (word in patterWordsSeq) {
+        for (word in pattern.bypassDirection(direction)) {
             node = when (word) {
                 artsSharedNodeName,         "{art}"  -> node.addChildNode(SharedWrapper(context.artsSharedTree))
                 verbsSharedNodeName,        "{verb}" -> node.addChildNode(SharedWrapper(context.verbsSharedTree))
@@ -373,5 +379,3 @@ fun Sequence<String>.splitToWords(): Alt<Seq<String>> =
     this.distinct()
         .map { it.split(' ', ',').map { word -> word.trim() }.filterNotEmpty() }
         .toList()
-
-
