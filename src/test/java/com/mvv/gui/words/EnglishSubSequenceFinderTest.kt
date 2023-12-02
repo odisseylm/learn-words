@@ -14,7 +14,7 @@ import java.nio.file.Path
 private val log = mu.KotlinLogging.logger {}
 
 
-class PrefixFinder2Test {
+class EnglishSubSequenceFinderTest {
 
     private val verbs = createSharedVerbTrees()
     private val arts = createSharedArtsTrees()
