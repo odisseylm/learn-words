@@ -2,12 +2,30 @@ package com.mvv.gui.words
 
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.DictionaryEntry
+import com.mvv.gui.test.useAssertJSoftAssertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 
 class WordsAnalysisTest {
+
+    @Test
+    @DisplayName("hasUnpairedBrackets")
+    fun test_hasUnpairedBrackets() {
+        useAssertJSoftAssertions {
+            assertThat("доверять".hasUnpairedBrackets()).isFalse
+            assertThat("доверять(ся)".hasUnpairedBrackets()).isFalse
+            assertThat("доверять(ся) (полагать(ся))".hasUnpairedBrackets()).isFalse
+
+            assertThat("доверять(ся".hasUnpairedBrackets()).isTrue
+            assertThat("доверяться)".hasUnpairedBrackets()).isTrue
+            assertThat("доверять(ся)) (полагать(ся))".hasUnpairedBrackets()).isTrue
+            assertThat("доверять((ся) (полагать(ся))".hasUnpairedBrackets()).isTrue
+            assertThat("доверять(ся) (полагать(ся)))".hasUnpairedBrackets()).isTrue
+            assertThat("доверять(ся) ((полагать(ся))".hasUnpairedBrackets()).isTrue
+        }
+    }
 
     @Test
     @DisplayName("analyzeWordCards")

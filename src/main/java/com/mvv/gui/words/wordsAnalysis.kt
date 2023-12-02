@@ -87,7 +87,7 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         val fromIsNotPrepared = from.isBlank()
                 || from.containsOneOf(unneededPartsForLearning)
                 || from.any { ! (it in " -'.!?" || it.isEnglishLetter()) }
-        val toIsNotPrepared   = to.isBlank()  || to.containsOneOf(unneededPartsForLearning)
+        val toIsNotPrepared   = to.isBlank() || to.containsOneOf(unneededPartsForLearning) || to.hasUnpairedBrackets()
         statusesProperty.update(TranslationIsNotPrepared, fromIsNotPrepared || toIsNotPrepared)
 
 
@@ -126,3 +126,24 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
     }
     log.debug("### analyzeWordCards took {}ms", System.currentTimeMillis() - started)
 }
+
+
+internal fun CharSequence.hasUnpairedBrackets(): Boolean {
+
+    var bracketLevel = 0
+
+    for (i in this.indices) {
+        val ch = this[i]
+
+        if (ch == '(') {
+            bracketLevel++
+        }
+        if (ch == ')') {
+            bracketLevel--
+            if (bracketLevel < 0) return true
+        }
+    }
+
+    return bracketLevel != 0
+}
+

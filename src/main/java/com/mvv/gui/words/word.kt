@@ -296,8 +296,8 @@ enum class WordCardStatus (
 
     // *************************** High priority warnings **************************************************************
     //
-    TranslationIsNotPrepared(true, {"The translation for '${it.from}' is not prepared for learning. " +
-            "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on)."}),
+    TranslationIsNotPrepared(true, {"The from/translation for '${it.from}' is not prepared for learning. " +
+            "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on) and unpaired brackets '()'."}),
 
     Duplicates(true, { "Duplicate. Please remove duplicates." }),
 
