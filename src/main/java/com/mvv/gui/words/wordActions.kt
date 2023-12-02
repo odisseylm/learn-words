@@ -2,9 +2,7 @@ package com.mvv.gui.words
 
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.extractExamples
-import com.mvv.gui.util.filterNotEmpty
-import com.mvv.gui.util.readBytes
-import com.mvv.gui.util.trimToNull
+import com.mvv.gui.util.*
 import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
 import javafx.collections.ObservableList
 import javafx.scene.input.Clipboard
@@ -171,7 +169,10 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
 
     card.fromWithPreposition = cards.merge("  ") { it.fromWithPreposition }
     card.transcription    = cards.merge(" ")  { it.transcription }
-    card.examples         = cards.merge("\n") { it.examples }
+    card.examples         = cards.flatMap { it.examples.splitExamples() }.filterNotBlank()
+                                 .distinct()
+                                 .joinToString("\n\n")
+                                 .ifNotBlank { it + "\n\n" }
     card.statuses         = cards.mergeSet    { it.statuses }
     card.predefinedSets   = cards.mergeSet    { it.predefinedSets }
     card.sourcePositions  = cards.mergeList   { it.sourcePositions }
@@ -180,6 +181,44 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
     card.file  = cards.map { it.file }.firstOrNull()
 
     return card
+}
+
+internal fun String.splitExamples(): List<String> {
+    if (this.isBlank()) return emptyList()
+
+    val lines = this.split("\n")
+    if (lines.isEmpty()) return emptyList()
+
+    val separatedExamples = mutableListOf<String>()
+    var currentExample = ""
+
+    for (line in lines) {
+
+        val lineIsBlank = line.isBlank()
+        val continueOfPreviousExample = !lineIsBlank && line.startsWith(' ')
+
+        if (lineIsBlank) { // end of previous example
+            if (currentExample.isNotBlank())
+                separatedExamples.add(currentExample.trim())
+            currentExample = ""
+        }
+
+        else if (continueOfPreviousExample) { // next line of previous comment
+            currentExample += "\n"
+            currentExample += line.trimEnd()
+        }
+
+        else { // just next example
+            if (currentExample.isNotBlank())
+                separatedExamples.add(currentExample.trim())
+            currentExample = line.trim()
+        }
+    }
+
+    if (currentExample.isNotBlank())
+        separatedExamples.add(currentExample.trim())
+
+    return separatedExamples
 }
 
 private fun mergeFrom(froms: List<String>): String {

@@ -1,10 +1,12 @@
 package com.mvv.gui.audio
 
-import com.mvv.gui.util.commandLine
-import com.mvv.gui.util.doTry
-import com.mvv.gui.util.executeCommandWithOutput
+import com.mvv.gui.util.*
 import org.apache.commons.exec.*
 import org.apache.commons.lang3.SystemUtils.IS_OS_LINUX
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.io.UncheckedIOException
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import kotlin.text.Charsets.UTF_8
@@ -13,8 +15,6 @@ import kotlin.text.Charsets.UTF_8
 private val log = mu.KotlinLogging.logger {}
 
 
-// TODO: add other attributes like gender, pitch, so on
-//
 // https://stackoverflow.com/questions/38572860/can-festival-ttss-speed-of-speech-be-changed
 // (Parameter.set 'Audio_Method 'Audio_Command)
 // (Parameter.set 'Audio_Command "aplay -Dplug:default -f S16_LE -r 15000 $FILE")
@@ -23,7 +23,7 @@ private val log = mu.KotlinLogging.logger {}
 // the speed and pitch effects. To slow the audio down you will need a speed value less than one, and compensate
 // for the effect on pitch with a positive value in pitch.
 //
-// TODO: to see festival songs
+// T O D O: to see festival songs
 //       http://festvox.org/docs/manual-1.4.3/festival_29.html
 //
 // https://metacpan.org/pod/eGuideDog::Festival
@@ -141,17 +141,24 @@ class FestivalVoiceSpeechSynthesizer (override val voice: FestivalVoice) : Speec
 
         log.debug { "Festival input: \n$inputPipedString" }
 
-        val executor = createExecutor(inputPipedString)
+        val bout = ByteArrayOutputStream()
+
+        val executor = createExecutorWithInput(inputPipedString, bout)
 
         //executor.watchdog = ExecuteWatchdog(15_000L)
         executor.processDestroyer = processDestroyer
 
         val exitCode = executor.execute(commandLine("festival", "--pipe"))
+        val resultOutput = bout.toString(UTF_8)
 
-        // TODO: in case of error inside inputPipedString,
-        //       we just have 'SIOD ERROR: end of file inside list' but exit-code is 0/success.
-        //       Need to determine such errors.
-        require(exitCode == 0) { "Error of speaking by festival." }
+        val failed = (exitCode != 0) || resultOutput.contains("SIOD ERROR")
+
+        if (failed) {
+            log.error(resultOutput)
+
+            val errStr = resultOutput.substringStartingFrom("SIOD ERROR", "\n", 200)
+            throw UncheckedIOException(IOException("Error of speaking by festival. ($errStr)"))
+        }
     }
 
     override val isAvailable: Boolean get() = isFestivalCommandPresent
@@ -164,9 +171,10 @@ fun String.escapeText(): String =
         //.replace("'", "’") // Why do I need it? We can  use such replacement only as they are wrapping word.
 
 
-private fun createExecutor(inputPipedString: String): Executor =
+private fun createExecutorWithInput(inputPipedString: String, outputStream: OutputStream): Executor =
     DefaultExecutor().also {
-        it.streamHandler = PumpStreamHandler(System.out, System.err, inputPipedString.byteInputStream(UTF_8))
+        //it.streamHandler = PumpStreamHandler(System.out, System.err, inputPipedString.byteInputStream(UTF_8))
+        it.streamHandler = PumpStreamHandler(outputStream, outputStream, inputPipedString.byteInputStream(UTF_8))
     }
 
 private class LastProcessDestroyer : ProcessDestroyer {

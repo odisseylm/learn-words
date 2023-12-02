@@ -1,5 +1,6 @@
 package com.mvv.gui.util
 
+import com.mvv.gui.test.useAssertJSoftAssertions
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -109,6 +110,41 @@ class StringsTest {
         a.assertThat("abcdF".asCharSequence().removeSuffixCaseInsensitive("DF")).isEqualTo("abc")
 
         a.assertAll()
+    }
+
+
+    @Test
+    @DisplayName("substringStartingFrom")
+    fun test_substringStartingFrom() {
+        useAssertJSoftAssertions {
+            assertThat("".substringStartingFrom("abc", "\n")).isNull()
+
+            assertThat("abcdf".substringStartingFrom("ab", "df")).isEqualTo("abc")
+            assertThat("abcdf".substringStartingFrom("ab", "z")).isEqualTo("abcdf")
+            assertThat("abcdf".substringStartingFrom("ab", "z", 2)).isEqualTo("ab")
+        }
+    }
+
+
+    @Test
+    @DisplayName("safeSubstring")
+    fun test_safeSubstring() {
+        useAssertJSoftAssertions {
+            val s = "abcdf"
+            val seq: CharSequence = s
+
+            assertThat(s.safeSubstring(1)).isEqualTo("bcdf")
+            assertThat(s.safeSubstring(44)).isEqualTo("")
+            assertThat(s.safeSubstring(1, 4)).isEqualTo("bcd")
+            assertThat(s.safeSubstring(1, 44)).isEqualTo("bcdf")
+            assertThat(s.safeSubstring(33, 44)).isEqualTo("")
+
+            assertThat(seq.safeSubSequence(1)).isEqualTo("bcdf")
+            assertThat(seq.safeSubSequence(44)).isEqualTo("")
+            assertThat(seq.safeSubSequence(1, 4)).isEqualTo("bcd")
+            assertThat(seq.safeSubSequence(1, 44)).isEqualTo("bcdf")
+            assertThat(seq.safeSubSequence(33, 44)).isEqualTo("")
+        }
     }
 }
 

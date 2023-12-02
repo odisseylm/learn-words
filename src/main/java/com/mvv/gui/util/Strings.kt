@@ -1,5 +1,6 @@
 package com.mvv.gui.util
 
+import kotlin.math.min
 
 
 fun <S: CharSequence> S.endsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.endsWith(it) }
@@ -211,10 +212,9 @@ fun String.removeRepeatableSpaces(spaceCharPolicy: SpaceCharPolicy = SpaceCharPo
 }
 
 
-// TODO: optimize to avoid trim
-fun String.containsWhiteSpaceInMiddle(): Boolean = this.trim().containsWhiteSpace()
+fun CharSequence.containsWhiteSpaceInMiddle(): Boolean = this.trim().containsWhiteSpace()
 
-fun String.containsWhiteSpace(): Boolean {
+fun CharSequence.containsWhiteSpace(): Boolean {
     for (i in this.indices) {
         if (this[i].isWhitespace()) return true
     }
@@ -222,12 +222,12 @@ fun String.containsWhiteSpace(): Boolean {
 }
 
 
-val String.lastChar: Char get() {
+val CharSequence.lastChar: Char get() {
     require(this.isNotEmpty()) { "Empty string."}
     return this[this.length - 1]
 }
 
-val String.lastCharOrNull: Char? get() = if (this.isNotEmpty()) this[this.length - 1] else null
+val CharSequence.lastCharOrNull: Char? get() = if (this.isNotEmpty()) this[this.length - 1] else null
 
 
 fun String.safeSubstring(start: Int): String = when {
@@ -243,6 +243,33 @@ fun String.safeSubstring(start: Int, end: Int): String {
         end >= this.length -> this.substring(start)
         else -> this.substring(start, end)
     }
+}
+
+fun CharSequence.safeSubSequence(start: Int): CharSequence = when {
+    start >= this.length -> ""
+    else -> safeSubSequence(start, this.length)
+}
+
+fun CharSequence.safeSubSequence(start: Int, end: Int): CharSequence {
+    require(start <= end) { " start($start) > end ($end)"}
+
+    return when {
+        start >= length -> ""
+        end >= this.length -> this.subSequence(start, this.length)
+        else -> this.subSequence(start, end)
+    }
+}
+
+
+fun CharSequence.substringStartingFrom(begin: String, endExcluding: String, maxLength: Int = Int.MAX_VALUE): String? {
+
+    val startIndex = this.indexOf(begin)
+    if (startIndex == -1) return null
+
+    val endIndex = this.indexOf(endExcluding, startIndex)
+        .ifIndexNotFound(min(this.length, startIndex + maxLength))
+
+    return this.substring(startIndex, endIndex)
 }
 
 
