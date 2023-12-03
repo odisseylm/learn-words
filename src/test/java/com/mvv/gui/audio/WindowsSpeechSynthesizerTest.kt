@@ -1,5 +1,6 @@
 package com.mvv.gui.audio
 
+import com.mvv.gui.test.useAssertJSoftAssertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -12,6 +13,18 @@ private val log = mu.KotlinLogging.logger {}
 
 @EnabledOnOs(OS.WINDOWS)
 class WindowsSpeechSynthesizerTest {
+
+    @Test
+    @DisplayName("extractChcpCodePageNumber")
+    fun test_extractChcpCodePageNumber() { useAssertJSoftAssertions {
+
+        // real examples
+        assertThat("Active code page: 437".extractChcpCodePageNumber()).isEqualTo(437)
+        assertThat("Текущая кодовая страница: 437".extractChcpCodePageNumber()).isEqualTo(437)
+
+        assertThat("aaa: 852".extractChcpCodePageNumber()).isEqualTo(852)
+        assertThat("851 852 853".extractChcpCodePageNumber()).isEqualTo(853)
+    } }
 
     @Test
     @DisplayName("getWindowsConsoleCharset")

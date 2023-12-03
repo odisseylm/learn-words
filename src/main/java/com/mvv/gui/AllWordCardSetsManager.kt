@@ -273,12 +273,21 @@ private val CharSequence.isAdjective: Boolean get() {
 //private val Part.isAdjective: Boolean get() = this.asTextOnly().isAdjective
 
 
-internal fun CharSequence.splitTranslation(): List<String> =
-    this.trim().splitTranslationImpl(true)
-        .map { it.toString().trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly) }
+internal fun CharSequence.splitTranslation(): List<String> {
+    val trimmed = this.trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly)
+    val withoutOptionalEnding = trimmed.removeOptionalTranslationEnding()
+
+    val t1 = trimmed.splitTranslationImpl(true)
+    val t2 = if (withoutOptionalEnding.length < trimmed.length)
+             withoutOptionalEnding.splitTranslationImpl(true)
+             else emptyList()
+
+    return (t1 + t2)
+        .map { it.trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly) }
         .distinct()
         .flatMap { listOf(it, it.removeOptionalTranslationEnding()) }
         .distinct()
+}
 
 private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<CharSequence> {
 

@@ -44,7 +44,7 @@ internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
         .associate { it }
 
     baseWordsToAddMap.forEach { (currentWordCard, baseWordCards) ->
-        // TODO: optimize this n*n
+        // T O D O: optimize this n*n
         val index = allWordCards.indexOf(currentWordCard)
         baseWordCards
             .filterNot { allWordCardsMap.containsKey(it.from) }

@@ -160,7 +160,7 @@ fun <T: CharSequence> T?.trimToNull(): T? =
 
 enum class SpaceCharPolicy { KeepExistent, UseSpaceOnly }
 
-fun String.removeRepeatableSpaces(spaceCharPolicy: SpaceCharPolicy = SpaceCharPolicy.KeepExistent): String {
+fun CharSequence.removeRepeatableSpaces(spaceCharPolicy: SpaceCharPolicy = SpaceCharPolicy.KeepExistent): String {
 
     val useOnlySpaceAsWhiteSpaceChar: Boolean = (spaceCharPolicy === SpaceCharPolicy.UseSpaceOnly)
 
@@ -186,7 +186,7 @@ fun String.removeRepeatableSpaces(spaceCharPolicy: SpaceCharPolicy = SpaceCharPo
         else lastCharIsSpaceChar = false
     }
 
-    if (processFromIndex == -1) return this
+    if (processFromIndex == -1) return this.toString()
 
     val result = StringBuilder(this.length)
     result.appendRange(this, 0, processFromIndex)

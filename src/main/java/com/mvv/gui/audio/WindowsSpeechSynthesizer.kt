@@ -5,6 +5,8 @@ import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.PumpStreamHandler
 import org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS
 import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.UncheckedIOException
 import java.nio.charset.Charset
 
 
@@ -61,7 +63,7 @@ class WindowsVoiceManager {
     val predefinedVoices: List<WindowsVoice> get() = predefinedVoicesList
 
     val availableVoices: List<WindowsVoice> get() =
-        // TODO: impl parsing result of
+        // T O D O: impl parsing result of
         //  `PowerShell -Command "Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo;"`
         // or in PowerShell console
         // Add-Type -AssemblyName System.Speech
@@ -113,15 +115,9 @@ internal fun getWindowsConsoleCharsetImpl(): Charset {
             .also { it.streamHandler = PumpStreamHandler(contentStream) }
             .execute(commandLine("cmd", "/C", "chcp"))
 
-    val content = contentStream.toString(Charsets.ISO_8859_1).trim()
-            .removePrefix("Active code page:")
+    val content = contentStream.toString(Charsets.ISO_8859_1)
 
-    // TODO: use regex to get last digits
-    val codePageNumberIndex = content.lastIndexOfAny(charArrayOf(' ', '\t', ':')) + 1 // or proper index or 0 (- 1  + 1)
-
-    val codePageNumberStr = content.substring(codePageNumberIndex).trim().removePrefix(":").trim()
-
-    val codePageNumber = try { codePageNumberStr.toInt() }
+    val codePageNumber = try { content.extractChcpCodePageNumber() }
                          catch (_: Exception) {
                              log.warn { "Error of parsing windows console charset from [$content]." }
                              return Charset.defaultCharset()
@@ -142,6 +138,17 @@ internal fun getWindowsConsoleCharsetImpl(): Charset {
     return consoleCharset ?: Charset.defaultCharset()
 }
 
+
+internal fun CharSequence.extractChcpCodePageNumber(): Int {
+    // Expected 'chcp' output:
+    //   Текущая кодовая страница: 437
+    //   Active code page: 437
+
+    val matchResult = Regex("(\\S\\d+)$").find(this.trimEnd())
+        ?: throw UncheckedIOException(IOException("Error of getting codepage number by 'chcp' (from [$this])."))
+
+    return matchResult.value.toInt()
+}
 
 /*
 VoiceAge
