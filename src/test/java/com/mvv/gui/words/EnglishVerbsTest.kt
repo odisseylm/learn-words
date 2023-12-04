@@ -1,5 +1,6 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.test.useAssertJSoftAssertions
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.Test
@@ -35,10 +36,6 @@ class EnglishVerbsTest {
         a.assertThat(verbs.getIrregularInfinitive("thrown")).isEqualTo("throw")
         a.assertThat(verbs.getIrregularInfinitive("threw")).isEqualTo("throw")
 
-        // TODO: impl
-        //a.assertThat(verbs.getIrregularInfinitive("throws")).isEqualTo("throw")
-        //a.assertThat(verbs.getIrregularInfinitive("throwing")).isEqualTo("throw")
-
         a.assertThat(verbs.getIrregularInfinitive("be")).isEqualTo("be")
         a.assertThat(verbs.getIrregularInfinitive("was")).isEqualTo("be")
         a.assertThat(verbs.getIrregularInfinitive("were")).isEqualTo("be")
@@ -51,7 +48,30 @@ class EnglishVerbsTest {
     }
 
     @Test
+    fun getIrregularInfinitive_forGerund() { useAssertJSoftAssertions {
+        val verbs = EnglishVerbs()
+
+        assertThat(verbs.getIrregularInfinitive("throwing")).isEqualTo("throw")
+        assertThat(verbs.getIrregularInfinitive("cutting")).isEqualTo("cut")
+        assertThat(verbs.getIrregularInfinitive("running")).isEqualTo("run")
+        assertThat(verbs.getIrregularInfinitive("buying")).isEqualTo("buy")
+        assertThat(verbs.getIrregularInfinitive("inlaying")).isEqualTo("inlay")
+
+        // assertThat(verbs.getIrregularInfinitive("dying")).isEqualTo("die")
+    } }
+
+    @Test
+    fun getIrregularInfinitive_for3rdForm() { useAssertJSoftAssertions {
+        val verbs = EnglishVerbs()
+
+        assertThat(verbs.getIrregularInfinitive("throws")).isEqualTo("throw")
+        assertThat(verbs.getIrregularInfinitive("cuts")).isEqualTo("cut")
+        assertThat(verbs.getIrregularInfinitive("makes")).isEqualTo("make")
+    } }
+
+    @Test
     @Disabled
+    @Suppress("DEPRECATION")
     fun getInfinitive() {
         val a = SoftAssertions()
 

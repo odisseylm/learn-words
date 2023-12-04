@@ -1,6 +1,7 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.util.endsWithOneOf
+import com.mvv.gui.util.lastChar
 
 
 class EnglishVerbs {
@@ -16,12 +17,51 @@ class EnglishVerbs {
     private val irregularInfinitives: Set<String> = irregularVerbs.map { it.base }.toSet()
 
     /** @param verb verbs should be in lower case */
-    internal fun getIrregularInfinitive(verb: String): String? =
+    internal fun getIrregularInfinitive(verb: String): String? {
+        var inf = getIrregularInfinitiveImpl(verb)
+        if (inf != null) return inf
+
+        inf = getIrregularInfinitiveWithSuffix(verb, "ing")
+        if (inf != null) return inf
+
+        inf = getIrregularInfinitiveWithSuffix(verb, "s")
+        if (inf != null) return inf
+
+        inf = getIrregularInfinitiveWithSuffix(verb, "es")
+        if (inf != null) return inf
+
+        return null
+    }
+
+    private fun getIrregularInfinitiveWithSuffix(verb: String, suffix: String): String? {
+        val withoutSuffix = verb.removeSuffix(suffix)
+        if (withoutSuffix.isEmpty()) return null
+
+        var inf = getIrregularInfinitiveImpl(withoutSuffix)
+        if (inf != null) return inf
+
+        inf = getIrregularInfinitiveImpl(withoutSuffix + "y")
+        if (inf != null) return inf
+
+        inf = getIrregularInfinitiveImpl(withoutSuffix + "e")
+        if (inf != null) return inf
+
+        inf = getIrregularInfinitiveImpl(withoutSuffix + withoutSuffix.lastChar)
+        if (inf != null) return inf
+
+        if (withoutSuffix.length >= 4 && withoutSuffix[withoutSuffix.length - 2] == withoutSuffix[withoutSuffix.length - 1])
+            inf = getIrregularInfinitiveImpl(withoutSuffix.substring(0, withoutSuffix.length - 1))
+
+        return inf
+    }
+
+    private fun getIrregularInfinitiveImpl(verb: String): String? =
         if (verb in irregularInfinitives) verb else irregularVerbsToInfinitive[verb]
 
-    // TODO: add removing "s"/"ing"
+    // T O D O: Add removing "s"/"ing" for regular if it is POSSIBLE???
     /** Returns infinitive if it surely can be determined, otherwise it returns null. */
-    fun getInfinitive(verb: String): String? {
+    @Deprecated("Not implemented. I'm not sure that it is possible.")
+    internal fun getInfinitive(verb: String): String? {
         @Suppress("NAME_SHADOWING")
         val verb = verb.lowercase()
         val irregularInfinitive = getIrregularInfinitive(verb)
