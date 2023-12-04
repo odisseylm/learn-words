@@ -149,6 +149,10 @@ fun CharSequence.lastIndexOfOneOfChars(chars: String, startingFrom: Int, end: In
 
 fun <S: CharSequence> S.ifNotBlank(action: (S)->S): S = if (this.isBlank()) this else action(this)
 
+inline fun <C : CharSequence> C?.ifNullOrBlank(defaultValue: () -> C): C =
+    if (this.isNullOrBlank()) defaultValue() else this
+
+
 fun <S: CharSequence> S?.doIfNotBlank(action: ()->Unit) {
     if (!this.isNullOrBlank()) action()
 }

@@ -43,6 +43,10 @@ class AllWordCardSetsManager : AutoCloseable {
     } }
 
     fun reloadAllSetsAsync() { updatesExecutor.submit { reloadAllSets() } }
+    fun reloadAllSetsAsync(taskManager: TaskManager) {
+        taskManager.addTask("Reloading all word card sets", updatesExecutor) {
+            reloadAllSets()
+    } }
 
     private fun reloadAllSets() {
         val sw = startStopWatch()

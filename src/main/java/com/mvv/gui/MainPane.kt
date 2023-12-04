@@ -26,6 +26,8 @@ const val appTitle = "Words"
 
 class MainWordsPane(val controller: LearnWordsController) : BorderPane() {
 
+    val statusPane = BorderPane()
+
     internal val wordEntriesLabel = Text("File/Clipboard")
     internal val ignoredWordsLabel = Text("Ignored words")
     internal val allProcessedWordsLabel = Text("All processed words")
@@ -129,6 +131,8 @@ class MainWordsPane(val controller: LearnWordsController) : BorderPane() {
         wordEntriesTable.prefWidth = 10_000.0
 
         this.center = contentPane
+
+        this.bottom = statusPane
     }
 
 }

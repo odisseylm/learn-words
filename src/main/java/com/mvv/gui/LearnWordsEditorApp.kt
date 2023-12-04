@@ -46,7 +46,11 @@ class LearnWordsEditorApp : Application() {
             primaryStage.centerOnScreen()
 
         primaryStage.onCloseRequest = EventHandler { closeRequestEvent ->
-            if (!controller.doIsCurrentDocumentIsSaved("Close application")) closeRequestEvent.consume()
+            val canQuit = controller.doIsCurrentDocumentIsSaved("Close application")
+            if (canQuit)
+                controller.close()
+            else
+                closeRequestEvent.consume()
         }
 
         primaryStage.show()

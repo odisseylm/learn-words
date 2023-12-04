@@ -18,6 +18,7 @@ import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.collections.transformation.SortedList
 import javafx.event.EventHandler
+import javafx.geometry.Insets
 import javafx.geometry.Point2D
 import javafx.scene.control.*
 import javafx.scene.control.ButtonBar.ButtonData
@@ -35,15 +36,19 @@ import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import kotlin.io.path.*
 
 
 private val log = mu.KotlinLogging.logger {}
 
 
-class LearnWordsController (val isReadOnly: Boolean = false) {
+class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
 
     //private val projectDirectory = getProjectDirectory(this.javaClass)
+
+    private val defaultTaskExecutor = Executors.newSingleThreadExecutor()
+    private val taskManager = TaskManager(javaFxRunner)
 
     internal val dictionary: Dictionary by lazy { CachedDictionary( DictionaryComposition(loadDictionaries()) ) }
 
@@ -89,6 +94,14 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             // TODO: use EnglishVerbs.getInfinitive() when it is implemented properly
             return englishVerbs.getIrregularInfinitive(firstWordOfBase) ?: firstWordOfBase
         }
+    }
+
+    override fun close() {
+        taskManager.close()
+        defaultTaskExecutor.shutdown()
+        allWordCardSetsManager.close()
+
+        Platform.runLater { pane.scene.window.hide() }
     }
 
     private fun rebuildPrefixFinder() {
@@ -169,6 +182,10 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         addKeyBindings()
 
+        pane.statusPane.right = taskManager.createProgressBar().also {
+            it.padding = Insets(2.0, 10.0, 4.0, 0.0)
+        }
+
         pane.addIsShownHandler {
             val window = pane.scene.window
 
@@ -182,16 +199,14 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
 
         pane.addIsShownHandler {
             // We use delay to get frame be shown before CPU will be busy with background tasks.
-            runLaterWithDelay(1000) { CompletableFuture.runAsync {
+            runLaterWithDelay(1000) {
 
-                // TODO: use some background task indicator
+                runAsyncTask("Rebuilding prefix")    { rebuildPrefixFinderImpl(emptySet()) }
 
-                rebuildPrefixFinderImpl(emptySet())
+                runAsyncTask("Loading dictionaries") { this.dictionary.find("apple")  } // load dictionaries lazy
 
-                this.dictionary.find("apple") // load dictionaries lazy
-
-                allWordCardSetsManager.reloadAllSetsAsync()
-            } } }
+                allWordCardSetsManager.reloadAllSetsAsync(taskManager)
+            } }
 
         installNavigationHistoryUpdates(currentWordsList, navigationHistory)
 
@@ -985,17 +1000,22 @@ class LearnWordsController (val isReadOnly: Boolean = false) {
             saveWordsToTxtFile(ignoredWordsFile, ignoredWords)
     }
 
-    // TODO: do it async and use some task indicator
+    private fun runAsyncTask(name: String, task: ()->Unit) = taskManager.addTask(name, defaultTaskExecutor, task)
+
     private fun loadExistentWords() {
-        loadIgnored()
-        allProcessedWords.setAll(loadWordsFromAllExistentDictionaries(null))
+        runAsyncTask("Loading ignored") { loadIgnored() }
+
+        runAsyncTask("Loading existent words") {
+            val fromAllExistentDictionaries = loadWordsFromAllExistentDictionaries(null)
+            runInFxEdtNowOrLater { allProcessedWords.setAll(fromAllExistentDictionaries) }
+        }
     }
 
 
     private fun loadIgnored() {
         if (ignoredWordsFile.exists()) {
             val ignoredWords = loadWords(ignoredWordsFile)
-            this.ignoredWords.setAll(ignoredWords)
+            runInFxEdtNowOrLater { this.ignoredWords.setAll(ignoredWords) }
         }
     }
 
