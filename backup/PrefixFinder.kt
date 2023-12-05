@@ -92,7 +92,7 @@ class PrefixFinder
             /*
             var wordNode = node.getChildByWord(w) // T O D O: !!! we need to perform search by also by delegate/shared and return the best result
 
-            // T O D O: !!! we need to perform search by also by delegate/shared and return the best result
+            // T  O D O: !!! we need to perform search by also by delegate/shared and return the best result
 
             val nodeHasChildren = node.children.isNotEmpty()
             if (nodeHasChildren) {

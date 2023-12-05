@@ -105,7 +105,7 @@ class AllWordCardSetsManager : AutoCloseable {
         this.searchWordEntries = currentSearchWordEntries
     }
 
-    // T O D O: try to return read-only cards
+    // Try to return read-only cards.
     fun findBy(wordOrPhrase: String, matchMode: MatchMode): List<SearchEntry> {
 
         if (wordOrPhrase.isBlank()) return emptyList()

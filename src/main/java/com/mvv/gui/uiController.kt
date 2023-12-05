@@ -91,7 +91,9 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         override fun extractBaseWord(phrase: String): String {
             val baseWords = prefixFinder.calculateBaseOfFromForSorting(phrase)
             val firstWordOfBase = baseWords.firstWord.removeCharSuffixesRepeatably("!.?…").toString()
-            // TODO: use EnglishVerbs.getInfinitive() when it is implemented properly
+            // In general, it would be nice to get infinitive for regular verbs,
+            // but it is impossible for all cases, and now we can live with that
+            // because these words in any cases will follow after base word because they have the same word root.
             return englishVerbs.getIrregularInfinitive(firstWordOfBase) ?: firstWordOfBase
         }
     }

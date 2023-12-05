@@ -23,7 +23,7 @@ private val log = mu.KotlinLogging.logger {}
 // the speed and pitch effects. To slow the audio down you will need a speed value less than one, and compensate
 // for the effect on pitch with a positive value in pitch.
 //
-// T O D O: to see festival songs
+// Old Festival has interesting feature - festival songs
 //       http://festvox.org/docs/manual-1.4.3/festival_29.html
 //
 // https://metacpan.org/pod/eGuideDog::Festival
@@ -106,7 +106,7 @@ class FestivalVoiceManager {
     val goodVoices: List<FestivalVoice> get() = goodVoicesList
 
     val availableVoices: List<FestivalVoice> get() =
-        // T O D O: impl, but I don't know how :-)
+        // It would be nice to impl, but I don't know how :-)
         predefinedVoices
 }
 
@@ -185,7 +185,16 @@ private class LastProcessDestroyer : ProcessDestroyer {
     override fun size(): Int = this.processes.size
 
     fun destroyAllProcesses() {
-        processes.forEach {
+        val safeSubProcessesRef = processes.toList()
+
+        safeSubProcessesRef.forEach {
+            it.descendants().forEach { subProcess -> subProcess.destroy() }
+            it.destroy()
+        }
+
+        Thread.sleep(50)
+        // forcibly
+        safeSubProcessesRef.forEach {
             it.descendants().forEach { subProcess ->
                 subProcess.destroyForcibly()
                 subProcess.onExit().get(5, TimeUnit.SECONDS)

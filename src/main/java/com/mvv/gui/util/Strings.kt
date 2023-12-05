@@ -115,7 +115,6 @@ fun CharSequence.endsWithOneOfChars(chars: String) =
     if (this.isEmpty()) false else this[this.length - 1] in chars
 
 
-// T O D O: compare with manuals loops
 fun CharSequence.indexOfOneOfChars(chars: String): Int {
     for (charIndex in this.indices) {
         if (this[charIndex] in chars) return charIndex

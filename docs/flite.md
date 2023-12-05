@@ -21,9 +21,9 @@ sln file for SAPI almost working, only one file is missed )) and need to change 
 
 TODO: test all voices from http://festvox.org/flite/packed/flite-2.3/voices/
 
-also paly with it on Linux
+also play with it on Linux
 
-paly with doewnlaoded voices
+play with downloaded voices
 
 ./bin/flite -voice C:\Users\Volod\Downloads\cmu_us_ahw.flitevox -t "Other similar platforms should just work, we have also cross compiled on a Linux machine for various ARM and MIPS processors."
 ./bin/flite -voice C:\Users\Volod\Downloads\cmu_us_clb.flitevox -t "Other similar platforms should just work, we have also cross compiled on a Linux machine for various ARM and MIPS processors."

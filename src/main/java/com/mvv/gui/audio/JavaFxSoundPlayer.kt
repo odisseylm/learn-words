@@ -17,7 +17,7 @@ import kotlin.io.path.toPath
 //private val log = mu.KotlinLogging.logger {}
 
 
-class JavaFxSoundPlayer(val playingMode: PlayingMode) : AudioPlayer {
+class JavaFxSoundPlayer(val playingMode: PlayingMode) : InterruptableAudioPlayer {
 
     // Actually there is absolutely not important which type of synchronized list is used
     // (you can replace it by java.util.Collections.synchronizedList() or Vector)
@@ -62,6 +62,8 @@ class JavaFxSoundPlayer(val playingMode: PlayingMode) : AudioPlayer {
     private fun stopPreviousClips() =
         // !!! thread-safe java forEach !!!
         clips.forEach(Consumer { it.stop() })
+
+    override fun interrupt() = stopPreviousClips()
 
 
     companion object {

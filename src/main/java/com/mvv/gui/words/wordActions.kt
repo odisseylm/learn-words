@@ -233,7 +233,7 @@ private fun mergeFrom(froms: List<String>): String {
 
         if (first == second) return first
 
-        // T O D O: add support of 2nd/3rd form of irregular verbs
+        // TODO: add support of 2nd/3rd form of irregular verbs
 
         for (suffix in suffixes) {
             if ((first + suffix).equals(second, ignoreCase = true)) merged = first
@@ -309,7 +309,7 @@ private fun List<Token>.containsWordSequence(tokenSequenceIndex: Int, wordSequen
 
 internal fun extractWordsFromFile(filePath: Path, sentenceEndRule: SentenceEndRule, ignoredWords: Set<String>, preProcessor: (Reader)-> Reader): List<CardWordEntry> =
     preProcessor(FileReader(filePath.toFile(), predictFileEncoding(filePath)))
-        .use { r -> extractWordsFromText_New(r.readText(), sentenceEndRule, ignoredWords) } // T O D O: would be better to pass lazy CharSequence instead of loading full text as String
+        .use { r -> extractWordsFromText_New(r.readText(), sentenceEndRule, ignoredWords) }
 
 private fun predictFileEncoding(filePath: Path): Charset {
     val bytes = filePath.readBytes(min(10U, Files.size(filePath).toUInt()))

@@ -151,8 +151,8 @@ class MidDictionaryTest {
 
     /*
 
-    // T O D O: to test ???  washer laundry machine washer	16-57682-S (with OmegaWiki_EngRus) ???
-    // T O D O: to test ???  washing machine clothes washer laundry machine washer	16-57682-B (with OmegaWiki_EngRus) ???
+    // T  O D O: to test ???  washer laundry machine washer	16-57682-S (with OmegaWiki_EngRus) ???
+    // T  O D O: to test ???  washing machine clothes washer laundry machine washer	16-57682-B (with OmegaWiki_EngRus) ???
 
     @Test
     fun findExisting_fromDfM_OmegaWiki_EngRus__washer() {

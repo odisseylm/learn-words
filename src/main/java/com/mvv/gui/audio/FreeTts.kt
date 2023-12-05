@@ -204,7 +204,7 @@ class MbrolaVoiceDirectory(private val mbrolaBaseDir: Path? = null) : VoiceDirec
             MbrolaVoice(
                 mbrolaBinary, mbrolaBaseDir, "en1",
                 "en1", //pitch 82 117
-                150.0f, 100.0f, 12.0f, // T O D O: it may be wrong!? Need to validate in some way.
+                150.0f, 100.0f, 12.0f, // It may be wrong!? Need to validate in some way.
                 "mbrola_en1",
                 Gender.MALE, Age.YOUNGER_ADULT, "MBROLA Voice en1", Locale.ENGLISH, "general", "mbrola",
                 lexicon,

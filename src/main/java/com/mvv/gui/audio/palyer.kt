@@ -32,3 +32,7 @@ enum class PlayingMode {
 interface AudioPlayer {
     fun play(audioSource: AudioSource)
 }
+
+interface InterruptableAudioPlayer : AudioPlayer {
+    fun interrupt()
+}

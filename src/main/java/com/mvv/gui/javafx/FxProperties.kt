@@ -124,7 +124,8 @@ fun <S,T> ObservableValue<S>.mapCached(map: (S)->T, otherDependent: ObservableVa
 
 
 /*
-// T O D O: remove 'atomic' versions since JavaFX properties are not thread-safe at all
+// Seem we can remove 'atomic' versions since JavaFX properties are not thread-safe at all!!!
+//
 fun <S,T> ObservableValue<S>.mapCachedAtomic(map: (S)->T): ObservableValue<T> = this.mapCachedAtomic(map, emptyObservable)
 
 fun <S,T> ObservableValue<S>.mapCachedAtomic(map: (S)->T, otherDependent: ObservableValue<*>, vararg otherDependents: ObservableValue<*>): ObservableValue<T> {

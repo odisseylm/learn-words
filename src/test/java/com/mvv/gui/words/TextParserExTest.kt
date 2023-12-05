@@ -409,7 +409,7 @@ class TextParserExTest {
         assertThat(sentences.map { it.text }).containsExactly(
             "Talk about your...\n            ...big lizards.",
             "Anyway, if you don't feel\n            like being alone tonight...",
-            "...", // T O D O: Ideally it should be part of some sentence... probably...
+            "...", // Ideally it should be part of some sentence... probably...
             "Joey and Chandler are\n            helping me with my furniture."
         )
 

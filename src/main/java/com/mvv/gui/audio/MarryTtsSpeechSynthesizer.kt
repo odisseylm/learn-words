@@ -282,7 +282,10 @@ class MarryTtsSpeechSynthesizer (val config: MarryTtsSpeechConfig, private val a
         audioPlayer.play(AudioSource(soundBytes))
     }
 
-    //override fun interrupt() T O D O: implement
+    override fun interrupt() {
+        // By the way it interrupts all sounds playing by this player, but it is ok for our case.
+        if (audioPlayer is InterruptableAudioPlayer) audioPlayer.interrupt()
+    }
 
     override val isAvailable: Boolean get() =
             doTry({ downloadUrlText("http://localhost:59125/documentation.html") }, "")

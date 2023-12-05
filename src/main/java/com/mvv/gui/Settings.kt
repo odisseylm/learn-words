@@ -32,6 +32,7 @@ class Settings (
     val warnAboutDuplicatesInOtherSets: Boolean = true,
     // means examples which can (recommended) be turned into cards (for learning)
     val tooManyExampleCardCandidatesCount: Int = 5,
+    val recentDocumentsCount: Int = 10
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -64,6 +65,7 @@ private fun loadSettings(): Settings {
         autoPlay = props.getBool("autoPlay") ?: defSet.autoPlay,
         warnAboutDuplicatesInOtherSets = props.getBool("warnAboutDuplicatesInOtherSets") ?: defSet.warnAboutDuplicatesInOtherSets,
         tooManyExampleCardCandidatesCount = props.getInt("tooManyExampleCardCandidatesCount") ?: defSet.tooManyExampleCardCandidatesCount,
+        recentDocumentsCount = props.getInt("recentDocumentsCount") ?: defSet.recentDocumentsCount,
     )
 }
 
@@ -74,9 +76,10 @@ private fun Properties.getInt(propName: String): Int? = this.getProperty(propNam
 
 private val recentFilesFile = userHome.resolve(".learn-words/recents.txt")
 private val recentDirectoriesFile = userHome.resolve(".learn-words/recentDirs.txt")
-private const val recentCount = 10 // T O D O: move to config
 
 class RecentDocuments {
+
+    private val recentCount = settings.recentDocumentsCount
 
     val recentFiles: List<Path> get() =
         if (recentFilesFile.exists())

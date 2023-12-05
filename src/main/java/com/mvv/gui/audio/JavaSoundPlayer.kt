@@ -90,6 +90,8 @@ class JavaSoundPlayer (val playingMode: PlayingMode) : AudioPlayer /*, AutoClose
         clip.loop(1)
     }
 
+    fun interrupt() = stopPreviousClips()
+
     companion object {
         val stopperTimer: Timer by lazy { Timer("java-sound-audio-player-stopper", true) }
     }
