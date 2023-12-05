@@ -42,6 +42,13 @@ enum class WarnAboutMissedBaseWordsMode { // WarnWhenSomeWordsMissed NotWarnWhen
 fun analyzeWordCards(allWordCards: Iterable<CardWordEntry>, warnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode, dictionary: Dictionary) =
     analyzeWordCards(allWordCards, warnAboutMissedBaseWordsMode, allWordCards, dictionary)
 
+
+private fun <T> WritableObjectValue<Set<T>>.update(value: T, toSet: Boolean): Boolean =
+    updateSetProperty(this, value, if (toSet) UpdateSet.Set else UpdateSet.Remove)
+private fun <T> WritableObjectValue<Set<T>>.remove(value: T): Boolean =
+    updateSetProperty(this, value, UpdateSet.Remove)
+
+
 fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
                      warnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode,
                      allWordCards: Iterable<CardWordEntry>,
@@ -50,28 +57,13 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
     val started = System.currentTimeMillis()
     log.debug("### analyzeWordCards")
 
-    fun String.removeOptionalTrailingPronoun(): String = englishOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, SubSequenceFinderOptions(false))
-
-    fun String.toFromKey(): String {
-        val keyToVerifyOnDuplicate = this.trim().lowercase().removePrefix("to ").let {
-            val withoutTrailingPronoun = it.removeOptionalTrailingPronoun()
-            if (withoutTrailingPronoun.wordCount == 1) it else withoutTrailingPronoun
-        }
-        return keyToVerifyOnDuplicate
-    }
-
     val allWordCardsMap: Map<String, List<CardWordEntry>> = allWordCards
         .flatMap {
             val fromLCTrimmed = it.from.trim().lowercase()
-            listOf(Pair(fromLCTrimmed, it), Pair(fromLCTrimmed.toFromKey(), it)) }
+            listOf(Pair(fromLCTrimmed, it), Pair(fromLCTrimmed.removePrefix("to "), it))
+        }
         .groupBy({ it.first }, { it.second })
         .mapValues { it.value.distinct() }
-
-
-    fun <T> WritableObjectValue<Set<T>>.update(value: T, toSet: Boolean): Boolean =
-        updateSetProperty(this, value, if (toSet) UpdateSet.Set else UpdateSet.Remove)
-    fun <T> WritableObjectValue<Set<T>>.remove(value: T): Boolean =
-        updateSetProperty(this, value, UpdateSet.Remove)
 
     wordCardsToVerify.forEach { card ->
 
@@ -82,7 +74,87 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         val statusesProperty = card.statusesProperty
         val statuses = card.statuses
 
-        val keyToVerifyOnDuplicate = fromLowerTrimmed.toFromKey()
+        val noTranslation = from.isNotBlank() && to.isBlank()
+        statusesProperty.update(NoTranslation, noTranslation)
+
+        val fromIsNotPrepared = from.isBlank()
+                || from.containsOneOf(unneededPartsForLearning)
+                || from.any { !(it in " -'.!?" || it.isEnglishLetter()) }
+        val toIsNotPrepared = to.isBlank() || to.containsOneOf(unneededPartsForLearning) || to.hasUnpairedBrackets()
+        statusesProperty.update(TranslationIsNotPrepared, fromIsNotPrepared || toIsNotPrepared)
+
+
+        if (IgnoreExampleCardCandidates in statuses)
+            statusesProperty.remove(TooManyExampleNewCardCandidates) // need to remove if 'ignore' (IgnoreExampleCardCandidates) is added by user
+        else {
+            val tooManyExampleCardCandidates = card.exampleNewCardCandidateCount > 5 // TODO: move 5 to settings
+            statusesProperty.update(TooManyExampleNewCardCandidates, tooManyExampleCardCandidates)
+        }
+
+
+        if (BaseWordDoesNotExist in statuses || card.fromWordCount != 1)
+            statusesProperty.remove(NoBaseWordInSet) // need to remove if 'ignore' (BaseWordDoesNotExist) is added by user
+        else {
+
+            val baseWordCards = englishBaseWords(fromLowerTrimmed, dictionary)
+            val baseWords = baseWordCards.map { it.from }
+
+            val cardsSetContainsOneOfBaseWords = allWordCardsMap.containsOneOfKeys(baseWords)
+            val cardsSetContainsAllBaseWords = allWordCardsMap.containsAllKeys(baseWords)
+
+            val showWarningAboutMissedBaseWord = when (warnAboutMissedBaseWordsMode) {
+                NotWarnWhenSomeBaseWordsPresent -> baseWords.isNotEmpty() && !cardsSetContainsOneOfBaseWords
+                WarnWhenSomeBaseWordsMissed -> baseWords.isNotEmpty() && !cardsSetContainsAllBaseWords
+            }
+
+            val missedBaseWords = baseWords.filterNot { allWordCardsMap.containsKey(it) }
+            card.missedBaseWords = missedBaseWords
+
+            log.debug(
+                "analyzeWordCards => '{}', cardsSetContainsOneOfBaseWords: {}, cardsSetContainsAllBaseWords: {}, baseWords: {}",
+                from, cardsSetContainsOneOfBaseWords, cardsSetContainsAllBaseWords, baseWords
+            )
+
+            statusesProperty.update(NoBaseWordInSet, showWarningAboutMissedBaseWord)
+        }
+
+    }
+
+    analyzeWordCardsDuplicates(allWordCards)
+
+    log.debug("### analyzeWordCards took {}ms", System.currentTimeMillis() - started)
+}
+
+private fun analyzeWordCardsDuplicates(allWordCards: Iterable<CardWordEntry>) {
+
+    val removeOptionalTrailingPronounOptions = SubSequenceFinderOptions(false)
+
+    fun String.removeOptionalTrailingPronoun(): String =
+        englishOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, removeOptionalTrailingPronounOptions)
+
+    fun String.asMinimizedFrom(): String {
+        val keyToVerifyOnDuplicate = this.trim().lowercase().removePrefix("to ").let {
+            val withoutTrailingPronoun = it.removeOptionalTrailingPronoun()
+            if (withoutTrailingPronoun.wordCount == 1) it else withoutTrailingPronoun
+        }
+        return keyToVerifyOnDuplicate
+    }
+
+
+    val allWordCardsMap: Map<String, List<CardWordEntry>> = allWordCards
+        .flatMap {
+            val fromLCTrimmed = it.from.trim().lowercase()
+            listOf(Pair(fromLCTrimmed, it), Pair(fromLCTrimmed.asMinimizedFrom(), it))
+        }
+        .groupBy({ it.first }, { it.second })
+        .mapValues { it.value.distinct() }
+
+
+    allWordCards.forEach { card ->
+
+        val fromLowerTrimmed = card.from.trim().lowercase()
+
+        val keyToVerifyOnDuplicate = fromLowerTrimmed.asMinimizedFrom()
 
         val possibleCardWordEntries = allWordCardsMap[keyToVerifyOnDuplicate]
         val hasDuplicate: Boolean = when {
@@ -105,52 +177,8 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
             }
         }
 
-        statusesProperty.update(Duplicates, hasDuplicate)
-
-        val noTranslation = from.isNotBlank() && to.isBlank()
-        statusesProperty.update(NoTranslation, noTranslation)
-
-        val fromIsNotPrepared = from.isBlank()
-                || from.containsOneOf(unneededPartsForLearning)
-                || from.any { ! (it in " -'.!?" || it.isEnglishLetter()) }
-        val toIsNotPrepared   = to.isBlank() || to.containsOneOf(unneededPartsForLearning) || to.hasUnpairedBrackets()
-        statusesProperty.update(TranslationIsNotPrepared, fromIsNotPrepared || toIsNotPrepared)
-
-
-        if (IgnoreExampleCardCandidates in statuses)
-            statusesProperty.remove(TooManyExampleNewCardCandidates) // need to remove if 'ignore' (IgnoreExampleCardCandidates) is added by user
-        else {
-            val tooManyExampleCardCandidates = card.exampleNewCardCandidateCount > 5 // TODO: move 5 to settings
-            statusesProperty.update(TooManyExampleNewCardCandidates, tooManyExampleCardCandidates)
-        }
-
-
-        if (BaseWordDoesNotExist in statuses || card.fromWordCount != 1)
-            statusesProperty.remove(NoBaseWordInSet) // need to remove if 'ignore' (BaseWordDoesNotExist) is added by user
-        else {
-
-            val baseWordCards = englishBaseWords(fromLowerTrimmed, dictionary)
-            val baseWords = baseWordCards.map { it.from }
-
-            val cardsSetContainsOneOfBaseWords = allWordCardsMap.containsOneOfKeys(baseWords)
-            val cardsSetContainsAllBaseWords   = allWordCardsMap.containsAllKeys(baseWords)
-
-            val showWarningAboutMissedBaseWord = when (warnAboutMissedBaseWordsMode) {
-                NotWarnWhenSomeBaseWordsPresent -> baseWords.isNotEmpty() && !cardsSetContainsOneOfBaseWords
-                WarnWhenSomeBaseWordsMissed     -> baseWords.isNotEmpty() && !cardsSetContainsAllBaseWords
-            }
-
-            val missedBaseWords = baseWords.filterNot { allWordCardsMap.containsKey(it) }
-            card.missedBaseWords = missedBaseWords
-
-            log.debug("analyzeWordCards => '{}', cardsSetContainsOneOfBaseWords: {}, cardsSetContainsAllBaseWords: {}, baseWords: {}",
-                from, cardsSetContainsOneOfBaseWords, cardsSetContainsAllBaseWords, baseWords)
-
-            statusesProperty.update(NoBaseWordInSet, showWarningAboutMissedBaseWord)
-        }
-
+        card.statusesProperty.update(Duplicates, hasDuplicate)
     }
-    log.debug("### analyzeWordCards took {}ms", System.currentTimeMillis() - started)
 }
 
 
