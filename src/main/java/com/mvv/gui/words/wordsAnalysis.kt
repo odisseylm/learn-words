@@ -1,12 +1,11 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.dictionary.Dictionary
+import com.mvv.gui.isVerb
 import com.mvv.gui.javafx.UpdateSet
 import com.mvv.gui.javafx.updateSetProperty
-import com.mvv.gui.util.containsAllKeys
-import com.mvv.gui.util.containsOneOf
-import com.mvv.gui.util.containsOneOfKeys
-import com.mvv.gui.util.isEnglishLetter
+import com.mvv.gui.splitTranslationToIndexed
+import com.mvv.gui.util.*
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WarnWhenSomeBaseWordsMissed
 import com.mvv.gui.words.WordCardStatus.*
@@ -53,12 +52,18 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
 
     fun String.removeOptionalTrailingPronoun(): String = englishOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, SubSequenceFinderOptions(false))
 
+    fun String.toFromKey(): String {
+        val keyToVerifyOnDuplicate = this.trim().lowercase().removePrefix("to ").let {
+            val withoutTrailingPronoun = it.removeOptionalTrailingPronoun()
+            if (withoutTrailingPronoun.wordCount == 1) it else withoutTrailingPronoun
+        }
+        return keyToVerifyOnDuplicate
+    }
+
     val allWordCardsMap: Map<String, List<CardWordEntry>> = allWordCards
         .flatMap {
             val fromLCTrimmed = it.from.trim().lowercase()
-            listOf(Pair(fromLCTrimmed, it), Pair(fromLCTrimmed.removePrefix("to ").trim(), it)) }
-        .flatMap {
-            listOf(it, Pair(it.first.removeOptionalTrailingPronoun(), it.second)) }
+            listOf(Pair(fromLCTrimmed, it), Pair(fromLCTrimmed.toFromKey(), it)) }
         .groupBy({ it.first }, { it.second })
         .mapValues { it.value.distinct() }
 
@@ -77,8 +82,29 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         val statusesProperty = card.statusesProperty
         val statuses = card.statuses
 
+        val keyToVerifyOnDuplicate = fromLowerTrimmed.toFromKey()
 
-        val hasDuplicate = (allWordCardsMap[fromLowerTrimmed.removePrefix("to ").removeOptionalTrailingPronoun()]?.size ?: 0) >= 2
+        val possibleCardWordEntries = allWordCardsMap[keyToVerifyOnDuplicate]
+        val hasDuplicate: Boolean = when {
+            possibleCardWordEntries == null || possibleCardWordEntries.size <= 1 -> false
+            else -> {
+                val normalizedFroms = possibleCardWordEntries.map { it.from.trim().lowercase().removePrefix("to ").trim() }.distinct()
+                if (normalizedFroms.size != 1) false
+                else {
+                    if (possibleCardWordEntries.size == 2) {
+                        // if it is so-so logic because we cannot surely say is translation is verb or no
+                        val verbCard = possibleCardWordEntries.find { it.from.trim().startsWith("to ") }
+                        val probablyNonVerbCard = possibleCardWordEntries.find { !it.from.trim().startsWith("to ") }
+
+                        val cardsAreVerbAndNotVerb = (verbCard != null && probablyNonVerbCard != null &&
+                                                      verbCard.to.areAllVerbs && !probablyNonVerbCard.to.areAllVerbs)
+                        !cardsAreVerbAndNotVerb
+                    }
+                    else true
+                }
+            }
+        }
+
         statusesProperty.update(Duplicates, hasDuplicate)
 
         val noTranslation = from.isNotBlank() && to.isBlank()
@@ -147,3 +173,11 @@ internal fun CharSequence.hasUnpairedBrackets(): Boolean {
     return bracketLevel != 0
 }
 
+
+private val String.areAllVerbs: Boolean get() {
+    val translations = this.splitToToTranslations()
+    return translations.filterNotBlank()
+        .flatMap { it.splitTranslationToIndexed() }
+        .map { it.splitToWords()[0] }
+        .all { it.isVerb }
+}

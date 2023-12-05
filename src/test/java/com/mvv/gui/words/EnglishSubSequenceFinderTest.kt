@@ -338,6 +338,12 @@ class EnglishSubSequenceFinderTest {
             assertThat("to cut something".removeOptionalTrailingPronoun()).isEqualTo("to cut")
             assertThat("to cut 555".removeOptionalTrailingPronoun()).isEqualTo("to cut 555")
             assertThat("to cut bla-bla".removeOptionalTrailingPronoun()).isEqualTo("to cut bla-bla")
+
+            assertThat("die hard".removeOptionalTrailingPronoun()).isEqualTo("die hard")
+            assertThat("to die hard".removeOptionalTrailingPronoun()).isEqualTo("to die hard")
+
+            assertThat("free from".removeOptionalTrailingPronoun()).isEqualTo("free from")
+            assertThat("to free from".removeOptionalTrailingPronoun()).isEqualTo("to free from")
         }
     }
 

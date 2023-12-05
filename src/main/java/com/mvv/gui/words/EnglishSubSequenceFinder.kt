@@ -185,6 +185,20 @@ private val englishArticlesAndSimilar: Alt<Seq<String>> = sequenceOf(
 ).splitToWords()
 
 
+private val englishArticlesAndSimilar22: Alt<Seq<String>> = sequenceOf(
+    "one's", "ones", "one",
+
+    "somebody's", "somebody", "smb's.", "smb.'s", "smb's", "smbs'", "smbs", "smb.", "smb",
+    "somebody's a", "somebody a", "smb's. a", "smb's a", "smbs' a", "smbs a", "smb. a", "smb a",
+    "somebody's the", "somebody the", "smb's. the", "smb's the", "smbs' the", "smbs the", "smb. the", "smb the",
+
+    "smth.'s", "smth's.", "smt.'s", "smt's.", "something's",
+    "smth.", "smth", "smt.", "smt", "something",
+
+    "my", "his", "her", "their", "its",
+).splitToWords()
+
+
 private val englishPronouns: Alt<Seq<String>> = sequenceOf(
     // Personal pronouns
     // Subject Pronouns
@@ -216,9 +230,16 @@ private val englishLanguageRules = SubSequenceLanguageRules(
     englishPronouns,
 )
 
+private val englishOnlyToCleanPronounsAndEtcLanguageRules = SubSequenceLanguageRules(
+    englishArticlesAndSimilar22,
+    prepositions,
+    englishCommonVerbs,
+    englishPronouns,
+)
+
 
 fun englishOptionalTrailingPronounsFinder(): SubSequenceFinder =
-    SubSequenceFinder(englishOptionalEndingsPronounsTemplates, Direction.Backward, emptyList(), englishLanguageRules)
+    SubSequenceFinder(englishOptionalEndingsPronounsTemplates, Direction.Backward, emptyList(), englishOnlyToCleanPronounsAndEtcLanguageRules)
 
 private val englishOptionalEndingsPronounsTemplates: Alt<Seq<String>> = sequenceOf(
     "{pp}",

@@ -253,7 +253,7 @@ private fun CardWordEntry.getAllSearchableWords(): List<String> {
 }
 
 
-private val CharSequence.isVerb: Boolean get() {
+val CharSequence.isVerb: Boolean get() {
     val fixed = this.trimEnd()
     return fixed.endsWithOneOf("ть", "ться")
 }
