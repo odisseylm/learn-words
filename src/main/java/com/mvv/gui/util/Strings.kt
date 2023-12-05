@@ -277,6 +277,14 @@ fun CharSequence.substringStartingFrom(begin: String, endExcluding: String, maxL
 }
 
 
+fun CharSequence.replaceSuffix(currentSuffix: CharSequence, newSuffix: CharSequence): String {
+    require(currentSuffix.isNotEmpty()) { "currentSuffix cannot be empty (does not make sense)." }
+    if (this.isEmpty() || !this.endsWith(currentSuffix)) return this.toString()
+
+    return this.substring(0, this.length - currentSuffix.length) + newSuffix
+}
+
+
 @Suppress("NOTHING_TO_INLINE")
 inline fun Char.isEnglishLetter(): Boolean {
     return (this in 'a'..'z') || (this in 'A'..'Z')

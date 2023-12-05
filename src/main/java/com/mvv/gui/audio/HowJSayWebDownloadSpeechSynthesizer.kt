@@ -1,9 +1,6 @@
 package com.mvv.gui.audio
 
-import com.mvv.gui.util.downloadUrl
-import com.mvv.gui.util.readBytes
-import com.mvv.gui.util.safeSubstring
-import com.mvv.gui.util.userHome
+import com.mvv.gui.util.*
 import java.nio.file.Path
 import kotlin.text.Charsets.ISO_8859_1
 import kotlin.text.Charsets.UTF_8
@@ -43,6 +40,10 @@ class HowJSayWebDownloadSpeechSynthesizer(audioPlayer: AudioPlayer) : CachingSpe
         if (asString.startsWith("<?xml") && asString.contains("<Error>"))
             throw SpeechSynthesizerException("No data for the word [$word] at howjsay.com.")
     }
+
+    override val isAvailable: Boolean get() = doTry( {
+            downloadUrl("https://howjsay.com", availabilityTestNetSettings).isNotEmpty() },
+            false)
 }
 
 

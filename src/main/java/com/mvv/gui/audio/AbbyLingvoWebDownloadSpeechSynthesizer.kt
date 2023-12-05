@@ -1,6 +1,6 @@
 package com.mvv.gui.audio
 
-import com.mvv.gui.util.userHome
+import com.mvv.gui.util.*
 import java.nio.file.Path
 
 
@@ -29,4 +29,9 @@ class AbbyLingvoWebDownloadSpeechSynthesizer(audioPlayer: AudioPlayer) : Caching
 
     override fun isSupported(text: String): Boolean = text.isBlank() || isOneWordText(text)
     override fun validateSupport(text: String) = validateTextIsOneWord(text, this.javaClass.simpleName)
+
+    override val isAvailable: Boolean
+        get() = doTry( {
+            downloadUrl("https://www.lingvolive.com/en-us", availabilityTestNetSettings).isNotEmpty() },
+            false)
 }

@@ -1,9 +1,6 @@
 package com.mvv.gui.audio
 
-import com.mvv.gui.util.addParam
-import com.mvv.gui.util.commandLine
-import com.mvv.gui.util.executeCommand
-import com.mvv.gui.util.trimToNull
+import com.mvv.gui.util.*
 import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.ExecuteException
 import org.apache.commons.exec.PumpStreamHandler
@@ -199,6 +196,9 @@ class ESpeakSpeechSynthesizer(override val voice: ESpeakVoice) : SpeechSynthesiz
 
         executeCommand(args)
     }
+
+    override val isAvailable: Boolean get() =
+        doTry( { executeCommand("espeak", "--help") == 0 }, false)
 }
 
 /*

@@ -30,7 +30,7 @@ interface SpeechSynthesizer {
 
     val voice: Voice
     val shortDescription: String
-    val isAvailable: Boolean get() = true // TODO: Implement
+    val isAvailable: Boolean
 }
 
 

@@ -146,6 +146,18 @@ class StringsTest {
             assertThat(seq.safeSubSequence(33, 44)).isEqualTo("")
         }
     }
+
+    @Test
+    @DisplayName("replaceSuffix")
+    fun test_replaceSuffix() { useAssertJSoftAssertions {
+        assertThat("abcdf".replaceSuffix("df", "ef")).isEqualTo("abcef")
+        assertThat("abcdf".replaceSuffix("df", "")).isEqualTo("abc")
+        assertThat("abcdf".replaceSuffix("ef", "ef")).isEqualTo("abcdf")
+        assertThat("".replaceSuffix("z", "ef")).isEqualTo("")
+
+        assertThatCode { assertThat("abcdf".replaceSuffix("", "ef")).isEqualTo("abcdf") }
+            .hasMessage("currentSuffix cannot be empty (does not make sense).")
+    } }
 }
 
 private fun String.asCharSequence(): CharSequence = this

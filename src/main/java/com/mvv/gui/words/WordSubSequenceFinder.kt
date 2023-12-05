@@ -44,7 +44,7 @@ open class SubSequenceFinder (
         val s = phrase.trim().removeRepeatableSpaces()
         return when (direction) {
             Direction.Forward  -> s.substring(matchedSubSequenceStr.length).trimStart()
-            Direction.Backward -> s.substring(0, s.length - matchedSubSequenceStr.length).trimEnd()
+            Direction.Backward -> s.substring(0, s.length - matchedSubSequenceStr.length - s.punctuationEndLength).trimEnd()
         }
     }
 
@@ -144,6 +144,15 @@ internal fun TreeNode?.sharedChildAsTreeNodeRes(word: String): TreeNodeRes? {
            else TreeNodeRes(childNode, this.asNextNode)
 }
 
+
+private val CharSequence.punctuationEndLength: Int get() {
+    for (i in this.length-1 downTo 0) {
+        if (this[i] !in ".!?…") {
+            return this.length-1 - i
+        }
+    }
+    return this.length
+}
 
 internal fun TreeNode.findMatchedSubSequence(phrase: String, direction: Direction, cleanPunctuationAtEndOfSentence: Boolean): String? {
 

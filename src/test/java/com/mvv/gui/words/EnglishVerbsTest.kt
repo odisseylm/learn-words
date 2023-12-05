@@ -70,15 +70,22 @@ class EnglishVerbsTest {
     } }
 
     @Test
+    @Suppress("DEPRECATION")
+    fun getInfinitive_ofIrregularVerb() { useAssertJSoftAssertions {
+        val verbs = EnglishVerbs()
+
+        assertThat(verbs.getInfinitive("heard")).isEqualTo("hear")
+        assertThat(verbs.getInfinitive("hearing")).isEqualTo("hear")
+        assertThat(verbs.getInfinitive("hears")).isEqualTo("hear")
+    } }
+
+    @Test
     @Disabled
     @Suppress("DEPRECATION")
-    fun getInfinitive() {
+    fun getInfinitive_ofRegularVerb() {
         val a = SoftAssertions()
 
         val verbs = EnglishVerbs()
-
-        // irregular
-        a.assertThat(verbs.getInfinitive("heard")).isEqualTo("hear")
 
         // -ied
         a.assertThat(verbs.getInfinitive("hurried")).isEqualTo("hurry")

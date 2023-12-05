@@ -17,6 +17,16 @@ private val russianOptionalEndingsTemplates: Alt<Seq<String>> = sequenceOf(
     "{prep} {art}",
     "{prep} {art} {pp}",
     "{prep} {pp} {art}",
+
+    // there {verb} is optional veb like 'делать'
+    "{verb}",
+    "{verb} {pp}",
+    "{verb} {art}",
+    "{verb} {prep}",
+    "{verb} {prep} {pp}",
+    "{verb} {prep} {art}",
+    "{verb} {prep} {art} {pp}",
+    "{verb} {prep} {pp} {art}",
 ).splitToWords()
 
 
@@ -36,6 +46,10 @@ private val russianArticlesAndSimilar: Alt<Seq<String>> = sequenceOf(
 
     // articles
     //"the", "an", "a",
+).splitToWords()
+
+private val optionalVerbs: Alt<Seq<String>> = sequenceOf(
+    "делаться", "делать", "сделаться", "сделать", "делание", "сделание",
 ).splitToWords()
 
 
@@ -473,7 +487,7 @@ private val russianPronouns: Alt<Seq<String>> = sequenceOf(
 private val optionalRussianTrailingRules = SubSequenceLanguageRules(
     russianArticlesAndSimilar,
     russianPrepositions,
-    emptyList(),
+    optionalVerbs,
     russianPronouns,
 )
 

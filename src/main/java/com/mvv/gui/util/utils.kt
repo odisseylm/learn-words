@@ -155,3 +155,9 @@ fun treeStringCaseInsensitiveSet(vararg items: String): TreeSet<String> =
 
 
 //inline fun <T, R : Comparable<R>> Iterable<T>.minBy(selector: (T) -> R): T = this.minByOrNull(selector)!!
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun <E, C: MutableCollection<E>> C.addAll(vararg values: E): C {
+    this.addAll(values)
+    return this
+}

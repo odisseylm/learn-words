@@ -105,7 +105,7 @@ class AllWordCardSetsManager : AutoCloseable {
         this.searchWordEntries = currentSearchWordEntries
     }
 
-    // TODO: try to return read-only cards
+    // T O D O: try to return read-only cards
     fun findBy(wordOrPhrase: String, matchMode: MatchMode): List<SearchEntry> {
 
         if (wordOrPhrase.isBlank()) return emptyList()
@@ -244,7 +244,7 @@ private fun CardWordEntry.getAllSearchableWords(): List<String> {
 
     val translations = this.to.lowercase()
         .splitToToTranslations()
-        .flatMap { it.splitTranslation() }
+        .flatMap { it.splitTranslationToIndexed() }
         .flatMap { getFromSubWords(it.trim().lowercase()) }
         .distinct()
     translations.forEach { allSearchWords.add(it) }
@@ -274,11 +274,50 @@ private val CharSequence.isAdjective: Boolean get() {
     return fixed.isNotEmpty() && (fixed[fixed.length - 1] == 'й') &&
            fixed.endsWithOneOf("ый", "ий", "ой", "ин", "ын", "ов", "ей", "от")
 }
-//private val Part.isAdjective: Boolean get() = this.asTextOnly().isAdjective
+
+private val CharSequence.isProbablyAdverbForVerb: Boolean get() {
+    val fixed = this.trimEnd()//.lowercase()
+    return fixed.isNotEmpty() && fixed.endsWithOneOf("но", "ро", "ко")
+}
 
 
-internal fun CharSequence.splitTranslation(): List<String> {
-    val trimmed = this.trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly)
+internal fun CharSequence.splitTranslationToIndexed(): List<String> {
+
+    val parts0: List<Part> = this
+        .trim()
+        .removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly)
+        .splitByBrackets()
+        .filterOutUnneededInBracketParts()
+
+    val trimmed = parts0
+        .joinToString("") { it.asSubContent() }
+        .trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly)
+    val trimmedWithoutBrackets = parts0
+        .filter { it.withoutBrackets }
+        .joinToString(" ") { it.asTextOnly() }
+        .trim()
+        .removeRepeatableSpaces()
+
+    val wordCount = trimmedWithoutBrackets.wordCount
+
+    if (trimmed.endsWith('!')) {
+        val result = mutableListOf<String>()
+
+        result.addAll(
+            trimmed, trimmed.removeSuffix("!"),
+            trimmedWithoutBrackets, trimmedWithoutBrackets.removeSuffix("!"))
+
+        if (trimmed.endsWith("айте!"))
+            result.addAll(
+                trimmed.replaceSuffix("айте!", "ай!"),
+                trimmed.replaceSuffix("айте!", "ай"),
+                trimmedWithoutBrackets.replaceSuffix("айте!", "ай!"),
+                trimmedWithoutBrackets.replaceSuffix("айте!", "ай"),
+            )
+
+        return result.distinct()
+    }
+
     val withoutOptionalEnding = trimmed.removeOptionalTranslationEnding()
 
     val t1 = trimmed.splitTranslationImpl(true)
@@ -290,30 +329,73 @@ internal fun CharSequence.splitTranslation(): List<String> {
         .map { it.trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly) }
         .distinct()
         .flatMap { listOf(it, it.removeOptionalTranslationEnding()) }
+        .filter { wordCount == 1 || it !in veryBaseVerbs }
         .distinct()
 }
+
+// We cannot use there Set because CharSequence do not have hashCode()/equals() or compareTo().
+private val inBracketPartsToSkip: List<CharSequence> = listOf(
+    "(разг.)", "(разг)", "(ам)", "(ам.)",
+    // "_разг.",
+)
+fun List<CharSequence>.containsCharSequence(v: CharSequence): Boolean =
+    this.any { it.isEqualTo(v) }
+fun CharSequence.isEqualTo(other: CharSequence): Boolean {
+    if (this.length != other.length) return false
+
+    for (i in this.indices) {
+        if (this[i] != other[i]) return false
+    }
+    return true
+}
+
+
+private val veryBaseVerbs = setOf("быть", "идти", "стоять")
+
+private fun List<Part>.filterOutUnneededInBracketParts(): List<Part> =
+    this.filterNot { inBracketPartsToSkip.containsCharSequence(it.asSubContent()) }
 
 private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<CharSequence> {
 
     val result = mutableListOf(this)
 
     val splitByBrackets = this.splitByBrackets().filter { it.asTextOnly().isNotBlank() }
+    val splitByBrackets2 = splitByBrackets.filterIndexed { i, it -> i < 2 || it.withoutBrackets }
 
     result.add(
         splitByBrackets.filter { it.withoutBrackets && it.asTextOnly().isNotBlank() }.joinToString(" ") { it.asTextOnly().trim() }
     )
 
-    if (splitByBrackets.size == 2) {
+    if (splitByBrackets2.size == 2) {
 
-        val part1 = splitByBrackets[0]
+        val part1 = splitByBrackets2[0]
         val part1Text = part1.asTextOnly()
 
-        val part2 = splitByBrackets[1]
+        val part2 = splitByBrackets2[1]
         val part2Text = part2.asTextOnly()
+
+        val part1Words = part1Text.splitToWords()
+        val part2Words = part2Text.splitToWords()
+
+        val part1WordCount = part1Words.size
+        val part2WordCount = part2Words.size
+
+        if (splitByBrackets.size == 2) {
+            // case "рассчитывать на (надеяться на)"
+            if (part1.withoutBrackets && part1WordCount == 2
+                && part2.inBrackets && part2WordCount == 2) {
+
+                if (part1Words[0].isVerb && part2Words[0].isVerb && part1Words[1] == part2Words[1]) {
+                    result.add(part1Text)
+                    result.add(part2Text)
+                }
+            }
+        }
+
 
         // case: "страшный (ужасный)"
         if (part1.withoutBrackets && part2.inBrackets
-            && part1Text.wordCount == 1 && part2Text.wordCount == 1
+            && part1WordCount == 1 && part2WordCount == 1
             && ((part1Text.isVerb && part2Text.isVerb) || (part1Text.isAdjective && part2Text.isAdjective)))
             result.add(part2Text)
 
@@ -330,7 +412,7 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
 
         // case: " страшный (ужасный жуткий) "
         else if (part1.withoutBrackets && part2.inBrackets
-            && part1Text.wordCount == 1 && part2Text.wordCount > 1
+            && part1WordCount == 1 && part2WordCount > 1
             && (part1Text.isAdjective && part2Text.isAdjective)) {
 
             val subItems = part2Text.toString().splitTranslationImpl(false).flatMap { it.splitToWords() }
@@ -341,15 +423,38 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
 
         // case: " доверяться (полагаться опираться) "
         else if (part1.withoutBrackets && part2.inBrackets
-            && part1Text.isOneWordVerb && part2Text.wordCount > 1 && part2Text.isVerb) {
+            && part1Text.isOneWordVerb && part2WordCount > 1) {
 
             val subItems = part2Text.toString().splitTranslationImpl(false).flatMap { it.splitToWords() }
 
             // case: " доверяться (полагаться опираться) "
             if (subItems.isNotEmpty() && subItems.all { it.isVerb })
                 result.addAll(subItems)
+
+            // case: "бить (сильно ударять)"
+            if (part2WordCount == 2 && part2Words[0].isProbablyAdverbForVerb && part2Words[1].isVerb) {
+                result.add(part2Words[1])
+                result.add(part2Text)
+            }
+            // case: "бить (ударять сильно)"
+            if (part2WordCount == 2 && part2Words[0].isVerb && part2Words[1].isProbablyAdverbForVerb) {
+                result.add(part2Words[0])
+                result.add(part2Text)
+            }
         }
+
+        if (splitByBrackets.size == 2) {
+
+            // case "выдерживать (держаться до конца)"
+            if (part1.withoutBrackets && part1WordCount == 1 && part1Text.isVerb &&
+                part2.inBrackets && part2WordCount > 1 && part2Words[0].isVerb && !part2Words[1].isVerb
+                ) {
+                result.addAll(part2Text.splitTranslationImpl(false))
+            }
+        }
+
     }
+
 
     if (splitByBrackets.size == 3) {
 
@@ -361,6 +466,11 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
 
         val part3 = splitByBrackets[2]
         val part3Text = part3.asTextOnly()
+
+        if (part2Text == "или") {
+            result.add(part1Text)
+            result.add(part3Text)
+        }
 
         if (part1.withoutBrackets && part2.inBrackets && part3.inBrackets
             && part1Text.isOneWordVerb && part2Text.isOptionalVerbEnd
@@ -397,6 +507,39 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
                 }
             }
         }
+
+        // case "грубый (немузыкальный) слух"
+        // It is not reliable and probably should be removed.
+        if (part1.withoutBrackets && part1Text.wordCount == 1 && part1Text.isAdjective &&
+            part2.inBrackets      && part2Text.wordCount == 1 && part2Text.isAdjective &&
+            part3.withoutBrackets && part3Text.wordCount == 1 && !(part3Text.isAdjective || part3Text.isVerb)
+            ) {
+            result.add("$part1Text $part3Text")
+            result.add("$part2Text $part3Text")
+        }
+    }
+
+    val allWordsWithoutBrackets: List<String> = splitByBrackets.filter { it.withoutBrackets }.flatMap { it.asTextOnly().splitToWords() }
+
+    // "бык или корова" "бык или корова (откормленные на убой)"
+    if (allWordsWithoutBrackets.size == 3 && allWordsWithoutBrackets[1] == "или") {
+        result.add(allWordsWithoutBrackets[0])
+        result.add(allWordsWithoutBrackets[2])
+    }
+
+    // case "беспрестанно бранить"
+    if (allWordsWithoutBrackets.size == 2 && allWordsWithoutBrackets[0].isProbablyAdverbForVerb && allWordsWithoutBrackets[1].isVerb) {
+        result.add(allWordsWithoutBrackets[1])
+    }
+
+    // case "бранить беспрестанно"
+    if (allWordsWithoutBrackets.size == 2 && allWordsWithoutBrackets[1].isProbablyAdverbForVerb && allWordsWithoutBrackets[0].isVerb) {
+        result.add(allWordsWithoutBrackets[0])
+    }
+
+    // to avoid removing too much
+    if (allWordsWithoutBrackets.size > 1) {
+        result.removeAll(veryBaseVerbs)
     }
 
     return result.distinct()

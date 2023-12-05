@@ -55,6 +55,19 @@ class RussianFinderTest {
     }
 
     @Test
+    fun removeMatchedTrailing_whenOnwPrepositionStartingByAnotherPreposition() {
+        useAssertJSoftAssertions {
+            assertThat(f.removeMatchedSubSequence("обходиться без чего-л")).isEqualTo("обходиться")
+            assertThat(f.removeMatchedSubSequence("обходиться без чего-л ")).isEqualTo("обходиться")
+            assertThat(f.removeMatchedSubSequence("обходиться без чего-л\n")).isEqualTo("обходиться")
+            assertThat(f.removeMatchedSubSequence(" \n \tобходиться без чего-л \n \t ")).isEqualTo("обходиться")
+
+            assertThat(f.removeMatchedSubSequence("обходиться без чего-л.")).isEqualTo("обходиться")
+            assertThat(f.removeMatchedSubSequence(" \n \t обходиться без чего-л. \n \t ")).isEqualTo("обходиться")
+        }
+    }
+
+    @Test
     @DisplayName("removeStress")
     fun test_removeStress() {
         assertThat("не́кто".removeStress()).isEqualTo("некто")

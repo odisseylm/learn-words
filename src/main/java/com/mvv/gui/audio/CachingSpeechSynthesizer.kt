@@ -4,6 +4,7 @@ import com.mvv.gui.util.*
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Duration
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
@@ -13,7 +14,8 @@ import kotlin.io.path.fileSize
 private val log = mu.KotlinLogging.logger {}
 
 
-val defaultSpeechSynthesizerNetSettings = NetSettings()
+val defaultSpeechSynthesizerNetSettings = NetSettings(timeout = Duration.ofSeconds(5))
+val availabilityTestNetSettings = NetSettings(timeout = Duration.ofSeconds(5))
 
 abstract class CachingSpeechSynthesizer (
     protected val audioPlayer: AudioPlayer,

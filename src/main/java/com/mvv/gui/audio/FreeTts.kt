@@ -115,6 +115,9 @@ class FreeTtsSpeechSynthesizer(private val freeTtsVoice: com.sun.speech.freetts.
         freeTtsVoice.speak(text)
         freeTtsVoice.deallocate()
     }
+
+    // In general, it is always available but 'mbrola' voices can be inaccessible.
+    override val isAvailable: Boolean = true
 }
 
 
@@ -160,6 +163,9 @@ class JavaSpeechSpeechSynthesizer(
     private fun cleanLastSynthesizerRef() =
         Central::class.java.getDeclaredField("lastSynthesizer")
             .also { lastSynthesizer -> lastSynthesizer.trySetAccessible(); lastSynthesizer.set(null, null) }
+
+    // In general, it is always available but 'mbrola' voices can be inaccessible.
+    override val isAvailable: Boolean = true
 }
 
 
