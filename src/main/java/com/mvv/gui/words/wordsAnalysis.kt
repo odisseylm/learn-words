@@ -4,6 +4,7 @@ import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.isVerb
 import com.mvv.gui.javafx.UpdateSet
 import com.mvv.gui.javafx.updateSetProperty
+import com.mvv.gui.settings
 import com.mvv.gui.splitTranslationToIndexed
 import com.mvv.gui.util.*
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
@@ -87,7 +88,7 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         if (IgnoreExampleCardCandidates in statuses)
             statusesProperty.remove(TooManyExampleNewCardCandidates) // need to remove if 'ignore' (IgnoreExampleCardCandidates) is added by user
         else {
-            val tooManyExampleCardCandidates = card.exampleNewCardCandidateCount > 5 // TODO: move 5 to settings
+            val tooManyExampleCardCandidates = card.exampleNewCardCandidateCount > settings.tooManyExampleCardCandidatesCount
             statusesProperty.update(TooManyExampleNewCardCandidates, tooManyExampleCardCandidates)
         }
 

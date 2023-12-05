@@ -30,6 +30,8 @@ class Settings (
     val toAutoRemoveIgnored: Boolean = true,
     val autoPlay: Boolean = true,
     val warnAboutDuplicatesInOtherSets: Boolean = true,
+    // means examples which can (recommended) be turned into cards (for learning)
+    val tooManyExampleCardCandidatesCount: Int = 5,
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -61,6 +63,7 @@ private fun loadSettings(): Settings {
         toAutoRemoveIgnored = props.getBool("toAutoRemoveIgnored") ?: defSet.toAutoRemoveIgnored,
         autoPlay = props.getBool("autoPlay") ?: defSet.autoPlay,
         warnAboutDuplicatesInOtherSets = props.getBool("warnAboutDuplicatesInOtherSets") ?: defSet.warnAboutDuplicatesInOtherSets,
+        tooManyExampleCardCandidatesCount = props.getInt("tooManyExampleCardCandidatesCount") ?: defSet.tooManyExampleCardCandidatesCount,
     )
 }
 
