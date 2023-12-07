@@ -304,8 +304,37 @@ fun CharSequence.containsEnglishLetters(): Boolean {
 //    this.codePoints().anyMatch { it.isEnglishLetter() }
 
 
+class CharSequenceComparator : Comparator<CharSequence> {
+    override fun compare(o1: CharSequence, o2: CharSequence): Int {
 
-@Suppress("NOTHING_TO_INLINE") // TODO: add tests
-inline fun Char.isRussianLetter(): Boolean {
-    return (this in 'а'..'я') || (this in 'А'..'Я')
+        val minLength = min(o1.length, o2.length)
+
+        for (i in 0 until minLength) {
+            val ch1 = o1[i]
+            val ch2 = o2[i]
+
+            if (ch1 != ch2) return ch1.compareTo(ch2)
+        }
+
+        if (o1.length != o2.length) return o1.length.compareTo(o2.length)
+
+        return 0
+    }
+
+    companion object {
+        val INSTANCE = CharSequenceComparator()
+    }
 }
+
+
+fun CharSequence.isEqualTo(other: CharSequence): Boolean {
+    if (this.length != other.length) return false
+
+    for (i in this.indices) {
+        if (this[i] != other[i]) return false
+    }
+    return true
+}
+
+fun Iterable<CharSequence>.containsCharSequence(v: CharSequence): Boolean =
+    this.any { it.isEqualTo(v) }

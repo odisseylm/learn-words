@@ -1,11 +1,9 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.dictionary.Dictionary
-import com.mvv.gui.cardeditor.isVerb
 import com.mvv.gui.javafx.UpdateSet
 import com.mvv.gui.javafx.updateSetProperty
 import com.mvv.gui.cardeditor.settings
-import com.mvv.gui.cardeditor.splitTranslationToIndexed
 import com.mvv.gui.util.*
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPresent
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WarnWhenSomeBaseWordsMissed

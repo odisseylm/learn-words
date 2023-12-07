@@ -1,7 +1,8 @@
-package com.mvv.gui.cardeditor
+package com.mvv.gui.words
 
+import com.mvv.gui.task.TaskManager
+import com.mvv.gui.task.addTask
 import com.mvv.gui.util.*
-import com.mvv.gui.words.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -188,23 +189,6 @@ class WordsData (
 
     val searchWordEntries: Map<String, List<CardWordEntry>> = splitByAllWords()
 
-    /*
-    fun findBy(wordOrPhrase: String): List<SearchEntry> {
-
-        val toSearch = wordOrPhrase.lowercase().trim()
-
-        val byExactMatch = searchWordEntries.getOrDefault(toSearch, emptyList())
-        if (byExactMatch.size >= 5) return byExactMatch.map { SearchEntry(file, it) }
-
-        val matched2 = if (toSearch.startsWith("to be "))
-            searchWordEntries[toSearch.removePrefix("to be ")] ?: emptyList() else emptyList()
-        val matched3 = if (toSearch.startsWith("to "))
-            searchWordEntries[toSearch.removePrefix("to ")] ?: emptyList() else emptyList()
-
-        return (byExactMatch + matched2 + matched3).map { SearchEntry(file, it) }
-    }
-    */
-
     private fun String.removeOptionalTrailingPronoun(): String {
         val s1 = englishOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, SubSequenceFinderOptions(false))
         val s2 = russianOptionalTrailingPronounsFinder.removeMatchedSubSequence(this, SubSequenceFinderOptions(false))
@@ -253,35 +237,17 @@ private fun CardWordEntry.getAllSearchableWords(): List<String> {
 }
 
 
-val CharSequence.isVerb: Boolean get() {
-    val fixed = this.trimEnd()
-    return fixed.endsWithOneOf("ть", "ться")
-}
 private val Part.isVerb: Boolean get() = this.asTextOnly().isVerb
 
-
-private val CharSequence.isOneWordVerb: Boolean get() = this.wordCount == 1 && this.isVerb
 private val Part.isOneWordVerb: Boolean get() = this.asTextOnly().wordCount == 1 && this.isVerb
 
-private val CharSequence.isOptionalVerbEnd: Boolean get() {
-    val fixed = this.trimEnd()
-    return fixed == "ся"
-}
 private val Part.isOptionalVerbEnd: Boolean get() = this.asTextOnly().isOptionalVerbEnd
 
-private val CharSequence.isAdjective: Boolean get() {
-    val fixed = this.trimEnd()//.lowercase()
-    return fixed.isNotEmpty() && (fixed[fixed.length - 1] == 'й') &&
-           fixed.endsWithOneOf("ый", "ий", "ой", "ин", "ын", "ов", "ей", "от")
-}
 
-private val CharSequence.isProbablyAdverbForVerb: Boolean get() {
-    val fixed = this.trimEnd()//.lowercase()
-    return fixed.isNotEmpty() && fixed.endsWithOneOf("но", "ро", "ко")
-}
+internal fun CharSequence.splitTranslationToIndexed(): List<String> =
+    this.splitRussianTranslationToIndexed()
 
-
-internal fun CharSequence.splitTranslationToIndexed(): List<String> {
+private fun CharSequence.splitRussianTranslationToIndexed(): List<String> {
 
     val parts0: List<Part> = this
         .trim()
@@ -333,27 +299,19 @@ internal fun CharSequence.splitTranslationToIndexed(): List<String> {
         .distinct()
 }
 
+
 // We cannot use there Set because CharSequence do not have hashCode()/equals() or compareTo().
-private val inBracketPartsToSkip: List<CharSequence> = listOf(
+private val inBracketPartsToSkip: Set<CharSequence> = TreeSet(CharSequenceComparator()).also { it.addAll(
     "(разг.)", "(разг)", "(ам)", "(ам.)",
     // "_разг.",
-)
-fun List<CharSequence>.containsCharSequence(v: CharSequence): Boolean =
-    this.any { it.isEqualTo(v) }
-fun CharSequence.isEqualTo(other: CharSequence): Boolean {
-    if (this.length != other.length) return false
-
-    for (i in this.indices) {
-        if (this[i] != other[i]) return false
-    }
-    return true
-}
+) }
 
 
 private val veryBaseVerbs = setOf("быть", "идти", "стоять")
 
 private fun List<Part>.filterOutUnneededInBracketParts(): List<Part> =
-    this.filterNot { inBracketPartsToSkip.containsCharSequence(it.asSubContent()) }
+    this.filterNot { inBracketPartsToSkip.contains(it.asSubContent()) }
+
 
 private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<CharSequence> {
 
@@ -549,82 +507,9 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
 private val russianOptionalTrailingFinderOptions = SubSequenceFinderOptions(true)
 private val russianOptionalTrailingFinder = russianOptionalTrailingFinder()
 
+
 private fun String.removeOptionalTranslationEnding(): String =
     russianOptionalTrailingFinder.removeMatchedSubSequence(this, russianOptionalTrailingFinderOptions)
-
-data class Part (
-    val content: CharSequence,
-    val inBrackets: Boolean,
-    // content
-    val from: Int,
-    /** Exclusive */
-    val to: Int,
-    // bracket indices
-    val openBracketIndex: Int,
-    val closingBracketIndex: Int,
-) {
-    fun asSubContent(): CharSequence = if (inBrackets) content.subSequence(openBracketIndex, closingBracketIndex + 1)
-                                                  else content.subSequence(from, to)
-    fun asTextOnly(): CharSequence = content.subSequence(from, to)
-
-    companion object {
-        fun inBrackets(
-            content: CharSequence,
-            // bracket indices
-            openBracketIndex: Int,
-            closingBracketIndex: Int,
-        ) = Part(content, true, openBracketIndex + 1, closingBracketIndex, openBracketIndex, closingBracketIndex)
-        fun withoutBrackets(
-            content: CharSequence,
-            from: Int,
-            /** Exclusive */
-            to: Int,
-        ) = Part(content, false, from, to, -1, -1)
-    }
-}
-
-val Part.withoutBrackets: Boolean get() = !this.inBrackets
-
-internal fun CharSequence.splitByBrackets(): List<Part> {
-
-    val parts = mutableListOf<Part>()
-    var bracketLevel = 0
-    var bracketPartStart = -1
-    var withoutBracketPartStart = 0
-
-    for (i in this.indices) {
-        val ch = this[i]
-
-        if (ch == '(') {
-            bracketLevel++
-
-            if (bracketLevel == 1) {
-                if (i > withoutBracketPartStart) {
-                    parts.add(Part.withoutBrackets(this, withoutBracketPartStart, i))
-                    withoutBracketPartStart = -1
-                }
-
-                bracketPartStart = i
-            }
-        }
-
-        if (ch == ')') {
-            bracketLevel--
-
-            if (bracketLevel == 0) {
-                parts.add(Part.inBrackets(this, bracketPartStart, i))
-                bracketPartStart = -1
-                withoutBracketPartStart = i + 1
-            }
-        }
-    }
-
-    if (withoutBracketPartStart != -1 && withoutBracketPartStart < this.lastIndex) {
-        parts.add(Part.withoutBrackets(this, withoutBracketPartStart, this.length))
-    }
-
-    return parts
-}
 
 
 private fun getFromSubWords(wordOrPhrase: String): List<String> {

@@ -3,6 +3,7 @@ package com.mvv.gui.cardeditor
 import com.mvv.gui.javafx.RelocationPolicy
 import com.mvv.gui.javafx.sceneRoot
 import com.mvv.gui.javafx.showPopup
+import com.mvv.gui.words.SearchEntry
 import javafx.event.EventHandler
 import javafx.geometry.Point2D
 import javafx.geometry.Pos

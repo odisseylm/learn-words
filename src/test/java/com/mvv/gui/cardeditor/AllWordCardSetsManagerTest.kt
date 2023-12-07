@@ -1,6 +1,9 @@
 package com.mvv.gui.cardeditor
 
 import com.mvv.gui.test.useAssertJSoftAssertions
+import com.mvv.gui.words.Part
+import com.mvv.gui.words.splitByBrackets
+import com.mvv.gui.words.splitTranslationToIndexed
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.Disabled

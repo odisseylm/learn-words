@@ -158,6 +158,55 @@ class StringsTest {
         assertThatCode { assertThat("abcdf".replaceSuffix("", "ef")).isEqualTo("abcdf") }
             .hasMessage("currentSuffix cannot be empty (does not make sense).")
     } }
+
+    @Test
+    fun charSequenceComparator() { useAssertJSoftAssertions {
+        //val charSequenceComparator = CharSequenceComparator()
+        val charSequenceComparator = CharSequenceComparator.INSTANCE
+
+        assertThat(charSequenceComparator.compare("", "")).isEqualTo(0)
+        assertThat(charSequenceComparator.compare("aa", "aa")).isEqualTo(0)
+        assertThat(charSequenceComparator.compare("aa", "ab")).isEqualTo(-1)
+        assertThat(charSequenceComparator.compare("ab", "aa")).isEqualTo(1)
+        assertThat(charSequenceComparator.compare("ab", "aa")).isEqualTo(1)
+        assertThat(charSequenceComparator.compare("ab", "aac")).isEqualTo(1)
+        assertThat(charSequenceComparator.compare("aaa", "aa")).isEqualTo(1)
+        assertThat(charSequenceComparator.compare("aa", "aaa")).isEqualTo(-1)
+    } }
+
+    @Test
+    @DisplayName("containsCharSequence")
+    fun test_containsCharSequence() { useAssertJSoftAssertions {
+
+        val s: CharSequence = TestingCharSequence(StringBuilder("aaa"))
+        val cs1 = TestingCharSequence(s.subSequence(0, 2))
+        val cs2 = TestingCharSequence(s.subSequence(1, 3))
+
+        assertThat(cs1.javaClass).isNotEqualTo(String::class.java)
+        assertThat(cs2.javaClass).isNotEqualTo(String::class.java)
+
+        @Suppress("ReplaceCallWithBinaryOperator")
+        assertThat(cs1.equals(cs2)).isFalse
+        assertThat(cs1 == cs2).isFalse
+
+        assertThat(cs1.hashCode() == cs2.hashCode()).isFalse
+
+        assertThat(cs1.isEqualTo(cs2)).isTrue
+
+        assertThat(cs1 in listOf(cs2)).isFalse
+        assertThat(cs2 in listOf(cs1)).isFalse
+
+        assertThat(listOf(cs1).containsCharSequence(cs2)).isTrue
+    } }
+
+
+    // General CharSequence impl without hashCode/equals.
+    private class TestingCharSequence (val s: CharSequence) : CharSequence {
+        override val length: Int = s.length
+        override fun get(index: Int): Char = s[index]
+        override fun subSequence(startIndex: Int, endIndex: Int): CharSequence =
+            TestingCharSequence(s.subSequence(startIndex, endIndex))
+    }
 }
 
 private fun String.asCharSequence(): CharSequence = this

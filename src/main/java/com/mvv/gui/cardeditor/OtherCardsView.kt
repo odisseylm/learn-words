@@ -3,6 +3,7 @@ package com.mvv.gui.cardeditor
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
 import com.mvv.gui.words.CardWordEntry
+import com.mvv.gui.words.SearchEntry
 import com.mvv.gui.words.baseWordsFilename
 import javafx.geometry.Point2D
 import javafx.scene.Node

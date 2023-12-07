@@ -1,4 +1,4 @@
-package com.mvv.gui.cardeditor
+package com.mvv.gui.task
 
 import com.mvv.gui.javafx.setToolTip
 import com.mvv.gui.util.ifNullOrBlank
@@ -133,7 +133,7 @@ fun TaskManager.addTask(name: String, task: ()->Unit) =
     this.addTask(task(name, task))
 
 
-fun TaskManager.createProgressBar(): Region {
+fun TaskManager.createFxProgressBar(): Region {
 
     val progressBar = ProgressBar(ProgressIndicator.INDETERMINATE_PROGRESS)
     progressBar.styleClass.add("TaskManagerProgressBar")

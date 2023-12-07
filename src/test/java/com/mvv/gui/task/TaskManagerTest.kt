@@ -1,4 +1,4 @@
-package com.mvv.gui.cardeditor
+package com.mvv.gui.task
 
 import com.mvv.gui.test.useAssertJSoftAssertions
 import org.junit.jupiter.api.Test

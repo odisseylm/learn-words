@@ -5,6 +5,10 @@ import com.mvv.gui.dictionary.CachedDictionary
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.dictionary.DictionaryComposition
 import com.mvv.gui.javafx.*
+import com.mvv.gui.task.TaskManager
+import com.mvv.gui.task.addTask
+import com.mvv.gui.task.createFxProgressBar
+import com.mvv.gui.task.javaFxRunner
 import com.mvv.gui.util.*
 import com.mvv.gui.words.*
 import com.mvv.gui.words.WordCardStatus.NoBaseWordInSet
@@ -192,7 +196,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
 
         addKeyBindings()
 
-        pane.statusPane.right = taskManager.createProgressBar().also {
+        pane.statusPane.right = taskManager.createFxProgressBar().also {
             it.padding = Insets(2.0, 10.0, 4.0, 0.0)
         }
 
