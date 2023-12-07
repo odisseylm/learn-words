@@ -1,5 +1,6 @@
 package com.mvv.gui
 
+import com.mvv.gui.test.useAssertJSoftAssertions
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.DisplayName
@@ -128,4 +129,90 @@ class UiControllerTest {
     }
 
     // Lower Chamber нижняя палата
+
+    @Test
+    @DisplayName("getWordAt forEmptyString")
+    fun test_getWordAt_forEmptyString() { useAssertJSoftAssertions {
+        assertThat("".getWordAt(-1)).isEqualTo(null)
+        assertThat("".getWordAt(0)).isEqualTo(null)
+        assertThat("".getWordAt(1)).isEqualTo(null)
+    } }
+
+    @Test
+    @DisplayName("getWordAt forBlankString")
+    fun test_getWordAt_forBlankString() { useAssertJSoftAssertions {
+        assertThat("  ".getWordAt(-1)).isEqualTo(null)
+        assertThat("  ".getWordAt(0)).isEqualTo(null)
+        assertThat("  ".getWordAt(1)).isEqualTo(null)
+        assertThat("  ".getWordAt(2)).isEqualTo(null)
+        assertThat("  ".getWordAt(3)).isEqualTo(null)
+        assertThat("  ".getWordAt(4)).isEqualTo(null)
+    } }
+
+    @Test
+    @DisplayName("getWordAt")
+    fun test_getWordAt() { useAssertJSoftAssertions {
+        assertThat(" cut ".getWordAt(-111)).isEqualTo(null)
+        assertThat(" cut ".getWordAt(-2)).isEqualTo(null)
+        assertThat(" cut ".getWordAt(-1)).isEqualTo(null)
+        assertThat(" cut ".getWordAt(0)).isEqualTo(null)
+
+        assertThat(" cut ".getWordAt(1)).isEqualTo("cut")
+        assertThat(" cut ".getWordAt(2)).isEqualTo("cut")
+        assertThat(" cut ".getWordAt(3)).isEqualTo("cut")
+        assertThat(" cut ".getWordAt(4)).isEqualTo("cut")
+
+        assertThat(" cut ".getWordAt(5)).isEqualTo(null)
+        assertThat(" cut ".getWordAt(6)).isEqualTo(null)
+        assertThat(" cut ".getWordAt(7)).isEqualTo(null)
+    } }
+
+    @Test
+    @DisplayName("getWordAt caretPosition at the end of word")
+    fun test_getWordAt_caretPositionAtTheEndOfWord() { useAssertJSoftAssertions {
+        assertThat("cut".getWordAt(3)).isEqualTo("cut")
+        assertThat(" cut ".getWordAt(4)).isEqualTo("cut")
+    } }
+
+    @Test
+    @DisplayName("getWordAt debug")
+    fun test_getWordAt_debug() { useAssertJSoftAssertions {
+        assertThat(" cut ".getWordAt(1)).isEqualTo("cut")
+    } }
+
+    @Test
+    @DisplayName("getWordAt with hyphen")
+    fun test_getWordAt_withHyphen() { useAssertJSoftAssertions {
+        assertThat(" cut-w ".getWordAt(-1)).isEqualTo(null)
+        assertThat(" cut-w ".getWordAt(0)).isEqualTo(null)
+
+        assertThat(" cut-w ".getWordAt(1)).isEqualTo("cut-w")
+        assertThat(" cut-w ".getWordAt(2)).isEqualTo("cut-w")
+        assertThat(" cut-w ".getWordAt(3)).isEqualTo("cut-w")
+        assertThat(" cut-w ".getWordAt(4)).isEqualTo("cut-w")
+        assertThat(" cut-w ".getWordAt(5)).isEqualTo("cut-w")
+        assertThat(" cut-w ".getWordAt(6)).isEqualTo("cut-w")
+
+        assertThat(" cut-w ".getWordAt(7)).isEqualTo(null)
+        assertThat(" cut-w ".getWordAt(8)).isEqualTo(null)
+    } }
+
+    @Test
+    @DisplayName("getWordAt with digits")
+    fun test_getWordAt_withDigits() { useAssertJSoftAssertions {
+        assertThat(" 12cut34 ".getWordAt(-1)).isEqualTo(null)
+        assertThat(" 12cut34 ".getWordAt(0)).isEqualTo(null)
+        assertThat(" 12cut34 ".getWordAt(1)).isEqualTo(null)
+        assertThat(" 12cut34 ".getWordAt(2)).isEqualTo(null)
+
+        assertThat(" 12cut34 ".getWordAt(3)).isEqualTo("cut")
+        assertThat(" 12cut34 ".getWordAt(4)).isEqualTo("cut")
+        assertThat(" 12cut34 ".getWordAt(5)).isEqualTo("cut")
+        assertThat(" 12cut34 ".getWordAt(6)).isEqualTo("cut")
+        assertThat(" 12cut34 ".getWordAt(7)).isEqualTo(null)
+        assertThat(" 12cut34 ".getWordAt(8)).isEqualTo(null)
+
+        assertThat(" 12cut34 ".getWordAt(9)).isEqualTo(null)
+        assertThat(" 12cut34 ".getWordAt(10)).isEqualTo(null)
+    } }
 }

@@ -85,7 +85,9 @@ private class OtherWordCardsTable(controller: LearnWordsController) : WordCardsT
             TextFieldType.TextField,
             DelegateStringConverter { it?.baseWordsFilename ?: "" },
             ToolTipMode.ShowAllContent)
-        fileColumn.prefWidth = 150.0
+
+        numberColumn.prefWidth = 25.0
+        fileColumn  .prefWidth = 150.0
 
         isEditable = false
 
@@ -93,7 +95,7 @@ private class OtherWordCardsTable(controller: LearnWordsController) : WordCardsT
             numberColumn,
             fromColumn,
             fileColumn,
-            transcriptionColumn,
+            //transcriptionColumn,
             translationCountColumn,
             toColumn,
             exampleCountColumn,
@@ -108,8 +110,9 @@ class LightOtherCardsViewPopup : PopupControl() {
         it.styleClass.add("otherCardsViewPopupContent")
     }
 
-    private val textFlow = TextFlow()
-        .also { content.center = it }
+    private val textFlow = TextFlow().also {
+        content.center = it
+    }
 
     init {
         this.sceneRoot = content

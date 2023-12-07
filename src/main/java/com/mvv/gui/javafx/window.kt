@@ -275,3 +275,22 @@ private fun Window.showPopupImpl(
 
     showInitially()
 }
+
+
+/*
+fun Window.setFocusable(focusable: Boolean) {
+
+    WindowHelper.setFocused(this, focusable)
+
+    val implPeerField: Field = Window::class.java.getDeclaredField("impl_peer")
+    implPeerField.setAccessible(true)
+
+    val implPeer: Any = implPeerField.get(this)
+    val getPlatformWindow: Method = implPeer.javaClass.getDeclaredMethod("getPlatformWindow")!!
+    getPlatformWindow.trySetAccessible()
+
+    val platformWindow: com.sun.glass.ui.Window = getPlatformWindow.invoke(implPeer) as com.sun.glass.ui.Window
+    platformWindow.setFocusable(focusable);
+    //getPlatformWindow.invoke(implPeer).setFocusable(focusable)
+}
+*/

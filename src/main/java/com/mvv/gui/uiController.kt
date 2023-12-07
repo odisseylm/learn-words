@@ -84,13 +84,20 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         it.contentComponent.maxHeight = 500.0
     } }
 
+    private val synonymsPopup: SynonymsPopup by lazy { SynonymsPopup(this) }
+
+    private val showSynonymInEditorTimer = Timer("showSynonymInEditorTimer", true).also {
+        if (settings.showSynonyms)
+            it.schedule(uiTimerTask { showSynonymOfCurrentWord() }, 5000, 1500)
+    }
+
     private val englishVerbs = EnglishVerbs()
     @Volatile
     private var prefixFinder = englishPrefixFinder(emptyList())
     private val baseWordExtractor: BaseWordExtractor = object : BaseWordExtractor {
         override fun extractBaseWord(phrase: String): String {
             val baseWords = prefixFinder.calculateBaseOfFromForSorting(phrase)
-            val firstWordOfBase = baseWords.firstWord.removeCharSuffixesRepeatably("!.?…").toString()
+            val firstWordOfBase = baseWords.firstWord()?.removeCharSuffixesRepeatably("!.?…")?.toString() ?: ""
             // In general, it would be nice to get infinitive for regular verbs,
             // but it is impossible for all cases, and now we can live with that
             // because these words in any cases will follow after base word because they have the same word root.
@@ -102,8 +109,9 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         taskManager.close()
         defaultTaskExecutor.shutdown()
         allWordCardSetsManager.close()
+        showSynonymInEditorTimer.cancel()
 
-        Platform.runLater { pane.scene.window.hide() }
+        runInFxEdtNowOrLater { pane.scene.window.hide() }
     }
 
     private fun rebuildPrefixFinder() {
@@ -283,10 +291,13 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         }
     }
 
-    internal fun showSpecifiedWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
+    internal fun showSpecifiedWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) =
+        showInOtherSetsPopup("'$wordOrPhrase' in other sets", cards)
+
+    internal fun showInOtherSetsPopup(title: String, cards: List<SearchEntry>) {
         val mainWnd = pane.scene.window
 
-        foundCardsViewPopup.show(mainWnd, "'$wordOrPhrase' in other sets", cards) {
+        foundCardsViewPopup.show(mainWnd, title, cards) {
             val xOffset = 20.0;  val yOffset = 50.0
             Point2D(
                 mainWnd.x + mainWnd.width - foundCardsViewPopup.width - xOffset,
@@ -1169,10 +1180,11 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         val selectedCards = currentWordsSelection.selectedItems
         if (selectedCards.size != 2) return false
 
-        val from1baseWord = selectedCards[0].baseWordOfFromProperty.value.firstWord
-        val from2baseWord = selectedCards[1].baseWordOfFromProperty.value.firstWord
+        val from1baseWord = selectedCards[0].baseWordOfFromProperty.value.firstWord()
+        val from2baseWord = selectedCards[1].baseWordOfFromProperty.value.firstWord()
 
-        return from1baseWord.startsWith(from2baseWord) || from2baseWord.startsWith(from1baseWord)
+        return from1baseWord != null && from2baseWord != null &&
+              (from1baseWord.startsWith(from2baseWord) || from2baseWord.startsWith(from1baseWord))
     }
 
     fun mergeSelected() {
@@ -1190,6 +1202,75 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         }
     }
 
+    private fun showSynonymOfCurrentWord() {
+        val focusOwner = pane.scene?.focusOwner
+
+        val currentWordOrPhrase: String? = if (focusOwner is TextInputControl) {
+            val selectedText = focusOwner.selectedText
+            if (selectedText.wordCount in 1..3) selectedText.trim()
+            else focusOwner.text.getWordAt(focusOwner.caretPosition)
+        }
+        else null
+
+        if (!currentWordOrPhrase.isNullOrBlank()) {
+            if (synonymsPopup.wordOrPhrase != currentWordOrPhrase || !synonymsPopup.isShowing)
+                showSynonymsOf(currentWordOrPhrase)
+        }
+        else synonymsPopup.hide()
+    }
+
+    fun showSynonymsOf(word: String) {
+
+        val synonymCards = allWordCardSetsManager.findBy(word, MatchMode.Exact)
+        if (synonymCards.isEmpty()) return
+
+        val mainWnd = pane.scene.window
+
+        synonymsPopup.show(mainWnd, word, synonymCards) {
+            val xOffset = 20.0;  val yOffset = 50.0
+
+            val newY = if (foundCardsViewPopup.isShowing) foundCardsViewPopup.y - synonymsPopup.height - 10.0
+                       else mainWnd.y + mainWnd.height - synonymsPopup.height - yOffset
+
+            Point2D(
+                mainWnd.x + mainWnd.width - synonymsPopup.width - xOffset,
+                newY)
+
+        }
+    }
+}
+
+/** @param caretPosition it can be in range 0…length (in contrast index can be only in range 0…length-1) */
+internal fun CharSequence.getWordAt(caretPosition: Int): String? {
+    if (caretPosition < 0 || caretPosition > this.length) return null
+
+    fun Char.isPartOfWord() = this.isLetter() || this == '-'
+
+    val wordPos = when {
+        caretPosition < this.length && this[caretPosition].isPartOfWord() -> caretPosition
+        caretPosition > 0 && this[caretPosition - 1].isPartOfWord() -> caretPosition - 1
+        else -> return null
+    }
+
+    var startWordIndex = 0
+    for (i in wordPos - 1 downTo 0) {
+        val ch = this[i]
+
+        if (!ch.isPartOfWord()) {
+            startWordIndex = i + 1
+            break
+        }
+    }
+
+    var endWordIndex = this.length
+    for (i in wordPos until this.length) {
+        if (!this[i].isPartOfWord()) {
+            endWordIndex = i
+            break
+        }
+    }
+
+    return this.substring(startWordIndex, endWordIndex)
 }
 
 private fun List<CardWordEntry>.skipCards(toSkip: Set<CardWordEntry>): List<CardWordEntry> =
@@ -1232,7 +1313,7 @@ internal fun String.highlightWords(wordOrPhrase: String, color: String): String 
 internal fun String.findWordToHighlight(tryToHighlightWord: String): String {
     val word = tryToHighlightWord.trim()
 
-    val preparations: List<(String)->String> = listOf(
+    val preparations: List<(String)->String?> = listOf(
         { it },
         { it.removePrefix("to ") },
         { it.removePrefix("to be ") },
@@ -1252,26 +1333,21 @@ internal fun String.findWordToHighlight(tryToHighlightWord: String): String {
         { it.removeSuffix(" to").removeSuffix("y") },
         { it.removeSuffix(" to").removeSuffix("ly") },
 
-        { it.removePrefix("to ").firstWord },
-        { it.removePrefix("to be ").firstWord },
-        { it.removePrefix("to ").firstWord.removeSuffix("e") },
-        { it.removePrefix("to ").firstWord.removeSuffix("le") },
-        { it.removePrefix("to ").firstWord.removeSuffix("y") },
-        { it.removePrefix("to ").firstWord.removeSuffix("ly") },
-        { it.removePrefix("to be ").firstWord.removeSuffix("s") },
+        { it.removePrefix("to ").firstWord() },
+        { it.removePrefix("to be ").firstWord() },
+        { it.removePrefix("to ").firstWord()?.removeSuffix("e") },
+        { it.removePrefix("to ").firstWord()?.removeSuffix("le") },
+        { it.removePrefix("to ").firstWord()?.removeSuffix("y") },
+        { it.removePrefix("to ").firstWord()?.removeSuffix("ly") },
+        { it.removePrefix("to be ").firstWord()?.removeSuffix("s") },
     )
 
     return preparations.firstNotNullOfOrNull { prep ->
         val preparedWord = prep(word)
-        if (preparedWord in this) preparedWord else null
+        if (preparedWord != null && preparedWord in this) preparedWord else null
     } ?: word
 }
 
-private val String.firstWord: String get() {
-    val s = this.trim()
-    val endIndex = s.indexOfOneOfChars(" \n\t")
-    return if (endIndex == -1) s else s.substring(0, endIndex)
-}
 
 internal fun moveSubTextToExamples(card: CardWordEntry, textInput: TextInputControl) {
     val textRange = textInput.selectionOrCurrentLineRange

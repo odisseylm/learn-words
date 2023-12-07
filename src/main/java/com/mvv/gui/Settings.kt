@@ -32,7 +32,8 @@ class Settings (
     val warnAboutDuplicatesInOtherSets: Boolean = true,
     // means examples which can (recommended) be turned into cards (for learning)
     val tooManyExampleCardCandidatesCount: Int = 5,
-    val recentDocumentsCount: Int = 10
+    val recentDocumentsCount: Int = 10,
+    val showSynonyms: Boolean = true,
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -66,6 +67,7 @@ private fun loadSettings(): Settings {
         warnAboutDuplicatesInOtherSets = props.getBool("warnAboutDuplicatesInOtherSets") ?: defSet.warnAboutDuplicatesInOtherSets,
         tooManyExampleCardCandidatesCount = props.getInt("tooManyExampleCardCandidatesCount") ?: defSet.tooManyExampleCardCandidatesCount,
         recentDocumentsCount = props.getInt("recentDocumentsCount") ?: defSet.recentDocumentsCount,
+        showSynonyms = props.getBool("showSynonyms") ?: defSet.showSynonyms,
     )
 }
 

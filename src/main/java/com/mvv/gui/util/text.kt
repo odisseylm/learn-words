@@ -24,4 +24,6 @@ val CharSequence.wordCount: Int get() {
 
 fun CharSequence.splitToWords(): List<String> = this.split(' ', '\t', '\n', ',', ';').filter { it.isNotEmpty() }
 
+// TODO: optimize
 fun CharSequence.lastWord(): String? = this.splitToWords().lastOrNull()
+fun CharSequence.firstWord(): String? = this.splitToWords().firstOrNull()
