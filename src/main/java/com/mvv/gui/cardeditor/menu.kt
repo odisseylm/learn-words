@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.cardeditor
 
 import com.mvv.gui.javafx.buttonIcon
 import com.mvv.gui.javafx.newMenuItem

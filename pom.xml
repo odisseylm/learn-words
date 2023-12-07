@@ -949,7 +949,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.1.0</version>
         <configuration>
-          <mainClass>com.mvv.gui.LearnWordsEditorApp</mainClass>
+          <mainClass>com.mvv.gui.cardeditor.LearnWordsEditorApp</mainClass>
           <additionalClasspathElements>
             <additionalClasspathElement>${basedir}/lib/jdictd-1.2.jar</additionalClasspathElement>
           </additionalClasspathElements>

@@ -1,10 +1,10 @@
 package com.mvv.gui.javafx
 
-import com.mvv.gui.copySelectedOrCurrentLineCombination
+import com.mvv.gui.cardeditor.copySelectedOrCurrentLineCombination
 import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextArea
 import com.mvv.gui.javafx.TextFieldTableCellUtils.Companion.createTextField
-import com.mvv.gui.lowerCaseKeyCombination
-import com.mvv.gui.removeCurrentLineCombination
+import com.mvv.gui.cardeditor.lowerCaseKeyCombination
+import com.mvv.gui.cardeditor.removeCurrentLineCombination
 import javafx.application.Platform
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty

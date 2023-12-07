@@ -1,6 +1,6 @@
 package com.mvv.gui.javafx
 
-import com.mvv.gui.CellEditorState
+import com.mvv.gui.cardeditor.CellEditorState
 import com.mvv.gui.util.ifIndexNotFound
 import javafx.application.Platform
 import javafx.scene.control.IndexRange

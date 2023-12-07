@@ -1,6 +1,6 @@
-package com.mvv.gui
+package com.mvv.gui.cardeditor
 
-import com.mvv.gui.LearnWordsController.InsertPosition
+import com.mvv.gui.cardeditor.LearnWordsController.InsertPosition
 import com.mvv.gui.javafx.*
 import com.mvv.gui.words.CardWordEntry
 import com.mvv.gui.words.PredefinedSet

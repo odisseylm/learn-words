@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.cardeditor
 
 import com.mvv.gui.audio.Gender
 import com.mvv.gui.words.SentenceEndRule

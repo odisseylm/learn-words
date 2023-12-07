@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.cardeditor
 
 import com.mvv.gui.dictionary.getProjectDirectory
 import com.mvv.gui.util.trimToNull

@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.cardeditor
 
 import com.mvv.gui.javafx.ToolBarButtonType
 import javafx.scene.Node

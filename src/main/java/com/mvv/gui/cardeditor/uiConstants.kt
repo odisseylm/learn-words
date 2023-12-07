@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.cardeditor
 
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCodeCombination

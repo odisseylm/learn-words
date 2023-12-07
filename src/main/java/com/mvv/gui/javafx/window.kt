@@ -1,6 +1,6 @@
 package com.mvv.gui.javafx
 
-import com.mvv.gui.initThemeAndStyles
+import com.mvv.gui.cardeditor.initThemeAndStyles
 import com.mvv.gui.util.addOnceEventHandler
 import javafx.application.Platform
 import javafx.geometry.Point2D

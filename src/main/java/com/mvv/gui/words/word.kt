@@ -1,9 +1,9 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.isGoodLearnCardCandidate
+import com.mvv.gui.cardeditor.isGoodLearnCardCandidate
 import com.mvv.gui.javafx.CacheableObservableValue
 import com.mvv.gui.javafx.mapCached
-import com.mvv.gui.parseToCard
+import com.mvv.gui.cardeditor.parseToCard
 import com.mvv.gui.util.containsEnglishLetters
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty

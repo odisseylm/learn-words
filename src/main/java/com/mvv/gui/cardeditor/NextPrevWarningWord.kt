@@ -1,4 +1,4 @@
-package com.mvv.gui
+package com.mvv.gui.cardeditor
 
 import com.mvv.gui.javafx.*
 import com.mvv.gui.util.toEnumSet
