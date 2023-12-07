@@ -87,7 +87,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
     private val synonymsPopup: SynonymsPopup by lazy { SynonymsPopup(this) }
 
     private val showSynonymInEditorTimer = Timer("showSynonymInEditorTimer", true).also {
-        if (settings.showSynonyms)
+        if (settings.showSynonyms && !isReadOnly)
             it.schedule(uiTimerTask { showSynonymOfCurrentWord() }, 5000, 1500)
     }
 
@@ -280,11 +280,11 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
     }
 
     private fun showThisWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
-        val mainWnd = pane.scene.window
-
         lightOtherCardsViewPopup.hide()
-        otherCardsViewPopup.show(mainWnd, "Word '$wordOrPhrase' already exists in other sets", cards) {
+        otherCardsViewPopup.show(pane, "Word '$wordOrPhrase' already exists in other sets", cards) {
+            val mainWnd = pane.scene.window
             val xOffset = 20.0;  val yOffset = 50.0
+
             Point2D(
                 mainWnd.x + mainWnd.width - otherCardsViewPopup.width - xOffset,
                 mainWnd.y + yOffset)
@@ -295,10 +295,10 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         showInOtherSetsPopup("'$wordOrPhrase' in other sets", cards)
 
     internal fun showInOtherSetsPopup(title: String, cards: List<SearchEntry>) {
-        val mainWnd = pane.scene.window
-
-        foundCardsViewPopup.show(mainWnd, title, cards) {
+        foundCardsViewPopup.show(pane, title, cards) {
+            val mainWnd = pane.scene.window
             val xOffset = 20.0;  val yOffset = 50.0
+
             Point2D(
                 mainWnd.x + mainWnd.width - foundCardsViewPopup.width - xOffset,
                 mainWnd.y + mainWnd.height - foundCardsViewPopup.height - yOffset)
@@ -306,10 +306,10 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
     }
 
     private fun showThisWordsInLightOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
-        val mainWnd = pane.scene.window
-
-        lightOtherCardsViewPopup.show(mainWnd, wordOrPhrase, cards) {
+        lightOtherCardsViewPopup.show(pane, wordOrPhrase, cards) {
+            val mainWnd = pane.scene.window
             val xOffset = 20.0;  val yOffset = 80.0
+
             Point2D(
                 mainWnd.x + mainWnd.width - lightOtherCardsViewPopup.width - xOffset,
                 mainWnd.y + yOffset)
@@ -1205,12 +1205,13 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
     private fun showSynonymOfCurrentWord() {
         val focusOwner = pane.scene?.focusOwner
 
-        val currentWordOrPhrase: String? = if (focusOwner is TextInputControl) {
-            val selectedText = focusOwner.selectedText
-            if (selectedText.wordCount in 1..3) selectedText.trim()
-            else focusOwner.text.getWordAt(focusOwner.caretPosition)
-        }
-        else null
+        val currentWordOrPhrase: String? =
+            if (focusOwner is TextInputControl && focusOwner.belongsToParent(currentWordsList)) {
+                val selectedText = focusOwner.selectedText
+                if (selectedText.wordCount in 1..3) selectedText.trim()
+                else focusOwner.text.getWordAt(focusOwner.caretPosition)
+            }
+            else null
 
         if (!currentWordOrPhrase.isNullOrBlank()) {
             if (synonymsPopup.wordOrPhrase != currentWordOrPhrase || !synonymsPopup.isShowing)
@@ -1219,19 +1220,21 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         else synonymsPopup.hide()
     }
 
-    fun showSynonymsOf(word: String) {
+    private fun showSynonymsOf(word: String) {
 
         val synonymCards = allWordCardSetsManager.findBy(word, MatchMode.Exact)
         if (synonymCards.isEmpty()) return
 
-        val mainWnd = pane.scene.window
-
-        synonymsPopup.show(mainWnd, word, synonymCards) {
+        synonymsPopup.show(pane, word, synonymCards) {
+            val mainWnd = pane.scene.window
+            val bottomPopup = foundCardsViewPopup
             val xOffset = 20.0;  val yOffset = 50.0
 
-            val newY = if (foundCardsViewPopup.isShowing) foundCardsViewPopup.y - synonymsPopup.height - 10.0
+            val newY = if (bottomPopup.isShowing)
+                            // If some other popup is already shown at bottom, we will show synonym popup a bit above it.
+                            bottomPopup.y - synonymsPopup.height - 10.0
+                            // Otherwise we will show it at the most bottom position.
                        else mainWnd.y + mainWnd.height - synonymsPopup.height - yOffset
-
             Point2D(
                 mainWnd.x + mainWnd.width - synonymsPopup.width - xOffset,
                 newY)

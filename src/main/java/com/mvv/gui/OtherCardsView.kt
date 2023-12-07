@@ -14,7 +14,6 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.Region
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
-import javafx.stage.Window
 import javafx.util.Callback
 import java.nio.file.Path
 
@@ -63,12 +62,12 @@ class OtherCardsViewPopup :
         get() = captionLabel.text
         set(value) { captionLabel.text = value }
 
-    fun show(parentWindow: Window, title: String, cards: List<SearchEntry>, getPos: ()-> Point2D) {
+    fun show(parent: Node, title: String, cards: List<SearchEntry>, getPos: ()-> Point2D) {
 
         this.caption = title
         this.cards   = cards.map { it.card }
 
-        this.showPopup(parentWindow, RelocationPolicy.CalculateOnlyOnce, getPos)
+        this.showPopup(parent, RelocationPolicy.CalculateOnlyOnce, getPos)
     }
 }
 
@@ -119,7 +118,7 @@ class LightOtherCardsViewPopup : PopupControl() {
         sizeToScene()
     }
 
-    fun show(parentWindow: Window, wordOrPhrase: String, cards: List<SearchEntry>, getPos: () -> Point2D) {
+    fun show(parent: Node, wordOrPhrase: String, cards: List<SearchEntry>, getPos: () -> Point2D) {
 
         textFlow.children.clear()
 
@@ -135,6 +134,6 @@ class LightOtherCardsViewPopup : PopupControl() {
 
         content.requestLayout()
 
-        this.showPopup(parentWindow, RelocationPolicy.AlwaysRecalculate, getPos)
+        this.showPopup(parent, RelocationPolicy.AlwaysRecalculate, getPos)
     }
 }

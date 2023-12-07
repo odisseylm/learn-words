@@ -6,13 +6,13 @@ import com.mvv.gui.javafx.showPopup
 import javafx.event.EventHandler
 import javafx.geometry.Point2D
 import javafx.geometry.Pos
+import javafx.scene.Node
 import javafx.scene.control.Hyperlink
 import javafx.scene.control.Label
 import javafx.scene.control.PopupControl
 import javafx.scene.layout.BorderPane
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
-import javafx.stage.Window
 
 
 class SynonymsPopup (val controller: LearnWordsController) : PopupControl() {
@@ -66,11 +66,11 @@ class SynonymsPopup (val controller: LearnWordsController) : PopupControl() {
         }
     }
 
-    fun show(parentWindow: Window, wordOrPhrase: String, synonyms: List<SearchEntry>, getPos: () -> Point2D) {
+    fun show(parent: Node, wordOrPhrase: String, synonyms: List<SearchEntry>, getPos: () -> Point2D) {
         wordLabel.text = wordOrPhrase
         setSynonyms(synonyms)
 
         content.requestLayout()
-        this.showPopup(parentWindow, RelocationPolicy.AlwaysRecalculate, getPos)
+        this.showPopup(parent, RelocationPolicy.AlwaysRecalculate, getPos)
     }
 }
