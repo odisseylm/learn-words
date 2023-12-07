@@ -191,6 +191,7 @@ class StringsTest {
 
         assertThat(cs1.hashCode() == cs2.hashCode()).isFalse
 
+        // custom version of 'equals' (extension function)
         assertThat(cs1.isEqualTo(cs2)).isTrue
 
         assertThat(cs1 in listOf(cs2)).isFalse

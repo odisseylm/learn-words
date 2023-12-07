@@ -286,9 +286,9 @@ private fun CharSequence.splitRussianTranslationToIndexed(): List<String> {
 
     val withoutOptionalEnding = trimmed.removeOptionalTranslationEnding()
 
-    val t1 = trimmed.splitTranslationImpl(true)
+    val t1 = trimmed.splitRussianTranslationImpl(true)
     val t2 = if (withoutOptionalEnding.length < trimmed.length)
-             withoutOptionalEnding.splitTranslationImpl(true)
+             withoutOptionalEnding.splitRussianTranslationImpl(true)
              else emptyList()
 
     return (t1 + t2)
@@ -300,10 +300,9 @@ private fun CharSequence.splitRussianTranslationToIndexed(): List<String> {
 }
 
 
-// We cannot use there Set because CharSequence do not have hashCode()/equals() or compareTo().
+// We cannot use there HashSet because in general CharSequence may not have hashCode()/equals() or compareTo().
 private val inBracketPartsToSkip: Set<CharSequence> = TreeSet(CharSequenceComparator()).also { it.addAll(
-    "(разг.)", "(разг)", "(ам)", "(ам.)",
-    // "_разг.",
+    "(разг.)", "(разг)", "(ам)", "(ам.)", "(уст.)", "(уст)", "(шутл.)", "(шутл)",
 ) }
 
 
@@ -313,7 +312,7 @@ private fun List<Part>.filterOutUnneededInBracketParts(): List<Part> =
     this.filterNot { inBracketPartsToSkip.contains(it.asSubContent()) }
 
 
-private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<CharSequence> {
+private fun CharSequence.splitRussianTranslationImpl(processChildren: Boolean): List<CharSequence> {
 
     val result = mutableListOf(this)
 
@@ -373,7 +372,7 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
             && part1WordCount == 1 && part2WordCount > 1
             && (part1Text.isAdjective && part2Text.isAdjective)) {
 
-            val subItems = part2Text.toString().splitTranslationImpl(false).flatMap { it.splitToWords() }
+            val subItems = part2Text.toString().splitRussianTranslationImpl(false).flatMap { it.splitToWords() }
             // case: " страшный (ужасный жуткий) "
             if (subItems.all { it.isAdjective })
                 result.addAll(subItems)
@@ -383,7 +382,7 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
         else if (part1.withoutBrackets && part2.inBrackets
             && part1Text.isOneWordVerb && part2WordCount > 1) {
 
-            val subItems = part2Text.toString().splitTranslationImpl(false).flatMap { it.splitToWords() }
+            val subItems = part2Text.toString().splitRussianTranslationImpl(false).flatMap { it.splitToWords() }
 
             // case: " доверяться (полагаться опираться) "
             if (subItems.isNotEmpty() && subItems.all { it.isVerb })
@@ -407,7 +406,7 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
             if (part1.withoutBrackets && part1WordCount == 1 && part1Text.isVerb &&
                 part2.inBrackets && part2WordCount > 1 && part2Words[0].isVerb && !part2Words[1].isVerb
                 ) {
-                result.addAll(part2Text.splitTranslationImpl(false))
+                result.addAll(part2Text.splitRussianTranslationImpl(false))
             }
         }
 
@@ -443,7 +442,7 @@ private fun CharSequence.splitTranslationImpl(processChildren: Boolean): List<Ch
                 // case: "доверять(ся) (полагать(ся))"
                 if ((part3Parts.size == 1 && part3Parts[0].isOneWordVerb)
                     || (part3Parts.size == 2 && part3Parts[0].isOneWordVerb && part3Parts[1].isOptionalVerbEnd))
-                    result.addAll(part3TextStr.splitTranslationImpl(false))
+                    result.addAll(part3TextStr.splitRussianTranslationImpl(false))
 
                 // case: " доверять(ся) (полагать(ся) опирать(ся)) "
                 else if (part3Parts.isNotEmpty() && part3Parts.all { it.isVerb || it.isOptionalVerbEnd }) {
