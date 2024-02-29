@@ -67,7 +67,7 @@ inline fun Int.ifIndexNotFound(altValue: Int): Int =
 inline fun Int.ifIndexNotFound(altValue: () -> Int): Int =
     if (this == -1) altValue() else this
 
-@Suppress("NOTHING_TO_INLINE")
-inline fun <C: CharSequence> Iterable<C>.filterNotEmpty(): List<C> = this.filter { it.isNotEmpty() }
-@Suppress("NOTHING_TO_INLINE")
-inline fun <C: CharSequence> Iterable<C>.filterNotBlank(): List<C> = this.filter { it.isNotBlank() }
+@Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
+inline fun <C: CharSequence> Iterable<C?>.filterNotEmpty(): List<C> = this.filterNot { it.isNullOrEmpty() } as List<C>
+@Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
+inline fun <C: CharSequence> Iterable<C?>.filterNotBlank(): List<C> = this.filterNot { it.isNullOrBlank() } as List<C>

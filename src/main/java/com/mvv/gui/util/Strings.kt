@@ -295,6 +295,13 @@ fun CharSequence.containsEnglishLetters(): Boolean {
     return false
 }
 
+fun CharSequence.containsLetter(): Boolean {
+    for (i in this.indices)
+        if (this[i].isLetter()) return true
+        //if (this[i].isRussianLetter() || this[i].isEnglishLetter()) return true
+    return false
+}
+
 
 //@Suppress("NOTHING_TO_INLINE")
 //inline fun Int.isEnglishLetter(): Boolean {

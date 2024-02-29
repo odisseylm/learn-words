@@ -313,7 +313,7 @@ private val verbs = listOf(
     "wait", "walk", "want", "watch", "win", "work", "write", "would",
 )
 
-private val articlesAndSimilar = listOf(
+/*private*/ val articlesAndSimilar = listOf(
     "one's", "ones", "one",
     "smb's.", "smb's", "smbs'", "smbs", "smb.", "smb",
     "smb's. a", "smb's a", "smbs' a", "smbs a", "smb. a", "smb a",

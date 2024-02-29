@@ -1,9 +1,7 @@
 package com.mvv.gui.cardeditor
 
-import com.mvv.gui.dictionary.AutoDictionariesLoader
-import com.mvv.gui.dictionary.CachedDictionary
+import com.mvv.gui.dictionary.*
 import com.mvv.gui.dictionary.Dictionary
-import com.mvv.gui.dictionary.DictionaryComposition
 import com.mvv.gui.javafx.*
 import com.mvv.gui.task.TaskManager
 import com.mvv.gui.task.addTask
@@ -1151,7 +1149,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
                 currentWords.selectItem(currentCard)
                 currentWords.edit(currentWords.items.indexOf(currentCard), tableColumn)
 
-                toPlayWordOnSelect = currentToPlayWordOnSelect
+                runLaterWithDelay(50L) { toPlayWordOnSelect = currentToPlayWordOnSelect }
             })
 
         return newCard
@@ -1217,17 +1215,40 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
             }
             else null
 
-        if (!currentWordOrPhrase.isNullOrBlank()) {
-            if (synonymsPopup.wordOrPhrase != currentWordOrPhrase || !synonymsPopup.isShowing)
-                showSynonymsOf(currentWordOrPhrase)
+        if (!currentWordOrPhrase.isNullOrBlank() && !toIgnoreSynonymFor(currentWordOrPhrase)) {
+            if (synonymsPopup.wordOrPhrase != currentWordOrPhrase || !synonymsPopup.isShowing) {
+                if (!showSynonymsOf(currentWordOrPhrase)) synonymsPopup.hide()
+            }
         }
         else synonymsPopup.hide()
     }
 
-    private fun showSynonymsOf(word: String) {
+    private val toIgnoreSynonymsFor: Set<String> = (
+                prepositions.flatMap { it.words }
+                + articlesAndSimilar.flatMap { it.splitToWords() }
+                + listOf(
+                    "do", "does", "be", "is", "have", "has", "have no", "has no", "get", "gets", "go", "goes",
+                    "can", "could", "may", "might", "must", "shall", "should",
+                    // "_v", "_v.", "(v.)",
+                    // "[02",
+                    // "хим.
+                ).flatMap { it.splitToWords() })
+            .toSet()
+
+    private fun toIgnoreSynonymFor(currentWordOrPhrase: String): Boolean {
+        val word = currentWordOrPhrase.trim().lowercase()
+
+        if (word in toIgnoreSynonymsFor) return true
+
+        if (!word.containsLetter()) return true
+
+        return false
+    }
+
+    private fun showSynonymsOf(word: String): Boolean {
 
         val synonymCards = allWordCardSetsManager.findBy(word, MatchMode.Exact)
-        if (synonymCards.isEmpty()) return
+        if (synonymCards.isEmpty()) return false
 
         synonymsPopup.show(pane, word, synonymCards) {
             val mainWnd = pane.scene.window
@@ -1244,6 +1265,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
                 newY)
 
         }
+        return true
     }
 }
 

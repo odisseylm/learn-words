@@ -28,9 +28,10 @@ fun commandLine(vararg args: String) = args.asIterable().toCommandLine()
 @Suppress("unused")
 fun executeCommand(vararg args: String) = executeCommand(args.asIterable())
 
-fun executeCommand(args: Iterable<String>) =
+fun executeCommand(args: Iterable<String>, successExitValues: Iterable<Int> = emptyList()) =
     DefaultExecutor()
         .also { it.streamHandler = PumpStreamHandler(System.out, System.err) }
+        .also { if (successExitValues.iterator().hasNext()) it.setExitValues(successExitValues.toList().toIntArray()) }
         .execute(args.toCommandLine())
 
 

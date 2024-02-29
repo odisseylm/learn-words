@@ -157,11 +157,11 @@ fun extractExamples(translation: DictionaryEntry): String {
 
 private const val russianChars = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
 
-internal fun String.containsRussianChars(): Boolean =
+internal fun CharSequence.containsRussianChars(): Boolean =
     this.any { russianChars.contains(it) }
 
 
 private const val transcriptionUniqueChars = "æðıŋɑɔəɛɪɵʃʊʌʒʤʧ"
 
-internal fun String.containsUniqueTranscriptionChars(): Boolean =
+internal fun CharSequence.containsUniqueTranscriptionChars(): Boolean =
     this.any { transcriptionUniqueChars.contains(it) }

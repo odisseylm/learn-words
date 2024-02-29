@@ -189,11 +189,12 @@ private fun putNonBlankToClipboard(text: String?) {
 }
 
 fun openGoogleTranslate(text: String) =
-    openWebBrowser("https://translate.google.com/?sl=en&tl=ru&op=translate&text=${urlEncode(text)}")
+    openDefaultWebBrowser("https://translate.google.com/?sl=en&tl=ru&op=translate&text=${urlEncode(text)}")
 
 fun openAbbyLingvoTranslate(text: String) =
     // hm... strange Abby site does not process '+' as space char, need to escape it as '%20'
-    openWebBrowser("https://www.lingvolive.com/en-us/translate/en-ru/${urlEncode(text).replace("+", "%20")}")
+    // and now it is not accessible without VPN (for that reason we use Opera)
+    openWebBrowser(BrowserType.Opera, "https://www.lingvolive.com/en-us/translate/en-ru/${urlEncode(text).replace("+", "%20")}")
 
 
 fun <T> showDropDownDialog(
