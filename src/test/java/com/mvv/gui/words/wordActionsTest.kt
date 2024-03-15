@@ -171,7 +171,7 @@ class WordActionsTest {
             it.predefinedSets = enumSetOf(PredefinedSet.DifficultToListen)
             it.transcription = "[transcr1]"
             it.statuses = setOf(WordCardStatus.NoBaseWordInSet, WordCardStatus.Duplicates)
-            it.file = Path.of("/dir1/file1.csv")
+            //it.file = Path.of("/dir1/file1.csv")
             it.fromWithPreposition = "angel of"
             it.sourcePositions = listOf(101, 102, 103)
             it.sourceSentences = "senetence 01\nsenetence 02"
@@ -182,7 +182,7 @@ class WordActionsTest {
             it.predefinedSets = enumSetOf(PredefinedSet.DifficultSense)
             it.transcription = "[transcr2]"
             it.statuses = setOf(WordCardStatus.NoBaseWordInSet, WordCardStatus.TooManyExampleNewCardCandidates)
-            it.file = Path.of("/dir1/file2.csv")
+            //it.file = Path.of("/dir1/file2.csv")
             it.fromWithPreposition = "Angeles from"
             it.sourcePositions = listOf(101, 102, 104)
             it.sourceSentences = "senetence 01\nsenetence 04"
@@ -198,7 +198,7 @@ class WordActionsTest {
         a.assertThat(merged.examples).isEqualTo("Example 01\n\nExample 02\n\nExample 03\n\nExample 04\n\n")
         a.assertThat(merged.predefinedSets).isEqualTo(enumSetOf(PredefinedSet.DifficultSense, PredefinedSet.DifficultToListen))
         a.assertThat(merged.statuses).isEqualTo(enumSetOf(WordCardStatus.NoBaseWordInSet, WordCardStatus.Duplicates, WordCardStatus.TooManyExampleNewCardCandidates))
-        a.assertThat(merged.file).isEqualTo(Path.of("/dir1/file1.csv"))
+        //a.assertThat(merged.file).isEqualTo(Path.of("/dir1/file1.csv"))
         a.assertThat(merged.fromWithPreposition).isEqualTo("angel of  Angeles from")
         a.assertThat(merged.sourcePositions).isEqualTo(listOf(101, 102, 103, 104))
         a.assertThat(merged.sourceSentences).isEqualTo(card1.sourceSentences + "\n" + card2.sourceSentences)
@@ -230,7 +230,7 @@ class WordActionsTest {
             it.predefinedSets = enumSetOf(PredefinedSet.DifficultToListen)
             it.transcription = "[transcr1]"
             it.statuses = setOf(WordCardStatus.NoBaseWordInSet, WordCardStatus.Duplicates)
-            it.file = Path.of("/dir1/file1.csv")
+            //it.file = Path.of("/dir1/file1.csv")
             it.fromWithPreposition = "angel of"
             it.sourcePositions = listOf(101, 102, 103)
             it.sourceSentences = "senetence 01\nsenetence 02"
@@ -241,7 +241,7 @@ class WordActionsTest {
             it.predefinedSets = enumSetOf(PredefinedSet.DifficultSense)
             it.transcription = "[transcr2]"
             it.statuses = setOf(WordCardStatus.NoBaseWordInSet, WordCardStatus.TooManyExampleNewCardCandidates)
-            it.file = Path.of("/dir1/file2.csv")
+            //it.file = Path.of("/dir1/file2.csv")
             it.fromWithPreposition = "Angeles from"
             it.sourcePositions = listOf(101, 102, 104)
             it.sourceSentences = "senetence 01\nsenetence 04"
@@ -252,7 +252,7 @@ class WordActionsTest {
             it.predefinedSets = enumSetOf(PredefinedSet.DifficultToListen)
             it.transcription = "[transcr1]"
             it.statuses = setOf(WordCardStatus.NoBaseWordInSet, WordCardStatus.Duplicates)
-            it.file = Path.of("/dir1/file1.csv")
+            //it.file = Path.of("/dir1/file1.csv")
             it.fromWithPreposition = "angel of"
             it.sourcePositions = listOf(101, 102, 103)
             it.sourceSentences = "senetence 01\nsenetence 02"
@@ -280,7 +280,7 @@ class WordActionsTest {
                 """.trimIndent())
         assertThat(merged.predefinedSets).isEqualTo(enumSetOf(PredefinedSet.DifficultSense, PredefinedSet.DifficultToListen))
         assertThat(merged.statuses).isEqualTo(enumSetOf(WordCardStatus.NoBaseWordInSet, WordCardStatus.Duplicates, WordCardStatus.TooManyExampleNewCardCandidates))
-        assertThat(merged.file).isEqualTo(Path.of("/dir1/file1.csv"))
+        //assertThat(merged.file).isEqualTo(Path.of("/dir1/file1.csv"))
         assertThat(merged.fromWithPreposition).isEqualTo("angel of  Angeles from")
         assertThat(merged.sourcePositions).isEqualTo(listOf(101, 102, 103, 104))
         assertThat(merged.sourceSentences).isEqualTo(card1.sourceSentences + "\n" + card2.sourceSentences)

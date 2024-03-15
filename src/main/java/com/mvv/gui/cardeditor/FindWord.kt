@@ -4,6 +4,7 @@ import com.mvv.gui.javafx.*
 import com.mvv.gui.util.lastChar
 import com.mvv.gui.util.startsWithOneOf
 import com.mvv.gui.words.CardWordEntry
+import com.mvv.gui.words.from
 import javafx.event.EventHandler
 import javafx.event.EventType
 import javafx.scene.Node

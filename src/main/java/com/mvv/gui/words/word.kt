@@ -1,15 +1,13 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.cardeditor.isGoodLearnCardCandidate
 import com.mvv.gui.javafx.CacheableObservableValue
 import com.mvv.gui.javafx.mapCached
-import com.mvv.gui.cardeditor.parseToCard
-import com.mvv.gui.util.containsEnglishLetters
+import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
 import javafx.beans.value.ObservableValue
 import javafx.scene.paint.Color
-import java.nio.file.Path
 
 
 //private val log = mu.KotlinLogging.logger {}
@@ -20,108 +18,107 @@ interface BaseWordExtractor {
 }
 
 
-class CardWordEntry (from: String, to: String, /*val features: Set<CardWordEntryFeatures> = emptySet(),*/ private val baseWordExtractor: BaseWordExtractor? = null) {
-    val fromProperty = SimpleStringProperty(this, "from", "")
-    val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")
+interface CardWordEntry {
+    val baseWordExtractor: BaseWordExtractor?
 
-    val baseWordOfFromProperty: CacheableObservableValue<String> = fromProperty.let { fromProp ->
+    val fromProperty: StringProperty
+    val fromWithPrepositionProperty: StringProperty
+    val baseWordOfFromProperty: CacheableObservableValue<String>
+    val baseWordAndFromProperty: CacheableObservableValue<BaseAndFrom>
+    val fromWordCountProperty: ObservableValue<Int>
+
+    val toProperty: StringProperty
+    val transcriptionProperty: StringProperty
+    val translationCountProperty: ObservableValue<Int>
+
+    val examplesProperty: StringProperty
+    val exampleCountProperty: ObservableValue<Int>
+    val exampleNewCardCandidateCountProperty: ObservableValue<Int>
+
+    val statusesProperty: ObjectProperty<Set<WordCardStatus>>
+    val predefinedSetsProperty:  ObjectProperty<Set<PredefinedSet>>
+    val sourcePositionsProperty: ObjectProperty<List<Int>>
+    val sourceSentencesProperty: StringProperty
+
+    // for showing in tooltip. It is filled during word cards analysis.
+    //@Transient
+    //var missedBaseWords: List<String> = emptyList()
+    val missedBaseWordsProperty: ObjectProperty<List<String>>
+
+    fun copy(): CardWordEntry
+    // TODO: why do I need it?? Try to remove this param.
+    fun copy(baseWordExtractor: BaseWordExtractor?): CardWordEntry
+}
+
+fun CardWordEntry(
+    from: String, to: String,
+    // val features: Set<CardWordEntryFeatures> = emptySet(),
+    baseWordExtractor: BaseWordExtractor? = null,
+): CardWordEntry {
+    return CardWordEntryImpl(baseWordExtractor).also {
+        it.from = from
+        it.to = to
+    }
+}
+
+
+fun CardWordEntry.copyBasePropsTo(to: CardWordEntry) {
+    to.from = this.from
+    to.to   = this.to
+    to.fromWithPreposition = this.fromWithPreposition
+    to.transcription   = this.transcription
+    to.examples        = this.examples
+    to.statuses        = this.statuses
+    to.predefinedSets  = this.predefinedSets
+    to.sourcePositions = this.sourcePositions
+    to.sourceSentences = this.sourceSentences
+    to.missedBaseWords = this.missedBaseWords
+}
+
+
+private class CardWordEntryImpl (
+    // val features: Set<CardWordEntryFeatures> = emptySet(),
+    override val baseWordExtractor: BaseWordExtractor? = null,
+    ) : CardWordEntry {
+
+    override val fromProperty = SimpleStringProperty(this, "from", "")
+    override val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")
+
+    override val baseWordOfFromProperty: CacheableObservableValue<String> = fromProperty.let { fromProp ->
         fromProp.mapCached { baseWordExtractor?.extractBaseWord(it) ?: it }
     }
 
     // Synthetic property for sorting because there is no way to pass Comparator<Card> for specific table column (we can use only Comparator<String>).
-    val baseWordAndFromProperty: CacheableObservableValue<BaseAndFrom> = baseWordOfFromProperty.mapCached { baseOfFrom ->
+    override val baseWordAndFromProperty: CacheableObservableValue<BaseAndFrom> = baseWordOfFromProperty.mapCached { baseOfFrom ->
         BaseAndFrom(baseOfFrom, fromProperty.value)
     }
 
-    val fromWordCountProperty = fromProperty.mapCached { it.trim().split(" ", "\t", "\n").size }
-    val toProperty = SimpleStringProperty(this, "to", "")
-    val transcriptionProperty = SimpleStringProperty(this, "transcription", "")
-    val translationCountProperty: ObservableValue<Int> = toProperty.mapCached { it?.translationCount ?: 0 }
+    override val fromWordCountProperty = fromProperty.mapCached { it.trim().split(" ", "\t", "\n").size }
+    override val toProperty = SimpleStringProperty(this, "to", "")
+    override val transcriptionProperty = SimpleStringProperty(this, "transcription", "")
+    override val translationCountProperty: ObservableValue<Int> = toProperty.mapCached { it?.translationCount ?: 0 }
 
-    val examplesProperty = SimpleStringProperty(this, "examples", "")
-    val exampleCountProperty = examplesProperty.mapCached { it.examplesCount }
-    val exampleNewCardCandidateCountProperty = examplesProperty.mapCached { it.exampleNewCardCandidateCount }
+    override val examplesProperty = SimpleStringProperty(this, "examples", "")
+    override val exampleCountProperty = examplesProperty.mapCached { it.examplesCount }
+    override val exampleNewCardCandidateCountProperty = examplesProperty.mapCached { it.exampleNewCardCandidateCount }
 
-    val statusesProperty        = SimpleObjectProperty<Set<WordCardStatus>>(this, "statuses", emptySet())
-    val predefinedSetsProperty  = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())
-    val sourcePositionsProperty = SimpleObjectProperty<List<Int>>(this, "sourcePositions", emptyList())
-    val sourceSentencesProperty = SimpleStringProperty(this, "sourceSentences", "")
-
-    @Transient // optional, used only in search results
-    val fileProperty = SimpleObjectProperty<Path>(this, "file", null)
-
-    var from: String
-        get()      = fromProperty.valueSafe
-        set(value) = fromProperty.set(value)
-    var fromWithPreposition: String
-        get()      = fromWithPrepositionProperty.valueSafe
-        set(value) = fromWithPrepositionProperty.set(value)
-    val fromWordCount: Int
-        get() = fromWordCountProperty.value
-    val baseWordOfFrom: String
-        get() = baseWordOfFromProperty.value ?: ""
-    var to: String
-        get()      = toProperty.get()
-        set(value) = toProperty.set(value)
-    var transcription: String
-        get()      = transcriptionProperty.get()
-        set(value) = transcriptionProperty.set(value)
-    var examples: String
-        get()      = examplesProperty.get()
-        set(value) = examplesProperty.set(value)
-    //val exampleCount: Int get() = exampleCountProperty.value
-    val exampleNewCardCandidateCount: Int get() = exampleNewCardCandidateCountProperty.value
-
-    val translationCount: Int
-        get() = translationCountProperty.value
-
-    var statuses: Set<WordCardStatus>
-        get()      = statusesProperty.get()
-        set(value) = statusesProperty.set(value)
-
-    var predefinedSets: Set<PredefinedSet>
-        get()      = predefinedSetsProperty.get()
-        set(value) = predefinedSetsProperty.set(value)
-
-    var sourcePositions: List<Int>
-        get()      = sourcePositionsProperty.get()
-        set(value) = sourcePositionsProperty.set(value)
-
-    var sourceSentences: String
-        get()      = sourceSentencesProperty.get()
-        set(value) = sourceSentencesProperty.set(value)
-
-    //@Transient
-    var file: Path?
-        get()      = fileProperty.get()
-        set(value) = fileProperty.set(value)
+    override val statusesProperty        = SimpleObjectProperty<Set<WordCardStatus>>(this, "statuses", emptySet())
+    override val predefinedSetsProperty  = SimpleObjectProperty<Set<PredefinedSet>>(this, "predefinedSets", emptySet())
+    override val sourcePositionsProperty = SimpleObjectProperty<List<Int>>(this, "sourcePositions", emptyList())
+    override val sourceSentencesProperty = SimpleStringProperty(this, "sourceSentences", "")
 
     // for showing in tooltip. It is filled during word cards analysis.
     @Transient
-    var missedBaseWords: List<String> = emptyList()
-
-    //constructor(from: String, to: String, features: Set<CardWordEntryFeatures> = emptySet()) {
-    init {
-        this.from = from
-        this.to   = to
-    }
+    override val missedBaseWordsProperty = SimpleObjectProperty<List<String>>(this, "missedBaseWords", emptyList())
 
     override fun toString(): String =
         "CardWordEntry(from='$from', to='${to.take(20)}...', statuses=$statuses," +
                 " translationCount=$translationCount, transcription='$transcription', examples='${examples.take(10)}...')"
 
-    fun copy(baseWordExtractor: BaseWordExtractor? = null): CardWordEntry =
-        CardWordEntry(this.from, this.to, baseWordExtractor ?: this.baseWordExtractor)
-            .also {
-                it.fromWithPreposition = this.fromWithPreposition
-                it.transcription   = this.transcription
-                it.examples        = this.examples
-                it.statuses        = this.statuses
-                it.predefinedSets  = this.predefinedSets
-                it.sourcePositions = this.sourcePositions
-                it.sourceSentences = this.sourceSentences
-                it.missedBaseWords = this.missedBaseWords
-            }
+    override fun copy(): CardWordEntry = copy(null)
+    override fun copy(baseWordExtractor: BaseWordExtractor?): CardWordEntry =
+        CardWordEntryImpl(baseWordExtractor ?: this.baseWordExtractor)
+            .also { this.copyBasePropsTo(it) }
 
 }
 
@@ -142,12 +139,6 @@ class BaseAndFrom (val base: String, val from: String) : Comparable<BaseAndFrom>
 
         return baseComparing
     }
-    //override fun compareTo(other: BaseAndFrom): Int =
-    //    this.base.compareTo(other.base)
-    //        .thenCompare { this.from.compareTo(other.from) }
-    //override fun compareTo(other: BaseAndFrom): Int =
-    //    compare(this, other) { it.base }
-    //       .thenCompare(this, other) { it.from }
 }
 
 
@@ -163,111 +154,6 @@ enum class TranslationCountStatus(val color: Color) {
     companion object {
         val allCssClasses = TranslationCountStatus.values().map { it.cssClass }
     }
-}
-
-
-val CharSequence.translationCount: Int get() {
-
-    var count = 0
-    var bracketLevel = 0
-    var wasTranslationChars = false
-
-    for (i in this.indices) {
-        val ch = this[i]
-
-        if (ch == '(') bracketLevel++
-        if (ch == ')' && bracketLevel > 0) bracketLevel--
-
-        if (bracketLevel == 0) {
-            if (ch == '\n' || ch == ',' || ch == ';') {
-                if (wasTranslationChars) count++
-                wasTranslationChars = false
-            }
-            else if (!ch.isWhitespace())
-                wasTranslationChars = true
-        }
-    }
-
-    if (bracketLevel == 0 && wasTranslationChars) count++
-
-    return count
-}
-
-fun CharSequence.splitToToTranslations(): List<CharSequence> {
-
-    data class Range (val first: Int, val last: Int) // or we can use Pair, but I preferred to use normal class
-
-    var bracketLevel = 0
-
-    var firstNonSpaceIndex = -1
-    var lastNonSpaceIndex = -1
-    val translations = mutableListOf<Range>()
-
-    for (i in this.indices) {
-        val ch = this[i]
-
-        if (ch == '(') bracketLevel++
-        if (ch == ')' && bracketLevel > 0) bracketLevel--
-
-        if (bracketLevel == 0) {
-            if (ch == '\n' || ch == ',' || ch == ';') {
-                if (firstNonSpaceIndex != -1) translations.add(Range(firstNonSpaceIndex, lastNonSpaceIndex))
-                firstNonSpaceIndex = -1
-                lastNonSpaceIndex = -1
-            }
-            else if (!ch.isWhitespace()) {
-                if (firstNonSpaceIndex == -1) firstNonSpaceIndex = i
-                lastNonSpaceIndex = i
-            }
-        }
-    }
-
-    if (bracketLevel == 0 && firstNonSpaceIndex != -1) translations.add(Range(firstNonSpaceIndex, lastNonSpaceIndex))
-
-    return translations.map { this.subSequence(it.first, it.last + 1) }
-}
-
-val String.translationCount_Old: Int get() = splitToToTranslations_Old().size
-
-fun String.splitToToTranslations_Old() =
-    formatWordOrPhraseToMemoWordFormat(this)
-        .split(",")
-        .filter { it.isNotBlank() }
-
-
-val Int.toTranslationCountStatus: TranslationCountStatus get() = when (this) {
-    in 0..3 -> TranslationCountStatus.Ok
-    in 4..5 -> TranslationCountStatus.NotBad
-    in 6..7 -> TranslationCountStatus.Warn
-    else -> TranslationCountStatus.ToMany
-}
-
-
-// TODO: improve examples splitting logic
-//       1) We should process auto inserted examples from dictionaries (like 1) bla-bla 2) bla-bla ...   it is in one long line )
-//       2) We should process auto inserted by Ctrl+E.
-//          Such example can have several lines (2nd, 3rd line start with space chars) and all lines should be considered as ONE example.
-//
-private val CharSequence.examplesCount: Int get() {
-    if (this.isBlank()) return 0
-
-    return this
-        .splitToSequence("\n")
-        .filter { it.isNotBlank() }
-        .filter { it.containsEnglishLetters() }
-        .count()
-}
-
-
-private val CharSequence.exampleNewCardCandidateCount: Int get() {
-    if (this.isBlank()) return 0
-
-    return this
-        .splitToSequence("\n")
-        .filter { it.isNotBlank() }
-        .filter { it.containsEnglishLetters() }
-        .filter { it.parseToCard()?.isGoodLearnCardCandidate() ?: false }
-        .count()
 }
 
 

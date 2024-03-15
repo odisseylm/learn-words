@@ -2,10 +2,8 @@ package com.mvv.gui.cardeditor
 
 import com.mvv.gui.cardeditor.LearnWordsController.InsertPosition
 import com.mvv.gui.javafx.*
-import com.mvv.gui.words.CardWordEntry
-import com.mvv.gui.words.PredefinedSet
+import com.mvv.gui.words.*
 import com.mvv.gui.words.WordCardStatus.TooManyExampleNewCardCandidates
-import com.mvv.gui.words.englishBaseWords
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
@@ -23,6 +21,9 @@ class ContextMenuController (val controller: LearnWordsController) {
 
     private val selectByBaseWordMenuItem = newMenuItem("Select by base word") { controller.selectByBaseWord() }
     private val copySelectedToOtherSetMenuItem = newMenuItem("Copy selected cards to other set") { controller.copySelectToOtherSet() }
+    /*
+    private val exportSelectedFromOtherSetMenuItem = newMenuItem("Export selected from other set") { controller.exportSelectFromOtherSet() }
+     */
 
     private val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
         buttonIcon("/icons/icons8-layers-16-with-plus.png")) {
@@ -69,6 +70,9 @@ class ContextMenuController (val controller: LearnWordsController) {
             SeparatorMenuItem(),
             selectByBaseWordMenuItem,
             copySelectedToOtherSetMenuItem,
+            /*
+            exportSelectedFromOtherSetMenuItem,
+             */
 
             SeparatorMenuItem(),
             newMenuItem("Toggle/lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
@@ -126,7 +130,10 @@ class ContextMenuController (val controller: LearnWordsController) {
         mergeMenuItem.isVisible = controller.isSelectionMergingAllowed()
 
         updateSelectByBaseWordMenuItem()
-        copySelectedToOtherSetMenuItem.isVisible = currentWordsList.selectionModel.selectedItems.size > 1
+        copySelectedToOtherSetMenuItem.isVisible = currentWordsList.hasSelection
+        /*
+        exportSelectedFromOtherSetMenuItem.isVisible = currentWordsList.singleSelection != null
+         */
 
         showSourceSentenceMenuItem.isVisible = selectedCard?.sourceSentences?.isNotBlank() ?: false
         updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)

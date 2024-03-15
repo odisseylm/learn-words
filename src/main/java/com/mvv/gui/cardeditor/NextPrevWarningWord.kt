@@ -4,6 +4,7 @@ import com.mvv.gui.javafx.*
 import com.mvv.gui.util.toEnumSet
 import com.mvv.gui.words.CardWordEntry
 import com.mvv.gui.words.WordCardStatus
+import com.mvv.gui.words.statuses
 import javafx.beans.value.ChangeListener
 import javafx.scene.control.ComboBox
 import javafx.scene.control.TableView

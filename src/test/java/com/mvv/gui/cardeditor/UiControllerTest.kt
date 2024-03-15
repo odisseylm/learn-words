@@ -1,6 +1,8 @@
 package com.mvv.gui.cardeditor
 
 import com.mvv.gui.test.useAssertJSoftAssertions
+import com.mvv.gui.words.from
+import com.mvv.gui.words.to
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.DisplayName

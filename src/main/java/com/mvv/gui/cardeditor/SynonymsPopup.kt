@@ -3,7 +3,8 @@ package com.mvv.gui.cardeditor
 import com.mvv.gui.javafx.RelocationPolicy
 import com.mvv.gui.javafx.sceneRoot
 import com.mvv.gui.javafx.showPopup
-import com.mvv.gui.words.SearchEntry
+import com.mvv.gui.words.AllCardWordEntry
+import com.mvv.gui.words.from
 import javafx.event.EventHandler
 import javafx.geometry.Point2D
 import javafx.geometry.Pos
@@ -18,7 +19,7 @@ import javafx.scene.text.TextFlow
 
 class SynonymsPopup (val controller: LearnWordsController) : PopupControl() {
 
-    private var synonyms: List<SearchEntry> = emptyList()
+    private var synonyms: List<AllCardWordEntry> = emptyList()
 
     private val textFlow  = TextFlow()
     private val wordLabel = Label("").also { it.style = "-fx-font-weight: bold;" }
@@ -57,17 +58,23 @@ class SynonymsPopup (val controller: LearnWordsController) : PopupControl() {
         sizeToScene()
     }
 
-    private fun setSynonyms(synonyms: List<SearchEntry>) {
+    private fun setSynonyms(synonyms: List<AllCardWordEntry>) {
         this.synonyms = synonyms
 
+        val groupedSynonyms: Map<String, List<String>> = synonyms
+            .map { it.from }
+            .groupBy { it }
+
         textFlow.children.clear()
-        synonyms.forEach {
-            textFlow.children.add(Text(it.card.from))
-            textFlow.children.add(Text("\n"))
-        }
+        groupedSynonyms.entries
+            .map { if (it.value.size == 1) it.key else "${it.key} (${it.value.size})" }
+            .forEach {
+                textFlow.children.add(Text(it))
+                textFlow.children.add(Text("\n"))
+            }
     }
 
-    fun show(parent: Node, wordOrPhrase: String, synonyms: List<SearchEntry>, getPos: () -> Point2D) {
+    fun show(parent: Node, wordOrPhrase: String, synonyms: List<AllCardWordEntry>, getPos: () -> Point2D) {
         wordLabel.text = wordOrPhrase
         setSynonyms(synonyms)
 

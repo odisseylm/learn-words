@@ -2,9 +2,7 @@ package com.mvv.gui.cardeditor
 
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
-import com.mvv.gui.words.CardWordEntry
-import com.mvv.gui.words.SearchEntry
-import com.mvv.gui.words.baseWordsFilename
+import com.mvv.gui.words.*
 import javafx.geometry.Point2D
 import javafx.scene.Node
 import javafx.scene.control.Label
@@ -55,18 +53,18 @@ class OtherCardsViewPopup :
         addWindowResizingFeature(this, content)
     }
 
-    var cards: List<CardWordEntry>
-        get() = cardsTable.items
+    @Suppress("UNCHECKED_CAST")
+    var cards: List<AllCardWordEntry>
+        get() = cardsTable.items as List<AllCardWordEntry>
         set(value) { cardsTable.items.setAll(value) }
 
     var caption: String
         get() = captionLabel.text
         set(value) { captionLabel.text = value }
 
-    fun show(parent: Node, title: String, cards: List<SearchEntry>, getPos: ()-> Point2D) {
-
+    fun show(parent: Node, title: String, cards: List<AllCardWordEntry>, getPos: ()-> Point2D) {
         this.caption = title
-        this.cards   = cards.map { it.card }
+        this.cards   = cards
 
         this.showPopup(parent, RelocationPolicy.CalculateOnlyOnce, getPos)
     }
@@ -75,7 +73,7 @@ class OtherCardsViewPopup :
 
 private class OtherWordCardsTable(controller: LearnWordsController) : WordCardsTable(controller) {
 
-    val fileColumn = TableColumn<CardWordEntry, Path?>("File")
+    val fileColumn = TableColumn<AllCardWordEntry, Path?>("File")
 
     init {
         fileColumn.id = "file"
@@ -91,10 +89,14 @@ private class OtherWordCardsTable(controller: LearnWordsController) : WordCardsT
 
         isEditable = false
 
+        // Let live with that. Otherwise, we need to turn all related classes to generic ones. It would be over-complicated solution.
+        @Suppress("UNCHECKED_CAST")
+        val fileCol = fileColumn as TableColumn<CardWordEntry, Path?>
+
         columns.setAll(
             numberColumn,
             fromColumn,
-            fileColumn,
+            fileCol,
             //transcriptionColumn,
             translationCountColumn,
             toColumn,
@@ -119,7 +121,7 @@ class LightOtherCardsViewPopup : PopupControl() {
         sizeToScene()
     }
 
-    fun show(parent: Node, wordOrPhrase: String, cards: List<SearchEntry>, getPos: () -> Point2D) {
+    fun show(parent: Node, wordOrPhrase: String, cards: List<AllCardWordEntry>, getPos: () -> Point2D) {
 
         textFlow.children.clear()
 

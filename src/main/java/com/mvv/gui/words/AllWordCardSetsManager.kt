@@ -3,6 +3,8 @@ package com.mvv.gui.words
 import com.mvv.gui.task.TaskManager
 import com.mvv.gui.task.addTask
 import com.mvv.gui.util.*
+import javafx.beans.property.ObjectProperty
+import javafx.beans.property.SimpleObjectProperty
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -24,6 +26,23 @@ enum class MatchMode {
 }
 
 
+interface AllCardWordEntry : CardWordEntry {
+    val fileProperty: ObjectProperty<Path>
+}
+val AllCardWordEntry.file: Path get() = fileProperty.get()
+
+fun CardWordEntry.toAllEntry(file: Path): AllCardWordEntry = AllCardWordEntryImpl(this, file)
+
+private class AllCardWordEntryImpl(
+    private val card: CardWordEntry,
+    file: Path)
+    : CardWordEntry by card, AllCardWordEntry {
+
+    override val fileProperty = SimpleObjectProperty(this, "file", file)
+    override fun toString(): String = "set: ${file.name} $from => $to"
+}
+
+
 class AllWordCardSetsManager : AutoCloseable {
 
     @Volatile
@@ -32,7 +51,7 @@ class AllWordCardSetsManager : AutoCloseable {
     @Volatile
     private var sets: Map<Path, WordsData> = mapOf()
     @Volatile
-    private var searchWordEntries: Map<String, List<SearchEntry>> = mutableMapOf()
+    private var searchWordEntries: Map<String, List<AllCardWordEntry>> = mutableMapOf()
 
     private val updatePeriod = Duration.ofSeconds(30)
 
@@ -85,17 +104,17 @@ class AllWordCardSetsManager : AutoCloseable {
                 if (prevFileData != null && fileLastUpdatedAt != null && fileLastUpdatedAt < prevFileData.loadedAt)
                     prevFileData
                 else try {
-                    WordsData(f, loadWordCardsFromInternalCsv(f).onEach { it.file = f  })
+                    WordsData(f, loadWordCardsFromInternalCsv(f))
                 } catch (ex: Exception) {
                     log.warn(ex) { "Error of loading set [$f]." }; null
                 }
             }
             .associateBy { it.file }
 
-        val currentSearchWordEntries: Map<String, List<SearchEntry>> = currentExistentSets.entries
+        val currentSearchWordEntries: Map<String, List<AllCardWordEntry>> = currentExistentSets.entries
             .flatMap { fileAndData ->
                 fileAndData.value.searchWordEntries.entries.flatMap { searchEntry ->
-                    searchEntry.value.map { card -> Pair(searchEntry.key, SearchEntry(fileAndData.key, card)) }
+                    searchEntry.value.map { card -> Pair(searchEntry.key, card.toAllEntry(fileAndData.key)) }
                 }
             }
             .groupBy({ it.first }, { it.second })
@@ -107,7 +126,7 @@ class AllWordCardSetsManager : AutoCloseable {
     }
 
     // Try to return read-only cards.
-    fun findBy(wordOrPhrase: String, matchMode: MatchMode): List<SearchEntry> {
+    fun findBy(wordOrPhrase: String, matchMode: MatchMode): List<AllCardWordEntry> {
 
         if (wordOrPhrase.isBlank()) return emptyList()
 
@@ -120,7 +139,7 @@ class AllWordCardSetsManager : AutoCloseable {
         }
     }
 
-    private fun findByExactMatch(toSearch: String): List<SearchEntry> {
+    private fun findByExactMatch(toSearch: String): List<AllCardWordEntry> {
 
         // to keep the same ref for all searches
         val searchWordEntriesRef = searchWordEntries
@@ -136,7 +155,7 @@ class AllWordCardSetsManager : AutoCloseable {
         return (byExactMatch + matched2 + matched3).distinct().ignoreEntriesFromFile(this.ignoredFile)
     }
 
-    private fun findByPrefix(wordOrPhrase: String): List<SearchEntry> {
+    private fun findByPrefix(wordOrPhrase: String): List<AllCardWordEntry> {
 
         // Actually it is needed only for possible verbs, and we can avoid it (for some cases) when we sure it is not verb.
         val toSearchPrefix = if (wordOrPhrase.startsWith("to ")) listOf(wordOrPhrase) else listOf(wordOrPhrase, "to $wordOrPhrase", "to be $wordOrPhrase")
@@ -147,7 +166,7 @@ class AllWordCardSetsManager : AutoCloseable {
         val matchedKeys = searchWordEntriesRef.keys
             .filter { it.startsWithOneOf(toSearchPrefix) }
 
-        val found: List<SearchEntry> = matchedKeys
+        val found: List<AllCardWordEntry> = matchedKeys
             .mapNotNull { searchWordEntriesRef[it] }
             .flatten()
             .distinct()
@@ -155,7 +174,7 @@ class AllWordCardSetsManager : AutoCloseable {
         return found.ignoreEntriesFromFile(this.ignoredFile)
     }
 
-    private fun findByContains(wordOrPhrase: String): List<SearchEntry> {
+    private fun findByContains(wordOrPhrase: String): List<AllCardWordEntry> {
 
         // to keep the same ref for all searches
         val searchWordEntriesRef = searchWordEntries
@@ -163,7 +182,7 @@ class AllWordCardSetsManager : AutoCloseable {
         val matchedKeys = searchWordEntriesRef.keys
             .filter { keyAsWord -> keyAsWord.contains(wordOrPhrase) }
 
-        val found: List<SearchEntry> = matchedKeys
+        val found: List<AllCardWordEntry> = matchedKeys
             .mapNotNull { searchWordEntriesRef[it] }
             .flatten()
             .distinct()
@@ -171,7 +190,7 @@ class AllWordCardSetsManager : AutoCloseable {
         return found.ignoreEntriesFromFile(this.ignoredFile)
     }
 
-    private fun List<SearchEntry>.ignoreEntriesFromFile(ignoredFile: Path?): List<SearchEntry> =
+    private fun List<AllCardWordEntry>.ignoreEntriesFromFile(ignoredFile: Path?): List<AllCardWordEntry> =
         this.filter { it.file != ignoredFile }
 
     val allCardSets: List<Path> get() = this.sets.keys.toList()
@@ -203,13 +222,6 @@ class WordsData (
     }
 }
 
-
-data class SearchEntry (
-    val file: Path,
-    val card: CardWordEntry,
-) {
-    override fun toString(): String = "set: ${file.name} ${card.from} => ${card.to}"
-}
 
 
 private fun CardWordEntry.getAllSearchableWords(): List<String> {

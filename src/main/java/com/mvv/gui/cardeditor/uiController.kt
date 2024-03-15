@@ -281,7 +281,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         }
     }
 
-    private fun showThisWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
+    private fun showThisWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<AllCardWordEntry>) {
         lightOtherCardsViewPopup.hide()
         otherCardsViewPopup.show(pane, "Word '$wordOrPhrase' already exists in other sets", cards) {
             val mainWnd = pane.scene.window
@@ -293,10 +293,10 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         }
     }
 
-    internal fun showSpecifiedWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) =
+    internal fun showSpecifiedWordsInOtherSetsPopup(wordOrPhrase: String, cards: List<AllCardWordEntry>) =
         showInOtherSetsPopup("'$wordOrPhrase' in other sets", cards)
 
-    internal fun showInOtherSetsPopup(title: String, cards: List<SearchEntry>) {
+    internal fun showInOtherSetsPopup(title: String, cards: List<AllCardWordEntry>) {
         foundCardsViewPopup.show(pane, title, cards) {
             val mainWnd = pane.scene.window
             val xOffset = 20.0;  val yOffset = 50.0
@@ -307,7 +307,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         }
     }
 
-    private fun showThisWordsInLightOtherSetsPopup(wordOrPhrase: String, cards: List<SearchEntry>) {
+    private fun showThisWordsInLightOtherSetsPopup(wordOrPhrase: String, cards: List<AllCardWordEntry>) {
         lightOtherCardsViewPopup.show(pane, wordOrPhrase, cards) {
             val mainWnd = pane.scene.window
             val xOffset = 20.0;  val yOffset = 80.0
@@ -520,6 +520,25 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
 
         saveWordsImpl(cardToSave, destFilePath)
     }
+
+    /*
+    fun exportSelectFromOtherSet() {
+        try { exportSelectFromOtherSetImpl() }
+        catch (ex: Exception) {
+            log.error(ex) { "Error of exporting selected card from other set." }
+            showInfoAlert(currentWordsList, "Error of exporting selected card from other set.\n\n${ex.message}")
+        }
+    }
+
+    private fun exportSelectFromOtherSetImpl() {
+
+        val selected: CardWordEntry = currentWordsList.singleSelection ?: throw IllegalStateException("No single selection.")
+
+        val found: List<AllCardWordEntry> = allWordCardSetsManager.findBy(selected.from, MatchMode.Exact)
+
+        TODO("Not yet implemented")
+    }
+    */
 
     fun translateSelected() =
         currentWordsSelection.selectedItems.doIfNotEmpty {

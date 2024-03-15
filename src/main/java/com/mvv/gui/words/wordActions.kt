@@ -178,7 +178,7 @@ fun mergeCards(cards: List<CardWordEntry>): CardWordEntry {
     card.sourcePositions  = cards.mergeList   { it.sourcePositions }
     card.sourceSentences  = cards.merge("\n") { it.sourceSentences }
     card.missedBaseWords  = cards.mergeList   { it.missedBaseWords }
-    card.file  = cards.map { it.file }.firstOrNull()
+    //card.file  = cards.map { it.file }.firstOrNull()
 
     return card
 }
