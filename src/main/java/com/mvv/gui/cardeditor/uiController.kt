@@ -521,7 +521,6 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         saveWordsImpl(cardToSave, destFilePath)
     }
 
-    /*
     fun exportSelectFromOtherSet() {
         try { exportSelectFromOtherSetImpl() }
         catch (ex: Exception) {
@@ -532,13 +531,26 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
 
     private fun exportSelectFromOtherSetImpl() {
 
-        val selected: CardWordEntry = currentWordsList.singleSelection ?: throw IllegalStateException("No single selection.")
+        val selected: CardWordEntry = currentWordsList.singleSelection
+            ?: throw IllegalStateException("No single selection.")
 
         val found: List<AllCardWordEntry> = allWordCardSetsManager.findBy(selected.from, MatchMode.Exact)
 
-        TODO("Not yet implemented")
+        val cardToExport = when {
+            found.isEmpty() -> null
+            found.size == 1 -> found.first()
+            else -> showSelectionCardDialog(pane, "Select card, please", found)
+        }
+
+        if (cardToExport != null) {
+            cardToExport.copyBasePropsTo(selected)
+            currentWordsList.runWithScrollKeeping {
+                // T O D O: actually it should work without that??!!
+                // Need this hack to increase/refresh rendered row height.
+                currentWordsList.refresh()
+            }
+        }
     }
-    */
 
     fun translateSelected() =
         currentWordsSelection.selectedItems.doIfNotEmpty {

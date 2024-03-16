@@ -3,12 +3,12 @@ package com.mvv.gui.cardeditor
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
 import com.mvv.gui.words.*
+import javafx.geometry.Insets
 import javafx.geometry.Point2D
 import javafx.scene.Node
-import javafx.scene.control.Label
-import javafx.scene.control.PopupControl
-import javafx.scene.control.TableColumn
+import javafx.scene.control.*
 import javafx.scene.image.ImageView
+import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.Region
 import javafx.scene.text.Text
@@ -139,4 +139,38 @@ class LightOtherCardsViewPopup : PopupControl() {
 
         this.showPopup(parent, RelocationPolicy.AlwaysRecalculate, getPos)
     }
+}
+
+
+
+fun <CardType: CardWordEntry> showSelectionCardDialog(parent: Node, title: String, cards: List<CardType>): CardType? {
+
+    val dialog = Dialog<Unit>()
+    dialog.title = title
+    dialog.isResizable = true
+
+    dialog.dialogPane.buttonTypes.addAll(
+        ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE),
+        ButtonType("Ok", ButtonBar.ButtonData.OK_DONE),
+    )
+
+    val cardsTable = OtherWordCardsTable(LearnWordsController(isReadOnly = true)).also {
+        it.items.setAll(cards)
+
+        it.selectionModel.selectionMode = SelectionMode.SINGLE
+        it.selectionModel.isCellSelectionEnabled = false
+    }
+
+    dialog.dialogPane.content = BorderPane(cardsTable)
+        .also { it.padding = Insets(0.0, 4.0, 0.0, 4.0); }
+
+    cardsTable.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
+        runLaterWithDelay(50) { if (ev.clickCount >= 2 && cardsTable.hasSelection) dialog.close() }
+    }
+
+    initDialogParentAndModality(dialog, parent)
+    dialog.showAndWait()
+
+    @Suppress("UNCHECKED_CAST")
+    return cardsTable.singleSelection as CardType?
 }

@@ -42,7 +42,6 @@ interface CardWordEntry {
 
     // for showing in tooltip. It is filled during word cards analysis.
     //@Transient
-    //var missedBaseWords: List<String> = emptyList()
     val missedBaseWordsProperty: ObjectProperty<List<String>>
 
     fun copy(): CardWordEntry

@@ -21,9 +21,7 @@ class ContextMenuController (val controller: LearnWordsController) {
 
     private val selectByBaseWordMenuItem = newMenuItem("Select by base word") { controller.selectByBaseWord() }
     private val copySelectedToOtherSetMenuItem = newMenuItem("Copy selected cards to other set") { controller.copySelectToOtherSet() }
-    /*
     private val exportSelectedFromOtherSetMenuItem = newMenuItem("Export selected from other set") { controller.exportSelectFromOtherSet() }
-     */
 
     private val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
         buttonIcon("/icons/icons8-layers-16-with-plus.png")) {
@@ -70,9 +68,7 @@ class ContextMenuController (val controller: LearnWordsController) {
             SeparatorMenuItem(),
             selectByBaseWordMenuItem,
             copySelectedToOtherSetMenuItem,
-            /*
             exportSelectedFromOtherSetMenuItem,
-             */
 
             SeparatorMenuItem(),
             newMenuItem("Toggle/lower case", buttonIcon("/icons/toLowerCase.png"), lowerCaseKeyCombination) {
@@ -131,9 +127,7 @@ class ContextMenuController (val controller: LearnWordsController) {
 
         updateSelectByBaseWordMenuItem()
         copySelectedToOtherSetMenuItem.isVisible = currentWordsList.hasSelection
-        /*
         exportSelectedFromOtherSetMenuItem.isVisible = currentWordsList.singleSelection != null
-         */
 
         showSourceSentenceMenuItem.isVisible = selectedCard?.sourceSentences?.isNotBlank() ?: false
         updateIgnoreNoBaseWordMenuItem(ignoreNoBaseWordMenuItem)
