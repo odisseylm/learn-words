@@ -30,7 +30,6 @@ import javafx.stage.FileChooser
 import javafx.stage.Stage
 import javafx.stage.Window
 import javafx.stage.WindowEvent
-import javafx.util.StringConverter
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.commons.text.StringEscapeUtils.escapeHtml4
 import java.io.File
@@ -424,6 +423,15 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
 
     fun toggleTextSelectionCaseOrLowerCaseRow() = currentWordsList.toggleTextSelectionCaseOrLowerCaseRow()
 
+    private fun doAction(actionName: String, action: ()->Unit) {
+        try { action() }
+        catch (ex: Exception) {
+            log.error(ex) { "Error of $actionName." }
+            showInfoAlert(pane, "Error of $actionName.\n\n${ex.message}")
+        }
+    }
+
+
     private fun copySelectedWord() = copyWordsToClipboard(currentWordsSelection.selectedItems)
 
     fun selectByBaseWord() {
@@ -433,13 +441,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         toSelect.forEach { currentWordsList.selectionModel.select(it) }
     }
 
-    fun copySelectToOtherSet() {
-        try { copySelectToOtherSetImpl() }
-        catch (ex: Exception) {
-            log.error(ex) { "Error of copying selected cards to other set file." }
-            showInfoAlert(currentWordsList, "Error of copying selected cards to other set file.\n\n${ex.message}")
-        }
-    }
+    fun copySelectToOtherSet() = doAction("copying selected cards to other set file") { copySelectToOtherSetImpl() }
 
     private fun copySelectToOtherSetImpl() {
 
@@ -449,23 +451,11 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         val currentWordsFile = this.currentWordsFile // local safe ref
         val currentWordsFileParent = currentWordsFile?.parent ?: dictDirectory
 
-        val otherSetsFiles = allWordCardSetsManager.allCardSets.sortedWith(PathCaseInsensitiveComparator())
-        val allOtherSetsParents = otherSetsFiles.map { it.parent }.distinct()
+        val allOtherSetsParents = allWordCardSetsManager.allCardSets.map { it.parent }.distinct()
         val commonAllOtherSetsSubParent = if (allOtherSetsParents.size == 1) allOtherSetsParents[0]
                                           else allOtherSetsParents.minByOrNull { it.nameCount } ?: currentWordsFileParent
 
-        val allSetsParentsAreParentOfCurrent = (allOtherSetsParents.size == 1) && (allOtherSetsParents[0] == currentWordsFileParent)
-
-        val pathToSetNameConv = object : StringConverter<Path>() {
-            override fun toString(value: Path?): String = when {
-                allSetsParentsAreParentOfCurrent -> value?.baseWordsFilename
-                else -> value?.toString()?.removePrefix(commonAllOtherSetsSubParent.toString())?.removePrefix("/")
-            } ?: ""
-            override fun fromString(string: String?): Path? = if (string.isNullOrBlank()) null else Path.of(string.trim())
-        }
-
-        val destFileOrSetName = showDropDownDialog(currentWordsList, "Select cards' set to copy cards to", otherSetsFiles, pathToSetNameConv, true)
-            ?: return
+        val destFileOrSetName = showCopyToOtherSetDialog(pane, currentWordsFile, allWordCardSetsManager) ?: return
 
         val destFilePath =
             if (destFileOrSetName.exists()) destFileOrSetName
@@ -521,13 +511,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         saveWordsImpl(cardToSave, destFilePath)
     }
 
-    fun exportSelectFromOtherSet() {
-        try { exportSelectFromOtherSetImpl() }
-        catch (ex: Exception) {
-            log.error(ex) { "Error of exporting selected card from other set." }
-            showInfoAlert(currentWordsList, "Error of exporting selected card from other set.\n\n${ex.message}")
-        }
-    }
+    fun exportSelectFromOtherSet() = doAction("exporting selected card from other set", this::exportSelectFromOtherSetImpl)
 
     private fun exportSelectFromOtherSetImpl() {
 

@@ -240,3 +240,16 @@
     -fx-min-width: 300;
     -fx-padding: 4 4 4 4;
 }
+
+
+.chooseOtherSetDialogPane .filterPane {
+    -fx-padding: 5 5 15 5;
+}
+
+.chooseOtherSetDialogPane .refreshFilesButton {
+    -fx-padding: 5 5 0 5;
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-border-width: 0;
+    -fx-border-insets: 0;
+}
