@@ -40,6 +40,24 @@ private class AllCardWordEntryImpl(
 
     override val fileProperty = SimpleObjectProperty(this, "file", file)
     override fun toString(): String = "set: ${file.name} $from => $to"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AllCardWordEntryImpl
+
+        if (card != other.card) return false
+        if (fileProperty.value != other.fileProperty.value) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = card.hashCode()
+        result = 31 * result + fileProperty.value.hashCode()
+        return result
+    }
 }
 
 
