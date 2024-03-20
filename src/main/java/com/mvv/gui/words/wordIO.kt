@@ -77,6 +77,8 @@ fun saveWordCards(file: Path, format: CsvFormat, words: Iterable<CardWordEntry>)
     }
 
 
+@Deprecated("It is may provoke performance degradation (in case if we have too many dictionaries)." +
+        " Use some cached mechanism, for example AllWordCardSetsManager")
 internal fun loadWordsFromAllExistentDictionaries(toIgnoreBaseWordsFilename: String?): List<String> {
 
     val allWordsFilesExceptIgnored = getAllExistentSetFiles(includeMemoWordFile = true, toIgnoreBaseWordsFilename = toIgnoreBaseWordsFilename)

@@ -23,7 +23,8 @@ class LearnWordsEditorApp : Application() {
 
         installJavaFxLogger()
 
-        val controller = LearnWordsController()
+        val appContext = AppContext()
+        val controller = LearnWordsController(appContext, isReadOnly = false)
         val mainWordsPane = controller.pane
 
         val scene = Scene(mainWordsPane)
@@ -47,8 +48,10 @@ class LearnWordsEditorApp : Application() {
 
         primaryStage.onCloseRequest = EventHandler { closeRequestEvent ->
             val canQuit = controller.doIsCurrentDocumentIsSaved("Close application")
-            if (canQuit)
+            if (canQuit) {
                 controller.close()
+                appContext.close()
+            }
             else
                 closeRequestEvent.consume()
         }

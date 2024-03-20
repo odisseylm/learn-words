@@ -26,23 +26,85 @@ import javafx.stage.Window
 import javafx.stage.WindowEvent
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.io.path.*
 
 
-//private val log = mu.KotlinLogging.logger {}
+private val log = mu.KotlinLogging.logger {}
 
 
-class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
+/**
+ * Application global/shared state objects to reuse with several windows.
+ */
+class AppContext : AutoCloseable {
+
+    val voiceManager = VoiceManager()
+
+    val dictionary: Dictionary by lazy { CachedDictionary( DictionaryComposition(loadDictionaries()) ) }
+
+    val allWordCardSetsManager: AllWordCardSetsManager by lazy { AllWordCardSetsManager() }
+
+    private val defaultTaskExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    val taskManager = TaskManager(javaFxRunner)
+
+    val ignoredWords: ObservableList<String> = FXCollections.observableArrayList()
+    val ignoredWordsSorted: ObservableList<String> = SortedList(ignoredWords, String.CASE_INSENSITIVE_ORDER)
+
+    val allProcessedWords: ObservableList<String> = FXCollections.observableArrayList()
+
+    fun runAsyncTask(name: String, task: ()->Unit) = taskManager.addTask(name, defaultTaskExecutor, task)
+
+    private fun loadDictionaries() = AutoDictionariesLoader().load()
+        .also { dictionaries -> // HardcodedDictionariesLoader().load()
+                log.info(
+                    "Used dictionaries\n" +
+                            dictionaries.mapIndexed { i, d -> "${i + 1} $d" }.joinToString("\n") +
+                            "\n---------------------------------------------------\n\n"
+                )
+            }
+
+    private fun loadIgnored() {
+        if (ignoredWordsFile.exists()) {
+            val ignoredWords = loadWords(ignoredWordsFile)
+            runInFxEdtNowOrLater { this.ignoredWords.setAll(ignoredWords) }
+        }
+    }
+
+    internal fun loadExistentWords() {
+        runAsyncTask("Loading ignored") { loadIgnored() }
+
+        runAsyncTask("Loading existent words") {
+            // TODO: use AllWordCardSetsManager
+            val fromAllExistentDictionaries = loadWordsFromAllExistentDictionaries(null)
+            runInFxEdtNowOrLater { allProcessedWords.setAll(fromAllExistentDictionaries) }
+        }
+    }
+
+    override fun close() {
+        allWordCardSetsManager.close()
+        taskManager.close()
+        defaultTaskExecutor.shutdown()
+    }
+}
+
+
+
+class LearnWordsController (
+    val appContext: AppContext,
+    val isReadOnly: Boolean,
+    ): AutoCloseable {
 
     internal val log = mu.KotlinLogging.logger {}
 
     //private val projectDirectory = getProjectDirectory(this.javaClass)
 
-    private val defaultTaskExecutor = Executors.newSingleThreadExecutor()
-    private val taskManager = TaskManager(javaFxRunner)
+    internal val dictionary: Dictionary get() = appContext.dictionary
+    internal val voiceManager: VoiceManager get() = appContext.voiceManager
+    internal val allWordCardSetsManager: AllWordCardSetsManager get() = appContext.allWordCardSetsManager
+    internal val ignoredWords: ObservableList<String> get() = appContext.ignoredWords
+    internal val ignoredWordsSorted: ObservableList<String> get() = appContext.ignoredWordsSorted
 
-    internal val dictionary: Dictionary by lazy { CachedDictionary( DictionaryComposition(loadDictionaries()) ) }
 
     internal val navigationHistory = NavigationHistory()
 
@@ -50,11 +112,6 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
 
     internal val currentWordsList: WordCardsTable get() = pane.wordEntriesTable
     internal val currentWords: ObservableList<CardWordEntry> get() = currentWordsList.items
-
-    internal val ignoredWords: ObservableList<String> = FXCollections.observableArrayList()
-    internal val ignoredWordsSorted: ObservableList<String> = SortedList(ignoredWords, String.CASE_INSENSITIVE_ORDER)
-
-    private val allProcessedWords: ObservableList<String> = FXCollections.observableArrayList()
 
     internal var currentWordsFile: Path? = null
 
@@ -65,12 +122,10 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
     private val toolBar = ToolBar2(this).also {
         it.nextPrevWarningWord.addSelectedWarningsChangeListener { _, _, _ -> recalculateWarnedWordsCount() } }
 
-    internal val allWordCardSetsManager: AllWordCardSetsManager by lazy { AllWordCardSetsManager() }
-
     // we have to use lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
-    internal val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
+    internal val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup(appContext) }
     internal val lightOtherCardsViewPopup: LightOtherCardsViewPopup by lazy { LightOtherCardsViewPopup() }
-    internal val foundCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup().also {
+    internal val foundCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup(appContext).also {
         it.contentComponent.maxWidth  = 650.0
         it.contentComponent.maxHeight = 500.0
     } }
@@ -87,9 +142,6 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
     private val baseWordExtractor: BaseWordExtractor = createBaseWordExtractor()
 
     override fun close() {
-        taskManager.close()
-        defaultTaskExecutor.shutdown()
-        allWordCardSetsManager.close()
         showSynonymInEditorTimer.cancel()
 
         runInFxEdtNowOrLater { pane.scene.window.hide() }
@@ -103,14 +155,14 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         currentWords.addListener(ListChangeListener { pane.wordEntriesLabel.text = currentWordsLabelText.format(it.list.size) })
 
         val ignoredWordsLabelText = "Ignored words (%d)"
-        ignoredWords.addListener(ListChangeListener { pane.ignoredWordsLabel.text = ignoredWordsLabelText.format(it.list.size) })
+        appContext.ignoredWords.addListener(ListChangeListener { pane.ignoredWordsLabel.text = ignoredWordsLabelText.format(it.list.size) })
 
-        pane.ignoredWordsList.items = ignoredWordsSorted
+        pane.ignoredWordsList.items = appContext.ignoredWordsSorted
 
         val allProcessedWordsLabelText = "All processed words (%d)"
-        allProcessedWords.addListener(ListChangeListener { pane.allProcessedWordsLabel.text = allProcessedWordsLabelText.format(it.list.size) })
+        appContext.allProcessedWords.addListener(ListChangeListener { pane.allProcessedWordsLabel.text = allProcessedWordsLabelText.format(it.list.size) })
 
-        pane.allProcessedWordsList.items = SortedList(allProcessedWords, String.CASE_INSENSITIVE_ORDER)
+        pane.allProcessedWordsList.items = SortedList(appContext.allProcessedWords, String.CASE_INSENSITIVE_ORDER)
 
         pane.topPane.children.add(0, MenuController(this).fillMenu())
         pane.topPane.children.add(toolBarController.toolBar)
@@ -152,7 +204,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
 
         addNonReadOnlyKeyBindings()
 
-        pane.statusPane.right = taskManager.createFxProgressBar().also {
+        pane.statusPane.right = appContext.taskManager.createFxProgressBar().also {
             it.padding = Insets(2.0, 10.0, 4.0, 0.0)
         }
 
@@ -172,15 +224,17 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
 
                 runAsyncTask("Rebuilding prefix")    { rebuildPrefixFinderImpl(emptySet()) }
 
-                runAsyncTask("Loading dictionaries") { dictionary.find("apple")  } // load dictionaries lazy
+                runAsyncTask("Loading dictionaries") { appContext.dictionary.find("apple")  } // load dictionaries lazy
 
-                allWordCardSetsManager.reloadAllSetsAsync(taskManager)
+                if (appContext.allWordCardSetsManager.isEmpty())
+                    appContext.allWordCardSetsManager.reloadAllSetsAsync(appContext.taskManager)
             }
         }
 
         installNavigationHistoryUpdates(currentWordsList, navigationHistory)
 
-        loadExistentWords()
+        if (appContext.ignoredWords.isEmpty())
+            appContext.loadExistentWords()
     }
 
     private fun addNonReadOnlyKeyBindings() {
@@ -207,7 +261,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
     private fun onCardFromEdited(wordOrPhrase: String) {
         if (settingsPane.warnAboutDuplicatesInOtherSets) {
             val fixedWordOrPhrase = wordOrPhrase.removeEnglishTrailingPronoun()
-            val foundInOtherSets = allWordCardSetsManager.findBy(fixedWordOrPhrase, MatchMode.Exact)
+            val foundInOtherSets = appContext.allWordCardSetsManager.findBy(fixedWordOrPhrase, MatchMode.Exact)
             if (foundInOtherSets.isNotEmpty())
                 showThisWordsInOtherSetsPopup(wordOrPhrase, foundInOtherSets)
         }
@@ -226,8 +280,6 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
             otherCardsViewPopup.hide()
         }
     }
-
-    internal val voiceManager = VoiceManager()
 
     internal val currentWordsSelection: TableView.TableViewSelectionModel<CardWordEntry> get() = currentWordsList.selectionModel
     internal val currentWarnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode get() = pane.warnAboutMissedBaseWordsModeDropDown.value
@@ -254,41 +306,9 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         }
     }
 
-
-    private fun runAsyncTask(name: String, task: ()->Unit) = taskManager.addTask(name, defaultTaskExecutor, task)
-
-
-    private fun loadDictionaries() =
-        if (isReadOnly) emptyList()
-        else {
-            AutoDictionariesLoader().load().also { dicts -> // HardcodedDictionariesLoader().load()
-                log.info(
-                    "Used dictionaries\n" +
-                            dicts.mapIndexed { i, d -> "${i + 1} $d" }.joinToString("\n") +
-                            "\n---------------------------------------------------\n\n"
-                )
-            }
-        }
-
-    private fun loadExistentWords() {
-        runAsyncTask("Loading ignored") { loadIgnored() }
-
-        runAsyncTask("Loading existent words") {
-            val fromAllExistentDictionaries = loadWordsFromAllExistentDictionaries(null)
-            runInFxEdtNowOrLater { allProcessedWords.setAll(fromAllExistentDictionaries) }
-        }
-    }
-
-    private fun loadIgnored() {
-        if (ignoredWordsFile.exists()) {
-            val ignoredWords = loadWords(ignoredWordsFile)
-            runInFxEdtNowOrLater { this.ignoredWords.setAll(ignoredWords) }
-        }
-    }
-
+    private fun runAsyncTask(name: String, task: ()->Unit) = appContext.runAsyncTask(name, task)
 }
 
 
 private val Window.isActive: Boolean get() =
     this.isShowing && this.isFocused
-

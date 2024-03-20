@@ -80,6 +80,8 @@ class AllWordCardSetsManager : AutoCloseable {
         Thread(runnable, "AllWordCardSetsManager updater").also { it.isDaemon = true }
     } }
 
+    fun isEmpty(): Boolean = searchWordEntries.isEmpty()
+
     fun reloadAllSetsAsync() { updatesExecutor.submit { reloadAllSets() } }
     fun reloadAllSetsAsync(taskManager: TaskManager) {
         taskManager.addTask("Reloading all word card sets", updatesExecutor) {

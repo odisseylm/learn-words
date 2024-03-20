@@ -17,11 +17,11 @@ import javafx.util.Callback
 import java.nio.file.Path
 
 
-class OtherCardsViewPopup :
+class OtherCardsViewPopup(appContext: AppContext) :
     javafx.stage.Stage(javafx.stage.StageStyle.UNDECORATED) {
     //javafx.scene.control.PopupControl() {
 
-    private val controller = LearnWordsController(isReadOnly = true) // TODO: use light version without modification logic
+    private val controller = LearnWordsController(appContext, isReadOnly = true) // TODO: use light version without modification logic
     private val cardsTable = OtherWordCardsTable(controller).also { it.id = "currentWords" }
 
     private val captionLabel = Label().also { it.styleClass.add("cardDuplicatesTitle") }
@@ -143,7 +143,7 @@ class LightOtherCardsViewPopup : PopupControl() {
 
 
 
-fun <CardType: CardWordEntry> showSelectionCardDialog(parent: Node, title: String, cards: List<CardType>): CardType? {
+fun <CardType: CardWordEntry> showSelectionCardDialog(appContext: AppContext, parent: Node, title: String, cards: List<CardType>): CardType? {
 
     val dialog = Dialog<Unit>()
     dialog.title = title
@@ -154,7 +154,7 @@ fun <CardType: CardWordEntry> showSelectionCardDialog(parent: Node, title: Strin
         ButtonType("Ok", ButtonBar.ButtonData.OK_DONE),
     )
 
-    val cardsTable = OtherWordCardsTable(LearnWordsController(isReadOnly = true)).also {
+    val cardsTable = OtherWordCardsTable(LearnWordsController(appContext, isReadOnly = true)).also {
         it.items.setAll(cards)
 
         it.selectionModel.selectionMode = SelectionMode.SINGLE

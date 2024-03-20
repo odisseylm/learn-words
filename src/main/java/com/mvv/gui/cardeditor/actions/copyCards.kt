@@ -96,7 +96,7 @@ private fun LearnWordsController.exportSelectFromOtherSetImpl() {
     val cardToExport = when {
         found.isEmpty() -> null
         found.size == 1 -> found.first()
-        else -> showSelectionCardDialog(pane, "Select card, please", found)
+        else -> showSelectionCardDialog(appContext, pane, "Select card, please", found)
     }
 
     if (cardToExport != null) {
