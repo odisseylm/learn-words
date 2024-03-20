@@ -58,14 +58,15 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
 
     internal var currentWordsFile: Path? = null
 
-    val cellEditorStates = WeakHashMap<Pair<TableColumn<CardWordEntry,*>, CardWordEntry>, CellEditorState>()
+    internal val cellEditorStates = WeakHashMap<Pair<TableColumn<CardWordEntry,*>, CardWordEntry>, CellEditorState>()
 
-    private val toolBarController2 = ToolBarControllerBig(this)
     internal val settingsPane = SettingsPane()
-    private val toolBar2 = ToolBar2(this).also {
+    private val toolBarController = ToolBarControllerBig(this)
+    private val toolBar = ToolBar2(this).also {
         it.nextPrevWarningWord.addSelectedWarningsChangeListener { _, _, _ -> recalculateWarnedWordsCount() } }
 
     internal val allWordCardSetsManager: AllWordCardSetsManager by lazy { AllWordCardSetsManager() }
+
     // we have to use lazy because creating popup before creating/showing main windows causes JavaFX hanging up :-)
     internal val otherCardsViewPopup: OtherCardsViewPopup by lazy { OtherCardsViewPopup() }
     internal val lightOtherCardsViewPopup: LightOtherCardsViewPopup by lazy { LightOtherCardsViewPopup() }
@@ -112,9 +113,9 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         pane.allProcessedWordsList.items = SortedList(allProcessedWords, String.CASE_INSENSITIVE_ORDER)
 
         pane.topPane.children.add(0, MenuController(this).fillMenu())
-        pane.topPane.children.add(toolBarController2.toolBar)
+        pane.topPane.children.add(toolBarController.toolBar)
         pane.topPane.children.add(settingsPane)
-        pane.topPane.children.add(toolBar2)
+        pane.topPane.children.add(toolBar)
 
         currentWordsList.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
             val card = currentWordsSelection.selectedItem
@@ -149,7 +150,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         addGlobalKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
             if (!currentWordsList.isEditing) copySelectedWord() } })
 
-        addKeyBindings()
+        addNonReadOnlyKeyBindings()
 
         pane.statusPane.right = taskManager.createFxProgressBar().also {
             it.padding = Insets(2.0, 10.0, 4.0, 0.0)
@@ -161,30 +162,28 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
             window.addEventHandler(WindowEvent.WINDOW_HIDDEN) { hidePopups() }
             if (window is Stage)
                 window.iconifiedProperty().addListener { _, _, minimized ->
-                    if (minimized) hidePopups() }
+                    if (minimized) hidePopups()
+                }
 
             window.focusedProperty().addListener { _,_,_ -> Platform.runLater { hidePopups() } }
-        }
 
-        pane.addIsShownHandler {
             // We use delay to get frame be shown before CPU will be busy with background tasks.
             runLaterWithDelay(1000) {
 
                 runAsyncTask("Rebuilding prefix")    { rebuildPrefixFinderImpl(emptySet()) }
 
-                runAsyncTask("Loading dictionaries") { this.dictionary.find("apple")  } // load dictionaries lazy
+                runAsyncTask("Loading dictionaries") { dictionary.find("apple")  } // load dictionaries lazy
 
                 allWordCardSetsManager.reloadAllSetsAsync(taskManager)
-            } }
+            }
+        }
 
         installNavigationHistoryUpdates(currentWordsList, navigationHistory)
 
         loadExistentWords()
     }
 
-    private fun addKeyBindings() {
-        if (isReadOnly) return
-
+    private fun addNonReadOnlyKeyBindings() {
         addGlobalKeyBinding(pane, openDocumentKeyCodeCombination) { loadWordsFromFile() }
         addGlobalKeyBinding(pane, saveDocumentKeyCodeCombination) { saveAll() }
 
@@ -192,7 +191,7 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         addGlobalKeyBinding(pane, nextNavigationKeyCodeCombination)     { navigateToCard(NavigationDirection.Forward, navigationHistory, currentWordsList) }
     }
 
-    internal val toWarnAbout: Set<WordCardStatus> get() = toolBar2.nextPrevWarningWord.selectedWarnings
+    internal val toWarnAbout: Set<WordCardStatus> get() = toolBar.nextPrevWarningWord.selectedWarnings
 
     internal var toPlayWordOnSelect: Boolean
         get() = settingsPane.playWordOnSelect
@@ -244,13 +243,6 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
     internal fun doIsCurrentDocumentIsSaved(currentAction: String = ""): Boolean =
         try { validateCurrentDocumentIsSaved(currentAction); true } catch (_: Exception) { false }
 
-    internal fun doAction(actionName: String, action: ()->Unit) {
-        try { action() }
-        catch (ex: Exception) {
-            log.error(ex) { "Error of $actionName." }
-            showInfoAlert(pane, "Error of $actionName.\n\n${ex.message}")
-        }
-    }
 
     internal val changeCardListener = ChangeListener<Any> { prop,_,_ ->
         markDocumentIsDirty()
@@ -262,7 +254,9 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
         }
     }
 
+
     private fun runAsyncTask(name: String, task: ()->Unit) = taskManager.addTask(name, defaultTaskExecutor, task)
+
 
     private fun loadDictionaries() =
         if (isReadOnly) emptyList()
@@ -284,7 +278,6 @@ class LearnWordsController (val isReadOnly: Boolean = false): AutoCloseable {
             runInFxEdtNowOrLater { allProcessedWords.setAll(fromAllExistentDictionaries) }
         }
     }
-
 
     private fun loadIgnored() {
         if (ignoredWordsFile.exists()) {
