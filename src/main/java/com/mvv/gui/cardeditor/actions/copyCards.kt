@@ -9,15 +9,14 @@ import com.mvv.gui.util.withFileExt
 import com.mvv.gui.words.*
 import javafx.scene.control.ButtonBar.ButtonData
 import javafx.scene.control.ButtonType
+import java.nio.file.Path
 import kotlin.io.path.exists
 
 
 fun LearnWordsController.copySelectToOtherSet() = doAction("copying selected cards to other set file") { copySelectToOtherSetImpl() }
 
-private fun LearnWordsController.copySelectToOtherSetImpl() {
 
-    val selected = currentWordsSelection.selectedItems
-    if (selected.isEmpty()) return
+fun LearnWordsController.showInternalFormatOpenDialog(editablePath: Boolean): Path? {
 
     val currentWordsFile = this.currentWordsFile // local safe ref
     val currentWordsFileParent = currentWordsFile?.parent ?: dictDirectory
@@ -26,7 +25,8 @@ private fun LearnWordsController.copySelectToOtherSetImpl() {
     val commonAllOtherSetsSubParent = if (allOtherSetsParents.size == 1) allOtherSetsParents[0]
                                       else allOtherSetsParents.minByOrNull { it.nameCount } ?: currentWordsFileParent
 
-    val destFileOrSetName = showCopyToOtherSetDialog(pane, currentWordsFile, allWordCardSetsManager) ?: return
+    val showFilesMode = if (editablePath) ShowFilesMode.Combo else ShowFilesMode.List
+    val destFileOrSetName = showCopyToOtherSetDialog(pane, currentWordsFile, allWordCardSetsManager, showFilesMode) ?: return null
 
     val destFilePath =
         if (destFileOrSetName.exists()) destFileOrSetName
@@ -44,6 +44,17 @@ private fun LearnWordsController.copySelectToOtherSetImpl() {
 
     require(destFilePath.isInternalCsvFormat && !destFilePath.isMemoWordFile) {
         "It looks strange to load/save data in memo-word format [$destFilePath]." }
+
+    return destFilePath
+}
+
+
+private fun LearnWordsController.copySelectToOtherSetImpl() {
+
+    val selected = currentWordsSelection.selectedItems
+    if (selected.isEmpty()) return
+
+    val destFilePath = showInternalFormatOpenDialog(true) ?: return
 
     val existentCards = if (destFilePath.exists()) loadWordCards(destFilePath) else emptyList()
 

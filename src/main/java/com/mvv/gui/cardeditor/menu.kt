@@ -24,7 +24,10 @@ class MenuController (val controller: LearnWordsController) {
                 controller.newDocument() },
             newMenuItem("Open/Import file", "Open internal/memo-word csv, or Import srt file",
                 buttonIcon("/icons/open16x16.gif"), openDocumentKeyCodeCombination) {
-                controller.loadWordsFromFile() },
+                controller.loadWordsFromFile(OpenDialogType.Standard) },
+            newMenuItem("Open file ALT", "Open internal csv",
+                buttonIcon("/icons/open16x16.gif")) {
+                controller.loadWordsFromFile(OpenDialogType.Alt) },
             recentMenu,
             newMenuItem("Join files", buttonIcon("/icons/join.png")) {
                 controller.joinWords() },

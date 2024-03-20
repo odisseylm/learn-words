@@ -60,12 +60,17 @@ enum class LoadType {
 }
 
 
-fun LearnWordsController.doLoadAction(fileOrDir: Path?, loadAction: (Path)->LoadType) {
+fun LearnWordsController.doLoadAction(fileOrDir: Path?, openDialogType: OpenDialogType, loadAction: (Path)->LoadType) {
 
     validateCurrentDocumentIsSaved("Open file")
 
+    fun showOpenDialog(): Path? = when (openDialogType) {
+        OpenDialogType.Standard -> showOpenDialog(dir = fileOrDir)?.toPath()
+        OpenDialogType.Alt      -> showInternalFormatOpenDialog(false)
+    }
+
     val filePath = if (fileOrDir == null || fileOrDir.isDirectory())
-        showOpenDialog(dir = fileOrDir)?.toPath()
+        showOpenDialog()
         else fileOrDir
 
     if (filePath == null) return
@@ -87,6 +92,8 @@ fun LearnWordsController.doLoadAction(fileOrDir: Path?, loadAction: (Path)->Load
     }
 }
 
+enum class OpenDialogType { Standard, Alt }
+
 fun LearnWordsController.showOpenDialog(dir: Path? = null, extensions: List<String> = emptyList()): File? {
 
     val allExtensions = listOf("*.csv", "*.words", "*.txt", "*.srt")
@@ -101,11 +108,11 @@ fun LearnWordsController.showOpenDialog(dir: Path? = null, extensions: List<Stri
 }
 
 
+fun LearnWordsController.loadWordsFromFile(file: Path) = loadWordsFromFile(file, OpenDialogType.Standard)
+fun LearnWordsController.loadWordsFromFile(openDialogType: OpenDialogType) = loadWordsFromFile(null, openDialogType)
 
-fun LearnWordsController.loadWordsFromFile() = loadWordsFromFile(null)
-
-fun LearnWordsController.loadWordsFromFile(file: Path?) {
-    doLoadAction(file) { filePath ->
+fun LearnWordsController.loadWordsFromFile(file: Path?, openDialogType: OpenDialogType) {
+    doLoadAction(file, openDialogType) { filePath ->
         val fileExt = filePath.extension.lowercase()
         val words: List<CardWordEntry> = when (fileExt) {
             "txt"          -> loadWords(filePath).map { CardWordEntry(it, "") }

@@ -261,7 +261,7 @@ class LearnWordsController (
     }
 
     private fun addNonReadOnlyKeyBindings() {
-        addGlobalKeyBinding(pane, openDocumentKeyCodeCombination) { loadWordsFromFile() }
+        addGlobalKeyBinding(pane, openDocumentKeyCodeCombination) { loadWordsFromFile(OpenDialogType.Standard) }
         addGlobalKeyBinding(pane, saveDocumentKeyCodeCombination) { saveAll() }
 
         addGlobalKeyBinding(pane, previousNavigationKeyCodeCombination) { navigateToCard(NavigationDirection.Back, navigationHistory, currentWordsList) }

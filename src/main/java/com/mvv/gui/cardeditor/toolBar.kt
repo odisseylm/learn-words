@@ -14,7 +14,9 @@ class ToolBarController (val controller: LearnWordsController) {
 
     private val controls: List<Control> = listOf(
         newButton("Load file", "Open internal or memo-word csv, or srt file",
-            buttonIcon("/icons/open16x16.gif")) { controller.loadWordsFromFile() },
+            buttonIcon("/icons/open16x16.gif")) { controller.loadWordsFromFile(OpenDialogType.Standard) },
+        newButton("Open file", "Open internal csv",
+            buttonIcon("/icons/open16x16.gif")) { controller.loadWordsFromFile(OpenDialogType.Alt) },
         newButton("From clipboard", "Parse text from clipboard", buttonIcon("/icons/paste.gif")) {
             controller.loadFromClipboard() },
         newButton("Save All", "Save current file in internal and memo-word csv format and save ignored words",
@@ -62,7 +64,9 @@ class ToolBarControllerBig (val controller: LearnWordsController) {
         new24xButton("New", "Create new words set",
             button24xIcon("/icons/big/new.png")) { controller.newDocument() },
         new24xButton("Open", "Open internal or memo-word csv, or srt file",
-            button24xIcon("/icons/big/open-blue-02.png")) { controller.loadWordsFromFile() },
+            button24xIcon("/icons/big/open-blue-02.png")) { controller.loadWordsFromFile(OpenDialogType.Standard) },
+        new24xButton("Open", "Open internal csv",
+            button24xIcon("/icons/big/open-blue-02.png")) { controller.loadWordsFromFile(OpenDialogType.Alt) },
         new24xButton("Save All", "Save current file in internal and memo-word csv format and save ignored words",
             button24xIcon("/icons/big/save-all.png")) { controller.saveAll() },
 
