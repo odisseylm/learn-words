@@ -1,6 +1,7 @@
 package com.mvv.gui.cardeditor.actions
 
 import com.mvv.gui.cardeditor.LearnWordsController
+import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.javafx.runWithScrollKeeping
 import com.mvv.gui.javafx.singleSelection
 import com.mvv.gui.util.containsWhiteSpaceInMiddle
@@ -8,8 +9,9 @@ import com.mvv.gui.util.filterNotBlank
 import com.mvv.gui.util.firstWord
 import com.mvv.gui.util.removeCharSuffixesRepeatably
 import com.mvv.gui.words.*
-import com.mvv.gui.words.addBaseWordsInSet
 import javafx.application.Platform
+import javafx.collections.ObservableList
+
 
 
 fun LearnWordsController.addAllBaseWordsInSet() = addAllBaseWordsInSetImpl(currentWords)
@@ -74,4 +76,38 @@ internal fun LearnWordsController.rebuildPrefixFinder() {
 fun LearnWordsController.rebuildPrefixFinderImpl(onlyPureWords: Set<String>) {
     this.prefixFinder = englishPrefixFinder(onlyPureWords)
     Platform.runLater { currentWords.toList().forEach { it.baseWordOfFromProperty.resetCachedValue() } }
+}
+
+
+internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
+                               warnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode,
+                               allWordCards: ObservableList<CardWordEntry>,
+                               dictionary: Dictionary
+    ): Map<CardWordEntry, List<CardWordEntry>> {
+
+    val allWordCardsMap: Map<String, CardWordEntry> = allWordCards.associateBy { it.from.trim().lowercase() }
+
+    val withoutBaseWord = wordCardsToProcess
+        .asSequence()
+        .filter { WordCardStatus.NoBaseWordInSet in it.statuses }
+        .toSortedSet(cardWordEntryComparator)
+
+    val baseWordsToAddMap: Map<CardWordEntry, List<CardWordEntry>> = withoutBaseWord
+        .asSequence()
+        .map { card -> Pair(card, englishBaseWords(card.from, dictionary, card)) }
+        .filter { it.second.isNotEmpty() }
+        .associate { it }
+
+    baseWordsToAddMap.forEach { (currentWordCard, baseWordCards) ->
+        // T O D O: optimize this n*n
+        val index = allWordCards.indexOf(currentWordCard)
+        baseWordCards
+            .filterNot { allWordCardsMap.containsKey(it.from) }
+            .forEachIndexed { i, baseWordCard ->
+                allWordCards.add(index + i, baseWordCard)
+        }
+    }
+    analyzeWordCards(withoutBaseWord, warnAboutMissedBaseWordsMode, allWordCards, dictionary)
+
+    return baseWordsToAddMap
 }

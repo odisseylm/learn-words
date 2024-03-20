@@ -3,11 +3,8 @@ package com.mvv.gui.cardeditor.actions
 import com.mvv.gui.cardeditor.LearnWordsController
 import com.mvv.gui.javafx.runWithScrollKeeping
 import com.mvv.gui.javafx.showInfoAlert
-import com.mvv.gui.words.CardWordEntry
-import com.mvv.gui.words.from
-import com.mvv.gui.words.loadWords
-import com.mvv.gui.words.removeWordsFromOtherSetsFromCurrentWords
-
+import com.mvv.gui.words.*
+import java.nio.file.Path
 
 
 fun LearnWordsController.removeSelected() {
@@ -52,3 +49,20 @@ fun LearnWordsController.removeIgnoredFromCurrentWords() {
 fun LearnWordsController.removeWordsFromOtherSetsFromCurrentWords() =
     removeWordsFromOtherSetsFromCurrentWords(currentWords, this.currentWordsFile)
         .also { removeChangeCardListener(it) }
+
+
+fun removeWordsFromOtherSetsFromCurrentWords(currentWords: MutableList<CardWordEntry>, currentWordsFile: Path?): List<CardWordEntry> {
+
+    val toRemove = loadWordsFromAllExistentDictionaries(currentWordsFile?.baseWordsFilename)
+    val toRemoveAsSet = toRemove.asSequence()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        .toSortedSet(String.CASE_INSENSITIVE_ORDER)
+
+    val currentToRemove = currentWords.filter { it.from.trim() in toRemoveAsSet }
+
+    // perform removing as ONE operation to minimize change events
+    currentWords.removeAll(currentToRemove)
+
+    return currentToRemove
+}

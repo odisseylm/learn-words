@@ -4,7 +4,9 @@ import com.mvv.gui.util.removeSuffixCaseInsensitive
 import com.mvv.gui.util.userHome
 import java.nio.file.Path
 import kotlin.io.path.extension
+import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
+import kotlin.io.path.notExists
 
 
 enum class CsvFormat { Internal, MemoWord }
@@ -75,6 +77,18 @@ fun saveWordCards(file: Path, format: CsvFormat, words: Iterable<CardWordEntry>)
     }
 
 
+internal fun loadWordsFromAllExistentDictionaries(toIgnoreBaseWordsFilename: String?): List<String> {
+
+    val allWordsFilesExceptIgnored = getAllExistentSetFiles(includeMemoWordFile = true, toIgnoreBaseWordsFilename = toIgnoreBaseWordsFilename)
+
+    return allWordsFilesExceptIgnored
+        .asSequence()
+        .map { loadWordCards(it) }
+        .flatMap { it }
+        .map { it.from }
+        .distinctBy { it.lowercase() }
+        .toList()
+}
 
 // -----------------------------------------------------------------------------
 
@@ -89,3 +103,19 @@ fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Pa
 
             saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${fileFormat.fileNameEnding}"), fileFormat, cardWordEntries)
         }
+
+
+
+fun getAllExistentSetFiles(includeMemoWordFile: Boolean, toIgnoreBaseWordsFilename: String?): List<Path> {
+    if (dictDirectory.notExists()) return emptyList()
+
+    return dictDirectory.toFile().walkTopDown()
+        .asSequence()
+        .map { it.toPath() }
+        .filter { it.isRegularFile() }
+        .filter { it != ignoredWordsFile }
+        .filter { it.isInternalCsvFormat || (includeMemoWordFile && it.isMemoWordFile) }
+        .filter { toIgnoreBaseWordsFilename.isNullOrBlank() || !it.name.contains(toIgnoreBaseWordsFilename) }
+        .toList()
+}
+

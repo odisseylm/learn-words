@@ -1,12 +1,12 @@
 package com.mvv.gui.cardeditor.actions
 
 import com.mvv.gui.cardeditor.LearnWordsController
+import com.mvv.gui.dictionary.Dictionary
+import com.mvv.gui.dictionary.extractExamples
 import com.mvv.gui.javafx.showTextAreaPreviewDialog
 import com.mvv.gui.javafx.singleSelection
 import com.mvv.gui.util.doIfNotEmpty
 import com.mvv.gui.words.*
-import com.mvv.gui.words.translateWord
-import com.mvv.gui.words.translateWords
 import javafx.beans.value.WritableValue
 
 
@@ -59,3 +59,28 @@ private fun addToCardProp(card: CardWordEntry, addFromCard: CardWordEntry, prop:
     if (cardPropValue.isNotBlank()) cardProp.value += "\n\n"
     cardProp.value += valueToAdd
 }
+
+
+
+internal fun Dictionary.translateWord(word: String): CardWordEntry =
+    CardWordEntry(word, "").also { this.translateWord(it) }
+
+
+internal fun Dictionary.translateWord(card: CardWordEntry) {
+    val translation = this.find(card.from.trim())
+
+    card.to            = translation.translations.joinToString("\n")
+    card.transcription = translation.transcription ?: ""
+    card.examples      = extractExamples(translation)
+}
+
+
+internal fun Dictionary.translateWords(words: Iterable<CardWordEntry>) =
+    words
+        .filter  { it.from.isNotBlank() }
+        .forEach {
+            if (it.to.isBlank())
+                this.translateWord(it)
+        }
+
+

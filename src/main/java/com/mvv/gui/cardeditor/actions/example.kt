@@ -10,6 +10,45 @@ import javafx.scene.control.TextArea
 import javafx.scene.control.TextInputControl
 
 
+internal fun String.splitExamples(): List<String> {
+    if (this.isBlank()) return emptyList()
+
+    val lines = this.split("\n")
+    if (lines.isEmpty()) return emptyList()
+
+    val separatedExamples = mutableListOf<String>()
+    var currentExample = ""
+
+    for (line in lines) {
+
+        val lineIsBlank = line.isBlank()
+        val continueOfPreviousExample = !lineIsBlank && line.startsWith(' ')
+
+        if (lineIsBlank) { // end of previous example
+            if (currentExample.isNotBlank())
+                separatedExamples.add(currentExample.trim())
+            currentExample = ""
+        }
+
+        else if (continueOfPreviousExample) { // next line of previous comment
+            currentExample += "\n"
+            currentExample += line.trimEnd()
+        }
+
+        else { // just next example
+            if (currentExample.isNotBlank())
+                separatedExamples.add(currentExample.trim())
+            currentExample = line.trim()
+        }
+    }
+
+    if (currentExample.isNotBlank())
+        separatedExamples.add(currentExample.trim())
+
+    return separatedExamples
+}
+
+
 fun LearnWordsController.moveSubTextToExamplesAndSeparateCard() {
     val focusOwner = pane.scene.focusOwner
     val editingCard = currentWordsList.editingItem

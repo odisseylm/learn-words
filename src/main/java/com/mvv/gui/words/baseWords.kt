@@ -1,5 +1,6 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.cardeditor.actions.translateWord
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.util.endsWithOneOf
 import com.mvv.gui.util.startsWithOneOf

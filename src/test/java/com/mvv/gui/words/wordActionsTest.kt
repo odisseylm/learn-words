@@ -1,5 +1,8 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.cardeditor.actions.mergeCards
+import com.mvv.gui.cardeditor.actions.mergeDuplicates
+import com.mvv.gui.cardeditor.actions.splitExamples
 import com.mvv.gui.test.useAssertJSoftAssertions
 import com.mvv.gui.util.enumSetOf
 import org.assertj.core.api.Assertions.assertThat
