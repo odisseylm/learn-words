@@ -3,6 +3,7 @@ package com.mvv.gui.cardeditor.actions
 import com.mvv.gui.cardeditor.LearnWordsController
 import com.mvv.gui.cardeditor.RecentDocuments
 import com.mvv.gui.cardeditor.appTitle
+import com.mvv.gui.cardeditor.showLearnEditor
 import com.mvv.gui.javafx.setWindowTitle
 import com.mvv.gui.javafx.showErrorAlert
 import com.mvv.gui.util.toIgnoreCaseSet
@@ -16,6 +17,12 @@ import kotlin.io.path.name
 
 
 fun LearnWordsController.newDocument() {
+
+    if (currentWords.isNotEmpty() && settingsPane.openInNewWindow) {
+        showLearnEditor(appContext)
+        return
+    }
+
     validateCurrentDocumentIsSaved("New document")
 
     currentWords.clear()

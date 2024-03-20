@@ -28,6 +28,9 @@ class SettingsPane : ToolBar() {
     private val warnAboutDuplicatesInOtherSetsCheckBox = CheckBox("Warn about duplicates in other sets")
         .also { it.isSelected = settings.warnAboutDuplicatesInOtherSets }
         .also { it.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT }
+    private val openInNewWindowCheckBox = CheckBox("Open in new window")
+        .also { it.isSelected = settings.openInNewWindow }
+        .also { it.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT }
 
     init {
         items.addAll(
@@ -44,6 +47,8 @@ class SettingsPane : ToolBar() {
             autoRemoveIgnoredCheckBox,
             stub(),
             warnAboutDuplicatesInOtherSetsCheckBox,
+            stub(),
+            openInNewWindowCheckBox,
         )
 
         playWordOnSelectCheckBox.isSelected = settings.autoPlay
@@ -61,6 +66,7 @@ class SettingsPane : ToolBar() {
     val sentenceEndRule: SentenceEndRule get() = sentenceEndRuleDropDown.selectionModel.selectedItem
     val autoRemoveIgnoredWords: Boolean get() = autoRemoveIgnoredCheckBox.isSelected
     val warnAboutDuplicatesInOtherSets: Boolean get() = warnAboutDuplicatesInOtherSetsCheckBox.isSelected
+    val openInNewWindow: Boolean get() = openInNewWindowCheckBox.isSelected
 }
 
 

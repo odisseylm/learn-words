@@ -29,7 +29,7 @@ enum class MatchMode {
 interface AllCardWordEntry : CardWordEntry {
     val fileProperty: ObjectProperty<Path>
 }
-val AllCardWordEntry.file: Path get() = fileProperty.get()
+val AllCardWordEntry.file: Path? get() = fileProperty.get()
 
 fun CardWordEntry.toAllEntry(file: Path): AllCardWordEntry = AllCardWordEntryImpl(this, file)
 
@@ -39,7 +39,7 @@ private class AllCardWordEntryImpl(
     : CardWordEntry by card, AllCardWordEntry {
 
     override val fileProperty = SimpleObjectProperty(this, "file", file)
-    override fun toString(): String = "set: ${file.name} $from => $to"
+    override fun toString(): String = "set: ${file?.name} $from => $to"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

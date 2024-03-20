@@ -2,6 +2,7 @@ package com.mvv.gui.javafx
 
 import com.mvv.gui.cardeditor.initThemeAndStyles
 import com.mvv.gui.util.addOnceEventHandler
+import com.sun.javafx.stage.EmbeddedWindow
 import javafx.application.Platform
 import javafx.geometry.Point2D
 import javafx.geometry.Rectangle2D
@@ -274,6 +275,20 @@ private fun Window.showPopupImpl(
     }
 
     showInitially()
+}
+
+
+fun Node.hideWindow() = this.scene?.window?.hide()
+
+fun Node.activateWindow() {
+    when (val wnd = this.scene.window) {
+        is Stage          -> {
+            wnd.show()
+            wnd.toFront()
+        }
+        is PopupWindow    -> wnd.show(wnd.ownerWindow)
+        is EmbeddedWindow -> wnd.show()
+    }
 }
 
 

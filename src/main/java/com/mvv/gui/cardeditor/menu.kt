@@ -35,6 +35,9 @@ class MenuController (val controller: LearnWordsController) {
             SeparatorMenuItem(),
             newMenuItem("Split", "Split current big set to several ones",
                 buttonIcon("/icons/slidesstack.png")) { controller.splitCurrentWords() },
+
+            SeparatorMenuItem(),
+            newMenuItem("Exit") { controller.appContext.quit() },
         )
 
         fileMenu.onShown = EventHandler { addRecentMenuItems(recentMenu) }

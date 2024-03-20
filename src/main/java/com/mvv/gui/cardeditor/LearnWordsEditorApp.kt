@@ -24,39 +24,8 @@ class LearnWordsEditorApp : Application() {
         installJavaFxLogger()
 
         val appContext = AppContext()
-        val controller = LearnWordsController(appContext, isReadOnly = false)
-        val mainWordsPane = controller.pane
 
-        val scene = Scene(mainWordsPane)
-        primaryStage.setScene(scene)
-        primaryStage.title = appTitle
-
-        primaryStage.scene = scene
-
-        scene.stylesheets.addAll(mainWordsPane.stylesheets)
-
-        val screens = Screen.getScreens()
-        val minScreenWidth = screens.minOf { it.bounds.width }
-        val minScreenHeight = screens.minOf { it.bounds.height }
-
-        mainWordsPane.prefWidth = minScreenWidth * 0.8
-        mainWordsPane.prefHeight = minScreenHeight * 0.8
-
-        primaryStage.isMaximized = settings.isMaximized
-        if (!primaryStage.isMaximized)
-            primaryStage.centerOnScreen()
-
-        primaryStage.onCloseRequest = EventHandler { closeRequestEvent ->
-            val canQuit = controller.doIsCurrentDocumentIsSaved("Close application")
-            if (canQuit) {
-                controller.close()
-                appContext.close()
-            }
-            else
-                closeRequestEvent.consume()
-        }
-
-        primaryStage.show()
+        showLearnEditor(appContext, primaryStage)
     }
 
     companion object {
@@ -69,4 +38,55 @@ class LearnWordsEditorApp : Application() {
 fun main() {
     System.setProperty("javafx.preloader", SetApplicationNamePreloader::class.java.name)
     Application.launch(LearnWordsEditorApp::class.java)
+}
+
+
+fun showLearnEditor(appContext: AppContext, stage: Stage? = null): Stage =
+    showLearnEditorImpl(null, appContext, stage)
+fun showLearnEditor(controller: LearnWordsController, stage: Stage? = null): Stage =
+    showLearnEditorImpl(controller, controller.appContext, stage)
+
+private fun showLearnEditorImpl(controller0: LearnWordsController?, appContext: AppContext, stage0: Stage? = null): Stage {
+
+    val controller: LearnWordsController = controller0 ?: LearnWordsController(appContext, isReadOnly = false)
+    val mainWordsPane = controller.pane
+    val stage = stage0 ?: Stage()
+
+    val scene = Scene(mainWordsPane)
+
+    stage.title = appTitle
+    stage.scene = scene
+    scene.stylesheets.addAll(mainWordsPane.stylesheets)
+
+    val screens = Screen.getScreens()
+    val minScreenWidth  = screens.minOf { it.bounds.width  }
+    val minScreenHeight = screens.minOf { it.bounds.height }
+
+    mainWordsPane.prefWidth  = minScreenWidth  * 0.8
+    mainWordsPane.prefHeight = minScreenHeight * 0.8
+
+    stage.isMaximized = settings.isMaximized
+    if (!stage.isMaximized)
+        stage.centerOnScreen()
+
+    stage.onCloseRequest = EventHandler { closeRequestEvent ->
+        val canQuit = controller.doIsCurrentDocumentSaved("Close application")
+        if (canQuit) {
+            controller.close()
+
+            appContext.openEditors.remove(controller)
+
+            if (appContext.openEditors.isEmpty())
+                // shutdown all threads to complete application
+                appContext.close()
+        }
+        else
+            closeRequestEvent.consume()
+    }
+
+    appContext.openEditors.add(controller)
+
+    stage.show()
+
+    return stage
 }

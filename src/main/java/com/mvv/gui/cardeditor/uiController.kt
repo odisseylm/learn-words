@@ -53,6 +53,8 @@ class AppContext : AutoCloseable {
 
     val allProcessedWords: ObservableList<String> = FXCollections.observableArrayList()
 
+    val openEditors: MutableList<LearnWordsController> = mutableListOf()
+
     fun runAsyncTask(name: String, task: ()->Unit) = taskManager.addTask(name, defaultTaskExecutor, task)
 
     private fun loadDictionaries() = AutoDictionariesLoader().load()
@@ -85,6 +87,27 @@ class AppContext : AutoCloseable {
         allWordCardSetsManager.close()
         taskManager.close()
         defaultTaskExecutor.shutdown()
+    }
+
+    fun quit() {
+        val editors = openEditors.toList() // safe unchangeable list
+        val appContext = editors.first().appContext
+
+        val unsaved = editors.filter { it.documentIsDirty }
+
+        if (unsaved.isEmpty()) {
+            editors.forEach { it.close(); openEditors.remove(it) }
+            appContext.close()
+        }
+        else {
+            val active = editors.find { it.pane.scene.window.isActive } ?: editors.first()
+            active.pane.activateWindow()
+
+            showInfoAlert(active.pane, "Some documents are unsaved.\nPlease close them manually.", appTitle)
+
+            if (!active.documentIsDirty)
+                unsaved.first().pane.activateWindow()
+        }
     }
 }
 
@@ -144,7 +167,7 @@ class LearnWordsController (
     override fun close() {
         showSynonymInEditorTimer.cancel()
 
-        runInFxEdtNowOrLater { pane.scene.window.hide() }
+        runInFxEdtNowOrLater { pane.hideWindow() }
     }
 
 
@@ -292,7 +315,7 @@ class LearnWordsController (
     internal fun markDocumentIsDirty() { this.documentIsDirty_ = true; Platform.runLater { updateTitle() } }
     internal fun resetDocumentIsDirty() { this.documentIsDirty_ = false; Platform.runLater { updateTitle() } }
 
-    internal fun doIsCurrentDocumentIsSaved(currentAction: String = ""): Boolean =
+    internal fun doIsCurrentDocumentSaved(currentAction: String = ""): Boolean =
         try { validateCurrentDocumentIsSaved(currentAction); true } catch (_: Exception) { false }
 
 

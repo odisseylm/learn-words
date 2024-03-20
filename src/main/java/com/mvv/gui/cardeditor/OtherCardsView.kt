@@ -1,5 +1,6 @@
 package com.mvv.gui.cardeditor
 
+import com.mvv.gui.cardeditor.actions.loadWordsFromFile
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
 import com.mvv.gui.words.*
@@ -47,10 +48,34 @@ class OtherCardsViewPopup(appContext: AppContext) :
 
         this.sceneRoot = content
 
+        addOpenCardSetAction()
+
         sizeToScene()
 
         addWindowMovingFeature(this, titleBar)
         addWindowResizingFeature(this, content)
+    }
+
+    private fun addOpenCardSetAction() {
+        cardsTable.addEventHandler(MouseEvent.MOUSE_CLICKED) {
+            if (it.clickCount < 2) return@addEventHandler
+
+            val card = cardsTable.singleSelection as AllCardWordEntry?
+            val cardSetFile = card?.file
+            val selectedTableColumn = cardsTable.selectionModel.selectedCells.firstOrNull()?.tableColumn
+
+            if (cardSetFile != null && selectedTableColumn == cardsTable.fileColumn) {
+                val appContext = cardsTable.controller.appContext
+                val alreadyOpen = appContext.openEditors.find { it.currentWordsFile == cardSetFile }
+                if (alreadyOpen != null)
+                    alreadyOpen.pane.activateWindow()
+                else {
+                    val controller = LearnWordsController(appContext, isReadOnly = false)
+                    showLearnEditor(controller)
+                    controller.loadWordsFromFile(cardSetFile)
+                }
+            }
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -130,7 +155,7 @@ class LightOtherCardsViewPopup : PopupControl() {
 
             textFlow.children.addAll(
                 Label("Word [$wordOrPhrase] is already present in the set '"),
-                Label(card.file.baseWordsFilename).also { it.style = "-fx-font-weight: bold;" },
+                Label(card.file?.baseWordsFilename ?: "").also { it.style = "-fx-font-weight: bold;" },
                 Label("'"),
             )
         }

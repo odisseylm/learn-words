@@ -34,6 +34,7 @@ class Settings (
     val tooManyExampleCardCandidatesCount: Int = 5,
     val recentDocumentsCount: Int = 10,
     val showSynonyms: Boolean = true,
+    val openInNewWindow: Boolean = false,
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -68,6 +69,7 @@ private fun loadSettings(): Settings {
         tooManyExampleCardCandidatesCount = props.getInt("tooManyExampleCardCandidatesCount") ?: defSet.tooManyExampleCardCandidatesCount,
         recentDocumentsCount = props.getInt("recentDocumentsCount") ?: defSet.recentDocumentsCount,
         showSynonyms = props.getBool("showSynonyms") ?: defSet.showSynonyms,
+        openInNewWindow = props.getBool("openInNewWindow") ?: defSet.openInNewWindow,
     )
 }
 
