@@ -1,5 +1,6 @@
 package com.mvv.gui.cardeditor
 
+import com.mvv.gui.cardeditor.actions.showSpecifiedWordsInOtherSetsPopup
 import com.mvv.gui.javafx.newButton
 import com.mvv.gui.words.MatchMode
 import javafx.application.Platform

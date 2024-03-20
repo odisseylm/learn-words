@@ -1,6 +1,5 @@
 package com.mvv.gui.javafx
 
-import com.mvv.gui.cardeditor.CellEditorState
 import com.mvv.gui.util.ifIndexNotFound
 import javafx.application.Platform
 import javafx.scene.control.IndexRange
@@ -172,6 +171,13 @@ private fun String.lastIndexOf(char: Char, startIndex: Int, endIndexExclusive: I
 
     return -1
 }
+
+
+data class CellEditorState (
+    val scrollLeft: Double,
+    val scrollTop: Double,
+    val caretPosition: Int,
+)
 
 
 fun <StateKey> TextInputControl.keepCellEditorState(stateKey: ()->StateKey, stateKeyContainer: MutableMap<StateKey, CellEditorState>) {

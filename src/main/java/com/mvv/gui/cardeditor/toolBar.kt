@@ -1,5 +1,6 @@
 package com.mvv.gui.cardeditor
 
+import com.mvv.gui.cardeditor.actions.*
 import com.mvv.gui.javafx.*
 import javafx.scene.Node
 import javafx.scene.control.ContentDisplay
@@ -34,10 +35,10 @@ class ToolBarController (val controller: LearnWordsController) {
         Label("  "),
 
         newButton("Insert above", buttonIcon("/icons/insertAbove-01.png")) {
-            controller.insertWordCard(LearnWordsController.InsertPosition.Below) }
+            controller.insertWordCard(InsertPosition.Below) }
             .also { it.contentDisplay = ContentDisplay.RIGHT },
         newButton("Insert below", buttonIcon("/icons/insertBelow-01.png")) {
-            controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
+            controller.insertWordCard(InsertPosition.Below) },
 
         Label("  "),
 
@@ -83,9 +84,9 @@ class ToolBarControllerBig (val controller: LearnWordsController) {
 
         stub(),
         new24xButton("Insert", "Insert above", button24xIcon("/icons/big/curve-above-with-plus.png")) {
-            controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
+            controller.insertWordCard(InsertPosition.Below) },
         new24xButton("Insert", "Insert below", button24xIcon("/icons/big/curve-below-with-plus.png")) {
-            controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
+            controller.insertWordCard(InsertPosition.Below) },
 
         stub(),
         new24xButton("Add base", "Add all possible missed base words",

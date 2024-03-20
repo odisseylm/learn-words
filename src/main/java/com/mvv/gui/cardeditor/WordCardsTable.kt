@@ -1,5 +1,9 @@
 package com.mvv.gui.cardeditor
 
+import com.mvv.gui.cardeditor.actions.moveSubTextToExamples
+import com.mvv.gui.cardeditor.actions.moveSubTextToExamplesAndSeparateCard
+import com.mvv.gui.cardeditor.actions.moveSubTextToSeparateCard
+import com.mvv.gui.cardeditor.actions.reanalyzeOnlyWords
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
 import com.mvv.gui.util.trimToNull

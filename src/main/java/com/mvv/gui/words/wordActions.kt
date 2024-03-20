@@ -25,6 +25,8 @@ import kotlin.math.min
 private val log = mu.KotlinLogging.logger {}
 
 
+// TODO: split to other files
+
 internal fun addBaseWordsInSet(wordCardsToProcess: Iterable<CardWordEntry>,
                                warnAboutMissedBaseWordsMode: WarnAboutMissedBaseWordsMode,
                                allWordCards: ObservableList<CardWordEntry>,

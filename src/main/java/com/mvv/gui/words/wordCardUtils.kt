@@ -1,7 +1,7 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.cardeditor.isGoodLearnCardCandidate
-import com.mvv.gui.cardeditor.parseToCard
+import com.mvv.gui.cardeditor.actions.isGoodLearnCardCandidate
+import com.mvv.gui.cardeditor.actions.parseToCard
 import com.mvv.gui.util.containsEnglishLetters
 
 

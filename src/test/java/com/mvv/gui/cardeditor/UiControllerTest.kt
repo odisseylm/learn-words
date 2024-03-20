@@ -1,5 +1,8 @@
 package com.mvv.gui.cardeditor
 
+import com.mvv.gui.cardeditor.actions.getWordAt
+import com.mvv.gui.cardeditor.actions.highlightWords
+import com.mvv.gui.cardeditor.actions.parseToCard
 import com.mvv.gui.test.useAssertJSoftAssertions
 import com.mvv.gui.words.from
 import com.mvv.gui.words.to

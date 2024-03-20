@@ -1,5 +1,6 @@
 package com.mvv.gui.cardeditor
 
+import com.mvv.gui.cardeditor.actions.*
 import com.mvv.gui.javafx.buttonIcon
 import com.mvv.gui.javafx.newMenuItem
 import com.mvv.gui.javafx.noIcon
@@ -46,9 +47,9 @@ class MenuController (val controller: LearnWordsController) {
 
             SeparatorMenuItem(),
             newMenuItem("Insert above", buttonIcon("/icons/insertAbove-01.png")) {
-                controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
+                controller.insertWordCard(InsertPosition.Below) },
             newMenuItem("Insert below", buttonIcon("/icons/insertBelow-01.png")) {
-                controller.insertWordCard(LearnWordsController.InsertPosition.Below) },
+                controller.insertWordCard(InsertPosition.Below) },
 
             SeparatorMenuItem(),
             newMenuItem("Line/Selection to example") { controller.moveSubTextToExamples() }
@@ -68,7 +69,7 @@ class MenuController (val controller: LearnWordsController) {
             newMenuItem("Remove words of All other sets", "Remove words from other sets") {
                 controller.removeWordsFromOtherSetsFromCurrentWords() },
             newMenuItem("Remove words of other set...", "Remove words from other sets") {
-                controller.removeWordsFromOtherSet() },
+                controller.removeWordsOfOtherSet() },
 
             SeparatorMenuItem(),
             newMenuItem("Translate Selected", buttonIcon("/icons/translate-16-01.png"), translateSelectedKeyCombination) {

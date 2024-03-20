@@ -1,5 +1,6 @@
 package com.mvv.gui.cardeditor
 
+import com.mvv.gui.cardeditor.actions.showInOtherSetsPopup
 import com.mvv.gui.javafx.RelocationPolicy
 import com.mvv.gui.javafx.sceneRoot
 import com.mvv.gui.javafx.showPopup

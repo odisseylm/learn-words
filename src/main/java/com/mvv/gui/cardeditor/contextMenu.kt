@@ -1,6 +1,6 @@
 package com.mvv.gui.cardeditor
 
-import com.mvv.gui.cardeditor.LearnWordsController.InsertPosition
+import com.mvv.gui.cardeditor.actions.*
 import com.mvv.gui.javafx.*
 import com.mvv.gui.words.*
 import com.mvv.gui.words.WordCardStatus.TooManyExampleNewCardCandidates
