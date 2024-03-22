@@ -24,50 +24,6 @@ import java.util.*
 private val log = mu.KotlinLogging.logger {}
 
 
-// https://memowordapp.com/Panel
-// https://memowordapp.com/Account
-
-
-// User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0
-
-
-// Load (with redirection) https://memoword.online/  ()
-//
-// Response
-//  Cookie: _ga_GPTPQ09Z5W=GS1.1.1711056654.1.1.1711057316.0.0.0; _ga=GA1.1.665749401.1711056654
-//
-
-// Load https://memowordapp.com/Account/Login?lng=en
-//
-// Response:
-//  set-cookie: ASP.NET_SessionId=cgprwf4osexryulg0zagaiar; path=/; HttpOnly; SameSite=Lax
-//  set-cookie: ASP.NET_SessionId=cgprwf4osexryulg0zagaiar; path=/; HttpOnly; SameSite=Lax
-//  set-cookie: __RequestVerificationToken=cl8qiiAvyVz61Ef5h0OT6BLaT2u_0QkcS_aBghRAeveQn0Qcw5Ujqapuf4bbEkPvB-mQUEWco3g8gpej9VbsQZAo1vo43IMCzzisxUQHKVc1; path=/; HttpOnly
-//
-// Page
-//  Login:
-//    To log in, enter your email address and registration code that you received when registering your email in the application.
-//    <input class="form-control" data-val="true" data-val-email="The Логин field is not a valid e-mail address." data-val-required="Введите логин (e-mail)" id="Login" name="Login" placeholder="example@address.com" type="text" value="">
-//    <input class="form-control" data-val="true" data-val-required="Введите пароль" id="Password" name="Password" placeholder="12345" type="password">
-
-
-// load https://memowordapp.com/Panel with enabled redirection
-// if it contains login form, we need to login
-//
-// Login
-//  Content-Type: application/x-www-form-urlencoded
-//  Cookie: ASP.NET_SessionId=llku50bga5imlb3eaz1wzu2h; __RequestVerificationToken=WFpbdLyOGvKzJYTJcuA_EK76jPOPCcGi9kch_xfa4jyae2nujPz4uaudnrKicp6h6eVbu26pSI8yzAmMIGM_cLSeBpLFiKaOlt3eMUDlMyM1
-//  Origin: https://memowordapp.com
-//  Referer: https://memowordapp.com/Account/Login?lng=ru
-//  User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0
-//  Content:
-//    __RequestVerificationToken=Nz1DADK-8_DMdDSp7Gx_ns0QEN3FLNfKUhFc3NVCu3LkHh27b2Nt1DQCbzEukjBC4Dz4qqzLMhnkZFEW82YslYJKOl4ywkaMBDwUMNUt_nc1
-//    &Login=vasya.pupkin%40gmail.com
-//    &Password=1111
-//    &Agreement=true
-//    &Agreement=false
-
-
 class MemoSession : AutoCloseable {
 
     private val cookieStore = PersistentCookieStore(getProjectDirectory().resolve("temp/.memoCookies.json"))
@@ -115,16 +71,14 @@ class MemoSession : AutoCloseable {
 
         log.info { "Uploading card set '$cardSetName' from $csvCardSet" }
 
-        val memoLanguageProfileId = memoSettings.languageProfileId
-        val memoLanguageProfileName = memoSettings.languageProfileName
-
         loginIfNeeded(false)
 
+        val memoLanguageProfileId = memoSettings.languageProfileId
+        val memoLanguageProfileName = memoSettings.languageProfileName
         val author = "Cheburan"
-
         val creationDateStr = SimpleDateFormat("dd.MM.yyyy").format(Date())
 
-        /*val profileSetsPageResponse: HttpResponse<String> =*/ client.send(
+        client.send(
             HttpRequest.newBuilder(URI("https://memowordapp.com/panel/lists/index/$memoLanguageProfileId?lng=en")).GET().build(),
             HttpResponse.BodyHandlers.ofString(),
         )
@@ -135,9 +89,6 @@ class MemoSession : AutoCloseable {
         )
 
         val formRequestVerificationToken = uploadCardSetFormPageResponse.extractFormRequestVerificationToken()
-
-        //val tempCardSetId = findCardSetId("army")
-        //log.info { "### tempCardSetId: $tempCardSetId" }
 
         // https://mizosoft.github.io/methanol/multipart_and_forms/#multipart-bodies
         val multipartBodyPublisher = MultipartBodyPublisher.newBuilder()
@@ -175,7 +126,9 @@ class MemoSession : AutoCloseable {
         val seemsSuccess = uploadCardSetResponse.body().containsOneOf(
             "Sets ($cardSetName - $memoLanguageProfileName)",
             ">$cardSetName - $memoLanguageProfileName<",
+            """<a href="#" id="aMemoListFullName" data-type="text" class="editable editable-click" style="display: inline;">$cardSetName - $memoLanguageProfileName</a>""",
             """<input id="MemoListFullName" name="MemoListFullName" type="hidden" value="$cardSetName - $memoLanguageProfileName" />""",
+            // Ideal HTML should be parsed and <option/> found and verified.
             // <option selected="selected" value="8b1f872c-001d-4f6a-a2c6-0b01ee732572">army3 - Ru-En</option>
         )
 
@@ -190,23 +143,10 @@ class MemoSession : AutoCloseable {
         else
             throw IllegalStateException("Unknown upload status.")
 
-        //log.info { "### uploadCardSetResponse\n${uploadCardSetResponse.body()}" }
-
         if (alreadyExists && rewrite) {
             deleteCardSet(cardSetName)
             uploadCardSet(csvCardSet, cardSetName, rewrite = false)
         }
-
-        // if success
-        // Cards of set "army2 - Ru-En"
-        //
-        // Key information
-        //   Set  army2 - Ru-En
-        //   <a href="#" id="aMemoListFullName" data-type="text" class="editable editable-click" style="display: inline;">army3 - Ru-En</a>
-        //   <input id="MemoListFullName" name="MemoListFullName" type="hidden" value="army3 - Ru-En" />
-        //
-        // Parameters of set
-        //
     }
 
     private fun deleteCardSet(cardSetName: String) {
@@ -232,29 +172,12 @@ class MemoSession : AutoCloseable {
         val isDeleted = deleteCardSetResponse.statusCode().isOneOf(200, 201)
         if (!isDeleted)
             throw IllegalStateException("Error of deleting MemoWord card set '$cardSetName' / ${cardSet.MemoListId}")
-
-        // https://memowordapp.com/api/mobile/v10/
-        //
-
-        // https://memowordapp.com/panel/lists/index/665ebd51-66cb-43d7-9ad0-ee3f0b489710?lng=en
-
-        // POST
-        // https://memowordapp.com/Panel/Lists/RemoveList
-        // Headers
-        //   Content-Type: application/json; charset=utf-8
-        //   Origin: https://memowordapp.com
-        //   Referer: https://memowordapp.com/panel/lists/index/665ebd51-66cb-43d7-9ad0-ee3f0b489710?lng=en
-        // Content/body
-        //   {"id":"d53792ab-1a5d-43a7-91a9-6a7940e43ba5"}
-        // Response
-        //   content-type: application/json; charset=utf-8
-        //
     }
 
     private fun findCardSetId(cardSetName: String): MemoCardSetInfo? {
 
-        // https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710?sort=UpdateDate&order=desc&offset=0&limit=100
         // https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710
+        // https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710?sort=UpdateDate&order=desc&offset=0&limit=100
 
         val languageProfileId = memoSettings.languageProfileId
 
@@ -268,7 +191,6 @@ class MemoSession : AutoCloseable {
             jsonBodyHandler<List<MemoCardSetInfo>>(objectMapper)
         )
 
-        //  - Ru-En
         val cardSet = cardSetsResponse.body().find {
             it.LanguageProfileId == languageProfileId
                 && ( it.FullName == cardSetName || it.FullName == "$cardSetName - ${memoSettings.languageProfileName}" )
@@ -278,20 +200,6 @@ class MemoSession : AutoCloseable {
     }
 
     private fun loginToMemoWord() {
-        /*
-        val cookieHandler = client.cookieHandler().get()
-
-        val cookieDomains = listOf(
-            "https://memoword.online/", "https://memowordapp.com",
-            "http://memoword.online/", "http://memowordapp.com",
-            "memoword.online/", "memowordapp.com",
-        )
-
-        val cookies: List<String> = cookieDomains
-            .flatMap { cookieHandler.get(URI(it), mapOf()).values.flatten() }
-            .distinct()
-        val cookieTokenPair = cookies.find { it.startsWith("__RequestVerificationToken=") }
-        */
 
         val loginPageResponse: HttpResponse<String> = client.send(
             HttpRequest.newBuilder(URI("https://memowordapp.com/Account/Login?lng=en")).GET().build(),
@@ -347,124 +255,6 @@ private fun HttpResponse<String>.extractFormRequestVerificationToken(): String {
             IllegalStateException("No form __RequestVerificationToken")
         )
 }
-
-
-/*
-https://memowordapp.com/panel/lists/index/665ebd51-66cb-43d7-9ad0-ee3f0b489710
-https://memowordapp.com/Panel/Import/Index/665ebd51-66cb-43d7-9ad0-ee3f0b489710
-
-<form action="/Panel/Import/Index/665ebd51-66cb-43d7-9ad0-ee3f0b489710" enctype="multipart/form-data" id="frmImport" method="post">
-  <input name="__RequestVerificationToken" type="hidden" value="9taMygSKUG8tOBw3IBL-kzkTOxTsOucDMd1ju9m5Q-abclqHK8B5FRSii-NO_FA2h7_V-juq8Vcfi4xVYRtHZYkm9XkJJzzbk-m49zYJbjn-iuovHoGb2kbJpZMmw-Q9yxTbc1pODGyDBRxn9kpZgw2" />
-  <input data-val="true" data-val-required="The LanguageProfileId field is required." id="LanguageProfileId" name="LanguageProfileId" type="hidden" value="665ebd51-66cb-43d7-9ad0-ee3f0b489710" />
-
-  <input data-val="true" data-val-required="The Наименование списка field is required." id="MemoListFullName" name="MemoListFullName" placeholder="set name" type="text" value="New set" />
-  <input id="MemoListCreateUser" name="MemoListCreateUser" placeholder="will be used as Author when creating sets" type="text" value="Cheburan" />
-  <textarea cols="20" id="Note" name="Note" placeholder="short description" rows="2"></textarea>
-  <input id="AdditionalUrl" name="AdditionalUrl" placeholder="Link to additional materials" type="text" value="" />
-
-  <input id="UserFullName" name="UserFullName" type="hidden" value="Cheburan" />
-  <input id="LanguageProfileFullName" name="LanguageProfileFullName" type="hidden" value="Ru-En" />
-
-  <input id="MemoListCreateDate" name="MemoListCreateDate" type="hidden" value="22.03.2024" />
-  <input id="MemoListSourceType" name="MemoListSourceType" type="hidden" value="Imported Excel" />
-
-  <input accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="btn btn-primary" id="File" name="File" style="width: 300px" type="file" value="" />
-
-  <input type="hidden" id="current_lang" value="en-US" />
-
-</form>
-*/
-
-/*
-
-fetch('https://memowordapp.com/api/mobile/v10/app/lastVersion',{method: 'POST', headers: {'test': 'TestPost'} })
-  .then(response => response.json())
-  .then(json => console.log(json))
-
-fetch('https://memowordapp.com/api/mobile/v10/app/lastVersion',{method: 'POST'})
-  .then(response => response.json())
-  .then(json => console.log(json))
-
-
-++
-fetch('https://memowordapp.com/api/app/ping',{
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({})
-    })
-  .then(response => response.json())
-  .then(json => console.log(json))
-
--- null
-fetch('https://memowordapp.com/api/app/lastVersion',{
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({})
-    })
-  .then(response => response.json())
-  .then(json => console.log(json))
-
--- error
-fetch('https://memowordapp.com/api/app/versionInfo',{
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({})
-    })
-  .then(response => response.json())
-  .then(json => console.log(json))
-
-
--- error "Отсутствует параметр X-Auth-AppId"
-fetch('https://memowordapp.com/api/languagesProfiles/list',{
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({})
-    })
-  .then(response => response.json())
-  .then(json => console.log(json))
-
-
--- error "Отсутствует параметр X-Auth-AppId"
-fetch('https://memowordapp.com/api/memoCards/list',{
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Auth-AppId': 'ru.mobsolutions.memoword',
-      'X-Auth-Method': '' // XAuthMethod = "sha512mob";
-      },
-    body: JSON.stringify({})
-    })
-  .then(response => response.json())
-  .then(json => console.log(json))
-
-
-    @POST("/api/app/lastVersion")
-    Observable<Response<AppVersionResponseModel>> getLastVersion(@HeaderMap Map<String, String> map, @Body RequestBody requestBody);
-
-    @POST("/api/app/ping")
-    Observable<Response<AppPingModel>> getPingUnsigned(@HeaderMap Map<String, String> map);
-
-    @POST("/api/app/versionInfo")
-    Observable<Response<AppVersionResponseModel>> getVersionInfo(@HeaderMap Map<String, String> map, @Body RequestBody requestBody);
-
-    @POST("/api/languagesProfiles/list")
-    Observable<Response<List<LangProfileModel>>> languageProfilesGet(@HeaderMap Map<String, String> map, @Body RequestBody requestBody);
-
-    @POST("/api/languages/list")
-    Observable<Response<List<LanguageModel>>> languagesList(@HeaderMap Map<String, String> map, @Body RequestBody requestBody);
-
-    @POST("/api/memoCards/list")
-    Observable<Response<List<MemoCardModel>>> memoCardsGet(@HeaderMap Map<String, String> map, @Body RequestBody requestBody);
-
-    @POST("/api/memoCardsLists/list")
-    Observable<Response<List<CardToListModel>>> memoCardsToListsGet(@HeaderMap Map<String, String> map, @Body RequestBody requestBody);
-
-    @POST("/api/memoLists/list")
-    Observable<Response<List<MemoListModel>>> memoListsGet(@HeaderMap Map<String, String> map, @Body RequestBody requestBody);
-
-    @POST("/api/memoLists/requestSets")
-    Observable<Response<Object>> sendInfos(@HeaderMap Map<String, String> map, @Body RequestBody requestBody);
-*/
 
 
 @Suppress("PropertyName")
