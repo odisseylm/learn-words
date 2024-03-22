@@ -35,6 +35,11 @@ class Settings (
     val recentDocumentsCount: Int = 10,
     val showSynonyms: Boolean = true,
     val openInNewWindow: Boolean = false,
+
+    val memoLogin: String?    = null,
+    val memoPassword: String? = null,
+    val memoWordLanguageProfileId: String?   = null, // for ru-en it can be 665ebd51-66cb-43d7-9ad0-ee3f0b489710
+    val memoWordLanguageProfileName: String? = null, // "Ru-En"
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -44,17 +49,37 @@ private const val defaultSplitWordCountPerFile: Int = 50
 private val defaultTheme: Theme = Theme.System
 
 
+data class MemoSettings (
+    val login: String,                   // email
+    val password: String,
+    val languageProfileId: String,   // for ru-en it can be 665ebd51-66cb-43d7-9ad0-ee3f0b489710
+    val languageProfileName: String, // "Ru-En"
+)
+
+val Settings.memoSettings: MemoSettings? get() {
+    if (memoLogin == null) return null
+
+    return MemoSettings(
+        login = memoLogin,
+        password = requireNotNull(memoPassword),
+        languageProfileId = requireNotNull(memoWordLanguageProfileId),
+        languageProfileName = requireNotNull(memoWordLanguageProfileName),
+    )
+}
+
 private fun loadSettings(): Settings {
     val possiblePaths = listOf(
         getProjectDirectory(Settings::class).resolve(".config.properties"),
-        userHome.resolve(".config.properties"),
+        userHome.resolve(".learnEditorConfig.properties"),
+        // overriding value from local non-git files
+        getProjectDirectory(Settings::class).resolve(".local.config.properties"),
     )
 
     val props = Properties()
 
     possiblePaths
-        .firstOrNull { it.exists() }
-        ?.let { configFile -> FileReader(configFile.toFile(), UTF_8).use { r -> props.load(r) } }
+        .filter { it.exists() }
+        .forEach { configFile -> FileReader(configFile.toFile(), UTF_8).use { r -> props.load(r) } }
 
     val defSet = Settings()
 
@@ -70,6 +95,11 @@ private fun loadSettings(): Settings {
         recentDocumentsCount = props.getInt("recentDocumentsCount") ?: defSet.recentDocumentsCount,
         showSynonyms = props.getBool("showSynonyms") ?: defSet.showSynonyms,
         openInNewWindow = props.getBool("openInNewWindow") ?: defSet.openInNewWindow,
+
+        memoLogin = props.getProperty("memoLogin"),
+        memoPassword = props.getProperty("memoPassword"),
+        memoWordLanguageProfileId = props.getProperty("memoWordLanguageProfileId"),
+        memoWordLanguageProfileName = props.getProperty("memoWordLanguageProfileName"),
     )
 }
 

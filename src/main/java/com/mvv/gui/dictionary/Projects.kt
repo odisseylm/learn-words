@@ -11,6 +11,8 @@ import java.util.Objects.requireNonNull
 import kotlin.reflect.KClass
 
 
+fun Any.getProjectDirectory() = getProjectDirectory(this.javaClass)
+
 fun getProjectDirectory(thatProjectTopClass: KClass<*>): Path = getProjectDirectory(thatProjectTopClass.java)
 
 fun getProjectDirectory(thatProjectTopClass: Class<*>): Path {
