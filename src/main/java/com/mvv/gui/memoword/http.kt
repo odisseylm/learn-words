@@ -4,10 +4,26 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.jsoup.nodes.Element
+import java.net.URI
 import java.net.URLEncoder
+import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.Charset
+
+
+@Suppress("FunctionName")
+internal fun GET(uri: String): HttpRequest =
+    HttpRequest.newBuilder(URI(uri)).GET().build()
+
+internal fun HttpClient.sendGet(uri: String): HttpResponse<String> =
+    this.send(GET(uri), HttpResponse.BodyHandlers.ofString())
+
+internal inline fun <reified T> HttpClient.sendJsonGet(uri: String, objectMapper: ObjectMapper): HttpResponse<T> =
+    this.send(
+        GET(uri),
+        jsonBodyHandler<T>(objectMapper)
+    )
 
 
 fun String.urlEncode(charset: Charset = Charsets.UTF_8): String = URLEncoder.encode(this, charset)

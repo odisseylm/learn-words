@@ -10,7 +10,7 @@ import java.util.*
 
 
 
-fun LearnWordsController.splitCurrentWords(): Unit = doSaveCurrentWords { filePath ->
+fun LearnWordsController.splitCurrentWords(): List<FileSaveResult> = doSaveCurrentWords { filePath ->
     val words = currentWords
     val df = SimpleDateFormat("yyyyMMdd-HHmmss")
     val splitFilesDir = filePath.parent.resolve("split-${df.format(Date())}")
@@ -22,19 +22,22 @@ fun LearnWordsController.splitCurrentWords(): Unit = doSaveCurrentWords { filePa
         //"$defaultSplitWordCountPerFile")
         "")
 
-    strSplitWordCountPerFile.ifPresent {
+    if (strSplitWordCountPerFile.isEmpty) emptyList()
+    else {
         try {
-            val wordCountPerFile: Int = it.toInt()
+            val wordCountPerFile: Int = strSplitWordCountPerFile.get().toInt()
             require(wordCountPerFile >= 20) { "Word count should be positive value." }
 
             //require(wordCountPerFile <= maxMemoCardWordCount) {
             //    "Word count should be less than 300 since memo-word supports only $maxMemoCardWordCount sized word sets." }
 
             saveSplitWordCards(filePath, words, splitFilesDir, wordCountPerFile, CsvFormat.Internal)
+                .map { FileSaveResult(it, FileSaveResult.Operation.Saved) }
         }
         catch (ex: Exception) {
             log.error(ex) { "Splitting words error: ${ex.message}" }
             showErrorAlert(pane, ex.message ?: "Unknown error", "Error of splitting.")
+            emptyList()
         }
     }
 }

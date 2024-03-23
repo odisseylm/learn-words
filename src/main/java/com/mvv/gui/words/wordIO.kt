@@ -94,17 +94,21 @@ internal fun loadWordsFromAllExistentDictionaries(toIgnoreBaseWordsFilename: Str
 
 // -----------------------------------------------------------------------------
 
-fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Path, portionSize: Int, fileFormat: CsvFormat) =
+fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Path, portionSize: Int, fileFormat: CsvFormat): List<Path> =
     words
         .asSequence()
         .windowed(portionSize, portionSize, true)
-        .forEachIndexed { i, cardWordEntries ->
+        .mapIndexed { i, cardWordEntries ->
             val baseWordsFilename = file.baseWordsFilename
             //val folder = file.parent.resolve("split")
             val numberSuffix = "%02d".format(i + 1)
 
-            saveWordCards(directory.resolve("${baseWordsFilename}_${numberSuffix}${fileFormat.fileNameEnding}"), fileFormat, cardWordEntries)
+            val memoFile = directory.resolve("${baseWordsFilename}_${numberSuffix}${fileFormat.fileNameEnding}")
+            saveWordCards(memoFile, fileFormat, cardWordEntries)
+
+            memoFile
         }
+        .toList()
 
 
 

@@ -4,6 +4,7 @@ import com.mvv.gui.cardeditor.actions.*
 import com.mvv.gui.dictionary.*
 import com.mvv.gui.dictionary.Dictionary
 import com.mvv.gui.javafx.*
+import com.mvv.gui.memoword.MemoWordSession
 import com.mvv.gui.task.TaskManager
 import com.mvv.gui.task.addTask
 import com.mvv.gui.task.createFxProgressBar
@@ -164,6 +165,8 @@ class LearnWordsController (
     internal var prefixFinder = englishPrefixFinder(emptyList())
     private val baseWordExtractor: BaseWordExtractor = createBaseWordExtractor()
 
+    internal val memoWord: MemoWordSession by lazy { MemoWordSession() }
+
     override fun close() {
         showSynonymInEditorTimer.cancel()
 
@@ -245,9 +248,10 @@ class LearnWordsController (
             // We use delay to get frame be shown before CPU will be busy with background tasks.
             runLaterWithDelay(1000) {
 
-                runAsyncTask("Rebuilding prefix")    { rebuildPrefixFinderImpl(emptySet()) }
+                runAsyncTask("Rebuilding prefix", ShowError.No) { rebuildPrefixFinderImpl(emptySet()) }
 
-                runAsyncTask("Loading dictionaries") { appContext.dictionary.find("apple")  } // load dictionaries lazy
+                // load dictionaries lazy
+                runAsyncTask("Loading dictionaries", ShowError.Message) { appContext.dictionary.find("apple")  }
 
                 if (appContext.allWordCardSetsManager.isEmpty())
                     appContext.allWordCardSetsManager.reloadAllSetsAsync(appContext.taskManager)
@@ -329,9 +333,22 @@ class LearnWordsController (
         }
     }
 
-    private fun runAsyncTask(name: String, task: ()->Unit) = appContext.runAsyncTask(name, task)
+    fun runAsyncTask(name: String, showError: ShowError, task: ()->Unit) = appContext.runAsyncTask(name, wrapTask(name, task, showError))
+
+    private fun wrapTask(taskName: String, task: ()->Unit, showError: ShowError): ()->Unit = {
+        try { task() }
+        catch (ex: Exception) {
+            log.error(ex) { "Error of executing task '$taskName'" }
+            when (showError) {
+                ShowError.Message -> Platform.runLater {
+                    showErrorAlert(pane, "${ex.javaClass.simpleName}\n${ex.message}", "$taskName - Error") }
+                ShowError.No -> { }
+            }
+        }
+    }
 }
 
+enum class ShowError { No, Message }
 
 private val Window.isActive: Boolean get() =
     this.isShowing && this.isFocused

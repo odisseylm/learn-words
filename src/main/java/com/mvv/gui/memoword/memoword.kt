@@ -24,7 +24,7 @@ import java.util.*
 private val log = mu.KotlinLogging.logger {}
 
 
-class MemoSession : AutoCloseable {
+class MemoWordSession : AutoCloseable {
 
     private val cookieStore = PersistentCookieStore(getProjectDirectory().resolve("temp/.memoCookies.json"))
         .also { it.load() }
@@ -40,19 +40,12 @@ class MemoSession : AutoCloseable {
     override fun close() { cookieStore.save() }
 
     fun connect() {
-        client.send(
-            HttpRequest.newBuilder(URI("https://memoword.online/en/")).GET().build(),
-            HttpResponse.BodyHandlers.ofString(),
-        )
-
+        client.sendGet("https://memoword.online/en/")
         loginIfNeeded(true)
     }
 
     private fun loginIfNeeded(logState: Boolean) {
-        val loginPageResponse: HttpResponse<String> = client.send(
-            HttpRequest.newBuilder(URI("https://memowordapp.com/Account/Login?lng=en")).GET().build(),
-            HttpResponse.BodyHandlers.ofString(),
-        )
+        val loginPageResponse = client.sendGet("https://memowordapp.com/Account/Login?lng=en")
 
         val needToLogin = loginPageResponse.body().containsOneOf(
             "To log in, enter your email address",
@@ -67,9 +60,9 @@ class MemoSession : AutoCloseable {
             if (logState) log.info("User is already logged in MemoWord site.")
     }
 
-    fun uploadCardSet(csvCardSet: Path, cardSetName: String, rewrite: Boolean) {
+    fun uploadCardSet(cardSetName: String, csvCardSetFile: Path, rewrite: Boolean) {
 
-        log.info { "Uploading card set '$cardSetName' from $csvCardSet" }
+        log.info { "Uploading card set '$cardSetName' from $csvCardSetFile" }
 
         loginIfNeeded(false)
 
@@ -78,15 +71,10 @@ class MemoSession : AutoCloseable {
         val author = "Cheburan"
         val creationDateStr = SimpleDateFormat("dd.MM.yyyy").format(Date())
 
-        client.send(
-            HttpRequest.newBuilder(URI("https://memowordapp.com/panel/lists/index/$memoLanguageProfileId?lng=en")).GET().build(),
-            HttpResponse.BodyHandlers.ofString(),
-        )
+        client.sendGet("https://memowordapp.com/panel/lists/index/$memoLanguageProfileId?lng=en")
 
-        val uploadCardSetFormPageResponse: HttpResponse<String> = client.send(
-            HttpRequest.newBuilder(URI("https://memowordapp.com/Panel/Import/Index/$memoLanguageProfileId?lng=en")).GET().build(),
-            HttpResponse.BodyHandlers.ofString(),
-        )
+        val uploadCardSetFormPageResponse = client.sendGet(
+            "https://memowordapp.com/Panel/Import/Index/$memoLanguageProfileId?lng=en")
 
         val formRequestVerificationToken = uploadCardSetFormPageResponse.extractFormRequestVerificationToken()
 
@@ -103,7 +91,7 @@ class MemoSession : AutoCloseable {
             .textPart("Note", "")
             .textPart("AdditionalUrl", "")
             .textPart("current_lang", "en-US")
-            .filePart("File", csvCardSet, MediaType.parse("text/csv"))
+            .filePart("File", csvCardSetFile, MediaType.parse("text/csv"))
             .build()
 
         val uploadCardSetResponse: HttpResponse<String> = client.send(
@@ -145,7 +133,7 @@ class MemoSession : AutoCloseable {
 
         if (alreadyExists && rewrite) {
             deleteCardSet(cardSetName)
-            uploadCardSet(csvCardSet, cardSetName, rewrite = false)
+            uploadCardSet(cardSetName, csvCardSetFile, rewrite = false)
         }
     }
 
@@ -156,7 +144,26 @@ class MemoSession : AutoCloseable {
         val cardSet = findCardSetId(cardSetName)
             ?: throw IllegalStateException("Card Set '$cardSetName' is not found.")
 
-        require(cardSet.CanDelete) { "Card set '$cardSetName' / ${cardSet.MemoListId} is not deletable." }
+        deleteCardSet(cardSet)
+    }
+
+    fun deleteExistentCardSets(cardSetNames: Iterable<String>) {
+
+        log.info { "Removing existent card sets of '${cardSetNames}'" }
+
+        val cardSetNamesAndFullNamesToDelete = cardSetNames.toSet() + cardSetNames.map { "$it - ${memoSettings.languageProfileName}" }
+
+        val allCardSets = getCardSets()
+
+        val existent = allCardSets.filter { cardSetNamesAndFullNamesToDelete.contains(it.FullName) }
+
+        existent.forEach {
+            deleteCardSet(it)
+        }
+    }
+
+    private fun deleteCardSet(cardSet: MemoCardSetInfo) {
+        require(cardSet.CanDelete) { "Card set '${cardSet.FullName}' / ${cardSet.MemoListId} is not deletable." }
 
         val deleteCardSetResponse: HttpResponse<String> = client.send(
             HttpRequest.newBuilder()
@@ -171,11 +178,19 @@ class MemoSession : AutoCloseable {
 
         val isDeleted = deleteCardSetResponse.statusCode().isOneOf(200, 201)
         if (!isDeleted)
-            throw IllegalStateException("Error of deleting MemoWord card set '$cardSetName' / ${cardSet.MemoListId}")
+            throw IllegalStateException("Error of deleting MemoWord card set '${cardSet.FullName}' / ${cardSet.MemoListId}.")
     }
 
     private fun findCardSetId(cardSetName: String): MemoCardSetInfo? {
+        val cardSets = getCardSets()
 
+        val cardSet = cardSets.find {
+            ( it.FullName == cardSetName || it.FullName == "$cardSetName - ${memoSettings.languageProfileName}" ) }
+
+        return cardSet
+    }
+
+    private fun getCardSets(): List<MemoCardSetInfo> {
         // https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710
         // https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710?sort=UpdateDate&order=desc&offset=0&limit=100
 
@@ -186,25 +201,19 @@ class MemoSession : AutoCloseable {
             it.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
 
-        val cardSetsResponse: HttpResponse<List<MemoCardSetInfo>> = client.send(
-            HttpRequest.newBuilder(URI("https://memowordapp.com/panel/lists/GetMemoLists/$languageProfileId?lng=en")).GET().build(),
-            jsonBodyHandler<List<MemoCardSetInfo>>(objectMapper)
+        val cardSetsResponse: HttpResponse<List<MemoCardSetInfo>> = client.sendJsonGet(
+            "https://memowordapp.com/panel/lists/GetMemoLists/$languageProfileId?lng=en",
+            objectMapper
         )
 
-        val cardSet = cardSetsResponse.body().find {
-            it.LanguageProfileId == languageProfileId
-                && ( it.FullName == cardSetName || it.FullName == "$cardSetName - ${memoSettings.languageProfileName}" )
-        }
-
-        return cardSet
+        val allCardSets = cardSetsResponse.body()
+        val cardSets = allCardSets.filter { it.LanguageProfileId == languageProfileId }
+        return cardSets
     }
 
     private fun loginToMemoWord() {
 
-        val loginPageResponse: HttpResponse<String> = client.send(
-            HttpRequest.newBuilder(URI("https://memowordapp.com/Account/Login?lng=en")).GET().build(),
-            HttpResponse.BodyHandlers.ofString(),
-        )
+        val loginPageResponse = client.sendGet("https://memowordapp.com/Account/Login?lng=en")
 
         val formRequestVerificationToken: String = loginPageResponse.extractFormRequestVerificationToken()
 
@@ -301,8 +310,12 @@ internal data class MemoCardSetInfo (
 
 
 fun main() {
-    MemoSession().use {
+    MemoWordSession().use {
         it.connect()
-        it.uploadCardSet(Path.of("/home/vmelnykov/english/words/grouped/army-RuEn-MemoWord.csv"), "army3", rewrite = true)
+        it.uploadCardSet(
+            "army3",
+            Path.of("/home/vmelnykov/english/words/grouped/army-RuEn-MemoWord.csv"),
+            rewrite = true
+        )
     }
 }

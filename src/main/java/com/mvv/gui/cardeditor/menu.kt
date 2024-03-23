@@ -34,6 +34,9 @@ class MenuController (val controller: LearnWordsController) {
             newMenuItem("Save All", "Save current file in internal and memo-word csv format and save ignored words",
                 buttonIcon("/icons/disks.png"), saveDocumentKeyCodeCombination) {
                 controller.saveAll() },
+            newMenuItem("Upload to MemoWord", "Save All & Upload to MemoWord site",
+                buttonIcon("/icons/disks.png"), saveDocumentKeyCodeCombination) {
+                controller.saveAllAndExportToMemoWord() },
 
             SeparatorMenuItem(),
             newMenuItem("Split", "Split current big set to several ones",

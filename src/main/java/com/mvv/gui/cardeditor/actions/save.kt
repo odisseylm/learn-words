@@ -58,54 +58,82 @@ fun LearnWordsController.saveIgnored() {
 }
 
 
-fun LearnWordsController.saveAll() {
+fun LearnWordsController.saveAll(): List<FileSaveResult> =
     try {
-        saveCurrentWords()
+        val changed = saveCurrentWords()
         saveIgnored()
+        changed
     }
     catch (ex: Exception) {
         showErrorAlert(pane, "Error of saving words\n${ex.message}")
+        emptyList()
     }
-}
 
 
-fun LearnWordsController.saveCurrentWords() = doSaveCurrentWords { filePath ->
+fun LearnWordsController.saveCurrentWords(): List<FileSaveResult> = doSaveCurrentWords { filePath ->
     RecentDocuments().addRecent(filePath.useFilenameSuffix(internalWordCardsFileExt))
-    saveWordsImpl(currentWords, filePath)
+    val files: List<FileSaveResult> = saveWordsImpl(currentWords, filePath)
     resetDocumentIsDirty()
+    files
 }
 
 
-fun LearnWordsController.saveWordsImpl(words: List<CardWordEntry>, filePath: Path) {
+class FileSaveResult (
+    val file: Path,
+    val operation: Operation,
+) {
+    enum class Operation { Saved, Deleted }
+}
+
+fun LearnWordsController.saveWordsImpl(words: List<CardWordEntry>, filePath: Path): List<FileSaveResult> {
+
+    val result = mutableListOf<FileSaveResult>()
+
     val internalFormatFile = filePath.useFilenameSuffix(internalWordCardsFileExt)
     saveWordCards(internalFormatFile, CsvFormat.Internal, words)
+    result.add(FileSaveResult(internalFormatFile, FileSaveResult.Operation.Saved))
 
     val memoWordFile = filePath.useFilenameSuffix(memoWordFileExt)
-    if (words.size <= maxMemoCardWordCount)
+    if (words.size <= maxMemoCardWordCount) {
         saveWordCards(memoWordFile, CsvFormat.MemoWord, words)
+        result.add(FileSaveResult(memoWordFile, FileSaveResult.Operation.Saved))
+    }
     else {
         memoWordFile.deleteIfExists()
+        result.add(FileSaveResult(memoWordFile, FileSaveResult.Operation.Deleted))
         log.info { "Saving MemoWord file ${memoWordFile.name} is skipped since it has too many entries ${words.size} (> $maxMemoCardWordCount)." }
     }
 
     val splitFilesDir = filePath.parent.resolve(filePath.baseWordsFilename)
-    if (splitFilesDir.exists()) {
-        val oldSplitFiles: List<Path> = splitFilesDir.listDirectoryEntries("*${filePath.baseWordsFilename}*.csv").sorted()
-        if (oldSplitFiles.isNotEmpty())
-            log.debug { "### Removing old split files: \n  ${oldSplitFiles.joinToString("\n  ")}" }
-        oldSplitFiles.forEach { it.deleteIfExists() }
-    }
+    val oldSplitFiles: List<Path> =
+        if (splitFilesDir.exists()) {
+            val oldSplitFiles: List<Path> = splitFilesDir.listDirectoryEntries("*${filePath.baseWordsFilename}*.csv").sorted()
+            if (oldSplitFiles.isNotEmpty())
+                log.debug { "### Removing old split files: \n  ${oldSplitFiles.joinToString("\n  ")}" }
+            oldSplitFiles.forEach { it.deleteIfExists() }
+            oldSplitFiles
+        }
+        else
+            emptyList()
 
     splitFilesDir.createDirectories()
-    saveSplitWordCards(filePath, words, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
+    val memoFiles = saveSplitWordCards(filePath, words, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
 
     // without phrases
     val onlyWords = words.filterNot { it.from.containsWhiteSpaceInMiddle() }
-    saveSplitWordCards(filePath.parent.resolve(filePath.baseWordsFilename + "_OnlyWords.csv"), onlyWords, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
+    val memoOnlyPureWordsFiles = saveSplitWordCards(filePath.parent.resolve(filePath.baseWordsFilename + "_OnlyWords.csv"), onlyWords, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
+
+    result.addAll(memoFiles.map { FileSaveResult(it, FileSaveResult.Operation.Saved) })
+    result.addAll(memoOnlyPureWordsFiles.map { FileSaveResult(it, FileSaveResult.Operation.Saved) })
+
+    val fullyRemoved = oldSplitFiles.toSet() - memoFiles.toSet() - memoOnlyPureWordsFiles.toSet()
+    result.addAll(fullyRemoved.map { FileSaveResult(it, FileSaveResult.Operation.Deleted) })
+
+    return result
 }
 
 
-fun LearnWordsController.doSaveCurrentWords(saveAction:(Path)->Unit) {
+fun LearnWordsController.doSaveCurrentWords(saveAction:(Path)->List<FileSaveResult>): List<FileSaveResult> {
 
     var filePath: Path? = this.currentWordsFile
     if (filePath == null) {
@@ -116,11 +144,13 @@ fun LearnWordsController.doSaveCurrentWords(saveAction:(Path)->Unit) {
 
     if (filePath == null) {
         //showErrorAlert(pane, "Filename is not specified.")
-        return
+        return emptyList()
     }
 
-    saveAction(filePath)
+    val resultFiles = saveAction(filePath)
 
     // !!! ONLY if success !!!
     updateCurrentWordsFile(filePath)
+
+    return resultFiles
 }
