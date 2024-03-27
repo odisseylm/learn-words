@@ -1,10 +1,10 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.dictionary.getProjectDirectory
+import com.mvv.gui.memoword.parseAsHtml
 import com.mvv.gui.util.filterNotBlank
 import com.mvv.gui.util.filterNotEmpty
 import com.mvv.gui.util.safeSubstring
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.io.IOException
 import java.io.UncheckedIOException
@@ -140,7 +140,7 @@ class EnglishSynonyms : AutoCloseable {
 
 internal fun String.parseSynonymsFromEnglishResultColumn(): List<String> {
 
-    val document: Document = Jsoup.parse(this)
+    val document: Document = this.parseAsHtml()
     val body = document.body()
 
     var synonymsEls = body.getElementsContainingOwnText("Synonyms:")
@@ -243,26 +243,24 @@ private fun printTableQuery(rs: ResultSet, maxRowCount: Int) {
             //if (rs.metaData.getColumnType(columnNames.indexOf(cn) + 1) == Types.BLOB) {
             //    val rs.getBlob(cn)
             //}
-            if (v is String || v is Int) {
-            }
-            else if (v is Blob) {
-                try {
-                    val bytes = v.getBytes(0, v.length().toInt())
-                    println(String(bytes, Charsets.UTF_8).safeSubstring(0, 250))
-                }
-                catch (ex: Exception) { ex.printStackTrace() }
-            }
-            else if (v is ByteArray) {
-                try {
-                    //println(String(v, Charsets.UTF_8).safeSubstring(0, 250))
-                    //println(String(v, Charsets.ISO_8859_1).safeSubstring(0, 250))
-                    //println(String(v, java.nio.charset.Charset.forName("CP866")).safeSubstring(0, 250))
-                    //println(String(Base64.getDecoder().decode(v)).safeSubstring(0, 250))
-                }
-                catch (ex: Exception) { ex.printStackTrace() }
-            }
-            else {
-                println(v.javaClass.name)
+            when (v) {
+                is String, is Int -> { }
+
+                is Blob ->
+                    try {
+                        val bytes = v.getBytes(0, v.length().toInt())
+                        println(String(bytes, Charsets.UTF_8).safeSubstring(0, 250))
+                    } catch (ex: Exception) { ex.printStackTrace() }
+
+                is ByteArray ->
+                    try {
+                        //println(String(v, Charsets.UTF_8).safeSubstring(0, 250))
+                        //println(String(v, Charsets.ISO_8859_1).safeSubstring(0, 250))
+                        //println(String(v, java.nio.charset.Charset.forName("CP866")).safeSubstring(0, 250))
+                        //println(String(Base64.getDecoder().decode(v)).safeSubstring(0, 250))
+                    } catch (ex: Exception) { ex.printStackTrace() }
+
+                else -> println(v.javaClass.name)
             }
         }
     }

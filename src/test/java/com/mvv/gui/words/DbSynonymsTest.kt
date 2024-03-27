@@ -91,7 +91,7 @@ class DbSynonymsTest {
                     "<br>create, produce, fashion, cause" +
                 "</p>"
 
-        val document: Document = Jsoup.parse(result)
+        val document: Document = result.parseAsHtml()
         //document.body().html()
 
         document.body().allElements

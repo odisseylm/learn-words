@@ -10,7 +10,6 @@ import com.mvv.gui.cardeditor.settings
 import com.mvv.gui.dictionary.getProjectDirectory
 import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.isOneOf
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.*
 import java.net.http.HttpClient
@@ -35,7 +34,8 @@ class MemoWordSession : AutoCloseable {
         .cookieHandler(cookieManager)
         .build()
 
-    private val memoSettings: MemoSettings by lazy { requireNotNull(settings.memoSettings) { "MemoWord settings are not set properly." } }
+    private val memoSettings: MemoSettings by lazy {
+        requireNotNull(settings.memoSettings) { "MemoWord settings are not set properly." } }
 
     override fun close() { cookieStore.save() }
 
@@ -106,19 +106,38 @@ class MemoWordSession : AutoCloseable {
 
         val alreadyExists = uploadCardSetResponse.body().containsOneOf("The list with this name already exists")
         val isError = uploadCardSetResponse.body().containsOneOf(
-            "An error occured processing your request",
+            "An error occured processing your request", // 'occured' - now HTML contains mistake :-)
             "An error occurred processing your request",
             "An error occured",
             "An error occurred",
         )
+
+        val uploadCardSetResponseHtml = uploadCardSetResponse.body().parseAsHtml()
+        val fullCardSetName = "$cardSetName - $memoLanguageProfileName"
+
+        val containsCardSetTextParts = uploadCardSetResponse.body().containsOneOf(
+            "Sets ($fullCardSetName)",
+            ">$fullCardSetName<",
+            )
+        val containsCardSetHRef =
+            uploadCardSetResponseHtml.containsHRef(id = "aMemoListFullName", innerText = fullCardSetName, ignoreCase = true) ||
+            uploadCardSetResponseHtml.containsHRef(id =  "MemoListFullName", innerText = fullCardSetName, ignoreCase = true)
+        val containsCardSetInput =
+            uploadCardSetResponseHtml.containsInput(name =  "MemoListFullName", value = fullCardSetName, ignoreCase = true) ||
+            uploadCardSetResponseHtml.containsInput(name = "aMemoListFullName", value = fullCardSetName, ignoreCase = true)
+
+        val seemsSuccess = containsCardSetTextParts || containsCardSetHRef || containsCardSetInput
+
+        /*
         val seemsSuccess = uploadCardSetResponse.body().containsOneOf(
-            "Sets ($cardSetName - $memoLanguageProfileName)",
-            ">$cardSetName - $memoLanguageProfileName<",
-            """<a href="#" id="aMemoListFullName" data-type="text" class="editable editable-click" style="display: inline;">$cardSetName - $memoLanguageProfileName</a>""",
-            """<input id="MemoListFullName" name="MemoListFullName" type="hidden" value="$cardSetName - $memoLanguageProfileName" />""",
+            "Sets ($fullCardSetName)",
+            ">$fullCardSetName<",
+            """<a href="#" id="aMemoListFullName" data-type="text" class="editable editable-click" style="display: inline;">$fullCardSetName</a>""",
+            """<input id="MemoListFullName" name="MemoListFullName" type="hidden" value="$fullCardSetName" />""",
             // Ideal HTML should be parsed and <option/> found and verified.
             // <option selected="selected" value="8b1f872c-001d-4f6a-a2c6-0b01ee732572">army3 - Ru-En</option>
         )
+        */
 
         if (isError) {
             log.info { "Error" }
@@ -151,7 +170,8 @@ class MemoWordSession : AutoCloseable {
 
         log.info { "Removing existent card sets of '${cardSetNames}'" }
 
-        val cardSetNamesAndFullNamesToDelete = cardSetNames.toSet() + cardSetNames.map { "$it - ${memoSettings.languageProfileName}" }
+        val cardSetNamesAndFullNamesToDelete = cardSetNames.toSet() +
+                cardSetNames.map { "$it - ${memoSettings.languageProfileName}" }
 
         val allCardSets = getCardSets()
 
@@ -253,7 +273,7 @@ class MemoWordSession : AutoCloseable {
 
 
 private fun HttpResponse<String>.extractFormRequestVerificationToken(): String {
-    val formPageDoc: Document = Jsoup.parse(this.body())
+    val formPageDoc: Document = this.body().parseAsHtml()
 
     return formPageDoc.forms()
         .flatMap { it.select("input") }
@@ -319,3 +339,119 @@ fun main() {
         )
     }
 }
+
+
+/*
+
+Get Card Sets (Memo Lists)
+https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710?sort=UpdateDate&order=desc&offset=0&limit=100
+https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710
+
+Get  ALL cards
+https://memowordapp.com/panel/words/GetMemoWords/b7760ca3-56e9-44e7-8047-6427fc22b4ac?order=asc&offset=0&limit=100
+https://memowordapp.com/panel/words/GetMemoWords/b7760ca3-56e9-44e7-8047-6427fc22b4ac
+
+Already learned (I know)
+https://memowordapp.com/panel/words/GetMemoWords/685e3f2b-00f8-4484-ab97-a216c589e5ed?order=asc&offset=0&limit=100
+https://memowordapp.com/panel/words/GetMemoWords/685e3f2b-00f8-4484-ab97-a216c589e5ed
+
+Download CardSet in Excel format
+https://memowordapp.com/Panel/words/Download?listId=b7d6bed0-e1dd-47d0-8a72-180d9b9ff349
+
+
+Modify card
+https://memowordapp.com/Panel/Card/Save ??
+
+<form action="/Panel/Card/Save" id="cardForm" method="post">
+<input id="MemoListId" name="MemoListId" type="hidden" value="b7d6bed0-e1dd-47d0-8a72-180d9b9ff349" />
+<input id="MemoCardId" name="MemoCardId" type="hidden" value="c107b2df-3abf-412e-804b-bc1ef49f3731" />
+<textarea id="textFrom" name="TextFrom" />
+<textarea id="textTo" name="TextTo" />
+<select class="form-control" id="memoLists" name="SelectedMemoList" style="width: 300px;">
+...
+</select>
+<input type="submit" id="saveCard" class="btn btn-default" value="Сохранить" />
+
+?? It is ent as json ??
+Headers
+  "name": "X-Requested-With",  "value": "XMLHttpRequest"
+
+"postData": {
+"mimeType": "application/json; charset=utf-8",
+"params": [],
+"text": '{
+  "MemoCardId":"0c78e519-fc46-4477-bca1-f1fa0d6bc638",
+  "MemoListId":"b7d6bed0-e1dd-47d0-8a72-180d9b9ff349",
+  "MemoListIds":["b7d6bed0-e1dd-47d0-8a72-180d9b9ff349","b7760ca3-56e9-44e7-8047-6427fc22b4ac"],
+  "MemoCardPartOfSpeechId":"7",
+  "Note":"",
+  "TextFrom":"привет 55",
+  "TextTo":"hello",
+  "SelectedMemoList":"771d766d-96db-46d0-9db8-048330e054c6"
+  }'
+}
+Answer
+"content": {
+"size": 70,
+"text": '{"Redirect":"/Panel/Words/Index/b7d6bed0-e1dd-47d0-8a72-180d9b9ff349"}'
+},
+
+Insert card JSON
+https://memowordapp.com/Panel/Card/Save
+{
+"MemoCardId":"",
+"MemoListId":"b7d6bed0-e1dd-47d0-8a72-180d9b9ff349",
+"MemoListIds":["b7d6bed0-e1dd-47d0-8a72-180d9b9ff349","57e26534-68d7-4498-9a27-026997b5da79"],
+"MemoCardPartOfSpeechId":"7",
+"Note":"",
+"TextFrom":"привет",
+"TextTo":"hello",
+"SelectedMemoList":"771d766d-96db-46d0-9db8-048330e054c6"
+}
+
+https://memowordapp.com/panel/words/GetMemoWords/b7d6bed0-e1dd-47d0-8a72-180d9b9ff349?order=asc&offset=0&limit=100
+
+
+Get CardSets for specific card
+https://memowordapp.com/panel/card/GetMemoCardLists/c107b2df-3abf-412e-804b-bc1ef49f3731?order=asc
+
+
+RemoveWordsFromList
+https://memowordapp.com/Panel/Words/RemoveWordsFromList
+{"MemoListId":"b7d6bed0-e1dd-47d0-8a72-180d9b9ff349","MemoCardIds":["0c78e519-fc46-4477-bca1-f1fa0d6bc638"]}
+
+
+MoveWordsToList (really it does NOT move, it adds)
+https://memowordapp.com/Panel/Words/MoveWordsToList
+{"MemoListId":"1614e343-21ae-4379-a0a1-3c103b530e7e","MemoCardIds":["5a05c72f-fc57-4497-9812-02ea32181e6b"]}
+
+
+
+Card
+{
+  "MemoCardId":"51f6268b-a397-46f9-b38b-aa63d9237e9d",
+  "LanguageFromId":68,
+  "LanguageFrom":"русский",
+  "LanguageToId":4,
+  "LanguageTo":"английский",
+  "PartOfSpeechId":7,
+  "PartOfSpeech":"Фр",
+  "SourceTypeId":552,
+  "SourceType":"Imported Excel",
+  "TranslationServiceId":601,
+  "TranslationService":"Google Translation API",
+  "TextFrom":"дело, дела, занятия, афера, вещь",
+  "TextTo":"affair",
+  "Note":"[əˈfɛə]",
+  "IsActive":true,
+  "InsertDate":"\/Date(1693856014434)\/",
+  "UpdateDate":null,
+  "OthersLists":[
+    {"Id":"685e3f2b-00f8-4484-ab97-a216c589e5ed","Name":"I know"},
+    {"Id":"f5a057f9-6239-488c-82dc-418d76c460b8","Name":"Repeat"},
+    {"Id":"358ab8d6-9732-4dd8-9d23-ca4583c14a2a","Name":"Equiod p01_01 - Ru-En"}
+    ],
+    "OrderNumber":1
+}
+
+*/
