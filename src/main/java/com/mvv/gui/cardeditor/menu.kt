@@ -34,8 +34,7 @@ class MenuController (val controller: LearnWordsController) {
             newMenuItem("Save All", "Save current file in internal and memo-word csv format and save ignored words",
                 buttonIcon("/icons/disks.png"), saveDocumentKeyCodeCombination) {
                 controller.saveAll() },
-            newMenuItem("Upload to MemoWord", "Save All & Upload to MemoWord site",
-                buttonIcon("/icons/disks.png"), saveDocumentKeyCodeCombination) {
+            newMenuItem("Upload to MemoWord", "Save All & Upload to MemoWord site", buttonIcon("/icons/disks.png")) {
                 controller.saveAllAndExportToMemoWord() },
 
             SeparatorMenuItem(),
@@ -99,6 +98,7 @@ class MenuController (val controller: LearnWordsController) {
                 controller.ignoreTooManyExampleCardCandidates() },
 
             SeparatorMenuItem(),
+            newMenuItem("Fix created/updated at") { controller.fixTimestamps() },
             newMenuItem("Update all sets indices") {
                 controller.allWordCardSetsManager.reloadAllSetsAsync() },
             newMenuItem("Sort & Refresh", buttonIcon("/icons/iu_update_obj.png")) {

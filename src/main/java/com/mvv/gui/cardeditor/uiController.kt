@@ -26,6 +26,7 @@ import javafx.stage.Stage
 import javafx.stage.Window
 import javafx.stage.WindowEvent
 import java.nio.file.Path
+import java.time.ZonedDateTime
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -225,6 +226,9 @@ class LearnWordsController (
             if (wordOrPhrase.isNotBlank()) Platform.runLater { onCardFromEdited(wordOrPhrase) }
         }
 
+        val cardAnyCellOnEditEventHandler = EventHandler<TableColumn.CellEditEvent<CardWordEntry, Any>> { onCardEdited(it.rowValue) }
+        pane.wordEntriesTable.columns.forEach { it.addEventHandler(TableColumn.editCommitEvent(), cardAnyCellOnEditEventHandler) }
+
         addGlobalKeyBindings(currentWordsList, copyKeyCombinations.associateWith { {
             if (!currentWordsList.isEditing) copySelectedWord() } })
 
@@ -294,6 +298,12 @@ class LearnWordsController (
         }
 
         rebuildPrefixFinder()
+    }
+
+    private fun onCardEdited(card: CardWordEntry) {
+        val now = ZonedDateTime.now()
+        card.updatedAt = now
+        if (card.createdAt == null) card.createdAt = now
     }
 
     // timeout is needed because JavaFX window takes focus with some delay

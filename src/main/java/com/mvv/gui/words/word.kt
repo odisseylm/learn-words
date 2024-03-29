@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.beans.value.ObservableValue
 import javafx.scene.paint.Color
+import java.time.ZonedDateTime
 
 
 //private val log = mu.KotlinLogging.logger {}
@@ -20,6 +21,9 @@ interface BaseWordExtractor {
 
 interface CardWordEntry {
     val baseWordExtractor: BaseWordExtractor?
+
+    val createdAtProperty: ObjectProperty<ZonedDateTime>
+    val updatedAtProperty: ObjectProperty<ZonedDateTime>
 
     val fromProperty: StringProperty
     val fromWithPrepositionProperty: StringProperty
@@ -79,6 +83,9 @@ private class CardWordEntryImpl (
     // val features: Set<CardWordEntryFeatures> = emptySet(),
     override val baseWordExtractor: BaseWordExtractor? = null,
     ) : CardWordEntry {
+
+    override val createdAtProperty = SimpleObjectProperty<ZonedDateTime>()
+    override val updatedAtProperty = SimpleObjectProperty<ZonedDateTime>()
 
     override val fromProperty = SimpleStringProperty(this, "from", "")
     override val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")

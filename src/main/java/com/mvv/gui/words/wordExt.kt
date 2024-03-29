@@ -1,5 +1,14 @@
 package com.mvv.gui.words
 
+import java.time.ZonedDateTime
+
+
+var CardWordEntry.createdAt: ZonedDateTime?
+    get()      = createdAtProperty.value
+    set(value) = createdAtProperty.set(value)
+var CardWordEntry.updatedAt: ZonedDateTime?
+    get()      = updatedAtProperty.value
+    set(value) = updatedAtProperty.set(value)
 
 var CardWordEntry.from: String
     get()      = fromProperty.valueSafe

@@ -1,6 +1,7 @@
 package com.mvv.gui.words
 
 import com.mvv.gui.util.getOrEmpty
+import com.mvv.gui.util.trimToNull
 import com.opencsv.CSVReader
 import com.opencsv.CSVWriter
 import com.opencsv.ICSVWriter
@@ -11,6 +12,7 @@ import java.io.FileReader
 import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.ZonedDateTime
 import java.util.EnumSet
 
 
@@ -68,7 +70,9 @@ fun loadWordCardsFromInternalCsv(file: Path): List<CardWordEntry> =
                     card.fromWithPreposition = it.getOrEmpty(index++)
                     card.predefinedSets = stringToEnums(it.getOrEmpty(index++))
                     card.sourcePositions = stringToInts(it.getOrEmpty(index++))
-                    card.sourceSentences = it.getOrEmpty(index)
+                    card.sourceSentences = it.getOrEmpty(index++)
+                    card.createdAt = it.getOrNull(index++).trimToNull() ?.let { s -> ZonedDateTime.parse(s) }
+                    card.updatedAt = it.getOrNull(index)  .trimToNull() ?.let { s -> ZonedDateTime.parse(s) }
                     card
                 }
                 .toList()
@@ -93,6 +97,8 @@ fun saveWordCardsIntoInternalCsv(file: Path, words: Iterable<CardWordEntry>) {
                     card.predefinedSets.joinToString(",") { it.name },
                     card.sourcePositions.joinToString(",") { it.toString() },
                     card.sourceSentences, // TODO: optimize it in some way to avoid having huge files
+                    card.createdAt?.toString(),
+                    card.updatedAt?.toString(),
                 ))
             }
         }
