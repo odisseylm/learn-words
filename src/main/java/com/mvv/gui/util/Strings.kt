@@ -20,6 +20,12 @@ fun CharSequence.removeSuffixCaseInsensitive(suffix: CharSequence): CharSequence
     if (this.endsWith(suffix, ignoreCase = true)) this.subSequence(0, this.length - suffix.length) else this
 fun String.removeSuffixCaseInsensitive(suffix: String): String =
     if (this.endsWith(suffix, ignoreCase = true)) this.substring(0, this.length - suffix.length) else this
+fun String.removeSuffixCaseInsensitive(suffixes: Iterable<String>): String {
+    for (suffix in suffixes)
+        if (this.endsWith(suffix, ignoreCase = true))
+            return this.substring(0, this.length - suffix.length)
+    return this
+}
 
 
 fun CharSequence.removeSuffixesRepeatably(vararg suffixes: String): CharSequence {
@@ -56,6 +62,16 @@ fun CharSequence.removeCharSuffixesRepeatably(suffixes: String): CharSequence {
         val isPrefixChar = ch in suffixes
 
         if (!isPrefixChar) return this.subSequence(0, i + 1)
+    }
+    return this
+}
+
+fun String.removeCharSuffixesRepeatably(suffixes: String): String {
+    for (i in this.length - 1 downTo 0) {
+        val ch = this[i]
+        val isPrefixChar = ch in suffixes
+
+        if (!isPrefixChar) return this.substring(0, i + 1)
     }
     return this
 }

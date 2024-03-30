@@ -68,14 +68,6 @@ fun CharSequence.splitToToTranslations(): List<CharSequence> {
 }
 
 
-val String.translationCount_Old: Int get() = splitToToTranslations_Old().size
-
-fun String.splitToToTranslations_Old() =
-    formatWordOrPhraseToMemoWordFormat(this)
-        .split(",")
-        .filter { it.isNotBlank() }
-
-
 val Int.toTranslationCountStatus: TranslationCountStatus get() = when (this) {
     in 0..3 -> TranslationCountStatus.Ok
     in 4..5 -> TranslationCountStatus.NotBad

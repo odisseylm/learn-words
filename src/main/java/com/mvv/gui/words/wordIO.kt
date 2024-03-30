@@ -1,7 +1,6 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.util.removeSuffixCaseInsensitive
-import com.mvv.gui.util.userHome
+import com.mvv.gui.util.*
 import java.nio.file.Path
 import kotlin.io.path.extension
 import kotlin.io.path.isRegularFile
@@ -15,7 +14,11 @@ enum class CsvFormat { Internal, MemoWord }
 val dictDirectory: Path = userHome.resolve("english/words")
 
 const val internalWordCardsFileExt = ".csv"
-const val memoWordFileExt = "-RuEn-MemoWord.csv" //
+private const val memoWordFileEnding = " - RuEn-MemoWord.csv"
+private val memoWordFilePossibleEndingsLowerCase = listOf(memoWordFileEnding.lowercase(),
+    " - RuEn-MemoWord.csv", "- RuEn-MemoWord.csv", "RuEn-MemoWord", "-MemoWord.csv", " MemoWord.csv",
+    " - RuEn-MemoWord.xlsx", "- RuEn-MemoWord.xlsx", "RuEn-MemoWord.xlsx", "-MemoWord.xlsx", " MemoWord.xlsx",
+    ).map { it.lowercase() }
 const val plainWordsFileExt = ".txt"
 const val ignoredWordsFilename = "ignored-words${plainWordsFileExt}"
 val ignoredWordsFile: Path = dictDirectory.resolve(ignoredWordsFilename)
@@ -24,20 +27,20 @@ const val maxMemoCardWordCount = 300
 
 val CsvFormat.fileNameEnding: String get() = when (this) {
     CsvFormat.Internal -> internalWordCardsFileExt
-    CsvFormat.MemoWord -> memoWordFileExt
+    CsvFormat.MemoWord -> memoWordFileEnding
 }
 
-val Path.isMemoWordFile: Boolean get() = this.name.lowercase().endsWith(memoWordFileExt.lowercase())
+val Path.isMemoWordFile: Boolean get() = this.name.lowercase().endsWithOneOf(memoWordFilePossibleEndingsLowerCase)
 val Path.isInternalCsvFormat: Boolean get() {
     val lowerFilename = this.name.lowercase()
-    return lowerFilename.endsWith(internalWordCardsFileExt) && !lowerFilename.endsWith(memoWordFileExt.lowercase())
+    return lowerFilename.endsWith(internalWordCardsFileExt) && !this.isMemoWordFile
 }
 
 
 // Function name uses 'suffix' because it can be any suffix (not only file extension)
 val Path.baseWordsFilename: String get() =
     this.name
-        .removeSuffixCaseInsensitive(memoWordFileExt)
+        .removeSuffixCaseInsensitive(memoWordFilePossibleEndingsLowerCase)
         .removeSuffixCaseInsensitive(internalWordCardsFileExt)
         .removeSuffixCaseInsensitive(plainWordsFileExt)
 
@@ -45,6 +48,8 @@ val Path.baseWordsFilename: String get() =
 // Function name uses 'suffix' because it can be any suffix (not only file extension)
 fun Path.useFilenameSuffix(filenameSuffix: String): Path =
     this.parent.resolve(this.baseWordsFilename + filenameSuffix)
+
+fun Path.useMemoWordFilenameSuffix(): Path = this.parent.resolve(this.baseWordsFilename + memoWordFileEnding)
 
 
 // -----------------------------------------------------------------------------
@@ -73,7 +78,11 @@ fun loadWordCards(file: Path): List<CardWordEntry> {
 fun saveWordCards(file: Path, format: CsvFormat, words: Iterable<CardWordEntry>) =
     when (format) {
         CsvFormat.Internal -> saveWordCardsIntoInternalCsv(file, words)
-        CsvFormat.MemoWord -> saveWordCardsIntoMemoWordCsv(file, words)
+        // CsvFormat.MemoWord -> saveWordCardsIntoMemoWordCsv(file, words)
+        CsvFormat.MemoWord -> {
+            saveWordCardsIntoMemoWordCsv(file.replaceExt(".csv"), words)
+            saveWordCardsIntoMemoWordXlsx(file.replaceExt(".xlsx"), words)
+        }
     }
 
 
@@ -103,7 +112,7 @@ fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Pa
             //val folder = file.parent.resolve("split")
             val numberSuffix = "%02d".format(i + 1)
 
-            val memoFile = directory.resolve("${baseWordsFilename}_${numberSuffix}${fileFormat.fileNameEnding}")
+            val memoFile = directory.resolve("$baseWordsFilename (${numberSuffix})${fileFormat.fileNameEnding}")
             saveWordCards(memoFile, fileFormat, cardWordEntries)
 
             memoFile

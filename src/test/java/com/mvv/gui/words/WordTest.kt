@@ -9,10 +9,10 @@ class WordTest {
 
     @Test
     @DisplayName("translationCount")
-    fun test_translationCount() {
+    fun test_splitToToTranslations_Old() {
         val a = SoftAssertions()
 
-        a.assertThat("word1, , ,,, word2".translationCount_Old).isEqualTo(2)
+        //a.assertThat("word1, , ,,, word2".splitToToTranslations_Old().size).isEqualTo(2)
 
         a.assertThat("word1, , ,,, word2".translationCount).isEqualTo(2)
         a.assertThat(" word1 ,  , ,,,  word2 (comment1,  , ,,, comment2, comment3, ) , \t \n word3 \t".translationCount).isEqualTo(3)
@@ -25,7 +25,7 @@ class WordTest {
     fun splitToToTranslations() {
         val a = SoftAssertions()
 
-        a.assertThat("word1, word2".splitToToTranslations_Old()).containsExactly("word1", " word2")
+        //a.assertThat("word1, word2".splitToToTranslations_Old()).containsExactly("word1", " word2")
 
         a.assertThat("word1, word2".splitToToTranslations()).containsExactly("word1", "word2")
 

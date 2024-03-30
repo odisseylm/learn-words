@@ -6,6 +6,7 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.extension
 import kotlin.io.path.name
 import kotlin.math.min
 
@@ -15,6 +16,13 @@ fun Path.replaceFilenamesSuffix(oldExt: String, newExt: String): Path {
     return this.parent.resolve(newFilename)
 }
 
+
+fun Path.replaceExt(fileExt: String): Path {
+    val oldExtWithDot = this.extension.ifNotBlank { ".${it}" }
+    val newExtWithDot = if (fileExt.startsWith('.')) fileExt else ".${fileExt}"
+    val newName = if (oldExtWithDot.isBlank()) this.name + newExtWithDot else this.name.replaceSuffix(oldExtWithDot, newExtWithDot)
+    return this.parent.resolve(newName)
+}
 
 fun useFileExt(filename: String, fileExt: String): String {
     val fileExtFixed = if (fileExt.startsWith('.')) fileExt else ".$fileExt"

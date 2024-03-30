@@ -93,7 +93,10 @@ fun LearnWordsController.saveWordsImpl(words: List<CardWordEntry>, filePath: Pat
     saveWordCards(internalFormatFile, CsvFormat.Internal, words)
     result.add(FileSaveResult(internalFormatFile, FileSaveResult.Operation.Saved))
 
-    val memoWordFile = filePath.useFilenameSuffix(memoWordFileExt)
+    val memoWordSubDir = filePath.parent.resolve("_MemoWord").resolve(filePath.baseWordsFilename)
+    memoWordSubDir.createDirectories()
+
+    val memoWordFile = memoWordSubDir.resolve(filePath.name).useMemoWordFilenameSuffix()
     if (words.size <= maxMemoCardWordCount) {
         saveWordCards(memoWordFile, CsvFormat.MemoWord, words)
         result.add(FileSaveResult(memoWordFile, FileSaveResult.Operation.Saved))
@@ -104,7 +107,7 @@ fun LearnWordsController.saveWordsImpl(words: List<CardWordEntry>, filePath: Pat
         log.info { "Saving MemoWord file ${memoWordFile.name} is skipped since it has too many entries ${words.size} (> $maxMemoCardWordCount)." }
     }
 
-    val splitFilesDir = filePath.parent.resolve(filePath.baseWordsFilename)
+    val splitFilesDir = memoWordSubDir.resolve("split")
     val oldSplitFiles: List<Path> =
         if (splitFilesDir.exists()) {
             val oldSplitFiles: List<Path> = splitFilesDir.listDirectoryEntries("*${filePath.baseWordsFilename}*.csv").sorted()
@@ -121,7 +124,10 @@ fun LearnWordsController.saveWordsImpl(words: List<CardWordEntry>, filePath: Pat
 
     // without phrases
     val onlyWords = words.filterNot { it.from.containsWhiteSpaceInMiddle() }
-    val memoOnlyPureWordsFiles = saveSplitWordCards(filePath.parent.resolve(filePath.baseWordsFilename + "_OnlyWords.csv"), onlyWords, splitFilesDir, settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
+    val memoOnlyPureWordsFiles = saveSplitWordCards(
+        memoWordSubDir.resolve(filePath.baseWordsFilename + " (OnlyWords).csv"),
+        onlyWords, splitFilesDir,
+        settingsPane.splitWordCountPerFile, CsvFormat.MemoWord)
 
     result.addAll(memoFiles.map { FileSaveResult(it, FileSaveResult.Operation.Saved) })
     result.addAll(memoOnlyPureWordsFiles.map { FileSaveResult(it, FileSaveResult.Operation.Saved) })
