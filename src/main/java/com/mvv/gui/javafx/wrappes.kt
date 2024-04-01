@@ -19,6 +19,8 @@ fun label(
     if (styleClass != null) this.styleClass.add(styleClass)
 }
 
+fun <T> label(adjust: Label.()->Unit) = Label().apply { this.adjust() }
+
 
 var Node.onDoubleClicked: ((MouseEvent)->Unit)
     get() { throw NotImplementedError() }
@@ -26,7 +28,7 @@ var Node.onDoubleClicked: ((MouseEvent)->Unit)
 
 fun <T> listView(
     items: Iterable<T>,
-    isEditable: Boolean ?= null,
+    isEditable: Boolean? = null,
     cellFactory: Callback<ListView<T>, ListCell<T>>? = null,
     onDoubleClicked: ((MouseEvent)->Unit)? = null,
 ) = ListView<T>().apply {
@@ -42,7 +44,7 @@ fun <T> listView(adjust: ListView<T>.()->Unit) = ListView<T>().apply { this.adju
 
 fun <T> comboBox(
     items: Iterable<T>,
-    isEditable: Boolean ?= null,
+    isEditable: Boolean? = null,
     cellFactory: Callback<ListView<T>, ListCell<T>>? = null,
     converter: StringConverter<T>? = null,
 ) = ComboBox<T>().apply {
