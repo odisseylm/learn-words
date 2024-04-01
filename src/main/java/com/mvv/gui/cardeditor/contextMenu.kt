@@ -4,10 +4,7 @@ import com.mvv.gui.cardeditor.actions.*
 import com.mvv.gui.javafx.*
 import com.mvv.gui.words.*
 import com.mvv.gui.words.WordCardStatus.TooManyExampleNewCardCandidates
-import javafx.scene.control.ContextMenu
-import javafx.scene.control.MenuItem
-import javafx.scene.control.SeparatorMenuItem
-import javafx.scene.control.TableView
+import javafx.scene.control.*
 
 
 //private val log = mu.KotlinLogging.logger {}
@@ -20,7 +17,12 @@ class ContextMenuController (val controller: LearnWordsController) {
     private val mergeMenuItem = newMenuItem("Merge", buttonIcon("icons/merge.png")) { controller.mergeSelected() }
 
     private val selectByBaseWordMenuItem = newMenuItem("Select by base word") { controller.selectByBaseWord() }
-    private val copySelectedToOtherSetMenuItem = newMenuItem("Copy selected cards to other set") { controller.copySelectToOtherSet() }
+
+    private val copySelectedToMenuItem = Menu("Copy selected cards to")
+    private val copySelectedToOtherSetMenuItem = newMenuItem("Other set") { controller.copySelectToOtherSet() }
+    private val copySelectedToSynonymsSetMenuItem = newMenuItem("Synonyms") { controller.addToSynonyms() }
+    private val copySelectedToGroupedSetMenuItem = newMenuItem("Grouped") { controller.addToGrouped() }
+
     private val exportSelectedFromOtherSetMenuItem = newMenuItem("Export selected from other set") { controller.exportSelectFromOtherSet() }
 
     private val addMissedBaseWordsMenuItem = newMenuItem("Add missed base word",
@@ -67,7 +69,13 @@ class ContextMenuController (val controller: LearnWordsController) {
 
             SeparatorMenuItem(),
             selectByBaseWordMenuItem,
-            copySelectedToOtherSetMenuItem,
+            copySelectedToMenuItem.apply {
+                items.addAll(
+                    copySelectedToOtherSetMenuItem,
+                    copySelectedToSynonymsSetMenuItem,
+                    copySelectedToGroupedSetMenuItem,
+                )
+            },
             exportSelectedFromOtherSetMenuItem,
 
             SeparatorMenuItem(),
@@ -126,7 +134,10 @@ class ContextMenuController (val controller: LearnWordsController) {
         mergeMenuItem.isVisible = controller.isSelectionMergingAllowed()
 
         updateSelectByBaseWordMenuItem()
-        copySelectedToOtherSetMenuItem.isVisible = currentWordsList.hasSelection
+
+        val copySelectedToIsVisible = currentWordsList.hasSelection
+        copySelectedToMenuItem.isVisible = copySelectedToIsVisible
+
         exportSelectedFromOtherSetMenuItem.isVisible = currentWordsList.singleSelection != null
 
         showSourceSentenceMenuItem.isVisible = selectedCard?.sourceSentences?.isNotBlank() ?: false

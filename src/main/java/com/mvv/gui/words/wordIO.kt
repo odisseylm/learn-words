@@ -120,11 +120,13 @@ fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Pa
         .toList()
 
 
+fun getAllExistentSetFiles(includeMemoWordFile: Boolean, toIgnoreBaseWordsFilename: String?): List<Path> =
+    getAllExistentSetFiles(dictDirectory, includeMemoWordFile, toIgnoreBaseWordsFilename)
 
-fun getAllExistentSetFiles(includeMemoWordFile: Boolean, toIgnoreBaseWordsFilename: String?): List<Path> {
-    if (dictDirectory.notExists()) return emptyList()
+fun getAllExistentSetFiles(dir: Path, includeMemoWordFile: Boolean, toIgnoreBaseWordsFilename: String?): List<Path> {
+    if (dir.notExists()) return emptyList()
 
-    return dictDirectory.toFile().walkTopDown()
+    return dir.toFile().walkTopDown()
         .asSequence()
         .map { it.toPath() }
         .filter { it.isRegularFile() }

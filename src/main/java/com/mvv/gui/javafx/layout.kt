@@ -1,7 +1,10 @@
 package com.mvv.gui.javafx
 
 import javafx.geometry.HPos
+import javafx.scene.Node
+import javafx.scene.layout.BorderPane
 import javafx.scene.layout.ColumnConstraints
+import javafx.scene.layout.FlowPane
 import javafx.scene.layout.Priority
 
 
@@ -21,4 +24,36 @@ fun columnConstraints(priority: Priority? = null, hAlignment: HPos? = null, fill
     if (fillWidth  != null) constr.isFillWidth = fillWidth
 
     return constr
+}
+
+
+fun borderPane(
+    center: Node?,
+    top: Node? = null,
+    left: Node? = null,
+    bottom: Node? = null,
+    right: Node? = null,
+    styleClass: String? = null,
+): BorderPane = BorderPane(center).apply {
+    if (top    != null) this.top    = top
+    if (left   != null) this.left   = left
+    if (bottom != null) this.bottom = bottom
+    if (right  != null) this.right  = right
+
+    if (styleClass != null) this.styleClass.add(styleClass)
+}
+
+
+fun flowPane(
+    children: Iterable<Node>? = null,
+    hGap: Double? = null,
+    vGap: Double? = null,
+    styleClass: String? = null,
+): FlowPane = FlowPane().apply {
+
+    if (hGap != null) this.hgap = hGap
+    if (vGap != null) this.vgap = vGap
+
+    if (children   != null) this.children.addAll(children)
+    if (styleClass != null) this.styleClass.add(styleClass)
 }

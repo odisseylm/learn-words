@@ -4,8 +4,6 @@ import com.mvv.gui.cardeditor.*
 import com.mvv.gui.javafx.runWithScrollKeeping
 import com.mvv.gui.javafx.showConfirmation
 import com.mvv.gui.javafx.singleSelection
-import com.mvv.gui.util.endsWithOneOf
-import com.mvv.gui.util.withFileExt
 import com.mvv.gui.words.*
 import javafx.scene.control.ButtonBar.ButtonData
 import javafx.scene.control.ButtonType
@@ -19,30 +17,11 @@ fun LearnWordsController.copySelectToOtherSet() = doAction("copying selected car
 fun LearnWordsController.showInternalFormatOpenDialog(editablePath: Boolean): Path? {
 
     val currentWordsFile = this.currentWordsFile // local safe ref
-    val currentWordsFileParent = currentWordsFile?.parent ?: dictDirectory
-
-    val allOtherSetsParents = allWordCardSetsManager.allCardSets.map { it.parent }.distinct()
-    val commonAllOtherSetsSubParent = if (allOtherSetsParents.size == 1) allOtherSetsParents[0]
-                                      else allOtherSetsParents.minByOrNull { it.nameCount } ?: currentWordsFileParent
 
     val showFilesMode = if (editablePath) ShowFilesMode.Combo else ShowFilesMode.List
-    val destFileOrSetName = showCopyToOtherSetDialog(pane, currentWordsFile, allWordCardSetsManager, showFilesMode) ?: return null
+    val destFilePath = showCopyToOtherSetDialog(pane, currentWordsFile, allWordCardSetsManager, showFilesMode) ?: return null
 
-    val destFilePath =
-        if (destFileOrSetName.exists()) destFileOrSetName
-        else {
-            if (destFileOrSetName.isInternalCsvFormat)
-                commonAllOtherSetsSubParent.resolve(destFileOrSetName)
-            else {
-                val setName = destFileOrSetName.toString()
-                require(!setName.endsWithOneOf(internalWordCardsFileExt, plainWordsFileExt)) {
-                    "Please, specify set name or full absolute path to set file."}
-
-                currentWordsFileParent.resolve(setName.withFileExt(internalWordCardsFileExt))
-            }
-        }
-
-    require(destFilePath.isInternalCsvFormat && !destFilePath.isMemoWordFile) {
+    require(destFilePath.isInternalCsvFormat) {
         "It looks strange to load/save data in memo-word format [$destFilePath]." }
 
     return destFilePath
@@ -54,11 +33,18 @@ private fun LearnWordsController.copySelectToOtherSetImpl() {
     val selected = currentWordsSelection.selectedItems
     if (selected.isEmpty()) return
 
-    val destFilePath = showInternalFormatOpenDialog(true) ?: return
+    // TODO: make list dialog editable too
+    val destFilePath = showInternalFormatOpenDialog(false) ?: return
+
+    copyToOtherSetImpl(destFilePath, selected)
+}
+
+
+private fun LearnWordsController.copyToOtherSetImpl(destFilePath: Path, toCopy: List<CardWordEntry>) {
 
     val existentCards = if (destFilePath.exists()) loadWordCards(destFilePath) else emptyList()
 
-    val duplicates = verifyDuplicates(existentCards, selected)
+    val duplicates = verifyDuplicates(existentCards, toCopy)
 
     val cardToSave: List<CardWordEntry> =
         if (duplicates.duplicatedByOnlyFrom.isNotEmpty()) {
@@ -83,12 +69,12 @@ private fun LearnWordsController.copySelectToOtherSetImpl() {
             if (res.isEmpty || res.get() == ButtonType.CANCEL) return
 
             when (res.get()) {
-                skipButton  -> existentCards + selected.skipCards(duplicates.fullDuplicates, duplicates.duplicatedByOnlyFrom)
-                mergeButton -> mergeCards(existentCards, selected.skipCards(duplicates.fullDuplicates))
+                skipButton  -> existentCards + toCopy.skipCards(duplicates.fullDuplicates, duplicates.duplicatedByOnlyFrom)
+                mergeButton -> mergeCards(existentCards, toCopy.skipCards(duplicates.fullDuplicates))
                 else        -> throw IllegalStateException("Unexpected button [${res.get()}]")
             }
         }
-        else existentCards + selected.skipCards(duplicates.fullDuplicates)
+        else existentCards + toCopy.skipCards(duplicates.fullDuplicates)
 
     saveWordsImpl(cardToSave, destFilePath)
 }
@@ -129,4 +115,19 @@ internal fun List<CardWordEntry>.skipCards(toSkip1: Set<CardWordEntry>, toSkip2:
 internal fun mergeCards(existentCards: List<CardWordEntry>, newCards: List<CardWordEntry>): List<CardWordEntry> {
     val all = (existentCards + newCards).groupBy { it.from.lowercase() }
     return all.values.map { cardsWitTheSameFrom -> mergeCards(cardsWitTheSameFrom).also { it.from = cardsWitTheSameFrom.first().from } }
+}
+
+
+internal fun LearnWordsController.addToSynonyms() = addToFrom("synonyms")
+internal fun LearnWordsController.addToGrouped() = addToFrom("grouped")
+
+
+private fun LearnWordsController.addToFrom(dictionariesSubDir: String) {
+
+    val card = currentWordsList.singleSelection ?: return
+    val chosenDict: Path? = chooseDictionaryDialog(pane, currentWordsFile, allWordCardSetsManager, "Synonyms",
+        dictDirectory.resolve(dictionariesSubDir))
+
+    if (chosenDict != null)
+        copyToOtherSetImpl(chosenDict, listOf(card))
 }

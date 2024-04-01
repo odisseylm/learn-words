@@ -253,3 +253,30 @@
     -fx-border-width: 0;
     -fx-border-insets: 0;
 }
+
+.chooseOtherSetDialogPane .dictionariesGroupingLabel {
+    -fx-padding: 0 0 15 0;
+    -fx-font-weight: bold;
+    -fx-underline: true;
+}
+
+.chooseOtherSetDialogPane .filterPane {
+    -fx-padding: 0 0 10 0;
+}
+
+.chooseOtherSetDialogPane .filterPane .letterButton {
+    -fx-min-width:   25;
+    -fx-min-height:  25;
+    -fx-pref-width:  25;
+    -fx-pref-height: 25;
+    -fx-max-width:   25;
+    -fx-max-height:  25;
+
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-wrap-text: false;
+    -fx-text-overrun: clip;
+    -fx-ellipsis-string: "";
+    -fx-label-padding: 0 0 0 0;
+    -fx-padding: 0 0 0 0;
+}
