@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.mvv.gui.javafx
 
 import javafx.scene.Node
@@ -23,27 +25,31 @@ var Node.onDoubleClicked: ((MouseEvent)->Unit)
     set(value) = addEventHandler(MouseEvent.MOUSE_CLICKED) { if (it.clickCount >= 2) value(it) }
 
 fun <T> listView(
-    items: Iterable<T>? = null,
+    items: Iterable<T>,
     isEditable: Boolean ?= null,
     cellFactory: Callback<ListView<T>, ListCell<T>>? = null,
     onDoubleClicked: ((MouseEvent)->Unit)? = null,
 ) = ListView<T>().apply {
-    if (items       != null) this.items.addAll(items)
+    this.items.addAll(items)
     if (isEditable  != null) this.isEditable  = isEditable
     if (cellFactory != null) this.cellFactory = cellFactory
 
     if (onDoubleClicked != null) this.onDoubleClicked = onDoubleClicked
 }
 
+fun <T> listView(adjust: ListView<T>.()->Unit) = ListView<T>().apply { this.adjust() }
+
 
 fun <T> comboBox(
-    items: Iterable<T>? = null,
+    items: Iterable<T>,
     isEditable: Boolean ?= null,
     cellFactory: Callback<ListView<T>, ListCell<T>>? = null,
     converter: StringConverter<T>? = null,
 ) = ComboBox<T>().apply {
-    if (items       != null) this.items.addAll(items)
+    this.items.addAll(items)
     if (isEditable  != null) this.isEditable  = isEditable
     if (cellFactory != null) this.cellFactory = cellFactory
     if (converter   != null) this.converter   = converter
 }
+
+fun <T> comboBox(adjust: ComboBox<T>.()->Unit) = ComboBox<T>().apply { this.adjust() }

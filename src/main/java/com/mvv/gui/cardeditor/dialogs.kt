@@ -176,14 +176,14 @@ fun chooseDictionaryDialog(parent: Node,
 
     val filterToggleGroup = ToggleGroup()
 
-    val filesList = listView(
-        items = pathToSetNameConv.otherCachedSetsFiles,
-        isEditable = true,
+    val filesList = listView<Path> {
+        items.addAll(pathToSetNameConv.otherCachedSetsFiles)
+        isEditable = true
         cellFactory = stringConverterListCellFactory(
-            DelegateStringConverter{ p -> pathToSetNameConv.toString(p).replace("/", "/ ") } ),
-    ).also {
-        it.onDoubleClicked = { _ ->
-            val selectedItem = it.selectionModel.selectedItem
+            DelegateStringConverter{ p -> pathToSetNameConv.toString(p).replace("/", "/ ") } )
+
+        onDoubleClicked = { _ ->
+            val selectedItem = selectionModel.selectedItem
             if (selectedItem != null) {
                 dialog.result = selectedItem
                 dialog.close()
