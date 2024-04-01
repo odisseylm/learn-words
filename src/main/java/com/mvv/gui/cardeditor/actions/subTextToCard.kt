@@ -2,7 +2,8 @@ package com.mvv.gui.cardeditor.actions
 
 import com.mvv.gui.cardeditor.LearnWordsController
 import com.mvv.gui.javafx.*
-import com.mvv.gui.words.CardWordEntry
+import com.mvv.gui.util.isEnglishLetter
+import com.mvv.gui.words.*
 import javafx.beans.property.StringPropertyBase
 import javafx.scene.control.TableColumn
 import javafx.scene.control.TableView
@@ -23,7 +24,7 @@ fun LearnWordsController.moveSubTextToSeparateCard() {
 
 
 fun LearnWordsController.moveSubTextToSeparateCard(editor: TextInputControl, item: CardWordEntry, tableColumn: TableColumn<CardWordEntry, String>) {
-    createCardFromSelectionOrCurrentLine(editor, tableColumn, item, currentWordsList)
+    createCardFromSelectionOrCurrentLine(editor, tableColumn, item)
         ?.also { reanalyzeOnlyWords(it) }
         ?.adjustCard()
 }
@@ -39,13 +40,19 @@ private fun LearnWordsController.createCardFromSelectionOrCurrentLine(
     textInput: TextInputControl,
     tableColumn: TableColumn<CardWordEntry, String>,
     currentCard: CardWordEntry,
-    currentWords: TableView<CardWordEntry>,
 ): CardWordEntry? {
+
+    val currentWords: TableView<CardWordEntry> = currentWordsList
 
     val selectionOrCurrentLine = textInput.selectionOrCurrentLine
     if (selectionOrCurrentLine.isBlank()) return null
 
     val newCard: CardWordEntry = selectionOrCurrentLine.parseToCard()?.adjustCard() ?: return null
+
+    val alreadyContains = currentWords.items.containsAlmostTheSameCard(newCard)
+    println("### alreadyContains [${newCard.from} => ${newCard.to}]   - $alreadyContains")
+
+    if (currentWords.items.containsAlmostTheSameCard(newCard)) return null
 
     if (textInput.selectedText.isEmpty()) {
         textInput.selectRange(textInput.selectionOrCurrentLineRange)
@@ -96,4 +103,55 @@ private fun LearnWordsController.createCardFromSelectionOrCurrentLine(
         })
 
     return newCard
+}
+
+
+fun List<CardWordEntry>.containsAlmostTheSameCard(newCard: CardWordEntry, compareExtraParams: Boolean = false): Boolean {
+    val existentPossiblySameCards = this.filter { it.from == newCard.from }
+
+    val sameCard = existentPossiblySameCards.find { isSenseAlmostTheSame(newCard, it, compareExtraParams) }
+    return sameCard != null
+}
+
+fun isSenseAlmostTheSame(card1: CardWordEntry, card2: CardWordEntry, compareExtraParams: Boolean = false): Boolean {
+    val isToAlmostSame = isSenseAlmostTheSame(card1.to, card2.to)
+    if (!isToAlmostSame) return false
+
+    val isExamplesAlmostSame = isSenseAlmostTheSame(card1.examples, card2.examples)
+    if (!isExamplesAlmostSame) return false
+
+    if (!compareExtraParams) return true
+
+    val isSourcePositionsAlmostSame = card1.sourcePositions.toSet() == card2.sourcePositions.toSet()
+    val isSourceSentencesAlmostSame = isSenseAlmostTheSame(card1.sourceSentences, card2.sourceSentences)
+    return isSourcePositionsAlmostSame && isSourceSentencesAlmostSame
+}
+
+fun isSenseAlmostTheSame(str1: CharSequence, str2: CharSequence): Boolean {
+
+    var i1 = 0
+    var i2 = 0
+    var ch1: Char
+    var ch2: Char
+
+    fun Char.toLowerCaseOrSpace(): Char =
+        if (this.isEnglishLetter() || this.isRussianLetter()) this.lowercaseChar() else ' '
+
+    while (true) {
+        ch1 = ' '
+        ch2 = ' '
+
+        while (i1 < str1.length && ch1 == ' ') {
+            ch1 = str1[i1++].toLowerCaseOrSpace()
+        }
+
+        while (i2 < str2.length && ch2 == ' ') {
+            ch2 = str2[i2++].toLowerCaseOrSpace()
+        }
+
+        when {
+            ch1 == ' ' && ch2 == ' ' -> return true
+            ch1 != ch2 -> return false
+        }
+    }
 }
