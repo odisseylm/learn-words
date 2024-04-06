@@ -10,6 +10,7 @@ import org.apache.poi.ss.usermodel.VerticalAlignment
 import org.apache.poi.ss.usermodel.Workbook.MAX_SENSITIVE_SHEET_NAME_LEN
 import org.apache.poi.util.Units
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.io.FileReader
 import java.io.FileWriter
@@ -90,8 +91,8 @@ fun saveWordCardsIntoMemoWordCsv(file: Path, words: Iterable<CardWordEntry>) {
                 .forEach {
                     csvWriter.writeNext(arrayOf(
                         // in reversed order -> ru-en
-                        formatWordOrPhraseToCsvMemoWordFormat(minimizeTo(it.to)),
-                        formatWordOrPhraseToCsvMemoWordFormat(fixFrom(it.from)),
+                        formatWordOrPhraseToCsvMemoWordFormat(optimizeToForMemoWord(it.to)),
+                        formatWordOrPhraseToCsvMemoWordFormat(optimizeFromForMemoWord(it.from)),
                         "", // part of speech
                         formatWordOrPhraseToCsvMemoWordFormat(it.transcription + '\n' + it.examples),
                     ))
@@ -99,9 +100,32 @@ fun saveWordCardsIntoMemoWordCsv(file: Path, words: Iterable<CardWordEntry>) {
         }
 }
 
+
+val CardWordEntry.fromInMemoWordFormat: String get() =
+    optimizeFromForMemoWord(this.from)
+val CardWordEntry.toInMemoWordFormat: String get() =
+    adoptWordOrPhraseToXlsxMemoWordFormat(optimizeToForMemoWord(this.to))
+val CardWordEntry.memoCardNote: String get() =
+    adoptWordOrPhraseToXlsxMemoWordFormat( (this.transcription + '\n' + this.examples).trim() )
+        .ifEmpty { " " } // MemoWord bug, otherwise 'null' will/may be saved
+
+
+fun wordCardsIntoMemoWordXlsx(cardSetName: String, words: Iterable<CardWordEntry>): ByteArray {
+    val workbook = wordCardsIntoMemoWordXlsxImpl(cardSetName, words)
+    return ByteArrayOutputStream().use { workbook.write(it); it.toByteArray() }
+}
+
 fun saveWordCardsIntoMemoWordXlsx(file: Path, words: Iterable<CardWordEntry>) {
     if (!words.iterator().hasNext()) throw IllegalArgumentException("Nothing to save to [$file].")
     Files.createDirectories(file.parent)
+
+    val cardSetName = file.baseWordsFilename
+    val workbook = wordCardsIntoMemoWordXlsxImpl(cardSetName, words)
+
+    FileOutputStream(file.toFile()).use { workbook.write(it) }
+}
+
+private fun wordCardsIntoMemoWordXlsxImpl(cardSetName: String, words: Iterable<CardWordEntry>): XSSFWorkbook {
 
     // xlsx - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 
@@ -110,7 +134,7 @@ fun saveWordCardsIntoMemoWordXlsx(file: Path, words: Iterable<CardWordEntry>) {
         .sortedBy { it.baseWordAndFromProperty.value }
 
     val workbook = XSSFWorkbook()
-    val sheet = workbook.createSheet(file.baseWordsFilename.safeSubstring(0, MAX_SENSITIVE_SHEET_NAME_LEN))
+    val sheet = workbook.createSheet(cardSetName.safeSubstring(0, MAX_SENSITIVE_SHEET_NAME_LEN))
 
     val toCellIndex = 0
     val fromCellIndex = 1 // in reversed order -> ru-en
@@ -155,9 +179,9 @@ fun saveWordCardsIntoMemoWordXlsx(file: Path, words: Iterable<CardWordEntry>) {
         .forEach { card ->
             val row = sheet.createRow(index++)
 
-            val from = fixFrom(card.from)
-            val to = adoptWordOrPhraseToXlsxMemoWordFormat(minimizeTo(card.to))
-            val remarks = adoptWordOrPhraseToXlsxMemoWordFormat(card.transcription + '\n' + card.examples)
+            val from    = card.fromInMemoWordFormat
+            val to      = card.toInMemoWordFormat
+            val remarks = card.memoCardNote
 
             row.createCell(toCellIndex)        .also { it.setCellValue(to);      it.cellStyle = bigCellStyle   }
             row.createCell(fromCellIndex)      .also { it.setCellValue(from);    it.cellStyle = shortCellStyle }
@@ -191,7 +215,7 @@ fun saveWordCardsIntoMemoWordXlsx(file: Path, words: Iterable<CardWordEntry>) {
     if (sheet.getColumnWidth(remarksCellIndex) > defaultWideColumnWidth)
         sheet.setColumnWidth(remarksCellIndex, defaultWideColumnWidth)
 
-    FileOutputStream(file.toFile()).use { workbook.write(it) }
+    return workbook
 }
 
 
@@ -219,13 +243,13 @@ private val fixedFromConversions: List<Pair<String, String>> = listOf(
     )
     .flatMap { p -> p.first.map { it to p.second }  }
 
-fun minimizeTo(to: String): String {
+fun optimizeToForMemoWord(to: String): String {
     var s = to
     minimizableToConversions.forEach { s = s.replace(it.first, it.second) }
     return s
 }
 
-fun fixFrom(from: String): String {
+fun optimizeFromForMemoWord(from: String): String {
     var s = from
     fixedFromConversions.forEach { s = s.replace(it.first, it.second) }
     return s

@@ -127,6 +127,7 @@ fun isSenseAlmostTheSame(card1: CardWordEntry, card2: CardWordEntry, compareExtr
     return isSourcePositionsAlmostSame && isSourceSentencesAlmostSame
 }
 
+/*
 fun isSenseAlmostTheSame(str1: CharSequence, str2: CharSequence): Boolean {
 
     var i1 = 0
@@ -152,6 +153,78 @@ fun isSenseAlmostTheSame(str1: CharSequence, str2: CharSequence): Boolean {
         when {
             ch1 == ' ' && ch2 == ' ' -> return true
             ch1 != ch2 -> return false
+        }
+    }
+}
+*/
+
+enum class CompareSenseResult {
+    AlmostSame,
+    Better,
+    Worse,
+    Different,
+}
+
+fun isSenseAlmostTheSame(str1: CharSequence, str2: CharSequence): Boolean =
+    doCompareSense(str1, str2) != CompareSenseResult.Different
+fun CharSequence.isSenseBetter(another: CharSequence): CompareSenseResult =
+    doCompareSense(this, another)
+
+private fun doCompareSense(str1: CharSequence, str2: CharSequence): CompareSenseResult {
+
+    var i1 = 0
+    var i2 = 0
+    var ch1: Char
+    var ch2: Char
+    var lowerCh1: Char
+    var lowerCh2: Char
+
+    var count1 = 0
+    var upperCount1 = 0
+    var count2 = 0
+    var upperCount2 = 0
+    //var areEqual = true
+
+    fun Char.toLetterOrSpace(): Char =
+        if (this.isEnglishLetter() || this.isRussianLetter()) this else ' '
+
+    while (true) {
+        ch1 = ' '; lowerCh1 = ' '
+        ch2 = ' '; lowerCh2 = ' '
+
+        while (i1 < str1.length && ch1 == ' ') {
+            ch1 = str1[i1++].toLetterOrSpace()
+            lowerCh1 = ch1.lowercaseChar()
+        }
+
+        while (i2 < str2.length && ch2 == ' ') {
+            ch2 = str2[i2++].toLetterOrSpace()
+            lowerCh2 = ch2.lowercaseChar()
+        }
+
+        if (lowerCh1 != ' ') {
+            count1++
+            if (lowerCh1 != ch1) upperCount1++
+        }
+
+        if (lowerCh2 != ' ') {
+            count2++
+            if (lowerCh2 != ch2) upperCount2++
+        }
+
+        when {
+            lowerCh1 != lowerCh2 ->
+                return CompareSenseResult.Different
+
+            // end of any/both strings
+            ch1 == ' ' && ch2 == ' ' ->
+                return when {
+                    upperCount1 > upperCount2 -> CompareSenseResult.Better
+                    upperCount1 < upperCount2 -> CompareSenseResult.Worse
+                    else -> CompareSenseResult.AlmostSame
+                }
+
+            else -> { }
         }
     }
 }

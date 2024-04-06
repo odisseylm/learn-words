@@ -1,23 +1,30 @@
 package com.mvv.gui.memoword
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.github.mizosoft.methanol.MediaType
+import com.github.mizosoft.methanol.MoreBodyPublishers
 import com.github.mizosoft.methanol.MultipartBodyPublisher
 import com.mvv.gui.cardeditor.MemoSettings
+import com.mvv.gui.cardeditor.actions.CompareSenseResult
+import com.mvv.gui.cardeditor.actions.isSenseBetter
 import com.mvv.gui.cardeditor.memoSettings
 import com.mvv.gui.cardeditor.settings
 import com.mvv.gui.dictionary.getProjectDirectory
-import com.mvv.gui.util.containsOneOf
-import com.mvv.gui.util.isOneOf
+import com.mvv.gui.util.*
+import com.mvv.gui.words.*
 import org.jsoup.nodes.Document
 import java.net.*
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.file.Files
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.Collections.synchronizedList
+import kotlin.io.path.extension
 
 
 private val log = mu.KotlinLogging.logger {}
@@ -37,6 +44,100 @@ class MemoWordSession : AutoCloseable {
     private val memoSettings: MemoSettings by lazy {
         requireNotNull(settings.memoSettings) { "MemoWord settings are not set properly." } }
 
+    private val tempMemoLists: MutableList<MemoList> = synchronizedList(mutableListOf())
+
+    private val systemMemoLists: List<MemoList> by lazy {
+        loginIfNeeded()
+
+        /*
+          {
+            "FullName": "All cards",
+            "CardTypeId": 751,
+            "CardType": "Все карточки",
+            "ListType": "Служебный",
+            "SourceTypeId": 555,
+            "SourceType": "Служебные сеты",
+            "IsDefault": false,
+            "IsActive": true,
+            "CanEdit": false,
+            "CanDelete": false
+          },
+          {
+            "FullName": "I know",
+            "CardTypeId": 752,
+            "CardType": "Уже знаю",
+            "ListType": "Служебный",
+            "SourceTypeId": 555,
+            "SourceType": "Служебные сеты",
+            "IsDefault": false,
+            "IsActive": true,
+            "CanEdit": false,
+            "CanDelete": false
+          },
+          {
+            "FullName": "Difficult",
+            "CardTypeId": 753,
+            "CardType": "Сложно",
+            "ListType": "Служебный",
+            "SourceTypeId": 555,
+            "SourceType": "Служебные сеты",
+            "IsPublic": false,
+            "IsDefault": false,
+            "IsActive": true,
+            "CanEdit": false,
+            "CanDelete": false
+          },
+          {
+            "FullName": "Repeat",
+            "CardTypeId": 754,
+            "CardType": "Повторить",
+            "ListType": "Служебный",
+            "SourceTypeId": 555,
+            "SourceType": "Служебные сеты",
+            "IsDefault": false,
+            "IsActive": true,
+            "CanEdit": false,
+            "CanDelete": false
+          },
+          {
+            "FullName": "My words",
+            "CardTypeId": null,
+            "CardType": null,
+            "ListType": "Служебный",
+            "SourceTypeId": 555,
+            "SourceType": "Служебные сеты",
+            "IsDefault": true,
+            "IsActive": true,
+            "CanEdit": false,
+            "CanDelete": false
+          },
+        */
+
+        downloadMemoLists()
+            .filter {
+                it.ListType == "Служебный" ||
+                //it.CardTypeId.isOneOf(751, 752, 753, 754) ||
+                it.CardTypeId != null ||
+                (!it.CanEdit && !it.CanDelete)
+                //it.CardType == "Все карточки" ||
+                //it.SourceTypeId == 555L ||
+                //it.SourceType == "Служебные сеты" ||
+                //it.FullName.isOneOf("All cards", "I know", "Difficult", "Repeat", ignoreCase = true)
+            }
+    }
+
+    private val allCardMemoList: MemoListEntry by lazy {
+        var allCardsMemoList: MemoList? = systemMemoLists.find {
+            it.CardTypeId == MemoListType.AllCards.id || it.FullName == MemoListType.AllCards.fullName }
+
+        if (allCardsMemoList == null)
+            allCardsMemoList = systemMemoLists.maxByOrNull { it.Qty ?: 0 }
+
+        requireNotNull(allCardsMemoList) { "Error of finding ${MemoListType.AllCards.fullName}." }
+        allCardsMemoList.asMemoListEntry
+    }
+
+
     override fun close() { cookieStore.save() }
 
     fun connect() {
@@ -44,7 +145,7 @@ class MemoWordSession : AutoCloseable {
         loginIfNeeded(true)
     }
 
-    private fun loginIfNeeded(logState: Boolean) {
+    private fun loginIfNeeded(logState: Boolean = false) {
         val loginPageResponse = client.sendGet("https://memowordapp.com/Account/Login?lng=en")
 
         val needToLogin = loginPageResponse.body().containsOneOf(
@@ -60,30 +161,41 @@ class MemoWordSession : AutoCloseable {
             if (logState) log.info("User is already logged in MemoWord site.")
     }
 
-    fun uploadCardSet(cardSetName: String, csvCardSetFile: Path, rewrite: Boolean) {
+    @Suppress("unused")
+    fun uploadMemoList(memoListName: String, xlsxOrCsvMemoListFile: Path, rewrite: Boolean) =
+        uploadMemoList(memoListName, FileSource(xlsxOrCsvMemoListFile), rewrite)
 
-        log.info { "Uploading card set '$cardSetName' from $csvCardSetFile" }
+    @Suppress("SameParameterValue")
+    private fun uploadMemoList(memoListName: String, cards: List<CardWordEntry>, rewrite: Boolean): MemoList {
+        log.info { "uploadMemoList ${cards.debugStr()}" }
+        val memoWordXlsxAsBytes = wordCardsIntoMemoWordXlsx(memoListName, cards)
+        return uploadMemoList(memoListName, BytesSource(memoWordXlsxAsBytes, XlsxMediaType), rewrite)
+    }
+
+    private fun uploadMemoList(memoListName: String, xlsxOrCsvMemoListFile: DataSource, rewrite: Boolean): MemoList {
+
+        log.info { "Uploading card set '$memoListName' from $xlsxOrCsvMemoListFile" }
 
         loginIfNeeded(false)
 
-        val memoLanguageProfileId = memoSettings.languageProfileId
+        val memoLanguageProfileId   = memoSettings.languageProfileId
         val memoLanguageProfileName = memoSettings.languageProfileName
-        val author = "Cheburan"
+        val author                  = memoSettings.author
         val creationDateStr = SimpleDateFormat("dd.MM.yyyy").format(Date())
 
         client.sendGet("https://memowordapp.com/panel/lists/index/$memoLanguageProfileId?lng=en")
 
-        val uploadCardSetFormPageResponse = client.sendGet(
+        val uploadMemoListFormPageResponse = client.sendGet(
             "https://memowordapp.com/Panel/Import/Index/$memoLanguageProfileId?lng=en")
 
-        val formRequestVerificationToken = uploadCardSetFormPageResponse.extractFormRequestVerificationToken()
+        val formRequestVerificationToken = uploadMemoListFormPageResponse.extractFormRequestVerificationToken()
 
         // https://mizosoft.github.io/methanol/multipart_and_forms/#multipart-bodies
-        val multipartBodyPublisher = MultipartBodyPublisher.newBuilder()
+        val multipartBodyPublisherB = MultipartBodyPublisher.newBuilder()
             .textPart("__RequestVerificationToken", formRequestVerificationToken)
             .textPart("LanguageProfileId", memoLanguageProfileId)
             .textPart("LanguageProfileFullName", memoLanguageProfileName)
-            .textPart("MemoListFullName", cardSetName)
+            .textPart("MemoListFullName", memoListName)
             .textPart("MemoListCreateUser", author)
             .textPart("UserFullName", author)
             .textPart("MemoListCreateDate", creationDateStr)
@@ -91,49 +203,54 @@ class MemoWordSession : AutoCloseable {
             .textPart("Note", "")
             .textPart("AdditionalUrl", "")
             .textPart("current_lang", "en-US")
-            .filePart("File", csvCardSetFile, MediaType.parse("text/csv"))
-            .build()
 
-        val uploadCardSetResponse: HttpResponse<String> = client.send(
+        when (xlsxOrCsvMemoListFile) {
+            is FileSource  -> multipartBodyPublisherB.filePart("File", xlsxOrCsvMemoListFile.file, xlsxOrCsvMemoListFile.mediaType)
+            is BytesSource -> multipartBodyPublisherB.filePart("File", xlsxOrCsvMemoListFile.bytes, "${memoListName}.xlsx", xlsxOrCsvMemoListFile.mediaType)
+        }
+
+        val multipartBodyPublisher = multipartBodyPublisherB.build()
+
+        val uploadMemoListResponse: HttpResponse<String> = client.send(
             HttpRequest.newBuilder(URI("https://memowordapp.com/Panel/Import/Index/$memoLanguageProfileId?lng=en"))
                 .header("Content-Type", multipartBodyPublisher.mediaType().toString())
-                .header("Origin", "https://memowordapp.com")
+                .header("Origin",  "https://memowordapp.com")
                 .header("Referer", "https://memowordapp.com/Panel/Import/Index/$memoLanguageProfileId")
                 .POST(multipartBodyPublisher)
                 .build(),
             HttpResponse.BodyHandlers.ofString(),
         )
 
-        val alreadyExists = uploadCardSetResponse.body().containsOneOf("The list with this name already exists")
-        val isError = uploadCardSetResponse.body().containsOneOf(
+        val alreadyExists = uploadMemoListResponse.body().containsOneOf("The list with this name already exists")
+        val isError = uploadMemoListResponse.body().containsOneOf(
             "An error occured processing your request", // 'occured' - now HTML contains mistake :-)
             "An error occurred processing your request",
             "An error occured",
             "An error occurred",
         )
 
-        val uploadCardSetResponseHtml = uploadCardSetResponse.body().parseAsHtml()
-        val fullCardSetName = "$cardSetName - $memoLanguageProfileName"
+        val uploadMemoListResponseHtml = uploadMemoListResponse.body().parseAsHtml()
+        val fullMemoListName = "$memoListName - $memoLanguageProfileName"
 
-        val containsCardSetTextParts = uploadCardSetResponse.body().containsOneOf(
-            "Sets ($fullCardSetName)",
-            ">$fullCardSetName<",
+        val containsMemoListTextParts = uploadMemoListResponse.body().containsOneOf(
+            "Sets ($fullMemoListName)",
+            ">$fullMemoListName<",
             )
-        val containsCardSetHRef =
-            uploadCardSetResponseHtml.containsHRef(id = "aMemoListFullName", innerText = fullCardSetName, ignoreCase = true) ||
-            uploadCardSetResponseHtml.containsHRef(id =  "MemoListFullName", innerText = fullCardSetName, ignoreCase = true)
-        val containsCardSetInput =
-            uploadCardSetResponseHtml.containsInput(name =  "MemoListFullName", value = fullCardSetName, ignoreCase = true) ||
-            uploadCardSetResponseHtml.containsInput(name = "aMemoListFullName", value = fullCardSetName, ignoreCase = true)
+        val containsMemoListHRef =
+            uploadMemoListResponseHtml.containsHRef(id = "aMemoListFullName", innerText = fullMemoListName, ignoreCase = true) ||
+            uploadMemoListResponseHtml.containsHRef(id =  "MemoListFullName", innerText = fullMemoListName, ignoreCase = true)
+        val containsMemoListInput =
+            uploadMemoListResponseHtml.containsInput(name =  "MemoListFullName", value = fullMemoListName, ignoreCase = true) ||
+            uploadMemoListResponseHtml.containsInput(name = "aMemoListFullName", value = fullMemoListName, ignoreCase = true)
 
-        val seemsSuccess = containsCardSetTextParts || containsCardSetHRef || containsCardSetInput
+        val seemsSuccess = containsMemoListTextParts || containsMemoListHRef || containsMemoListInput
 
         /*
-        val seemsSuccess = uploadCardSetResponse.body().containsOneOf(
-            "Sets ($fullCardSetName)",
-            ">$fullCardSetName<",
-            """<a href="#" id="aMemoListFullName" data-type="text" class="editable editable-click" style="display: inline;">$fullCardSetName</a>""",
-            """<input id="MemoListFullName" name="MemoListFullName" type="hidden" value="$fullCardSetName" />""",
+        val seemsSuccess = uploadMemoListResponse.body().containsOneOf(
+            "Sets ($fullMemoListName)",
+            ">$fullMemoListName<",
+            """<a href="#" id="aMemoListFullName" data-type="text" class="editable editable-click" style="display: inline;">$fullMemoListName</a>""",
+            """<input id="MemoListFullName" name="MemoListFullName" type="hidden" value="$fullMemoListName" />""",
             // Ideal HTML should be parsed and <option/> found and verified.
             // <option selected="selected" value="8b1f872c-001d-4f6a-a2c6-0b01ee732572">army3 - Ru-En</option>
         )
@@ -144,91 +261,545 @@ class MemoWordSession : AutoCloseable {
             throw IllegalStateException("Error of upload CSV.")
         }
         else if (alreadyExists)
-            log.info { "Card set '$cardSetName' already exists." }
+            log.info { "Card set '$memoListName' already exists." }
         else if (seemsSuccess)
-            log.info { "Card set '$cardSetName' is uploaded." }
-        else
+            log.info { "Card set '$memoListName' is uploaded." }
+        else {
+            Files.writeString(getProjectDirectory().resolve(".~temp-upload-cards-${System.currentTimeMillis()}.html"), uploadMemoListResponse.body())
             throw IllegalStateException("Unknown upload status.")
+        }
 
         if (alreadyExists && rewrite) {
-            deleteCardSet(cardSetName)
-            uploadCardSet(cardSetName, csvCardSetFile, rewrite = false)
+            deleteMemoList(memoListName)
+            return uploadMemoList(memoListName, xlsxOrCsvMemoListFile, rewrite = false)
         }
+
+        val memoListId =
+            if (alreadyExists) findMemoList(memoListName)?.id
+            else
+                uploadMemoListResponse.uri().toString()
+                    .substringAfterLast("/words/index/", "", ignoreCase = true)
+                    .substringBefore('?')
+
+        if (memoListId.isNullOrBlank())
+            throw IllegalStateException("MemoList '$memoListName' is not found.")
+
+        val memoList = downloadMemoLists().find { it.id == memoListId }
+            ?: throw IllegalStateException("MemoList with ID '$memoListId' is not found.")
+
+        return memoList
     }
 
-    private fun deleteCardSet(cardSetName: String) {
+    private fun deleteMemoList(memoListName: String) {
 
-        log.info { "Removing card set '$cardSetName'" }
+        log.info { "Removing card set '$memoListName'" }
 
-        val cardSet = findCardSetId(cardSetName)
-            ?: throw IllegalStateException("Card Set '$cardSetName' is not found.")
+        val memoList = findMemoListId(memoListName)
+            ?: throw IllegalStateException("MemoList '$memoListName' is not found.")
 
-        deleteCardSet(cardSet)
+        deleteMemoList(memoList)
     }
 
-    fun deleteExistentCardSets(cardSetNames: Iterable<String>) {
+    fun deleteExistentMemoLists(memoListNamesOrIds: Iterable<String>) {
 
-        log.info { "Removing existent card sets of '${cardSetNames}'" }
+        log.info { "Removing existent MemoLists of '${memoListNamesOrIds}'" }
 
-        val cardSetNamesAndFullNamesToDelete = cardSetNames.toSet() +
-                cardSetNames.map { "$it - ${memoSettings.languageProfileName}" }
+        val memoListNamesAndFullNamesToDelete = memoListNamesOrIds.toSet() +
+                memoListNamesOrIds.map { "$it - ${memoSettings.languageProfileName}" }
 
-        val allCardSets = getCardSets()
+        val allMemoLists = downloadMemoLists()
 
-        val existent = allCardSets.filter { cardSetNamesAndFullNamesToDelete.contains(it.FullName) }
+        val existent = allMemoLists.filter { memoListNamesAndFullNamesToDelete.containsOneOf(it.FullName, it.id) }
+        log.info { "Existent MemoLists to remove ${existent.map { it.FullName + " / " + it.id }}" }
 
         existent.forEach {
-            deleteCardSet(it)
+            deleteMemoList(it)
         }
     }
 
-    private fun deleteCardSet(cardSet: MemoCardSetInfo) {
-        require(cardSet.CanDelete) { "Card set '${cardSet.FullName}' / ${cardSet.MemoListId} is not deletable." }
+    // There is no PUT, DELETE and PATCH because we do not need it now.
+    enum class Method { GET, POST }
 
-        val deleteCardSetResponse: HttpResponse<String> = client.send(
-            HttpRequest.newBuilder()
-                .uri(URI("https://memowordapp.com/Panel/Lists/RemoveList"))
-                .header("Content-Type", "application/json; charset=utf-8")
-                .header("Origin", "https://memowordapp.com")
-                .header("Referer", "https://memowordapp.com/panel/lists/index/${memoSettings.languageProfileId}")
-                .POST(HttpRequest.BodyPublishers.ofString(""" {"id":"${cardSet.MemoListId}"} """))
+    private inline fun <reified R> doJsonRequest(
+        uri: URI,
+        method: Method = Method.GET,
+        request: Any? = null,
+        additionalHeaders: Map<String, String>? = null,
+        sendNulls: Boolean = false,
+        verifyLogin: Boolean = false,
+    ): R = doJsonRequestImpl(
+        uri, method, request, null,
+        object : TypeReference<R>() {},
+        additionalHeaders, sendNulls, verifyLogin,
+    )
+
+    private fun <R> doJsonRequestImpl(
+        uri: URI,
+        method: Method,
+        request: Any?,
+        @Suppress("SameParameterValue")
+        responseType: Class<R>?,
+        responseTypeRef: TypeReference<R>?,
+        additionalHeaders: Map<String, String>? = null,
+        sendNulls: Boolean = false,
+        verifyLogin: Boolean = false,
+        ): R {
+
+        if (method == Method.GET)  require(request == null) { "GET cannot have request." }
+        if (method == Method.POST) require(request != null) { "POST must have request."  }
+
+        if (verifyLogin) loginIfNeeded()
+
+        val requestObjectMapper = createDefaultObjectMapper().also {
+            if (!sendNulls) it.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        }
+        val responseObjectMapper = createDefaultObjectMapper().also {
+            it.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
+
+        val requestString = if (request != null) requestObjectMapper.writeValueAsString(request) else null
+
+        log.info { "Requesting $uri" }
+
+        val httpRequest = HttpRequest.newBuilder()
+            .uri(uri)
+            .header("Content-Type", "application/json; charset=utf-8")
+            .header("Origin",  "https://memowordapp.com")
+            .header("Referer", "https://memowordapp.com/panel/lists/index/${memoSettings.languageProfileId}")
+
+        additionalHeaders?.forEach { (k, v) -> httpRequest.header(k, v) }
+
+        if (method == Method.POST) {
+            log.info { "Sending request $requestString" }
+            httpRequest.POST(HttpRequest.BodyPublishers.ofString(requestString))
+        }
+
+        val response: HttpResponse<String> = client.send(
+            httpRequest.build(),
+            HttpResponse.BodyHandlers.ofString(),
+        )
+
+        val success = response.statusCode().isOneOf(200, 201)
+        if (!success) {
+            log.error { "Request failed with ${response.statusCode()}" }
+            throw IllegalStateException("Error of executing $uri (response status ${response.statusCode()}).")
+        }
+
+        val responseStr = response.body()
+
+        @Suppress("UNCHECKED_CAST")
+        return when {
+            responseType == String::class.java || responseTypeRef?.type == String::class.java
+                -> responseStr as R
+            responseType == Unit::class.java || responseTypeRef?.type == Unit::class.java
+                -> Unit as R
+
+            responseType != null
+                -> responseObjectMapper.readValue(responseStr, responseType)
+            responseTypeRef != null
+                -> responseObjectMapper.readValue(responseStr, responseTypeRef)
+
+            else -> throw IllegalStateException("responseType/responseTypeRef is missed.")
+        }
+    }
+
+    private fun deleteMemoList(memoList: MemoList) {
+        require(memoList.CanDelete) { "MemoList '${memoList.FullName}' / ${memoList.id} is not deletable." }
+
+        doJsonRequest<String>(
+            uri     = URI("https://memowordapp.com/Panel/Lists/RemoveList"),
+            method  = Method.POST,
+            request = mapOf("id" to memoList.id),
+        )
+    }
+
+    private fun findMemoListId(memoListName: String): MemoList? {
+        val extMemoListName = "$memoListName - ${memoSettings.languageProfileName}"
+        val memoLists = downloadMemoLists()
+
+        val memoList = memoLists.find { it.FullName.isOneOf(memoListName, extMemoListName) }
+        return memoList
+    }
+
+    private fun downloadMemoLists(): List<MemoList> {
+        val languageProfileId = memoSettings.languageProfileId
+
+        val allMemoLists = doJsonRequest<List<MemoList>>(
+            URI("https://memowordapp.com/panel/lists/GetMemoLists/$languageProfileId?lng=en"))
+        val memoLists = allMemoLists.filter { it.LanguageProfileId == languageProfileId } // filter to make sure
+        return memoLists
+    }
+
+    private fun findMemoList(memoListIdOrName: String): MemoList? {
+        val memoLists = downloadMemoLists()
+
+        val fullMemoListName = "$memoListIdOrName - ${memoSettings.languageProfileName}"
+
+        val memoList = memoLists.find { it.id == memoListIdOrName }
+            ?: memoLists.find { it.FullName == memoListIdOrName }
+            ?: memoLists.find { it.FullName == fullMemoListName }
+
+        return memoList
+    }
+
+    private fun insertNewCards(cards: List<CardWordEntry>, memoList: MemoList) =
+        cards.forEach { insertNewCard(it, memoList) }
+
+    private fun insertNewCard(card: CardWordEntry, memoList: MemoList) {
+
+        // https://memowordapp.com/Panel/Card/Create/2530c8c0-e032-45bc-9368-9bf8093c4713
+        // https://memowordapp.com/Panel/Card/Save
+        // content-type: application/json; charset=utf-8
+        // {
+        //  "MemoCardId":"",
+        //  "MemoListId":"2530c8c0-e032-45bc-9368-9bf8093c4713",
+        //  "MemoListIds":["2530c8c0-e032-45bc-9368-9bf8093c4713"],
+        //  "TextFrom":"привет 88",
+        //  "TextTo":"Hello 55",
+        //  "Note":"",
+        //  "MemoCardPartOfSpeechId":"20",
+        //  "SelectedMemoList":"57e26534-68d7-4498-9a27-026997b5da79"
+        // }
+        //
+        // Response
+        // {"Redirect":"/Panel/Words/Index/2530c8c0-e032-45bc-9368-9bf8093c4713"}
+
+        val request = MemoWordInsertUpdateCardRequest(
+                MemoCardId  = "",
+                MemoListId  = memoList.id,
+                MemoListIds = listOf(memoList.id),
+                TextFrom    = "",
+                TextTo      = "",
+                Note        = card.memoCardNote,
+                MemoCardPartOfSpeechId = (card.partOfSpeech ?: guessPartOfSpeech(card.from)).asMemo.toString(),
+                SelectedMemoList = null,
+            )
+            .withText(memoList, Language.English, card.fromInMemoWordFormat)
+            .withText(memoList, Language.Russian, card.toInMemoWordFormat)
+
+        doJsonRequest<Map<String, String>>(
+            uri     = URI("https://memowordapp.com/Panel/Card/Save"),
+            method  = Method.POST,
+            request = request,
+        )
+    }
+
+    private fun moveCardsToRecycleMemoList(cards: List<MemoCard>, fromList: MemoList): MemoList {
+        val tempMemoList: MemoList = createMemoList("temp-${System.currentTimeMillis()}")
+        moveCardsToMemoList(cards, fromList, tempMemoList)
+        return tempMemoList
+    }
+
+    private fun createMemoList(memoListName: String): MemoList {
+
+        // Form
+        // multipart/form-data; boundary=---------------------------40482128124172102556501603362
+        // "SourceType"         WebSite
+        // "LanguageProfileId"  665ebd51-66cb-43d7-9ad0-ee3f0b489710
+        // "LanguageFrom"       68
+        // "LanguageTo"         4
+        // "FullName"           test 04
+        // "Author"             Cheburan
+        // "Description"        notes
+        //  Initial page https://memowordapp.com/Panel/Lists/Create/665ebd51-66cb-43d7-9ad0-ee3f0b489710
+
+        log.info { "Creating card set '$memoListName'" }
+
+        //loginIfNeeded()
+
+        val memoLanguageProfileId = memoSettings.languageProfileId
+
+        //val uploadMemoListFormPageResponse = client.sendGet(
+        //    "https://memowordapp.com/Panel/Import/Index/$memoLanguageProfileId?lng=en")
+        //
+        //val formRequestVerificationToken = uploadMemoListFormPageResponse.extractFormRequestVerificationToken()
+
+        // https://mizosoft.github.io/methanol/multipart_and_forms/#multipart-bodies
+        val multipartBodyPublisher = MultipartBodyPublisher.newBuilder()
+            //.textPart("__RequestVerificationToken", formRequestVerificationToken)
+            .textPart("SourceType", "WebSite")
+            .textPart("LanguageProfileId", memoLanguageProfileId)
+            .textPart("LanguageFrom", MemoLanguage.English.id)
+            .textPart("LanguageTo", MemoLanguage.Russian.id)
+            .textPart("FullName", memoListName)
+            .textPart("Author", memoSettings.author)
+            .textPart("Description", "")
+            .build()
+
+        val createMemoListResponse: HttpResponse<String> = client.send(
+            HttpRequest.newBuilder(URI("https://memowordapp.com/Panel/Lists/Create/$memoLanguageProfileId"))
+                .header("Content-Type", multipartBodyPublisher.mediaType().toString())
+                .header("Origin",  "https://memowordapp.com")
+                .header("Referer", "https://memowordapp.com/Panel/Lists/Create/$memoLanguageProfileId")
+                .POST(multipartBodyPublisher)
                 .build(),
             HttpResponse.BodyHandlers.ofString(),
         )
 
-        val isDeleted = deleteCardSetResponse.statusCode().isOneOf(200, 201)
-        if (!isDeleted)
-            throw IllegalStateException("Error of deleting MemoWord card set '${cardSet.FullName}' / ${cardSet.MemoListId}.")
-    }
-
-    private fun findCardSetId(cardSetName: String): MemoCardSetInfo? {
-        val cardSets = getCardSets()
-
-        val cardSet = cardSets.find {
-            ( it.FullName == cardSetName || it.FullName == "$cardSetName - ${memoSettings.languageProfileName}" ) }
-
-        return cardSet
-    }
-
-    private fun getCardSets(): List<MemoCardSetInfo> {
-        // https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710
-        // https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710?sort=UpdateDate&order=desc&offset=0&limit=100
-
-        val languageProfileId = memoSettings.languageProfileId
-
-        val objectMapper = createDefaultObjectMapper().also {
-            it.registerModule(KotlinModule.Builder().build())
-            it.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        }
-
-        val cardSetsResponse: HttpResponse<List<MemoCardSetInfo>> = client.sendJsonGet(
-            "https://memowordapp.com/panel/lists/GetMemoLists/$languageProfileId?lng=en",
-            objectMapper
+        // !!! Upload fails with 'already exists' but you can create duplicated empty MemoList
+        val alreadyExists = createMemoListResponse.body().containsOneOf("The list with this name already exists")
+        // And seems error never happens
+        val isError = createMemoListResponse.body().containsOneOf(
+            "An error occured processing your request", // 'occured' - now HTML contains mistake :-)
+            "An error occurred processing your request",
+            "An error occured",
+            "An error occurred",
         )
 
-        val allCardSets = cardSetsResponse.body()
-        val cardSets = allCardSets.filter { it.LanguageProfileId == languageProfileId }
-        return cardSets
+        //val seemsSuccess = containsMemoListTextParts || containsMemoListHRef || containsMemoListInput
+
+        // ?? https://memowordapp.com/panel/words/index/66b1e2db-4c87-4fa6-8a9b-5b1b3a500642
+        // ??
+        // https://memowordapp.com/Panel/Lists/Create/665ebd51-66cb-43d7-9ad0-ee3f0b489710
+        // https://memowordapp.com/Panel/Words/index/2530c8c0-e032-45bc-9368-9bf8093c4713
+
+        val memoListId = createMemoListResponse.uri().toString()
+            .substringAfterLast("/words/index/", "", ignoreCase = true)
+            .substringBefore('?')
+
+        if (isError) {
+            log.info { "Error" }
+            throw IllegalStateException("Error of upload CSV.")
+        }
+        else if (alreadyExists)
+            log.info { "Card set '$memoListName' already exists." }
+        else if (memoListId.isBlank())
+            throw IllegalStateException("Error of extracting created MemoListId.")
+        //else if (seemsSuccess)
+        //    log.info { "Card set '$memoListName' is uploaded." }
+        //else
+        //    throw IllegalStateException("Unknown upload status.")
+
+        val memoList = downloadMemoLists().find { it.id == memoListId }
+            ?: throw IllegalStateException("MemoList with ID '$memoListId'.")
+
+        return memoList
+    }
+
+    private fun removeCardsFromMemoList(cards: List<MemoCard>, memoList: MemoList) =
+        cards.doIfNotEmpty {
+            // https://memowordapp.com/Panel/Words/RemoveWordsFromList
+            // {"MemoListId":"b7d6bed0-e1dd-47d0-8a72-180d9b9ff349","MemoCardIds":["0c78e519-fc46-4477-bca1-f1fa0d6bc638"]}
+            doJsonRequest<String>(
+                uri     = URI("https://memowordapp.com/Panel/Words/RemoveWordsFromList"),
+                method  = Method.POST,
+                request = CardsForMemoListRequest(MemoListId = memoList.id, MemoCardIds = cards.map { it.id })
+            )
+        }
+
+    private fun moveCardsToMemoList(cards: List<MemoCard>, fromMemoList: MemoList, toMemoList: MemoList) =
+        cards.doIfNotEmpty {
+            addCardsToMemoList(cards, toMemoList)
+            removeCardsFromMemoList(cards, fromMemoList)
+        }
+
+    private fun addCardsToMemoList(cards: List<MemoCard>, memoList: MemoList) = cards.doIfNotEmpty {
+        // {"MemoListId":"1614e343-21ae-4379-a0a1-3c103b530e7e","MemoCardIds":["5a05c72f-fc57-4497-9812-02ea32181e6b"]}
+        doJsonRequest<String>(
+            uri     = URI("https://memowordapp.com/Panel/Words/MoveWordsToList"),
+            method  = Method.POST,
+            request = CardsForMemoListRequest(MemoListId = memoList.id, MemoCardIds = cards.map { it.id })
+        )
+    }
+
+    internal fun saveMemoList(file: Path) {
+        val cards = loadWordCards(file)
+        saveMemoList(file.baseWordsFilename, cards)
+    }
+
+    private fun saveMemoList(memoListName: String, cards: List<CardWordEntry>) {
+
+        log.info { "saveMemoList ( $memoListName ${cards.size}" }
+
+        val cardsMap = cards
+            .flatMap { card -> card.possibleMemoFroms().map { Pair(it, card) } }
+            .associate { it }
+
+        val existentMemoList = findMemoList(memoListName)
+
+        val allMemoCards: List<MemoCard> = downloadAllMemoCards()
+        log.info { "allMemoCards: ${allMemoCards.size}" }
+
+        val currentMemoCards = if (existentMemoList == null) emptyList()
+                               else downloadMemoCards(existentMemoList.asMemoListEntry)
+        log.info { "currentMemoCards: ${currentMemoCards.debugMStr()}" }
+
+        val currentMemoCardsMap = currentMemoCards.associateBy { it.text(Language.English) }
+
+        val toRemoveFromMemoList: List<MemoCard> = currentMemoCards.filterNot { it.text(Language.English) in cardsMap }
+        log.info { "toRemoveFromMemoList: ${toRemoveFromMemoList.debugMStr()}" }
+
+        val memoWordFroms = allMemoCards.map { it.text(Language.English) }.toSet()
+        val toInsertNewToMemoList: List<CardWordEntry> = cards
+            .filterNot { currentMemoCardsMap.containsOneOfKeys(it.possibleMemoFroms())  }
+            .filterNot {
+                // T O D O: avoid calling possibleMemoFroms(), try to reuse cardsMap
+                memoWordFroms.containsOneOf(it.possibleMemoFroms())
+            }
+            .distinctBy { it.from }
+        log.info { "toInsertNewToMemoList: ${toInsertNewToMemoList.debugStr()}" }
+
+        val existentMemoCardEntries = findExistentMemoCardsFor(cards, allMemoCards)
+        log.info { "existentMemoCardEntries: ${existentMemoCardEntries.debugPStr()}" }
+
+        val toAddExistentToMemoList: List<MemoCard> = allMemoCards
+            .filter { it.text(Language.English) in cardsMap }
+            .distinctBy { it.text(Language.English) }
+            .filter { existentMemoList == null || !it.belongsToMemoList(existentMemoList) }
+        log.info { "toAddExistentToMemoList: ${toAddExistentToMemoList.debugMStr()}" }
+
+        val toUpdate = toUpdateChangedCards(existentMemoCardEntries)
+        log.info { "toUpdate: ${toUpdate.debugPStr()}" }
+
+        var tempListId: MemoList? = null
+
+        val memoListId: MemoList = if (existentMemoList == null) {
+            if (toInsertNewToMemoList.isNotEmpty())
+                uploadMemoList(memoListName, toInsertNewToMemoList, rewrite = false)
+            else
+                createMemoList(memoListName)
+
+            findMemoList(memoListName)
+                ?: throw IllegalStateException("Created MemoList [$memoListName] is not found.")
+        }
+        else {
+            if (toRemoveFromMemoList.isNotEmpty())
+                tempListId = moveCardsToRecycleMemoList(toRemoveFromMemoList, existentMemoList)
+
+            insertNewCards(toInsertNewToMemoList, existentMemoList)
+            existentMemoList
+        }
+
+        addCardsToMemoList(toAddExistentToMemoList, memoListId)
+
+        doUpdateMemoCards(toUpdate)
+
+        if (tempListId != null)
+            tempMemoLists.add(tempListId)
+    }
+
+    fun deleteTempMemoLists() {
+        val memoLists = tempMemoLists.toTypedArray()
+        deleteExistentMemoLists(memoLists.map { it.id })
+        this.tempMemoLists.removeAll(memoLists.toList())
+    }
+
+    private fun findExistentMemoCardsFor(
+        cards: List<CardWordEntry>,
+        allMemoCards: List<MemoCard>,
+        ): List<Pair<MemoCard, CardWordEntry>> {
+
+        val duplicatedFrom = cards.groupBy { it.from }
+            .entries.filter { it.value.size > 1 }
+            .map { it.key }
+
+        if (duplicatedFrom.isNotEmpty())
+            throw IllegalArgumentException(
+                "Impossible to synchronize/update MemoWord cards. There duplicates $duplicatedFrom. Please remove/merge them.")
+
+        val cardsMap = cards
+            .flatMap { card -> card.possibleMemoFroms().map { Pair(it, card) } }
+            .associate { it }
+
+        //val allMemoCards: List<MemoCard> = downloadAllMemoCards()
+        val allMemoCardsMap: Map<String, MemoCard> = allMemoCards.associateBy { it.text(Language.English) }
+
+        val existentMemoCards = cardsMap
+            .map { (from, card) ->
+                val existentMemoCard = allMemoCardsMap[from]
+                if (existentMemoCard == null) null else Pair(existentMemoCard, card)
+            }
+            .filterNotNull()
+
+        val notExistent = (cards - existentMemoCards.map { it.second }.toSet()).sortedBy { it.from }
+        log.info { "notExistent  ${notExistent.debugStr()}" }
+
+        return existentMemoCards
+    }
+
+    // return updated ones
+    private fun toUpdateChangedCards(cards: List<Pair<MemoCard, CardWordEntry>>) = cards
+        .mapNotNull { entry ->
+            val (memoCard, card) = entry
+
+            val memoCardIsUpdatedAt = memoCard.lastUpdatedAt
+            requireNotNull(memoCardIsUpdatedAt) { "MemoCard ${memoCard.id} has no updatedAt info." }
+
+            val cardIsUpdatedAt = card.lastUpdatedAt
+            val toUpdate: Boolean =
+                if (cardIsUpdatedAt != null)
+                    (cardIsUpdatedAt.toInstant() > memoCardIsUpdatedAt)
+                else {
+                    card.isBetterThan(memoCard)
+                }
+
+            if (toUpdate) entry else null
+        }
+
+    private fun doUpdateMemoCards(memoCards: List<Pair<MemoCard, CardWordEntry>>) {
+
+        val changedMemoCards = memoCards.map {
+            it.first.updateFrom(it.second)
+        }
+
+        this.loginIfNeeded()
+        changedMemoCards.forEach {
+            doUpdateMemoCard(it)
+        }
+    }
+
+
+    private fun doUpdateMemoCard(card: MemoCard) {
+
+        val updateRequestObj = MemoWordInsertUpdateCardRequest(
+            MemoCardId  = card.id,
+            MemoListId  = card.OthersLists!!.first().id,
+            MemoListIds = card.OthersLists.map { it.id },
+            TextFrom    = card.TextFrom!!,
+            TextTo      = card.TextTo!!,
+            Note        = card.Note!!,
+            MemoCardPartOfSpeechId = card.PartOfSpeechId!!.toString(),
+            SelectedMemoList = null,
+        )
+
+        log.info { "doUpdateMemoCard request: $updateRequestObj" }
+
+        // Possible response: {"Redirect":"/Panel/Words/Index/b7d6bed0-e1dd-47d0-8a72-180d9b9ff349"}
+
+        val resp = doJsonRequest<Map<String, Any>>(
+            uri     = URI("https://memowordapp.com/Panel/Card/Save"),
+            method  = Method.POST,
+            request = updateRequestObj,
+            additionalHeaders = mapOf("X-Requested-With" to "XMLHttpRequest")
+        )
+
+        println("### Response: $resp")
+    }
+
+    private fun downloadAllMemoCards(): List<MemoCard> {
+        loginIfNeeded()
+        return downloadMemoCards(allCardMemoList)
+    }
+
+    /*
+    private fun downloadMemoCards(memoListIdOrName: String): List<MemoCard> {
+        val memoList = findMemoList(memoListIdOrName)
+            ?: throw IllegalStateException("MemoList [$memoListIdOrName] is not found.")
+        return downloadMemoCardsByMemoListId(memoList.asMemoListEntry)
+    }
+    */
+
+    private fun downloadMemoCards(memoList: MemoListEntry): List<MemoCard> {
+        loginIfNeeded()
+
+        // !!! offset & limit do NOT work at all !!!
+        // https://memowordapp.com/panel/words/GetMemoWords/b7760ca3-56e9-44e7-8047-6427fc22b4ac
+
+        val allCards = doJsonRequest<List<MemoCard>>(
+            URI("https://memowordapp.com/panel/words/GetMemoWords/${memoList.id}"))
+
+        return allCards.map { it.copy(OthersLists =
+            (it.OthersLists ?: emptyList()) + memoList) }
     }
 
     private fun loginToMemoWord() {
@@ -245,10 +816,9 @@ class MemoWordSession : AutoCloseable {
             HttpRequest.newBuilder()
                 .uri(URI("https://memowordapp.com/Account/Login"))
                 .header("Content-Type", "application/x-www-form-urlencoded")
-                .header("Origin", "https://memowordapp.com")
-                .header("Referer", "https://memowordapp.com/Account/Login?lng=en")
+                .header("Origin",     "https://memowordapp.com")
+                .header("Referer",    "https://memowordapp.com/Account/Login?lng=en")
                 .header("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0")
-                //.header("Sec-Fetch-Site", "same-origin")
                 .POST(ofFormData(mapOf(
                     "__RequestVerificationToken" to formRequestVerificationToken,
                     "Login" to email,
@@ -286,172 +856,134 @@ private fun HttpResponse<String>.extractFormRequestVerificationToken(): String {
 }
 
 
-@Suppress("PropertyName")
-internal data class MemoCardSetInfo (
-    val MemoListId: String,        // "57e26534-68d7-4498-9a27-026997b5da79"
-    val LanguageProfileId: String, // "665ebd51-66cb-43d7-9ad0-ee3f0b489710"
-    val LanguageProfile: String?,  // "Ru-En"
+private fun CardWordEntry.isBetterThan(memoCard: MemoCard): Boolean {
+    val translation1 = this.to
+    val translation2 = memoCard.text(Language.Russian)
 
-    val FullName: String?,  // "My words"    "army2 - Ru-En"
-    val Note: String?,      // "Your first set for the cards you created"
-    val Author: String?,    // "Cheburan"
-    val ListType: String?,  // "Служебный"
+    return when {
+        translation1.isNotBlank() && translation2.isBlank()    -> false
+        translation1.isBlank()    && translation2.isNotBlank() -> true
+        else -> translation1.isSenseBetter(translation2) == CompareSenseResult.Better
+    }
+}
 
-    val IsActive: Boolean?, // true
-    val CanDelete: Boolean,
+private fun CardWordEntry.possibleMemoFroms(): Collection<String> {
+    val from = this.from
+    val memoWordFrom = optimizeFromForMemoWord(from)
+    val csvMemoWordFrom = formatWordOrPhraseToCsvMemoWordFormat(memoWordFrom)
 
-    //val LanguageFromId: Long?, // 68
-    //val LanguageFrom: String?, // "русский"
-    //val LanguageToId: Long?,   // 4
-    //val LanguageTo: String?,   // "английский"
+    return aFewValues(from, memoWordFrom, csvMemoWordFrom)
+}
 
-    //val CardTypeId: Any?,      // null
-    //val CardType: Any?,        // null
-    //val LearnTypeId: Long?,    // 701
-    //val LearnType: String?,    // "Учу"
-    //val SourceTypeId: Long?,   // 555
-    //val SourceType: String?,   // "Служебные сеты"
-    //val ProductId: Any?,       // null
-    //val IsPaid: Boolean?,      // false
-    //val IsPublic: Boolean?,    // false
-    //val IsDefault: Boolean?,   // true
-    //val InsertDate: String?,   // "/Date(1691696098994)/"
-    //val UpdateDate: String?,   // "/Date(1694104076757)/"
-    //val Qty: Long?,            // 3
-    //val AccessEmails: Any?,    // null
-    //val OriginalListId: Any?,  // null
-    //val OriginalListProductId: Any?, // null
-    //val AuthorId: Long?,       // 422205
-    //val PartnerId: Any?,       // null
-    //val CanEdit: Boolean,      // false
-    //val Courses: String?,      // ""
-    //val CanDelete: Boolean?,   // false
-)
+// small optimization
+private fun aFewValues(v1: String, v2: String, v3: String): Collection<String> = when {
+    v1 == v2 && v2 == v3 -> Collections.singleton(v1)
+    v2 == v3 -> listOf(v1, v2)
+    else -> setOf(v1, v2, v3)
+}
+
+sealed interface DataSource {
+    val mediaType: MediaType
+}
+
+private val CsvMediaType = MediaType.parse("text/csv")
+private val XlsxMediaType = MediaType.parse("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+class FileSource(val file: Path, private val fileMediaType: MediaType? = null) : DataSource {
+    override fun toString(): String = "DataSource { $file }"
+    override val mediaType: MediaType get() = fileMediaType ?: when (file.extension) {
+        "csv"  -> CsvMediaType
+        "xlsx" -> XlsxMediaType
+        else   -> throw IllegalArgumentException("Error of determine MediaType for $file.")
+    }
+}
+class BytesSource(val bytes: ByteArray, override val mediaType: MediaType) : DataSource {
+    override fun toString(): String = "DataSource { ${bytes.size}, $mediaType }"
+}
+
+
+fun MultipartBodyPublisher.Builder.filePart(name: String, bytes: ByteArray, filename: String, mediaType: MediaType): MultipartBodyPublisher.Builder {
+    val publisher = MoreBodyPublishers.ofMediaType(HttpRequest.BodyPublishers.ofByteArray(bytes), mediaType)
+    return this.formPart(name, filename, publisher)
+}
+
+
+//private fun String.debugStr(): String = this.safeSubstring(0, 15)
+private fun String.debugStr(): String = this
+private fun <T> List<T>.safeSubList(fromIndex: Int, toIndex: Int) =
+    if (toIndex < this.size) this.subList(fromIndex, toIndex) else this
+
+private fun List<CardWordEntry>.debugStr(): String {
+    val s = StringBuilder()
+    s.append(this.size).append("\n")
+    //this.forEach { s.append("    ").append(it.from.debugStr()).append("\n") }
+    this.safeSubList(0, 2).forEach { s.append("    ").append(it.from.debugStr()).append("\n") }
+    s.append("    ...\n")
+    return s.toString()
+}
+private fun List<MemoCard>.debugMStr(): String {
+    val s = StringBuilder()
+    s.append(this.size).append("\n")
+    //this.forEach { s.append("    ").append(it.text(Language.English).debugStr()).append("\n") }
+    this.safeSubList(0, 2).forEach { s.append("    ").append(it.text(Language.English).debugStr()).append("\n") }
+    s.append("    ...\n")
+    return s.toString()
+}
+private fun List<Pair<MemoCard, CardWordEntry>>.debugPStr(): String =
+    this.map { it.second }.debugStr()
 
 
 fun main() {
     MemoWordSession().use {
         it.connect()
-        it.uploadCardSet(
-            "army3",
-            Path.of("/home/vmelnykov/english/words/grouped/army-RuEn-MemoWord.csv"),
-            rewrite = true
-        )
+        //it.uploadMemoList(
+        //    "army3",
+        //    Path.of("/home/vmelnykov/english/words/grouped/army-RuEn-MemoWord.csv"),
+        //    rewrite = true
+        //)
+        //it.updateExistentCards(listOf(
+        //    cardWordEntry {
+        //        from = "hello"
+        //        to = "привет пока"
+        //        updatedAt = ZonedDateTime.now()
+        //    }
+        //))
+
+        //it.saveMemoList(
+        //    "army3",
+        //    loadWordCards(Path.of("/home/vmelnykov/english/words/grouped/army.csv")),
+        //)
+
+        //it.deleteMemoList(MemoList.byId("temp", "temp"))
+        it.deleteExistentMemoLists(listOf("temp"))
+
+        //it.uploadMemoList(
+        //    "army3",
+        //    Path.of("/home/vmelnykov/english/words/grouped/_MemoWord/army/army - RuEn-MemoWord.xlsx"),
+        //    rewrite = true
+        //)
+        //it.uploadMemoList(
+        //    "army3",
+        //    BytesSource(
+        //        Files.readAllBytes(Path.of("/home/vmelnykov/english/words/grouped/_MemoWord/army/army - RuEn-MemoWord.xlsx")),
+        //        XlsxMediaType),
+        //    rewrite = true
+        //)
+        //it.uploadMemoList(
+        //    "army3",
+        //    listOf(
+        //        cardWordEntry {
+        //            from = "hello"
+        //            to = "привет пока"
+        //            updatedAt = ZonedDateTime.now()
+        //        }
+        //    ),
+        //    rewrite = true
+        //)
+        //it.uploadMemoList(
+        //    "army3",
+        //    loadWordCards(Path.of("/home/vmelnykov/english/words/grouped/army.csv")),
+        //    rewrite = true
+        //)
     }
 }
-
-
-/*
-
-Get Card Sets (Memo Lists)
-https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710?sort=UpdateDate&order=desc&offset=0&limit=100
-https://memowordapp.com/panel/lists/GetMemoLists/665ebd51-66cb-43d7-9ad0-ee3f0b489710
-
-Get  ALL cards
-https://memowordapp.com/panel/words/GetMemoWords/b7760ca3-56e9-44e7-8047-6427fc22b4ac?order=asc&offset=0&limit=100
-https://memowordapp.com/panel/words/GetMemoWords/b7760ca3-56e9-44e7-8047-6427fc22b4ac
-
-Already learned (I know)
-https://memowordapp.com/panel/words/GetMemoWords/685e3f2b-00f8-4484-ab97-a216c589e5ed?order=asc&offset=0&limit=100
-https://memowordapp.com/panel/words/GetMemoWords/685e3f2b-00f8-4484-ab97-a216c589e5ed
-
-Download CardSet in Excel format
-https://memowordapp.com/Panel/words/Download?listId=b7d6bed0-e1dd-47d0-8a72-180d9b9ff349
-
-
-Modify card
-https://memowordapp.com/Panel/Card/Save ??
-
-<form action="/Panel/Card/Save" id="cardForm" method="post">
-<input id="MemoListId" name="MemoListId" type="hidden" value="b7d6bed0-e1dd-47d0-8a72-180d9b9ff349" />
-<input id="MemoCardId" name="MemoCardId" type="hidden" value="c107b2df-3abf-412e-804b-bc1ef49f3731" />
-<textarea id="textFrom" name="TextFrom" />
-<textarea id="textTo" name="TextTo" />
-<select class="form-control" id="memoLists" name="SelectedMemoList" style="width: 300px;">
-...
-</select>
-<input type="submit" id="saveCard" class="btn btn-default" value="Сохранить" />
-
-?? It is ent as json ??
-Headers
-  "name": "X-Requested-With",  "value": "XMLHttpRequest"
-
-"postData": {
-"mimeType": "application/json; charset=utf-8",
-"params": [],
-"text": '{
-  "MemoCardId":"0c78e519-fc46-4477-bca1-f1fa0d6bc638",
-  "MemoListId":"b7d6bed0-e1dd-47d0-8a72-180d9b9ff349",
-  "MemoListIds":["b7d6bed0-e1dd-47d0-8a72-180d9b9ff349","b7760ca3-56e9-44e7-8047-6427fc22b4ac"],
-  "MemoCardPartOfSpeechId":"7",
-  "Note":"",
-  "TextFrom":"привет 55",
-  "TextTo":"hello",
-  "SelectedMemoList":"771d766d-96db-46d0-9db8-048330e054c6"
-  }'
-}
-Answer
-"content": {
-"size": 70,
-"text": '{"Redirect":"/Panel/Words/Index/b7d6bed0-e1dd-47d0-8a72-180d9b9ff349"}'
-},
-
-Insert card JSON
-https://memowordapp.com/Panel/Card/Save
-{
-"MemoCardId":"",
-"MemoListId":"b7d6bed0-e1dd-47d0-8a72-180d9b9ff349",
-"MemoListIds":["b7d6bed0-e1dd-47d0-8a72-180d9b9ff349","57e26534-68d7-4498-9a27-026997b5da79"],
-"MemoCardPartOfSpeechId":"7",
-"Note":"",
-"TextFrom":"привет",
-"TextTo":"hello",
-"SelectedMemoList":"771d766d-96db-46d0-9db8-048330e054c6"
-}
-
-https://memowordapp.com/panel/words/GetMemoWords/b7d6bed0-e1dd-47d0-8a72-180d9b9ff349?order=asc&offset=0&limit=100
-
-
-Get CardSets for specific card
-https://memowordapp.com/panel/card/GetMemoCardLists/c107b2df-3abf-412e-804b-bc1ef49f3731?order=asc
-
-
-RemoveWordsFromList
-https://memowordapp.com/Panel/Words/RemoveWordsFromList
-{"MemoListId":"b7d6bed0-e1dd-47d0-8a72-180d9b9ff349","MemoCardIds":["0c78e519-fc46-4477-bca1-f1fa0d6bc638"]}
-
-
-MoveWordsToList (really it does NOT move, it adds)
-https://memowordapp.com/Panel/Words/MoveWordsToList
-{"MemoListId":"1614e343-21ae-4379-a0a1-3c103b530e7e","MemoCardIds":["5a05c72f-fc57-4497-9812-02ea32181e6b"]}
-
-
-
-Card
-{
-  "MemoCardId":"51f6268b-a397-46f9-b38b-aa63d9237e9d",
-  "LanguageFromId":68,
-  "LanguageFrom":"русский",
-  "LanguageToId":4,
-  "LanguageTo":"английский",
-  "PartOfSpeechId":7,
-  "PartOfSpeech":"Фр",
-  "SourceTypeId":552,
-  "SourceType":"Imported Excel",
-  "TranslationServiceId":601,
-  "TranslationService":"Google Translation API",
-  "TextFrom":"дело, дела, занятия, афера, вещь",
-  "TextTo":"affair",
-  "Note":"[əˈfɛə]",
-  "IsActive":true,
-  "InsertDate":"\/Date(1693856014434)\/",
-  "UpdateDate":null,
-  "OthersLists":[
-    {"Id":"685e3f2b-00f8-4484-ab97-a216c589e5ed","Name":"I know"},
-    {"Id":"f5a057f9-6239-488c-82dc-418d76c460b8","Name":"Repeat"},
-    {"Id":"358ab8d6-9732-4dd8-9d23-ca4583c14a2a","Name":"Equiod p01_01 - Ru-En"}
-    ],
-    "OrderNumber":1
-}
-
-*/

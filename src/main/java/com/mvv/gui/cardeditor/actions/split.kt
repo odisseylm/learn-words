@@ -3,7 +3,6 @@ package com.mvv.gui.cardeditor.actions
 import com.mvv.gui.cardeditor.LearnWordsController
 import com.mvv.gui.javafx.showErrorAlert
 import com.mvv.gui.javafx.showTextInputDialog
-import com.mvv.gui.words.CsvFormat
 import com.mvv.gui.words.saveSplitWordCards
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,7 +30,7 @@ fun LearnWordsController.splitCurrentWords(): List<FileSaveResult> = doSaveCurre
             //require(wordCountPerFile <= maxMemoCardWordCount) {
             //    "Word count should be less than 300 since memo-word supports only $maxMemoCardWordCount sized word sets." }
 
-            saveSplitWordCards(filePath, words, splitFilesDir, wordCountPerFile, CsvFormat.Internal)
+            saveSplitWordCards(filePath, words, splitFilesDir, wordCountPerFile) // , CsvFormat.Internal)
                 .map { FileSaveResult(it, FileSaveResult.Operation.Saved) }
         }
         catch (ex: Exception) {

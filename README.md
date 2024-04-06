@@ -232,3 +232,11 @@ Some icons can have [Attribution 3.0 Unported] license(https://creativecommons.o
 Dark theme
 - [JavaFX-Dark-Theme](https://github.com/antoniopelusi/JavaFX-Dark-Theme) - Creative Commons Legal Code (CC0 1.0 Universal) license
     - https://github.com/antoniopelusi/JavaFX-Dark-Theme/blob/main/style.css (with some my local fixes)
+
+
+Synonyms
+
+ - https://sinonim.org/s/%D1%81%D1%82%D1%80%D0%B0%D1%88%D0%BD%D1%8B%D0%B9
+ - https://synonyms.reverso.net/%D1%81%D0%B8%D0%BD%D0%BE%D0%BD%D0%B8%D0%BC%D1%8B/ru/%D1%81%D1%82%D1%80%D0%B0%D1%88%D0%BD%D1%8B%D0%B9
+ - https://synonyms.reverso.net/synonym/ru/%D1%81%D1%82%D1%80%D0%B0%D1%88%D0%BD%D1%8B%D0%B9
+ - https://pr-cy.ru/synonyms/?word=%D1%81%D1%82%D1%80%D0%B0%D1%88%D0%BD%D1%8B%D0%B9

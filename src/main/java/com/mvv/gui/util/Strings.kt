@@ -361,3 +361,9 @@ fun CharSequence.isEqualTo(other: CharSequence): Boolean {
 
 fun Iterable<CharSequence>.containsCharSequence(v: CharSequence): Boolean =
     this.any { it.isEqualTo(v) }
+
+
+fun String.substringAfterLast(delimiter: String, missingDelimiterValue: String = this, ignoreCase: Boolean): String {
+    val index = lastIndexOf(delimiter, ignoreCase = ignoreCase)
+    return if (index == -1) missingDelimiterValue else substring(index + delimiter.length, length)
+}

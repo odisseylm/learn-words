@@ -14,6 +14,12 @@ import java.time.ZonedDateTime
 //private val log = mu.KotlinLogging.logger {}
 
 
+enum class Language {
+    English,
+    Russian,
+}
+
+
 interface BaseWordExtractor {
     fun extractBaseWord(phrase: String): String
 }
@@ -62,6 +68,31 @@ fun CardWordEntry(
         it.from = from
         it.to = to
     }
+}
+
+inline fun cardWordEntry(init: CardWordEntry.()->Unit) = CardWordEntry("", "").apply(init)
+
+
+// There only needed for me values.
+enum class PartOfSpeech {
+    Noun,
+    Adjective,     // Прилагательное
+    Verb,
+    Pronoun,       // Местоимение
+    Adverb,        // Наречие
+    Union,         // Союз
+    Numeral,       // Числительное
+    Particle,      // Частица ??
+    Preposition,   // Предлог
+    Interjection,  // Междометие
+
+    // Article,      // the, an, a
+    // Conjunction,  // and... but... or... while... because
+    // Interjection, // Oh!... Wow!... Oops!
+
+    Word,
+    Phrase,
+    SetExpression,
 }
 
 

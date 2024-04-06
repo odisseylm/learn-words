@@ -39,6 +39,8 @@ inline val Int.isOdd: Boolean get() = (this % 2) == 1
 
 
 fun <T> T.isOneOf(vararg values: T): Boolean = values.any { it == this }
+fun String?.isOneOf(vararg values: String, ignoreCase: Boolean): Boolean = this != null && values.any { it.equals(this, ignoreCase = ignoreCase) }
+fun String?.isOneOf(values: Iterable<String>, ignoreCase: Boolean): Boolean = this != null && values.any { it.equals(this, ignoreCase = ignoreCase) }
 
 
 @Suppress("NOTHING_TO_INLINE")

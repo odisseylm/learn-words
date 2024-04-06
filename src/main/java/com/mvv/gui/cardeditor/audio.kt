@@ -3,7 +3,7 @@ package com.mvv.gui.cardeditor
 import com.mvv.gui.audio.*
 import com.mvv.gui.util.doTry
 import com.mvv.gui.util.treeStringCaseInsensitiveSet
-import com.mvv.gui.words.fixFrom
+import com.mvv.gui.words.optimizeFromForMemoWord
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.atomic.AtomicReference
@@ -121,6 +121,6 @@ class VoiceManager {
 
 private fun prepareText(text: String): String {
     // at six o'clock sharp
-    text.replace('\'', '\'')
-    return fixFrom(text.trim())
+    //text.replace('\'', '\'') // TODO: to test it. Why it is not used?
+    return optimizeFromForMemoWord(text.trim())
 }

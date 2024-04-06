@@ -10,6 +10,8 @@ var CardWordEntry.updatedAt: ZonedDateTime?
     get()      = updatedAtProperty.value
     set(value) = updatedAtProperty.set(value)
 
+val CardWordEntry.lastUpdatedAt: ZonedDateTime? get() = this.updatedAt ?: this.createdAt
+
 var CardWordEntry.from: String
     get()      = fromProperty.valueSafe
     set(value) = fromProperty.set(value)
@@ -53,3 +55,6 @@ var CardWordEntry.sourceSentences: String
 var CardWordEntry.missedBaseWords: List<String>
     get()      = missedBaseWordsProperty.get()
     set(value) = missedBaseWordsProperty.set(value)
+
+val CardWordEntry.partOfSpeech: PartOfSpeech? // TODO: impl
+    get()      = null

@@ -48,6 +48,8 @@ class ContextMenuController (val controller: LearnWordsController) {
         selectedCard?.from?.also { openGoogleTranslate(it) } }
     private val translateByAbbyMenuItem = newMenuItem("Translate by Abby", buttonIcon("icons/abby-icon-01.png")) {
         selectedCard?.from?.also { openAbbyLingvoTranslate(it) } }
+    private val translateByReversoMenuItem = newMenuItem("Translate by Reverso", buttonIcon("icons/reverso-04.png")) {
+        selectedCard?.from?.also { openReversoTranslate(it) } }
 
     private val showInitialTranslationMenuItem = newMenuItem("Show initial translation") { controller.showInitialTranslationOfSelected() }
     private val addInitialTranslationMenuItem = newMenuItem("Add initial translation") { controller.addInitialTranslationOfSelected() }
@@ -95,6 +97,7 @@ class ContextMenuController (val controller: LearnWordsController) {
             SeparatorMenuItem(),
             translateByGoogleMenuItem,
             translateByAbbyMenuItem,
+            translateByReversoMenuItem,
 
             SeparatorMenuItem(),
             showInitialTranslationMenuItem,

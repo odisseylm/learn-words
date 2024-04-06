@@ -1,5 +1,6 @@
 package com.mvv.gui.util
 
+import com.mvv.gui.test.useAssertJSoftAssertions
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -89,7 +90,7 @@ class UtilsTest {
     }
 
     @Test
-    fun test_isOneOf() {
+    fun test_isOneOf() { useAssertJSoftAssertions {
         assertThat(1.isOneOf(2)).isFalse()
         assertThat(1.isOneOf(1)).isTrue()
 
@@ -99,7 +100,17 @@ class UtilsTest {
         assertThat(3.isOneOf(2, 3)).isTrue()
 
         assertThat(4.isOneOf(2, 3)).isFalse()
-    }
+
+        assertThat("abc".isOneOf("def", "qwerty", ignoreCase = false)).isFalse
+        assertThat("abc".isOneOf("def", "QWERTY", ignoreCase = false)).isFalse
+        assertThat("abc".isOneOf(listOf("def", "qwerty"), ignoreCase = false)).isFalse
+        assertThat("abc".isOneOf(listOf("def", "QWERTY"), ignoreCase = false)).isFalse
+
+        assertThat("abc".isOneOf("def", "ABC", ignoreCase = false)).isFalse
+        assertThat("abc".isOneOf("def", "ABC", ignoreCase = true)).isTrue()
+        assertThat("abc".isOneOf(listOf("def", "ABC"), ignoreCase = false)).isFalse
+        assertThat("abc".isOneOf(listOf("def", "ABC"), ignoreCase = true)).isTrue()
+    } }
 
     @Test
     fun test_skipFirst() {

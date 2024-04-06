@@ -30,6 +30,6 @@ class SrtTest {
         assertThat("00:23".isSrtTimestamp).isFalse()
         assertThat("00".isSrtTimestamp).isFalse()
         assertThat("".isSrtTimestamp).isFalse()
-        assertThat("cheburan".isSrtTimestamp).isFalse()
+        assertThat("john".isSrtTimestamp).isFalse()
     }
 }

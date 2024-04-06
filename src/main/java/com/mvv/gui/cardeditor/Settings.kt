@@ -40,6 +40,7 @@ class Settings (
     val memoPassword: String? = null,
     val memoWordLanguageProfileId: String?   = null, // for ru-en it can be 665ebd51-66cb-43d7-9ad0-ee3f0b489710
     val memoWordLanguageProfileName: String? = null, // "Ru-En"
+    val memoWordAuthor: String? = null, // "Ru-En"
 )
 
 val settings: Settings by lazy { loadSettings() }
@@ -54,6 +55,7 @@ data class MemoSettings (
     val password: String,
     val languageProfileId: String,   // for ru-en it can be 665ebd51-66cb-43d7-9ad0-ee3f0b489710
     val languageProfileName: String, // "Ru-En"
+    val author: String, // "Ru-En"
 )
 
 val Settings.memoSettings: MemoSettings? get() {
@@ -64,6 +66,7 @@ val Settings.memoSettings: MemoSettings? get() {
         password = requireNotNull(memoPassword),
         languageProfileId = requireNotNull(memoWordLanguageProfileId),
         languageProfileName = requireNotNull(memoWordLanguageProfileName),
+        author = requireNotNull(memoWordAuthor),
     )
 }
 
@@ -100,6 +103,7 @@ private fun loadSettings(): Settings {
         memoPassword = props.getProperty("memoPassword"),
         memoWordLanguageProfileId = props.getProperty("memoWordLanguageProfileId"),
         memoWordLanguageProfileName = props.getProperty("memoWordLanguageProfileName"),
+        memoWordAuthor = props.getProperty("memoWordAuthor"),
     )
 }
 

@@ -191,12 +191,16 @@ private fun putNonBlankToClipboard(text: String?) {
 fun openGoogleTranslate(text: String) =
     openDefaultWebBrowser("https://translate.google.com/?sl=en&tl=ru&op=translate&text=${urlEncode(text)}")
 
+fun openReversoTranslate(text: String) =
+    openDefaultWebBrowser("https://context.reverso.net/translation/english-russian/${urlEncode(text)}")
+
 fun openAbbyLingvoTranslate(text: String) =
     // hm... strange Abby site does not process '+' as space char, need to escape it as '%20'
     // and now it is not accessible without VPN (for that reason we use Opera)
     openWebBrowser(BrowserType.Opera, "https://www.lingvolive.com/en-us/translate/en-ru/${urlEncode(text).replace("+", "%20")}")
 
 
+@Suppress("unused")
 fun <T> showDropDownDialog(
     parent: Node, title: String, items: List<T>, converter: StringConverter<T>,
     hasEditor: Boolean,

@@ -3,6 +3,9 @@ package com.mvv.gui.words
 import com.mvv.gui.cardeditor.actions.isGoodLearnCardCandidate
 import com.mvv.gui.cardeditor.actions.parseToCard
 import com.mvv.gui.util.containsEnglishLetters
+import com.mvv.gui.util.splitToWords
+import com.mvv.gui.util.startsWithOneOf
+import java.util.TreeSet
 
 
 val CharSequence.translationCount: Int get() {
@@ -101,4 +104,37 @@ internal val CharSequence.exampleNewCardCandidateCount: Int get() {
         .filter { it.containsEnglishLetters() }
         .filter { it.parseToCard()?.isGoodLearnCardCandidate() ?: false }
         .count()
+}
+
+
+fun guessPartOfSpeech(wordOrPhrase: String): PartOfSpeech {
+    val allWords = wordOrPhrase.splitToWords()
+    val mainWords = allWords.filterNot { it in ignorableWords }
+    val mainWordCount = mainWords.size
+
+    return when {
+        allWords.size <= 1 -> PartOfSpeech.Word
+
+        wordOrPhrase.startsWithOneOf("an ", "a ", "the ", ignoreCase = true) && mainWordCount <= 1
+            -> PartOfSpeech.Noun
+
+        wordOrPhrase.startsWithOneOf("to ") && mainWordCount <= 1
+            -> PartOfSpeech.Verb
+
+        allWords.size > 2 -> PartOfSpeech.Phrase
+
+        else -> PartOfSpeech.Word
+    }
+}
+
+
+private val ignorableWords: Set<String> by lazy {
+    (listOf(
+            "to",
+            "somebody", "smb.", "smb",
+            "something", "smth.", "smth", "smt.", "smt",
+        ) +
+        prepositions.flatMap { it.words }
+    )
+    .toCollection(TreeSet<String>(String.CASE_INSENSITIVE_ORDER))
 }

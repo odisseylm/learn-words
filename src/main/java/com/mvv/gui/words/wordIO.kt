@@ -50,6 +50,7 @@ fun Path.useFilenameSuffix(filenameSuffix: String): Path =
     this.parent.resolve(this.baseWordsFilename + filenameSuffix)
 
 fun Path.useMemoWordFilenameSuffix(): Path = this.parent.resolve(this.baseWordsFilename + memoWordFileEnding)
+fun Path.useInternalFilenameSuffix(): Path = this.parent.resolve(this.baseWordsFilename + internalWordCardsFileExt)
 
 
 // -----------------------------------------------------------------------------
@@ -103,19 +104,24 @@ internal fun loadWordsFromAllExistentDictionaries(toIgnoreBaseWordsFilename: Str
 
 // -----------------------------------------------------------------------------
 
-fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Path, portionSize: Int, fileFormat: CsvFormat): List<Path> =
+fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Path, portionSize: Int/*, fileFormat: CsvFormat*/): List<Path> =
     words
         .asSequence()
         .windowed(portionSize, portionSize, true)
-        .mapIndexed { i, cardWordEntries ->
+        .flatMapIndexed { i, cardWordEntries ->
             val baseWordsFilename = file.baseWordsFilename
             //val folder = file.parent.resolve("split")
             val numberSuffix = "%02d".format(i + 1)
 
-            val memoFile = directory.resolve("$baseWordsFilename (${numberSuffix})${fileFormat.fileNameEnding}")
-            saveWordCards(memoFile, fileFormat, cardWordEntries)
+            val intFile = directory.resolve("$baseWordsFilename (${numberSuffix})").useInternalFilenameSuffix()
+            saveWordCards(intFile, CsvFormat.Internal, cardWordEntries)
 
-            memoFile
+            val memoFile = directory.resolve("$baseWordsFilename (${numberSuffix})").useMemoWordFilenameSuffix()
+            val memoFileXlsx = memoFile.replaceExt("xlsx")
+            // it also stores in xlsx format
+            saveWordCards(memoFile, CsvFormat.MemoWord, cardWordEntries)
+
+            listOf(intFile, memoFile, memoFileXlsx)
         }
         .toList()
 
