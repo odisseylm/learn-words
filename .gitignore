@@ -14,3 +14,5 @@
 /hs_err_pid*.log
 /replay_pid*.log
 .local.config.properties
+
+.~temp-upload-cards-*.html

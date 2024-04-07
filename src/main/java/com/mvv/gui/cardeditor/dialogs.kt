@@ -33,7 +33,7 @@ fun showCopyToOtherSetDialog(
     val dialog = Dialog<Path>()
 
     // Dynamic state (or we can convert it to class)
-    var filterBy: String? = null
+    var filterBy: (Path)->Boolean = { true }
     var otherRealSetsFiles: List<Path>? = null
 
 
@@ -70,17 +70,12 @@ fun showCopyToOtherSetDialog(
             }
     }
 
-
-    fun getFiltered(filterString: String?): List<Path> {
+    fun getFiltered(filterF: (Path)->Boolean): List<Path> {
         val files = otherRealSetsFiles ?: otherCachedSetsFiles
-        val altFilterStr = filterString?.replace('/', '\\') ?: ""
 
-        val filtered = when (filterString) {
-            "", null -> files
-            "/"  -> files.filterNot { pathToSetNameConv.toString(it).containsOneOf("/", "\\") }
-            else -> files.filter { it.toString().containsOneOf(filterString, altFilterStr) }
-        }
-
+        val filtered = files
+            .filter { filterF(it) }
+            .filterNot { it.containsOneOf("_MemoWord", ".MemoWord") }
         return filtered
     }
 
@@ -91,7 +86,7 @@ fun showCopyToOtherSetDialog(
         fillFiles()
     }
 
-    fun filterButton(label: String, btnFilterBy: String?) = radioButton(
+    fun filterButton(label: String, btnFilterBy: (Path)->Boolean) = radioButton(
         label       = label,
         toggleGroup = filterToggleGroup,
         onAction    = EventHandler { filterBy = btnFilterBy; fillFiles() },
@@ -99,18 +94,13 @@ fun showCopyToOtherSetDialog(
 
     val filterPane = flowPane(
         children = listOf(
-            filterButton("All", null).also { it.isSelected = true },
-            filterButton("Root", "/"),
-            filterButton("Grouped", "/grouped/"),
-            filterButton("Synonyms", "/synonyms/"),
-            filterButton("Base verbs", "/base-verbs/"),
-            filterButton("Films", "/films/"),
-            filterButton("Homophones", "/homophones/"),
+            filterButton("All") { true }.also { it.isSelected = true },
         ),
         hGap = 20.0,
         vGap = 10.0,
         styleClass = "filterPane",
     )
+    filterPane.children.addAll(CardsGroup.values().map { filterButton(it.groupName, it.fileBelongsToGroup) })
 
     val contentPane = borderPane(
         center = HBox(refreshFilesButton { refreshSetFiles() }, filesContainer),
@@ -162,6 +152,7 @@ fun chooseDictionaryDialog(parent: Node,
                            allWordCardSetsManager: AllWordCardSetsManager,
                            label: String,
                            dictionariesDirectory: Path?,
+                           fileBelongsToGroup: (Path)->Boolean,
                           ): Path? {
 
     val dictDirectory = dictionariesDirectory ?: dictDirectory
@@ -193,7 +184,8 @@ fun chooseDictionaryDialog(parent: Node,
 
 
     fun getFiltered(startsWith: Char?): List<Path> {
-        val allDictFiles = otherRealSetsFiles ?: pathToSetNameConv.otherCachedSetsFiles
+        val allDictFiles = (otherRealSetsFiles ?: pathToSetNameConv.otherCachedSetsFiles)
+            .filter(fileBelongsToGroup)
 
         val filtered = if (startsWith == null || startsWith == ' ') allDictFiles
                        else allDictFiles.filter {
@@ -268,7 +260,7 @@ private class DictionaryPathToRelativeNameConverter (
 
     fun getRealtimeDictionarySets(): List<Path> = getAllExistentSetFiles(
         dictionariesDirectory,
-        includeMemoWordFile = false,
+        //includeMemoWordFile = false,
         toIgnoreBaseWordsFilename = allWordCardSetsManager.ignoredFile?.baseWordsFilename,
         ).sortedWith(PathCaseInsensitiveComparator())
 

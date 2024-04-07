@@ -92,7 +92,7 @@ class AllWordCardSetsManager : AutoCloseable {
         val sw = startStopWatch()
 
         val ignoredFileBaseName = this.ignoredFile?.baseWordsFilename
-        val allExistentSetFiles = getAllExistentSetFiles(includeMemoWordFile = false, toIgnoreBaseWordsFilename = ignoredFileBaseName).toSet()
+        val allExistentSetFiles = getAllExistentSetFiles(toIgnoreBaseWordsFilename = ignoredFileBaseName).toSet()
 
         val prevSets = this.sets
 

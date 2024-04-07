@@ -118,15 +118,11 @@ internal fun mergeCards(existentCards: List<CardWordEntry>, newCards: List<CardW
 }
 
 
-internal fun LearnWordsController.addToSynonyms() = addToFrom("synonyms")
-internal fun LearnWordsController.addToGrouped() = addToFrom("grouped")
-
-
-private fun LearnWordsController.addToFrom(dictionariesSubDir: String) {
+internal fun LearnWordsController.addToFrom(cardsGroup: CardsGroup) {
 
     val card = currentWordsList.singleSelection ?: return
     val chosenDict: Path? = chooseDictionaryDialog(pane, currentWordsFile, allWordCardSetsManager, "Synonyms",
-        dictDirectory.resolve(dictionariesSubDir))
+        cardsGroup.directory, cardsGroup.fileBelongsToGroup)
 
     if (chosenDict != null)
         copyToOtherSetImpl(chosenDict, listOf(card))

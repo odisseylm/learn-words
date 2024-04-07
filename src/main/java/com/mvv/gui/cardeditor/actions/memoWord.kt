@@ -2,6 +2,8 @@ package com.mvv.gui.cardeditor.actions
 
 import com.mvv.gui.cardeditor.LearnWordsController
 import com.mvv.gui.cardeditor.ShowError
+import com.mvv.gui.util.containsOneOf
+import com.mvv.gui.words.CardsGroup
 import com.mvv.gui.words.baseWordsFilename
 import com.mvv.gui.words.isInternalCsvFormat
 import java.nio.file.Path
@@ -38,24 +40,36 @@ fun LearnWordsController.saveAllAndExportToMemoWord() {
           val filesToSave = processedInternalFiles
                .filter { it.operation == FileSaveResult.Operation.Saved }
                .map { it.file }
+               .filter { it.containsOneOf("_MemoWord", ".MemoWord") }
 
           val setNamesToDelete = processedInternalFiles
                .filter { it.operation == FileSaveResult.Operation.Deleted }
                .map { it.file }
                .filterNot { it in filesToSave } // to make sure
-               .map { it.asMemoWordSetName }
+               .map { it.asMemoListName }
 
           memoWord.connect()
 
           filesToSave.forEach { f ->
-               memoWord.saveMemoList(f)
+               memoWord.saveMemoList(f.asMemoListName, f)
           }
           memoWord.deleteExistentMemoLists(setNamesToDelete)
           memoWord.deleteTempMemoLists() // in case of success
      }
 }
 
-private val Path.asMemoWordSetName: String get() =
-     this.baseWordsFilename
+private val Path.asMemoListName: String get() {
+
+     val group = CardsGroup.values()
+          //.find { it.fileBelongsToGroup(this) }
+          .filter { it != CardsGroup.Root }
+          .find { this.startsWith(it.directory) }
+
+     val baseName = this.baseWordsFilename
+          // Let's improve it a bit.
           .replace("_0", " 0")
           .replace("_OnlyWords", " OnlyWords")
+
+     return if (group != null) "${group.groupName} - $baseName"
+            else baseName
+}

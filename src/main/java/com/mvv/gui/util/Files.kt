@@ -63,3 +63,7 @@ fun predictFileEncoding(filePath: Path): Charset {
            Charsets.UTF_16
            else Charsets.UTF_8
 }
+
+
+//fun Path.containsOneOf(element: Path, vararg or: Path) = this.contains(element) || or.any { this.contains(it) }
+fun Path.containsOneOf(element: String, vararg or: String) = this.contains(Path.of(element)) || or.any { this.contains(Path.of(it)) }

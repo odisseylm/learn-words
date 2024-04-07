@@ -221,10 +221,36 @@ private fun doCompareSense(str1: CharSequence, str2: CharSequence): CompareSense
                 return when {
                     upperCount1 > upperCount2 -> CompareSenseResult.Better
                     upperCount1 < upperCount2 -> CompareSenseResult.Worse
-                    else -> CompareSenseResult.AlmostSame
+                    else -> {
+                        val lineCount1 = str1.lineCount
+                        val lineCount2 = str2.lineCount
+
+                        when {
+                            lineCount1 > lineCount2 -> CompareSenseResult.Better
+                            lineCount1 < lineCount2 -> CompareSenseResult.Worse
+                            else -> CompareSenseResult.AlmostSame
+                        }
+                    }
                 }
 
             else -> { }
         }
     }
+}
+
+private val CharSequence.lineCount: Int get() {
+    var lineCount = 0
+
+    var prevChar = ' '
+    val lastCharIndex = this.length
+
+    this.forEachIndexed { i, ch ->
+        val isLineSplit = (ch == '\n')
+        if (isLineSplit && prevChar != '\n' && i != lastCharIndex && i != 0) {
+            lineCount++
+        }
+        prevChar = ch
+    }
+
+    return lineCount
 }

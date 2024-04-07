@@ -602,9 +602,9 @@ class MemoWordSession : AutoCloseable {
         )
     }
 
-    internal fun saveMemoList(file: Path) {
+    internal fun saveMemoList(memoListName: String, file: Path) {
         val cards = loadWordCards(file)
-        saveMemoList(file.baseWordsFilename, cards)
+        saveMemoList(memoListName, cards)
     }
 
     private fun saveMemoList(memoListName: String, cards: List<CardWordEntry>) {
@@ -728,7 +728,7 @@ class MemoWordSession : AutoCloseable {
             val cardIsUpdatedAt = card.lastUpdatedAt
             val toUpdate: Boolean =
                 if (cardIsUpdatedAt != null)
-                    (cardIsUpdatedAt.toInstant() > memoCardIsUpdatedAt)
+                    card.from.isNotBlank() && (cardIsUpdatedAt.toInstant() > memoCardIsUpdatedAt)
                 else {
                     card.isBetterThan(memoCard)
                 }

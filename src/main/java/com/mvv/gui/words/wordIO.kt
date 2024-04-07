@@ -91,7 +91,7 @@ fun saveWordCards(file: Path, format: CsvFormat, words: Iterable<CardWordEntry>)
         " Use some cached mechanism, for example AllWordCardSetsManager")
 internal fun loadWordsFromAllExistentDictionaries(toIgnoreBaseWordsFilename: String?): List<String> {
 
-    val allWordsFilesExceptIgnored = getAllExistentSetFiles(includeMemoWordFile = true, toIgnoreBaseWordsFilename = toIgnoreBaseWordsFilename)
+    val allWordsFilesExceptIgnored = getAllExistentSetFiles(toIgnoreBaseWordsFilename = toIgnoreBaseWordsFilename)
 
     return allWordsFilesExceptIgnored
         .asSequence()
@@ -126,10 +126,10 @@ fun saveSplitWordCards(file: Path, words: Iterable<CardWordEntry>, directory: Pa
         .toList()
 
 
-fun getAllExistentSetFiles(includeMemoWordFile: Boolean, toIgnoreBaseWordsFilename: String?): List<Path> =
-    getAllExistentSetFiles(dictDirectory, includeMemoWordFile, toIgnoreBaseWordsFilename)
+fun getAllExistentSetFiles(toIgnoreBaseWordsFilename: String?): List<Path> =
+    getAllExistentSetFiles(dictDirectory, toIgnoreBaseWordsFilename)
 
-fun getAllExistentSetFiles(dir: Path, includeMemoWordFile: Boolean, toIgnoreBaseWordsFilename: String?): List<Path> {
+fun getAllExistentSetFiles(dir: Path, toIgnoreBaseWordsFilename: String?): List<Path> {
     if (dir.notExists()) return emptyList()
 
     return dir.toFile().walkTopDown()
@@ -137,8 +137,24 @@ fun getAllExistentSetFiles(dir: Path, includeMemoWordFile: Boolean, toIgnoreBase
         .map { it.toPath() }
         .filter { it.isRegularFile() }
         .filter { it != ignoredWordsFile }
-        .filter { it.isInternalCsvFormat || (includeMemoWordFile && it.isMemoWordFile) }
+        //.filter { it.isInternalCsvFormat || (includeMemoWordFile && it.isMemoWordFile) }
+        .filterNot { it.containsOneOf("_MemoWord", ".MemoWord") }
+        .filter { it.isInternalCsvFormat }
         .filter { toIgnoreBaseWordsFilename.isNullOrBlank() || !it.name.contains(toIgnoreBaseWordsFilename) }
         .toList()
 }
 
+
+enum class CardsGroup (val groupName: String, subDir: String) {
+    Root("Root", ""),
+    Topic("Topic", "topic"),
+    Grouped("Grouped", "grouped"),
+    Synonyms("Synonyms", "synonyms"),
+    Homophones("Homophones", "homophones"),
+    Films("Films", "films"),
+    BaseVerbs("Base Verbs", "base-verbs"),
+    ;
+
+    val directory: Path = if (subDir.isEmpty()) dictDirectory else dictDirectory.resolve(subDir)
+    val fileBelongsToGroup: (Path)->Boolean = { it.parent == this.directory }
+}

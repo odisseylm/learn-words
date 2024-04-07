@@ -19,9 +19,6 @@ class ContextMenuController (val controller: LearnWordsController) {
     private val selectByBaseWordMenuItem = newMenuItem("Select by base word") { controller.selectByBaseWord() }
 
     private val copySelectedToMenuItem = Menu("Copy selected cards to")
-    private val copySelectedToOtherSetMenuItem = newMenuItem("Other set") { controller.copySelectToOtherSet() }
-    private val copySelectedToSynonymsSetMenuItem = newMenuItem("Synonyms") { controller.addToSynonyms() }
-    private val copySelectedToGroupedSetMenuItem = newMenuItem("Grouped") { controller.addToGrouped() }
 
     private val exportSelectedFromOtherSetMenuItem = newMenuItem("Export selected from other set") { controller.exportSelectFromOtherSet() }
 
@@ -72,11 +69,8 @@ class ContextMenuController (val controller: LearnWordsController) {
             SeparatorMenuItem(),
             selectByBaseWordMenuItem,
             copySelectedToMenuItem.apply {
-                items.addAll(
-                    copySelectedToOtherSetMenuItem,
-                    copySelectedToSynonymsSetMenuItem,
-                    copySelectedToGroupedSetMenuItem,
-                )
+                items.addAll( newMenuItem("Other set...") { controller.copySelectToOtherSet() } )
+                items.addAll( CardsGroup.values().map { newMenuItem(it.groupName + "...") { controller.addToFrom(it) } } )
             },
             exportSelectedFromOtherSetMenuItem,
 
