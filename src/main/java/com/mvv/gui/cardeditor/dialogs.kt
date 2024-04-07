@@ -26,7 +26,11 @@ fun showCopyToOtherSetDialog(
     showFilesMode: ShowFilesMode,
     ): Path? {
 
-    val currentWordsFileParent = currentWordsFile?.parent ?: dictDirectory
+    val currentWordsFileParent = if (currentWordsFile == null) dictDirectory
+                                 else {
+                                     if (currentWordsFile.startsWith(dictDirectory)) dictDirectory
+                                     else currentWordsFile.parent
+                                 }
     val pathToSetNameConv = DictionaryPathToRelativeNameConverter(allWordCardSetsManager, currentWordsFileParent)
     val otherCachedSetsFiles: List<Path> = pathToSetNameConv.otherCachedSetsFiles
 
