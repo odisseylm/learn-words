@@ -342,9 +342,29 @@ private fun Sheet.calculateCellHeightInPoints(value: String, cellWidthInChars: I
 }
 
 
-private fun CharSequence.lineCount(): Int {
+// TODO: write tests
+fun CharSequence.lineCount(): Int {
     var lineCount = 0
     for (ch in this)
         if (ch == '\n') lineCount++
+    return lineCount
+}
+
+
+// TODO: write tests
+fun CharSequence.nonEmptyLineCount(): Int {
+    var lineCount = 0
+
+    var prevChar = ' '
+    val lastCharIndex = this.length - 1
+
+    this.forEachIndexed { i, ch ->
+        val isLineSplit = (ch == '\n')
+        if (isLineSplit && prevChar != '\n' && i != lastCharIndex && i != 0) {
+            lineCount++
+        }
+        prevChar = ch
+    }
+
     return lineCount
 }

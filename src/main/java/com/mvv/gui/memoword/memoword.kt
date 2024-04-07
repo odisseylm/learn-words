@@ -168,6 +168,13 @@ class MemoWordSession : AutoCloseable {
     @Suppress("SameParameterValue")
     private fun uploadMemoList(memoListName: String, cards: List<CardWordEntry>, rewrite: Boolean): MemoList {
         log.info { "uploadMemoList ${cards.debugStr()}" }
+
+        val validCards = filterInsertingCards(cards)
+        if (validCards.isEmpty()) {
+            log.info { "No valid cards to upload." }
+            return findMemoList(memoListName) ?: createMemoList(memoListName)
+        }
+
         val memoWordXlsxAsBytes = wordCardsIntoMemoWordXlsx(memoListName, cards)
         return uploadMemoList(memoListName, BytesSource(memoWordXlsxAsBytes, XlsxMediaType), rewrite)
     }
@@ -442,8 +449,34 @@ class MemoWordSession : AutoCloseable {
         return memoList
     }
 
-    private fun insertNewCards(cards: List<CardWordEntry>, memoList: MemoList) =
-        cards.forEach { insertNewCard(it, memoList) }
+    fun CardWordEntry.isCardValid() = this.from.isNotBlank() && this.to.isNotBlank()
+
+    private fun filterInsertingCards(cards: List<CardWordEntry>): List<CardWordEntry> {
+
+        val invalidCards = cards.filterNot { it.isCardValid() }
+        val validCards   = cards.filter    { it.isCardValid() }
+
+        if (invalidCards.isNotEmpty())
+            log.warn { "Some inserting cards are invalid ${invalidCards.debugStr()}. They will be skipped." }
+
+        return validCards
+    }
+
+    private fun filterUpdatingCards(entries: List<Pair<MemoCard, CardWordEntry>>): List<Pair<MemoCard, CardWordEntry>> {
+
+        val invalidCards = entries.filterNot { it.second.isCardValid() }
+        val validCards   = entries.filter    { it.second.isCardValid() }
+
+        if (invalidCards.isNotEmpty())
+            log.warn { "Some inserting cards are invalid ${invalidCards.map { it.second }.debugStr()}. They will be skipped." }
+
+        return validCards
+    }
+
+    private fun insertNewCards(cards: List<CardWordEntry>, memoList: MemoList) {
+        val validCards = filterInsertingCards(cards)
+        validCards.forEach { insertNewCard(it, memoList) }
+    }
 
     private fun insertNewCard(card: CardWordEntry, memoList: MemoList) {
 
@@ -598,7 +631,7 @@ class MemoWordSession : AutoCloseable {
         doJsonRequest<String>(
             uri     = URI("https://memowordapp.com/Panel/Words/MoveWordsToList"),
             method  = Method.POST,
-            request = CardsForMemoListRequest(MemoListId = memoList.id, MemoCardIds = cards.map { it.id })
+            request = CardsForMemoListRequest(MemoListId = memoList.id, MemoCardIds = cards.map { it.id }.distinct())
         )
     }
 
@@ -609,11 +642,11 @@ class MemoWordSession : AutoCloseable {
 
     private fun saveMemoList(memoListName: String, cards: List<CardWordEntry>) {
 
-        log.info { "saveMemoList ( $memoListName ${cards.size}" }
+        log.info { "saveMemoList '$memoListName' (${cards.size})" }
 
-        val cardsMap = cards
-            .flatMap { card -> card.possibleMemoFroms().map { Pair(it, card) } }
-            .associate { it }
+        val allPossibleFromsOfSavingCards = cards
+            .flatMap { card -> card.possibleMemoFroms() }
+            .toSet()
 
         val existentMemoList = findMemoList(memoListName)
 
@@ -626,7 +659,7 @@ class MemoWordSession : AutoCloseable {
 
         val currentMemoCardsMap = currentMemoCards.associateBy { it.text(Language.English) }
 
-        val toRemoveFromMemoList: List<MemoCard> = currentMemoCards.filterNot { it.text(Language.English) in cardsMap }
+        val toRemoveFromMemoList: List<MemoCard> = currentMemoCards.filterNot { it.text(Language.English) in allPossibleFromsOfSavingCards }
         log.info { "toRemoveFromMemoList: ${toRemoveFromMemoList.debugMStr()}" }
 
         val memoWordFroms = allMemoCards.map { it.text(Language.English) }.toSet()
@@ -643,17 +676,17 @@ class MemoWordSession : AutoCloseable {
         log.info { "existentMemoCardEntries: ${existentMemoCardEntries.debugPStr()}" }
 
         val toAddExistentToMemoList: List<MemoCard> = allMemoCards
-            .filter { it.text(Language.English) in cardsMap }
+            .filter { it.text(Language.English) in allPossibleFromsOfSavingCards }
             .distinctBy { it.text(Language.English) }
             .filter { existentMemoList == null || !it.belongsToMemoList(existentMemoList) }
         log.info { "toAddExistentToMemoList: ${toAddExistentToMemoList.debugMStr()}" }
 
-        val toUpdate = toUpdateChangedCards(existentMemoCardEntries)
+        var toUpdate = toUpdateChangedCards(existentMemoCardEntries)
         log.info { "toUpdate: ${toUpdate.debugPStr()}" }
 
         var tempListId: MemoList? = null
 
-        val memoListId: MemoList = if (existentMemoList == null) {
+        val memoList: MemoList = if (existentMemoList == null) {
             if (toInsertNewToMemoList.isNotEmpty())
                 uploadMemoList(memoListName, toInsertNewToMemoList, rewrite = false)
             else
@@ -670,7 +703,20 @@ class MemoWordSession : AutoCloseable {
             existentMemoList
         }
 
-        addCardsToMemoList(toAddExistentToMemoList, memoListId)
+        addCardsToMemoList(toAddExistentToMemoList, memoList)
+
+        val addedCardIds = toAddExistentToMemoList.map { it.id }.toSet()
+
+        toUpdate = toUpdate.map { p ->
+            val memoCard = p.first
+            val intCard = p.second
+
+            if (memoCard.id in addedCardIds)
+                Pair(memoCard.copy(OthersLists = memoCard.otherLists.addMemoList(memoList)), intCard)
+            else
+                p
+        }
+
 
         doUpdateMemoCards(toUpdate)
 
@@ -701,7 +747,6 @@ class MemoWordSession : AutoCloseable {
             .flatMap { card -> card.possibleMemoFroms().map { Pair(it, card) } }
             .associate { it }
 
-        //val allMemoCards: List<MemoCard> = downloadAllMemoCards()
         val allMemoCardsMap: Map<String, MemoCard> = allMemoCards.associateBy { it.text(Language.English) }
 
         val existentMemoCards = cardsMap
@@ -729,20 +774,22 @@ class MemoWordSession : AutoCloseable {
             val toUpdate: Boolean =
                 if (cardIsUpdatedAt != null)
                     card.from.isNotBlank() && (cardIsUpdatedAt.toInstant() > memoCardIsUpdatedAt)
-                else {
+                else
                     card.isBetterThan(memoCard)
-                }
 
             if (toUpdate) entry else null
         }
 
     private fun doUpdateMemoCards(memoCards: List<Pair<MemoCard, CardWordEntry>>) {
 
-        val changedMemoCards = memoCards.map {
-            it.first.updateFrom(it.second)
+        val validCards = filterUpdatingCards(memoCards)
+
+        val changedMemoCards = validCards.map { (memoCard, intCard) ->
+            memoCard.updateFrom(intCard)
         }
 
-        this.loginIfNeeded()
+        loginIfNeeded()
+
         changedMemoCards.forEach {
             doUpdateMemoCard(it)
         }
@@ -753,8 +800,8 @@ class MemoWordSession : AutoCloseable {
 
         val updateRequestObj = MemoWordInsertUpdateCardRequest(
             MemoCardId  = card.id,
-            MemoListId  = card.OthersLists!!.first().id,
-            MemoListIds = card.OthersLists.map { it.id },
+            MemoListId  = card.otherLists.first().id,
+            MemoListIds = card.otherLists.map { it.id },
             TextFrom    = card.TextFrom!!,
             TextTo      = card.TextTo!!,
             Note        = card.Note!!,
@@ -798,8 +845,7 @@ class MemoWordSession : AutoCloseable {
         val allCards = doJsonRequest<List<MemoCard>>(
             URI("https://memowordapp.com/panel/words/GetMemoWords/${memoList.id}"))
 
-        return allCards.map { it.copy(OthersLists =
-            (it.OthersLists ?: emptyList()) + memoList) }
+        return allCards.map { it.copy(OthersLists = it.otherLists + memoList) }
     }
 
     private fun loginToMemoWord() {
@@ -856,17 +902,39 @@ private fun HttpResponse<String>.extractFormRequestVerificationToken(): String {
 }
 
 
+// TODO: write tests
 private fun CardWordEntry.isBetterThan(memoCard: MemoCard): Boolean {
     val translation1 = this.to
     val translation2 = memoCard.text(Language.Russian)
 
     return when {
-        translation1.isNotBlank() && translation2.isBlank()    -> false
-        translation1.isBlank()    && translation2.isNotBlank() -> true
-        else -> translation1.isSenseBetter(translation2) == CompareSenseResult.Better
+        translation1.isNotBlank() && translation2.isBlank()    -> true
+        translation1.isBlank()    && translation2.isNotBlank() -> false
+        else -> this.isTranslationSenseOrFormatBetter(memoCard)
     }
 }
 
+// TODO: write tests
+internal fun CardWordEntry.isTranslationSenseOrFormatBetter(memoCard: MemoCard): Boolean {
+    val origTranslation1 = this.to
+    val origTranslation2 = memoCard.text(Language.Russian)
+    if (origTranslation1.isSenseBetter(origTranslation2) == CompareSenseResult.Better)
+        return true
+
+    val optimizedTranslation1 = optimizeToForMemoWord(origTranslation1)
+    val lineCount1 = optimizedTranslation1.nonEmptyLineCount()
+    val lineCount2 = origTranslation2.nonEmptyLineCount()
+
+    when {
+        lineCount1 > lineCount2 -> CompareSenseResult.Better
+        lineCount1 < lineCount2 -> CompareSenseResult.Worse
+        else -> CompareSenseResult.AlmostSame
+    }
+
+    return lineCount1 > lineCount2
+}
+
+// TODO: write tests
 private fun CardWordEntry.possibleMemoFroms(): Collection<String> {
     val from = this.from
     val memoWordFrom = optimizeFromForMemoWord(from)

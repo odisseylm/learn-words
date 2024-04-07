@@ -69,7 +69,10 @@ data class MemoListEntry (
 inline fun MemoCard.belongsToMemoList(memoList: MemoList): Boolean =
     this.belongsToMemoListById(memoList.id)
 fun MemoCard.belongsToMemoListById(memoListId: String): Boolean =
-    this.OthersLists != null && this.OthersLists.any { it.id == memoListId }
+    this.otherLists.any { it.id == memoListId }
+
+fun List<MemoListEntry>?.addMemoList(memoList: MemoList): List<MemoListEntry> =
+    ((this ?: emptyList()) + memoList.asMemoListEntry).distinctBy { it.id }
 
 val MemoList.asMemoListEntry: MemoListEntry get() =
     MemoListEntry(this.id, this.FullName)
@@ -106,6 +109,7 @@ internal data class CardsForMemoListRequest (
 
 
 inline val MemoCard.id: String get() = this.MemoCardId
+inline val MemoCard.otherLists: List<MemoListEntry> get() = this.OthersLists ?: emptyList()
 inline val MemoList.id: String get() = this.MemoListId
 inline val MemoListEntry.id: String get() = this.Id
 
