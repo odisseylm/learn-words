@@ -261,6 +261,6 @@ private val String.areAllVerbs: Boolean get() {
     val translations = this.splitToToTranslations()
     return translations.filterNotBlank()
         .flatMap { it.splitTranslationToIndexed() }
-        .map { it.splitToWords()[0] }
+        .mapNotNull { it.splitToWords().firstOrNull() }
         .all { it.isVerb }
 }
