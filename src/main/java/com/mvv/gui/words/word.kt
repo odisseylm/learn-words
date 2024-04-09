@@ -2,6 +2,8 @@ package com.mvv.gui.words
 
 import com.mvv.gui.javafx.CacheableObservableValue
 import com.mvv.gui.javafx.mapCached
+import com.mvv.gui.util.safeSubstring
+import com.mvv.gui.util.toTextPosition
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -219,8 +221,38 @@ enum class WordCardStatus (
 
     // *************************** High priority warnings **************************************************************
     //
-    TranslationIsNotPrepared(true, {"The from/translation for '${it.from}' is not prepared for learning. " +
-            "Please remove unneeded symbols (like [, 1., 2., 1), 2) so on) and unpaired brackets '()'."}),
+    TranslationIsNotPrepared(true, {
+        val s = StringBuilder("The from/translation for '${it.from}' is not prepared for learning. ")
+        val status = validateFromOrToPreparedStatus(it)
+
+        if (!status.isOk) {
+            for (problem in status.problems) {
+                when (problem) {
+                    FormatProblem.IsBlank ->
+                        s.append("\nIt is blank.")
+                    FormatProblem.ForbiddenChars ->
+                        s.append("\nPlease remove unneeded symbols (like [, 1., 2., 1), 2) so on.")
+                    FormatProblem.UnpairedBrackets ->
+                        s.append("\nPlease fix unpaired brackets '()'.")
+                }
+            }
+
+            val problemIndex = status.problemIndex
+            s.append("\nSee at position $problemIndex")
+
+            val to = it.to
+            if (problemIndex != -1 && problemIndex < to.length) {
+                val textPos = to.toTextPosition(problemIndex)
+                s.append(" [${textPos.row + 1},${textPos.column + 1}]")
+
+                val textPart = to.safeSubstring(problemIndex, problemIndex + 20)
+                if (textPart.isNotBlank())
+                    s.append(" (").append(textPart).append("...)")
+            }
+            s.append(".")
+        }
+        s.toString()
+    }),
 
     Duplicates(true, { "Duplicate. Please remove duplicates." }),
 

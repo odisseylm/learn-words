@@ -12,8 +12,16 @@ fun <S: CharSequence> S.startsWithOneOf(vararg suffixes: String): Boolean = this
 fun <S: CharSequence> S.startsWithOneOf(suffixes: Iterable<String>, ignoreCase: Boolean): Boolean = suffixes.any { this.startsWith(it, ignoreCase) }
 fun <S: CharSequence> S.startsWithOneOf(vararg suffixes: String, ignoreCase: Boolean): Boolean = this.startsWithOneOf(suffixes.asIterable(), ignoreCase)
 
-fun <S: CharSequence> S.containsOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.contains(it) }
-fun <S: CharSequence> S.containsOneOf(vararg suffixes: String): Boolean = this.containsOneOf(suffixes.asIterable())
+fun <S: CharSequence> S.containsOneOf(strings: Iterable<CharSequence>): Boolean = strings.any { this.contains(it) }
+fun <S: CharSequence> S.containsOneOf(vararg strings: CharSequence): Boolean = this.containsOneOf(strings.asIterable())
+// !!! Returned index may be not 1st index in source string !!!
+fun <S: CharSequence> S.indexOfAnyOfOneOf(strings: Iterable<String>): Int {
+    for (s in strings) {
+        val index = this.indexOf(s)
+        if (index != -1) return index
+    }
+    return -1
+}
 
 
 fun CharSequence.removeSuffixCaseInsensitive(suffix: CharSequence): CharSequence =

@@ -1,6 +1,7 @@
 package com.mvv.gui.util
 
 import java.util.EnumSet
+import kotlin.math.min
 
 
 fun <K, V> Map<K, V>.containsOneOfKeys(keys: Iterable<K>): Boolean =
@@ -66,6 +67,12 @@ inline fun Int.ifIndexNotFound(altValue: Int): Int =
 
 inline fun Int.ifIndexNotFound(altValue: () -> Int): Int =
     if (this == -1) altValue() else this
+
+fun minFoundIndex(index1: Int, index2: Int): Int = when {
+    index1 == -1 -> index2
+    index2 == -1 -> index1
+    else -> min(index1, index2)
+}
 
 @Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
 inline fun <C: CharSequence> Iterable<C?>.filterNotEmpty(): List<C> = this.filterNot { it.isNullOrEmpty() } as List<C>

@@ -49,8 +49,8 @@ private fun LearnWordsController.createCardFromSelectionOrCurrentLine(
 
     val newCard: CardWordEntry = selectionOrCurrentLine.parseToCard()?.adjustCard() ?: return null
 
-    val alreadyContains = currentWords.items.containsAlmostTheSameCard(newCard)
-    println("### alreadyContains [${newCard.from} => ${newCard.to}]   - $alreadyContains")
+    //val alreadyContains = currentWords.items.containsAlmostTheSameCard(newCard)
+    //log.info { "### alreadyContains [${newCard.from} => ${newCard.to}]   - $alreadyContains" }
 
     if (currentWords.items.containsAlmostTheSameCard(newCard)) return null
 

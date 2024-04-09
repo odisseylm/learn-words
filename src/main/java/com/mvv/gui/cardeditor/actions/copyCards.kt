@@ -121,7 +121,7 @@ internal fun mergeCards(existentCards: List<CardWordEntry>, newCards: List<CardW
 internal fun LearnWordsController.addToFrom(cardsGroup: CardsGroup) {
 
     val card = currentWordsList.singleSelection ?: return
-    val chosenDict: Path? = chooseDictionaryDialog(pane, currentWordsFile, allWordCardSetsManager, "Synonyms",
+    val chosenDict: Path? = chooseDictionaryDialog(pane, currentWordsFile, allWordCardSetsManager, cardsGroup.groupName,
         cardsGroup.directory, cardsGroup.fileBelongsToGroup)
 
     if (chosenDict != null)

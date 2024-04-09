@@ -9,6 +9,7 @@ import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.NotWarnWhenSomeBaseWordsPr
 import com.mvv.gui.words.WarnAboutMissedBaseWordsMode.WarnWhenSomeBaseWordsMissed
 import com.mvv.gui.words.WordCardStatus.*
 import javafx.beans.value.WritableObjectValue
+import java.util.EnumSet
 
 
 private val log = mu.KotlinLogging.logger {}
@@ -76,11 +77,8 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
         val noTranslation = from.isNotBlank() && to.isBlank()
         statusesProperty.update(NoTranslation, noTranslation)
 
-        val fromIsNotPrepared = from.isBlank()
-                || from.containsOneOf(unneededPartsForLearning)
-                || from.any { !(it in " -'.!?" || it.isEnglishLetter()) }
-        val toIsNotPrepared = to.isBlank() || to.containsOneOf(unneededPartsForLearning) || to.hasUnpairedBrackets()
-        statusesProperty.update(TranslationIsNotPrepared, fromIsNotPrepared || toIsNotPrepared)
+        val fromOrToPreparedStatus = validateFromOrToPreparedStatus(card)
+        statusesProperty.update(TranslationIsNotPrepared, !fromOrToPreparedStatus.isOk)
 
 
         if (IgnoreExampleCardCandidates in statuses)
@@ -123,6 +121,59 @@ fun analyzeWordCards(wordCardsToVerify: Iterable<CardWordEntry>,
 
     log.debug("### analyzeWordCards took {}ms", System.currentTimeMillis() - started)
 }
+
+
+enum class FormatProblem { IsBlank, ForbiddenChars, UnpairedBrackets }
+
+data class FormatStatus (
+    val isOk: Boolean,
+    val problems: Set<FormatProblem> = emptySet(),
+    val problemIndex: Int = -1
+)
+
+
+fun validateFromOrToPreparedStatus(card: CardWordEntry): FormatStatus {
+    val fromStatus = validateFromOrToPreparedStatusImpl(card.from, unneededPartsForLearning,
+        unneededCharF = { !it.isEnglishLetter() && it !in " -'.!?" })
+    val toStatus   = validateFromOrToPreparedStatusImpl(card.to, unneededPartsForLearning)
+
+    return FormatStatus(
+        isOk         = fromStatus.isOk && toStatus.isOk,
+        problems     = fromStatus.problems + toStatus.problems,
+        problemIndex = minFoundIndex(fromStatus.problemIndex, toStatus.problemIndex),
+    )
+}
+
+
+private fun validateFromOrToPreparedStatusImpl(
+    fromOrTo: String,
+    unneededSubStrings: List<String>,
+    unneededCharF: ((Char)->Boolean)? = null,
+    ): FormatStatus {
+    if (fromOrTo.isBlank())
+        return FormatStatus(isOk = false, problems = setOf(FormatProblem.IsBlank))
+
+    val unpairedBracketIndex = fromOrTo.getUnpairedBracketsIndex()
+    val unneededPartsForLearningIndex: Int = minFoundIndex(
+        fromOrTo.indexOfAnyOfOneOf(unneededSubStrings),
+        if (unneededCharF == null) -1 else fromOrTo.indexOfFirst { unneededCharF(it) },
+    )
+
+    if (unpairedBracketIndex == -1 && unneededPartsForLearningIndex == -1)
+        return FormatStatus(isOk = true)
+
+    // T O D O: try to write in more elegant way
+    val problems = EnumSet.noneOf(FormatProblem::class.java)
+    if (unpairedBracketIndex != -1) problems.add(FormatProblem.UnpairedBrackets)
+    if (unneededPartsForLearningIndex != -1) problems.add(FormatProblem.ForbiddenChars)
+
+    return FormatStatus(
+        isOk = problems.isEmpty(),
+        problems = problems,
+        problemIndex = minFoundIndex(unpairedBracketIndex, unneededPartsForLearningIndex),
+    )
+}
+
 
 private fun analyzeWordCardsDuplicates(allWordCards: Iterable<CardWordEntry>) {
 
@@ -181,23 +232,28 @@ private fun analyzeWordCardsDuplicates(allWordCards: Iterable<CardWordEntry>) {
 }
 
 
-internal fun CharSequence.hasUnpairedBrackets(): Boolean {
+internal fun CharSequence.hasUnpairedBrackets(): Boolean =
+    getUnpairedBracketsIndex() != -1
+
+internal fun CharSequence.getUnpairedBracketsIndex(): Int {
 
     var bracketLevel = 0
+    var bracketPos = -1
 
     for (i in this.indices) {
         val ch = this[i]
 
         if (ch == '(') {
             bracketLevel++
+            bracketPos = i
         }
         if (ch == ')') {
             bracketLevel--
-            if (bracketLevel < 0) return true
+            if (bracketLevel < 0) return i
         }
     }
 
-    return bracketLevel != 0
+    return if (bracketLevel != 0) bracketPos else -1
 }
 
 
