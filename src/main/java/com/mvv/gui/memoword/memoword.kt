@@ -15,10 +15,13 @@ import com.mvv.gui.dictionary.getProjectDirectory
 import com.mvv.gui.util.*
 import com.mvv.gui.words.*
 import org.jsoup.nodes.Document
-import java.net.*
+import java.net.CookieManager
+import java.net.CookiePolicy
+import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.net.http.HttpResponse.BodyHandler
 import java.nio.file.Files
 import java.nio.file.Path
 import java.text.SimpleDateFormat
@@ -141,12 +144,12 @@ class MemoWordSession : AutoCloseable {
     override fun close() { cookieStore.save() }
 
     fun connect() {
-        client.sendGet("https://memoword.online/en/")
+        client.sendGetAndMeasure("https://memoword.online/en/")
         loginIfNeeded(true)
     }
 
     private fun loginIfNeeded(logState: Boolean = false) {
-        val loginPageResponse = client.sendGet("https://memowordapp.com/Account/Login?lng=en")
+        val loginPageResponse = client.sendGetAndMeasure("https://memowordapp.com/Account/Login?lng=en")
 
         val needToLogin = loginPageResponse.body().containsOneOf(
             "To log in, enter your email address",
@@ -190,9 +193,9 @@ class MemoWordSession : AutoCloseable {
         val author                  = memoSettings.author
         val creationDateStr = SimpleDateFormat("dd.MM.yyyy").format(Date())
 
-        client.sendGet("https://memowordapp.com/panel/lists/index/$memoLanguageProfileId?lng=en")
+        client.sendGetAndMeasure("https://memowordapp.com/panel/lists/index/$memoLanguageProfileId?lng=en")
 
-        val uploadMemoListFormPageResponse = client.sendGet(
+        val uploadMemoListFormPageResponse = client.sendGetAndMeasure(
             "https://memowordapp.com/Panel/Import/Index/$memoLanguageProfileId?lng=en")
 
         val formRequestVerificationToken = uploadMemoListFormPageResponse.extractFormRequestVerificationToken()
@@ -218,7 +221,7 @@ class MemoWordSession : AutoCloseable {
 
         val multipartBodyPublisher = multipartBodyPublisherB.build()
 
-        val uploadMemoListResponse: HttpResponse<String> = client.send(
+        val uploadMemoListResponse: HttpResponse<String> = client.sendAndMeasure(
             HttpRequest.newBuilder(URI("https://memowordapp.com/Panel/Import/Index/$memoLanguageProfileId?lng=en"))
                 .header("Content-Type", multipartBodyPublisher.mediaType().toString())
                 .header("Origin",  "https://memowordapp.com")
@@ -366,8 +369,6 @@ class MemoWordSession : AutoCloseable {
 
         val requestString = if (request != null) requestObjectMapper.writeValueAsString(request) else null
 
-        log.info { "Requesting $uri" }
-
         val httpRequest = HttpRequest.newBuilder()
             .uri(uri)
             .header("Content-Type", "application/json; charset=utf-8")
@@ -381,7 +382,7 @@ class MemoWordSession : AutoCloseable {
             httpRequest.POST(HttpRequest.BodyPublishers.ofString(requestString))
         }
 
-        val response: HttpResponse<String> = client.send(
+        val response: HttpResponse<String> = client.sendAndMeasure(
             httpRequest.build(),
             HttpResponse.BodyHandlers.ofString(),
         )
@@ -542,7 +543,7 @@ class MemoWordSession : AutoCloseable {
 
         val memoLanguageProfileId = memoSettings.languageProfileId
 
-        //val uploadMemoListFormPageResponse = client.sendGet(
+        //val uploadMemoListFormPageResponse = client.sendGetAndMeasure(
         //    "https://memowordapp.com/Panel/Import/Index/$memoLanguageProfileId?lng=en")
         //
         //val formRequestVerificationToken = uploadMemoListFormPageResponse.extractFormRequestVerificationToken()
@@ -559,7 +560,7 @@ class MemoWordSession : AutoCloseable {
             .textPart("Description", "")
             .build()
 
-        val createMemoListResponse: HttpResponse<String> = client.send(
+        val createMemoListResponse: HttpResponse<String> = client.sendAndMeasure(
             HttpRequest.newBuilder(URI("https://memowordapp.com/Panel/Lists/Create/$memoLanguageProfileId"))
                 .header("Content-Type", multipartBodyPublisher.mediaType().toString())
                 .header("Origin",  "https://memowordapp.com")
@@ -850,7 +851,7 @@ class MemoWordSession : AutoCloseable {
 
     private fun loginToMemoWord() {
 
-        val loginPageResponse = client.sendGet("https://memowordapp.com/Account/Login?lng=en")
+        val loginPageResponse = client.sendGetAndMeasure("https://memowordapp.com/Account/Login?lng=en")
 
         val formRequestVerificationToken: String = loginPageResponse.extractFormRequestVerificationToken()
 
@@ -858,7 +859,7 @@ class MemoWordSession : AutoCloseable {
         val psw = settings.memoPassword
         require(email != null && psw != null) { "Memo login mame/psw is not set." }
 
-        val loginResponse: HttpResponse<String> = client.send(
+        val loginResponse: HttpResponse<String> = client.sendAndMeasure(
             HttpRequest.newBuilder()
                 .uri(URI("https://memowordapp.com/Account/Login"))
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -884,6 +885,11 @@ class MemoWordSession : AutoCloseable {
 
         log.info { "Successful logging into MemoWord site." }
     }
+
+    private fun <R> HttpClient.sendAndMeasure(request: HttpRequest, responseBodyHandler: BodyHandler<R>): HttpResponse<R> =
+        measureTime("Requesting ${request.uri()}", log) { this.send(request, responseBodyHandler) }
+    private fun HttpClient.sendGetAndMeasure(uri: String): HttpResponse<String> =
+        measureTime("Requesting $uri", log) { this.sendGet(uri) }
 
 }
 

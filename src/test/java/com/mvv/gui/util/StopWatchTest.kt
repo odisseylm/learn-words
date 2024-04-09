@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.StopWatch
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Test
 import org.junit.platform.commons.util.ReflectionUtils
 import java.lang.reflect.Field
 import java.time.Duration
@@ -11,6 +12,7 @@ import kotlin.reflect.KClass
 
 
 class StopWatchTest {
+    private val log = mu.KotlinLogging.logger {}
 
     //@Test
     @DisplayName("timeString")
@@ -60,6 +62,17 @@ class StopWatchTest {
             .isEqualTo("52ns")
 
         a.assertAll()
+    }
+
+
+    @Test
+    fun justUseCode() {
+        val stopWatch = startStopWatch()
+        stopWatch.logInfo(log)
+        stopWatch.logInfo(log, "message1")
+
+        stopWatch.debugInfo(log)
+        stopWatch.debugInfo(log, "message1")
     }
 
 

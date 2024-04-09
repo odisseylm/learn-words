@@ -35,3 +35,9 @@ fun StopWatch.debugInfo(log: mu.KLogger, point: String) =
 fun StopWatch.debugInfo(log: mu.KLogger) =
     log.debug { "${this.message} => elapsed ${this.timeString}ns" }
 
+
+fun <R> measureTime(taskName: String, log: mu.KLogger, task: ()->R): R {
+    val stopWatch = startStopWatch(taskName)
+    return try { task() }
+           finally { stopWatch.logInfo(log) }
+}
