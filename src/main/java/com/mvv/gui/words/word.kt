@@ -109,6 +109,8 @@ fun CardWordEntry.copyBasePropsTo(to: CardWordEntry) {
     to.sourcePositions = this.sourcePositions
     to.sourceSentences = this.sourceSentences
     to.missedBaseWords = this.missedBaseWords
+    to.createdAt       = this.createdAt
+    to.updatedAt       = this.updatedAt
 }
 
 
