@@ -11,6 +11,19 @@ import org.junit.jupiter.api.Test
 class WordsAnalysisTest {
 
     @Test
+    fun areAllVerbs() { useAssertJSoftAssertions {
+        assertThat("""(v.) РАСКАИВАТЬСЯ
+                      сокрушаться (сожалеть)
+                      """.areAllVerbs).isTrue
+
+        assertThat("""(бот.) ползучий
+                      (зоол.) ПРЕСМЫКАЮЩИЙСЯ
+                      (rıˈpent) (v.) РАСКАИВАТЬСЯ
+                      сокрушаться (сожалеть)
+                      """.areAllVerbs).isFalse
+    } }
+
+    @Test
     @DisplayName("hasUnpairedBrackets")
     fun test_hasUnpairedBrackets() {
         useAssertJSoftAssertions {

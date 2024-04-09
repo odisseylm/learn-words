@@ -4,7 +4,9 @@ import kotlin.math.min
 
 
 fun <S: CharSequence> S.endsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.endsWith(it) }
+fun <S: CharSequence> S.endsWithOneOf(suffixes: Iterable<String>, ignoreCase: Boolean): Boolean = suffixes.any { this.endsWith(it, ignoreCase) }
 fun <S: CharSequence> S.endsWithOneOf(vararg suffixes: String): Boolean = endsWithOneOf(suffixes.asIterable())
+fun <S: CharSequence> S.endsWithOneOf(vararg suffixes: String, ignoreCase: Boolean): Boolean = endsWithOneOf(suffixes.asIterable(), ignoreCase)
 
 fun <S: CharSequence> S.startsWithOneOf(suffixes: Iterable<String>): Boolean = suffixes.any { this.startsWith(it) }
 fun <S: CharSequence> S.startsWithOneOf(vararg suffixes: String): Boolean = this.startsWithOneOf(suffixes.asIterable())

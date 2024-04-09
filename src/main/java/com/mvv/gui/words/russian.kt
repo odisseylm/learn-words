@@ -12,7 +12,7 @@ inline fun Char.isRussianLetter(): Boolean {
 
 val CharSequence.isVerb: Boolean get() {
     val fixed = this.trimEnd()
-    return fixed.endsWithOneOf("ть", "ться")
+    return fixed.endsWithOneOf("ть", "ться", ignoreCase = true)
 }
 val CharSequence.isOneWordVerb: Boolean get() = this.wordCount == 1 && this.isVerb
 

@@ -49,19 +49,24 @@ fun CharSequence.splitToToTranslations(): List<CharSequence> {
     for (i in this.indices) {
         val ch = this[i]
 
-        if (ch == '(') bracketLevel++
-        if (ch == ')' && bracketLevel > 0) bracketLevel--
+        when {
+            ch == '(' ->
+                bracketLevel++
 
-        if (bracketLevel == 0) {
-            if (ch == '\n' || ch == ',' || ch == ';') {
-                if (firstNonSpaceIndex != -1) translations.add(Range(firstNonSpaceIndex, lastNonSpaceIndex))
-                firstNonSpaceIndex = -1
-                lastNonSpaceIndex = -1
-            }
-            else if (!ch.isWhitespace()) {
-                if (firstNonSpaceIndex == -1) firstNonSpaceIndex = i
-                lastNonSpaceIndex = i
-            }
+            ch == ')' && bracketLevel > 0 ->
+                bracketLevel--
+
+            else ->
+                if (bracketLevel == 0) {
+                    if (ch == '\n' || ch == ',' || ch == ';') {
+                        if (firstNonSpaceIndex != -1) translations.add(Range(firstNonSpaceIndex, lastNonSpaceIndex))
+                        firstNonSpaceIndex = -1
+                        lastNonSpaceIndex = -1
+                    } else if (!ch.isWhitespace()) {
+                        if (firstNonSpaceIndex == -1) firstNonSpaceIndex = i
+                        lastNonSpaceIndex = i
+                    }
+                }
         }
     }
 

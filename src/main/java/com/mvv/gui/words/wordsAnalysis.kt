@@ -257,7 +257,7 @@ internal fun CharSequence.getUnpairedBracketsIndex(): Int {
 }
 
 
-private val String.areAllVerbs: Boolean get() {
+internal val String.areAllVerbs: Boolean get() {
     val translations = this.splitToToTranslations()
     return translations.filterNotBlank()
         .flatMap { it.splitTranslationToIndexed() }
