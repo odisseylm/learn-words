@@ -1,6 +1,7 @@
 package com.mvv.gui.cardeditor.actions
 
 import com.mvv.gui.cardeditor.LearnWordsController
+import com.mvv.gui.util.filterNotEmpty
 import com.mvv.gui.util.toIgnoreCaseSet
 import com.mvv.gui.words.*
 import javafx.scene.input.Clipboard
@@ -17,6 +18,27 @@ fun LearnWordsController.loadFromClipboard() {
         .map { it.adjustCard() }
 
     currentWords.addAll(words)
+    rebuildPrefixFinder()
+
+    reanalyzeAllWords()
+}
+
+
+fun LearnWordsController.loadPhrasesFromClipboard() {
+    val toIgnoreWords = if (settingsPane.autoRemoveIgnoredWords) ignoredWords.toIgnoreCaseSet() else emptySet()
+
+    val phrases = Clipboard.getSystemClipboard().string
+        .lines()
+        .map { it.trim() }
+        .filterNotEmpty()
+        .map { cardWordEntry { from = it } }
+
+    val words = extractWordsFromClipboard(Clipboard.getSystemClipboard(), SentenceEndRule.ByLineBreak, toIgnoreWords)
+        .map { it.adjustCard() }
+
+    val all = (phrases + words).distinctBy { it.from }
+    currentWords.addAll(all)
+
     rebuildPrefixFinder()
 
     reanalyzeAllWords()
