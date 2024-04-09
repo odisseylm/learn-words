@@ -21,7 +21,6 @@ class WordTest {
     }
 
     @Test
-    @DisplayName("splitToToTranslations")
     fun splitToToTranslations() {
         val a = SoftAssertions()
 
@@ -29,14 +28,22 @@ class WordTest {
 
         a.assertThat("word1, word2".splitToToTranslations()).containsExactly("word1", "word2")
 
+        // compact string
+        a.assertThat("word1,word2(comment1,comment2,comment3,),word3".splitToToTranslations())
+            .containsExactly("word1", "word2(comment1,comment2,comment3,)", "word3")
+
+        // too many spaces
         a.assertThat(" word1 ,  word2 (comment1, comment2, comment3, ) , \t \n word3 \t".splitToToTranslations())
             .containsExactly("word1", "word2 (comment1, comment2, comment3, )", "word3")
+
+        // with word after bracket
+        a.assertThat(" word1 ,  word2 (comment1, comment2, comment3, ) bla-bla, \t \n word3 \t".splitToToTranslations())
+            .containsExactly("word1", "word2 (comment1, comment2, comment3, ) bla-bla", "word3")
 
         a.assertAll()
     }
 
     @Test
-    @DisplayName("splitToToTranslations withWrongString")
     fun splitToToTranslations_withWrongString_shouldNotFail() {
         val a = SoftAssertions()
 

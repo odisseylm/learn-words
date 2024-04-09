@@ -53,8 +53,10 @@ fun CharSequence.splitToToTranslations(): List<CharSequence> {
             ch == '(' ->
                 bracketLevel++
 
-            ch == ')' && bracketLevel > 0 ->
+            ch == ')' && bracketLevel > 0 -> {
                 bracketLevel--
+                if (bracketLevel == 0) lastNonSpaceIndex = i
+            }
 
             else ->
                 if (bracketLevel == 0) {

@@ -41,10 +41,14 @@ open class SubSequenceFinder (
         val matchedSubSequenceStr = findMatchedSubSequence(phrase, options)
             ?: return phrase
 
-        val s = phrase.trim().removeRepeatableSpaces()
+        val s = phrase.trim().removeRepeatableSpaces() // T O D O: is it safe (as was expected)??
         return when (direction) {
             Direction.Forward  -> s.substring(matchedSubSequenceStr.length).trimStart()
-            Direction.Backward -> s.substring(0, s.length - matchedSubSequenceStr.length - s.punctuationEndLength).trimEnd()
+            Direction.Backward -> {
+                val sPunctuationEndLength = s.punctuationEndLength
+                val mPunctuationEndLength = matchedSubSequenceStr.punctuationEndLength
+                s.substring(0, s.length - matchedSubSequenceStr.length + mPunctuationEndLength - sPunctuationEndLength).trimEnd()
+            }
         }
     }
 

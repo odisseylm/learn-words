@@ -9,15 +9,15 @@ class CollectionsTest {
     @Test
     fun ifIndexNotFound() { useAssertJSoftAssertions {
        assertThat((-1).ifIndexNotFound(5)).isEqualTo(5)
-       assertThat(0.ifIndexNotFound(5)).isEqualTo(1)
+       assertThat(0.ifIndexNotFound(5)).isEqualTo(0)
        assertThat(1.ifIndexNotFound(5)).isEqualTo(1)
     } }
 
     @Test
     fun testIfIndexNotFound() { useAssertJSoftAssertions {
-        assertThat((-1).ifIndexNotFound {5 }).isEqualTo(5)
-        assertThat(0.ifIndexNotFound { 5 }).isEqualTo(1)
-        assertThat(1.ifIndexNotFound { 5 }).isEqualTo(1)
+        assertThat((-1).ifIndexNotFound { 5 }).isEqualTo(5)
+        assertThat(0.ifIndexNotFound { 0 }).isEqualTo(0)
+        assertThat(1.ifIndexNotFound { 1 }).isEqualTo(1)
     } }
 
     @Test
