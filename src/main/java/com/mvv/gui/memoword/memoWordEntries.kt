@@ -310,17 +310,35 @@ enum class MemoWordPartOfSpeech (val id: Int) {
 val PartOfSpeech.asMemo: MemoWordPartOfSpeech get() = when (this) {
     PartOfSpeech.Noun          -> MemoWordPartOfSpeech.Noun
     PartOfSpeech.Adjective     -> MemoWordPartOfSpeech.Adjective
+
     PartOfSpeech.Verb          -> MemoWordPartOfSpeech.Verb
+    PartOfSpeech.AuxiliaryVerb -> MemoWordPartOfSpeech.Verb
+    PartOfSpeech.ModalVerb     -> MemoWordPartOfSpeech.Verb
+    PartOfSpeech.PhrasalVerb   -> MemoWordPartOfSpeech.Verb
+
     PartOfSpeech.Pronoun       -> MemoWordPartOfSpeech.Pronoun
     PartOfSpeech.Adverb        -> MemoWordPartOfSpeech.Adverb
     PartOfSpeech.Union         -> MemoWordPartOfSpeech.Union
     PartOfSpeech.Numeral       -> MemoWordPartOfSpeech.Numeral
+    PartOfSpeech.Article       -> MemoWordPartOfSpeech.Noun
     PartOfSpeech.Particle      -> MemoWordPartOfSpeech.Particle
     PartOfSpeech.Preposition   -> MemoWordPartOfSpeech.Preposition
+    PartOfSpeech.PluralPreposition -> MemoWordPartOfSpeech.Word
     PartOfSpeech.Interjection  -> MemoWordPartOfSpeech.Interjection
+
     PartOfSpeech.Word          -> MemoWordPartOfSpeech.Word
     PartOfSpeech.Phrase        -> MemoWordPartOfSpeech.Phrase
+    PartOfSpeech.PrepPhrase    -> MemoWordPartOfSpeech.Phrase
+
+    PartOfSpeech.Exclamation   -> MemoWordPartOfSpeech.Phrase
     PartOfSpeech.SetExpression -> MemoWordPartOfSpeech.SetExpression
+
+    //PartOfSpeech.Singular    -> MemoWordPartOfSpeech.Word
+    //PartOfSpeech.Plural      -> MemoWordPartOfSpeech.Word
+
+    PartOfSpeech.Conjunction   -> MemoWordPartOfSpeech.Word
+    PartOfSpeech.Determiner    -> MemoWordPartOfSpeech.Word
+    PartOfSpeech.Abbreviation  -> MemoWordPartOfSpeech.Word
 }
 
 

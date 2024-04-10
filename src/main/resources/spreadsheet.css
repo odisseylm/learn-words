@@ -119,42 +119,149 @@
 }
 #currentWords  .table-row-cell .Noun {
     -fx-alignment: center;
+    /*-fx-background-color: #a35d2a;*/
+    /*-fx-background-color: linear-gradient(from 25% 25% to 100% 100%, #a35d2a, background-color);*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #a35d2a, background-color);
 }
 #currentWords  .table-row-cell .Adjective {
     -fx-alignment: center;
+    /*-fx-background-color: #95a286;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #95a286, background-color);
 }
 #currentWords  .table-row-cell .Verb {
     -fx-alignment: center;
+    /*-fx-background-color: #8b3d17;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #8b3d17, background-color);
+}
+#currentWords  .table-row-cell .AuxiliaryVerb {
+    -fx-alignment: center;
+    /*-fx-background-color: #8b3d17;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #8b3d17, background-color);
+}
+#currentWords  .table-row-cell .ModalVerb {
+    -fx-alignment: center;
+    /*-fx-background-color: #8b3d17;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #8b3d17, background-color);
+}
+#currentWords  .table-row-cell .PhrasalVerb {
+    -fx-alignment: center;
+    /*-fx-background-color: #ad5d5e;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #ad5d5e, background-color);
 }
 #currentWords  .table-row-cell .Pronoun {
     -fx-alignment: center;
+    /*-fx-background-color: #c6a8b0;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #c6a8b0, background-color);
 }
 #currentWords  .table-row-cell .Adverb {
     -fx-alignment: center;
+    /*-fx-background-color: #555b4d;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #555b4d, background-color);
 }
 #currentWords  .table-row-cell .Union {
     -fx-alignment: center;
+    /*-fx-background-color: #253d6b;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #253d6b, background-color);
 }
 #currentWords  .table-row-cell .Numeral {
     -fx-alignment: center;
+    /*-fx-background-color: #1a2747;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #1a2747, background-color);
 }
 #currentWords  .table-row-cell .Particle {
     -fx-alignment: center;
+    /*-fx-background-color: #b18f6a;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #b18f6a, background-color);
 }
 #currentWords  .table-row-cell .Preposition {
     -fx-alignment: center;
+    /*-fx-background-color: #d7bfd7;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #d7bfd7, background-color);
+}
+#currentWords  .table-row-cell .PluralPreposition {
+    -fx-alignment: center;
+    /*-fx-background-color: #d7bfd7;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #d7bfd7, background-color);
 }
 #currentWords  .table-row-cell .Interjection {
     -fx-alignment: center;
+    /*-fx-background-color: #b18f6a;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #b18f6a, background-color);
 }
 #currentWords  .table-row-cell .Word {
     -fx-alignment: center;
+    /*-fx-background-color: #9896a4;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #9896a4, background-color);
+}
+#currentWords  .table-row-cell .Abbreviation {
+    -fx-alignment: center;
+    /*-fx-background-color: #9896a4;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #9896a4, background-color);
+}
+#currentWords  .table-row-cell .Singular {
+    -fx-alignment: center;
+    /*-fx-background-color: #9896a4;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #9896a4, background-color);
+}
+#currentWords  .table-row-cell .Conjunction {
+    -fx-alignment: center;
+    /*-fx-background-color: #9896a4;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #9896a4, background-color);
+}
+#currentWords  .table-row-cell .Determiner {
+    -fx-alignment: center;
+    /*-fx-background-color: #9896a4;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #9896a4, background-color);
 }
 #currentWords  .table-row-cell .Phrase {
     -fx-alignment: center;
+    /*-fx-background-color: #d8af46;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #d8af46, background-color);
+}
+#currentWords  .table-row-cell .PrepPhrase {
+    -fx-alignment: center;
+    /*-fx-background-color: #d8af46;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #d8af46, background-color);
+}
+#currentWords  .table-row-cell .Exclamation {
+    -fx-alignment: center;
+    /*-fx-background-color: #af9483;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #af9483, background-color);
 }
 #currentWords  .table-row-cell .SetExpression {
     -fx-alignment: center;
+    /*-fx-background-color: #af9483;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #af9483, background-color);
+}
+#currentWords  .table-row-cell .AdditionalPartOfSpeech1 {
+    -fx-alignment: center;
+    /*-fx-background-color: #ffa07a;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #ffa07a, background-color);
+}
+#currentWords  .table-row-cell .AdditionalPartOfSpeech2 {
+    -fx-alignment: center;
+    /*-fx-background-color: #11d3d5;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #11d3d5, background-color);
+}
+#currentWords  .table-row-cell .AdditionalPartOfSpeech3 {
+    -fx-alignment: center;
+    /*-fx-background-color: #9b16a3;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #9b16a3, background-color);
+}
+#currentWords  .table-row-cell .MasculineGender {
+    -fx-alignment: center;
+    /*-fx-background-color: #2d17a0;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #2d17a0, background-color);
+}
+#currentWords  .table-row-cell .FeminineGender {
+    -fx-alignment: center;
+    /*-fx-background-color: #efbae6;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #efbae6, background-color);
+}
+#currentWords  .table-row-cell .NeuterGender {
+    -fx-alignment: center;
+    /*-fx-background-color: #ebe0a2;*/
+    -fx-background-color: linear-gradient(from 0px 0px to 20px 20px, #ebe0a2, background-color);
 }
 
 

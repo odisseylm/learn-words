@@ -79,32 +79,113 @@ inline fun cardWordEntry(init: CardWordEntry.()->Unit) = CardWordEntry("", "").a
 
 
 // There only needed for me values.
-enum class PartOfSpeech {
-    Noun,
-    Adjective,     // Прилагательное
-    Verb,
-    Pronoun,       // Местоимение
-    Adverb,        // Наречие
-    Union,         // Союз
-    Numeral,       // Числительное
-    Particle,      // Частица ??
-    Preposition,   // Предлог
-    Interjection,  // Междометие
+enum class PartOfSpeech (vararg shorts: String) {
+    Noun("n.", "(n.)", "_n."),
+    Adjective("adj.", "(adj.)", "_adj."),      // Прилагательное
+
+    Verb("v.", "(v.)", "_v."),
+    AuxiliaryVerb("av.", "(av.)", "_av."),
+    ModalVerb("mv.", "(mv.)", "_mv."),
+    PhrasalVerb("phrv.", "(phrv.)", "_phrv."),
+
+    PluralPreposition("pi.", "(pi.)", "_pi."),
+
+    //Singular("sg.", "(sg.)", "_sg."),
+    //Plural("pl.", "(pl.)", "_pl."),
+
+    Pronoun("pron.", "(.pron)", ".pron_"),     // Местоимение
+    Adverb("adv.", "(adv.)", "_adv."),         // Наречие
+    Union("un.", "(un.)", "_un."),             // Союз     // Is 'un.' ok?
+    Numeral("num.", "(num.)", "_num.", "n-ord.", "(n-ord.)", "_n-ord.", "n-card.", "(n-card.)", "_n-card."),
+    Article("art.", "(art.)", "_art."),
+    Particle("part.", "(part.)", "_part."),    // Частица  // Is 'part.' ok?
+    Preposition("prep.", "(prep.)", "_prep."), // Предлог
+    Interjection("interj.", "(interj.)", "_interj."), // Междометие
+    Conjunction("cj.", "(cj.)", "_cj."),
+    Determiner("det.", "(det.)", "_det."),            // Is 'det.' ok?
+    Exclamation("exclam.", "(exclam.)", "_exclam."),  // Is 'excl.' ok?
+
+    // v.t.
 
     // Article,      // the, an, a
     // Conjunction,  // and... but... or... while... because
     // Interjection, // Oh!... Wow!... Oops!
 
+    /*
+    v.t.
+    _emph. сами;
+    _emph. сам, сама
+    _attr. молодёжный;
+    _sup      best   1. _a. (_sup. от good 1)
+    _predic.  kaput    _нем. _a. _predic. _разг. уничтоженный; разорённый; потерпевший
+    _pass     passive voice
+    _press-p
+    _demonstr.  it 1. _pron.  1) _pers. (_obj. без измен.) он, она, оно (о предметах и животных);  ... это; 2) _demonstr. это;
+
+    _subj.
+
+    _p-p       cracked   1. _p-p. от crack
+    _p         crept     _p. и _p-p. от creep 1
+
+    _pres-p    yearning  1. _pres-p. от yearn
+    _poss.
+
+    abbrev    abbreviation or acronym
+    av        auxiliary verb
+    Am Eng    American English
+    Br Eng    British English
+    conj      determiner
+    ?? conj det  conjunction determiner
+    ?? det    determiner
+    exclam    exclamation
+
+    mv        modal verb
+    n         noun
+
+    ???
+    phrv      phrasal verb
+    pi
+    prep       plural preposition
+    prep phr   prepositional phrase
+
+    pron       pronoun
+    sing       singular
+    v          verb
+
+    ?? v. a.
+    ?? v. a. & n.
+    ?? v. n.
+    */
+
+    //AmericanEnglish("Am Eng"),
+    //BritishEnglish("Br Eng"),
+
+    // abbreviation or acronym
+    Abbreviation("abbrev.", "(abbrev.)", "_abbrev."), // Is 'abbrev.' ok?
+    // prepositional phrase
+    PrepPhrase("prep phr."),
+
     Word,
-    Phrase,
-    SetExpression,
+    Phrase("phr.", "(phr.)", "_phr."),     // Is 'phr.' ok?
+    SetExpression("se.", "(se.)", "_se."), // Is 'se.' ok?
     ;
+
+    val all: List<String> = (shorts.toList() + shorts.map { "($it)" } + this.name.lowercase() + this.name).sortedBy { it.length }
 
     companion object {
         val allCssClasses = PartOfSpeech.values().map { it.name }
     }
 }
 
+/*
+Groups:
+_разг.
+_архит. _мор. _стр. _жив. _охот. _тех. _бот. _ж-д.
+
+_перен.
+_a. _predic.
+_pl. _собир.
+*/
 
 fun CardWordEntry.copyBasePropsTo(to: CardWordEntry) {
     to.from = this.from
