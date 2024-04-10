@@ -43,6 +43,9 @@ interface CardWordEntry {
     val transcriptionProperty: StringProperty
     val translationCountProperty: ObservableValue<Int>
 
+    val partsOfSpeechProperty: ObjectProperty<Set<PartOfSpeech>>
+    val predictedPartOfSpeechProperty: ObservableValue<PartOfSpeech>
+
     val examplesProperty: StringProperty
     val exampleCountProperty: ObservableValue<Int>
     val exampleNewCardCandidateCountProperty: ObservableValue<Int>
@@ -95,6 +98,11 @@ enum class PartOfSpeech {
     Word,
     Phrase,
     SetExpression,
+    ;
+
+    companion object {
+        val allCssClasses = PartOfSpeech.values().map { it.name }
+    }
 }
 
 
@@ -138,6 +146,10 @@ private class CardWordEntryImpl (
     override val toProperty = SimpleStringProperty(this, "to", "")
     override val transcriptionProperty = SimpleStringProperty(this, "transcription", "")
     override val translationCountProperty: ObservableValue<Int> = toProperty.mapCached { it?.translationCount ?: 0 }
+
+    override val partsOfSpeechProperty: ObjectProperty<Set<PartOfSpeech>> = SimpleObjectProperty()
+    override val predictedPartOfSpeechProperty: CacheableObservableValue<PartOfSpeech> = fromProperty.mapCached(
+        { guessPartOfSpeech(it, toProperty.value) }, toProperty)
 
     override val examplesProperty = SimpleStringProperty(this, "examples", "")
     override val exampleCountProperty = examplesProperty.mapCached { it.examplesCount }

@@ -45,6 +45,11 @@ fun <T> Iterable<T>.doIfNotEmpty(action: (Iterable<T>)->Unit) {
     if (this.iterator().hasNext()) action(this)
 }
 
+//inline fun <C, R> C?.ifNullOrEmpty(defaultValue: () -> R): R where C : Collection<*>, C : R =
+//    if (isNullOrEmpty()) defaultValue() else this
+inline fun <T, C: Collection<T>> C?.ifNullOrEmpty(defaultValue: ()->C): C =
+    if (isNullOrEmpty()) defaultValue() else this
+
 
 fun <T, E: Exception> Sequence<T>.firstOrThrow(ex: ()->E): T =
     this.firstOrNull() ?: throw ex()

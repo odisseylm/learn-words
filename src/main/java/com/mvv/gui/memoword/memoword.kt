@@ -450,7 +450,7 @@ class MemoWordSession : AutoCloseable {
         return memoList
     }
 
-    fun CardWordEntry.isCardValid() = this.from.isNotBlank() && this.to.isNotBlank()
+    private fun CardWordEntry.isCardValid() = this.from.isNotBlank() && this.to.isNotBlank()
 
     private fun filterInsertingCards(cards: List<CardWordEntry>): List<CardWordEntry> {
 
@@ -505,7 +505,7 @@ class MemoWordSession : AutoCloseable {
                 TextFrom    = "",
                 TextTo      = "",
                 Note        = card.memoCardNote,
-                MemoCardPartOfSpeechId = (card.partOfSpeech ?: guessPartOfSpeech(card.from)).asMemo.toString(),
+                MemoCardPartOfSpeechId = card.asSinglePartOfSpeech().asMemo.id.toString(),
                 SelectedMemoList = null,
             )
             .withText(memoList, Language.English, card.fromInMemoWordFormat)

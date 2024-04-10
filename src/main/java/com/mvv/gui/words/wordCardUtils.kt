@@ -3,6 +3,7 @@ package com.mvv.gui.words
 import com.mvv.gui.cardeditor.actions.isGoodLearnCardCandidate
 import com.mvv.gui.cardeditor.actions.parseToCard
 import com.mvv.gui.util.containsEnglishLetters
+import com.mvv.gui.util.isOneOf
 import com.mvv.gui.util.splitToWords
 import com.mvv.gui.util.startsWithOneOf
 import java.util.TreeSet
@@ -113,6 +114,15 @@ internal val CharSequence.exampleNewCardCandidateCount: Int get() {
         .count()
 }
 
+
+fun guessPartOfSpeech(card: CardWordEntry): PartOfSpeech = guessPartOfSpeech(card.from, card.to)
+
+fun guessPartOfSpeech(from: String, to: String): PartOfSpeech {
+    val guessedByFrom = guessPartOfSpeech(from)
+    return if (guessedByFrom.isOneOf(PartOfSpeech.Word, PartOfSpeech.Phrase) && to.areAllVerbs)
+                PartOfSpeech.Verb
+           else guessedByFrom
+}
 
 fun guessPartOfSpeech(wordOrPhrase: String): PartOfSpeech {
     val allWords = wordOrPhrase.splitToWords()

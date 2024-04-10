@@ -112,6 +112,52 @@
     -fx-padding: 0 15 0 15;
 }
 
+
+#currentWords .partsOfSpeech .label {
+    -fx-alignment: center;
+    -fx-padding: 0 15 0 15;
+}
+#currentWords  .table-row-cell .Noun {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Adjective {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Verb {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Pronoun {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Adverb {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Union {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Numeral {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Particle {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Preposition {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Interjection {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Word {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .Phrase {
+    -fx-alignment: center;
+}
+#currentWords  .table-row-cell .SetExpression {
+    -fx-alignment: center;
+}
+
+
 #currentWords .translationCountColumn .label {
     -fx-alignment: center;
     -fx-padding: 0 15 0 15;

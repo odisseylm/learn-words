@@ -38,6 +38,12 @@ inline val Int.isEven: Boolean get() = (this % 2) == 0
 inline val Int.isOdd: Boolean get() = (this % 2) == 1
 
 
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T> T.isOneOf(val1: T, val2: T): Boolean = this == val1 || this == val2
+//@Suppress("NOTHING_TO_INLINE")
+//inline fun <T> T.isOneOf(val1: T, val2: T, val3: T): Boolean =
+//    this == val1 || this == val2 || this == val3
+
 fun <T> T.isOneOf(vararg values: T): Boolean = values.any { it == this }
 fun String?.isOneOf(vararg values: String, ignoreCase: Boolean): Boolean = this != null && values.any { it.equals(this, ignoreCase = ignoreCase) }
 fun String?.isOneOf(values: Iterable<String>, ignoreCase: Boolean): Boolean = this != null && values.any { it.equals(this, ignoreCase = ignoreCase) }

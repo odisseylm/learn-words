@@ -1,7 +1,6 @@
 package com.mvv.gui.words
 
-import com.mvv.gui.util.getOrEmpty
-import com.mvv.gui.util.trimToNull
+import com.mvv.gui.util.*
 import com.opencsv.CSVReader
 import com.opencsv.CSVWriter
 import com.opencsv.ICSVWriter
@@ -72,11 +71,21 @@ fun loadWordCardsFromInternalCsv(file: Path): List<CardWordEntry> =
                     card.sourcePositions = stringToInts(it.getOrEmpty(index++))
                     card.sourceSentences = it.getOrEmpty(index++)
                     card.createdAt = it.getOrNull(index++).trimToNull() ?.let { s -> ZonedDateTime.parse(s) }
-                    card.updatedAt = it.getOrNull(index)  .trimToNull() ?.let { s -> ZonedDateTime.parse(s) }
+                    card.updatedAt = it.getOrNull(index++).trimToNull() ?.let { s -> ZonedDateTime.parse(s) }
+                    card.partsOfSpeech = parsePartsOfSpeech(it.getOrEmpty(index))
                     card
                 }
                 .toList()
         }
+
+internal fun parsePartsOfSpeech(string: String): Set<PartOfSpeech> =
+    string.split('|')
+        .filterNotBlank()
+        .mapNotNull {
+            try { PartOfSpeech.valueOf(it.trim()) }
+            catch (_: Exception) { null }
+        }
+        .toSet()
 
 
 fun saveWordCardsIntoInternalCsv(file: Path, words: Iterable<CardWordEntry>) {
@@ -99,6 +108,7 @@ fun saveWordCardsIntoInternalCsv(file: Path, words: Iterable<CardWordEntry>) {
                     card.sourceSentences, // TODO: optimize it in some way to avoid having huge files
                     card.createdAt?.toString(),
                     card.updatedAt?.toString(),
+                    card.partsOfSpeech?.joinToString("|"),
                 ))
             }
         }

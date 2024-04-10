@@ -7,7 +7,10 @@ import javafx.util.Callback
 import javafx.util.StringConverter
 
 
-class LabelStatusTableCell<S,T>(private val stringConverter: StringConverter<T>, private val updateCellAttrs: (TableCell<S,T>,S,T?)->Unit) : TextFieldTableCell<S, T>() {
+class LabelTableCell<S,T>(
+    private val stringConverter: StringConverter<T>?,
+    private val updateCellAttrs: (TableCell<S,T>,S,T?)->Unit,
+    ) : TextFieldTableCell<S, T>() {
 
     override fun updateItem(item: T?, empty: Boolean) {
         super.updateItem(item, empty)
@@ -16,17 +19,17 @@ class LabelStatusTableCell<S,T>(private val stringConverter: StringConverter<T>,
             text = null
             setGraphic(null)
         } else {
-            text = stringConverter.toString(item)
+            text = stringConverter?.toString(item)
             updateCellAttrs(this, tableRow.item, item)
         }
     }
 
     companion object {
         @Suppress("MemberVisibilityCanBePrivate")
-        fun <S, T> forTableColumn(stringConverter: StringConverter<T>, updateCellAttrs: (TableCell<S,T>, S, T?)->Unit): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            Callback { _: TableColumn<S, T>? -> LabelStatusTableCell(stringConverter, updateCellAttrs) }
+        fun <S, T> forTableColumn(stringConverter: StringConverter<T>?, updateCellAttrs: (TableCell<S,T>, S, T?)->Unit): Callback<TableColumn<S, T>, TableCell<S, T>> =
+            Callback { _: TableColumn<S, T>? -> LabelTableCell(stringConverter, updateCellAttrs) }
         fun <S, T> forTableColumn(updateCellAttrs: (TableCell<S,T>,S,T?)->Unit): Callback<TableColumn<S, T>, TableCell<S, T>> =
-            forTableColumn<S, T>(DefaultReadOnlyObjectStringConverter<T>(), updateCellAttrs)
+            forTableColumn(DefaultReadOnlyObjectStringConverter(), updateCellAttrs)
     }
 }
 

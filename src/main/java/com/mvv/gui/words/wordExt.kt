@@ -56,5 +56,6 @@ var CardWordEntry.missedBaseWords: List<String>
     get()      = missedBaseWordsProperty.get()
     set(value) = missedBaseWordsProperty.set(value)
 
-val CardWordEntry.partOfSpeech: PartOfSpeech? // TODO: impl
-    get()      = null
+var CardWordEntry.partsOfSpeech: Set<PartOfSpeech>?
+    get()      = this.partsOfSpeechProperty.get()
+    set(value) = this.partsOfSpeechProperty.set(value)

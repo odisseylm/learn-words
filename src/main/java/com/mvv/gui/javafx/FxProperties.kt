@@ -1,5 +1,6 @@
 package com.mvv.gui.javafx
 
+import com.mvv.gui.util.ifNullOrEmpty
 import com.sun.javafx.binding.ExpressionHelper
 import javafx.beans.InvalidationListener
 import javafx.beans.property.ReadOnlyProperty
@@ -116,12 +117,20 @@ fun <S,T> ObservableValue<S>.mapCached(map: (S)->T, otherDependent: ObservableVa
     addListeners(otherDependent)
     otherDependents.forEach { addListeners(it) }
 
-    return ObservableCacheableValueWrapper(resultObs) {
-        ref = null
-        resultObs.set(cachedMapper(this.value))
-    }
+    return ObservableCacheableValueWrapper(
+        delegate = resultObs,
+        resetCachedValueF = {
+            ref = null
+            resultObs.set(cachedMapper(this.value))
+        },
+        //otherDependencies = otherDependents.toList(),
+    )
 }
 
+// Ideally it would be better to return ObservableValue<C> (instead of ObservableValue<C?>)
+// but it breaks its usage.
+fun <T,C:Collection<T>> ObservableValue<C?>.ifNullOrEmptyCached(supply: ()->C, otherDependent: ObservableValue<*>, vararg otherDependents: ObservableValue<*>): ObservableValue<C?> =
+    this.mapCached( { it.ifNullOrEmpty { supply() } }, otherDependent, *otherDependents)
 
 /*
 // Seem we can remove 'atomic' versions since JavaFX properties are not thread-safe at all!!!
@@ -214,15 +223,50 @@ abstract class AbstractObservable<T> : ObservableValue<T> {
 }
 
 
-open class ObservableValueWrapper<T> (private val delegate: ObservableValue<T>) : ObservableValue<T> {
-    override fun addListener(listener: ChangeListener<in T>?) = delegate.addListener(listener)
-    override fun addListener(listener: InvalidationListener?) = delegate.addListener(listener)
-    override fun removeListener(listener: InvalidationListener?) = delegate.removeListener(listener)
-    override fun removeListener(listener: ChangeListener<in T>?) = delegate.removeListener(listener)
+open class ObservableValueWrapper<T> (
+        private val delegate: ObservableValue<T>,
+        //otherDependents: List<ObservableValue<*>>,
+    ) : ObservableValue<T> {
+
+    //private var helper: ExpressionHelper<Any>? = null
+
+    override fun addListener(listener: ChangeListener<in T>?) {
+        delegate.addListener(listener)
+        //helper = ExpressionHelper.addListener(helper, this as ObservableValue<Any>, listener as ChangeListener<Any>)
+    }
+    override fun removeListener(listener: ChangeListener<in T>?) {
+        delegate.removeListener(listener)
+        //helper = ExpressionHelper.removeListener(helper, listener as ChangeListener<Any>)
+    }
+    override fun addListener(listener: InvalidationListener?) {
+        delegate.addListener(listener)
+        //helper = ExpressionHelper.addListener(helper, this as ObservableValue<Any>, listener as InvalidationListener)
+    }
+    override fun removeListener(listener: InvalidationListener?) {
+        delegate.removeListener(listener)
+        //helper = ExpressionHelper.removeListener(helper, listener)
+    }
     override fun getValue(): T = delegate.value
+
+    //@Suppress("MemberVisibilityCanBePrivate")
+    //protected fun fireChangedValue() =
+    //    ExpressionHelper.fireValueChangedEvent(helper)
+    //
+    //init {
+    //    otherDependents.forEach {
+    //        it.addListener { _, _, _ ->
+    //            println("### fireChangedValue()")
+    //            fireChangedValue()
+    //        }
+    //    }
+    //}
 }
 
 
-class ObservableCacheableValueWrapper<T> (delegate: ObservableValue<T>, private val resetCachedValueF: ()->Unit) : ObservableValueWrapper<T>(delegate), CacheableObservableValue<T> {
+class ObservableCacheableValueWrapper<T> (
+        delegate: ObservableValue<T>,
+        private val resetCachedValueF: ()->Unit,
+        //otherDependencies: List<ObservableValue<*>>,
+    ) : ObservableValueWrapper<T>(delegate/*, otherDependencies*/), CacheableObservableValue<T> {
     override fun resetCachedValue() = resetCachedValueF()
 }

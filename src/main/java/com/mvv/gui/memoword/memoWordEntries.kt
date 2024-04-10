@@ -342,13 +342,29 @@ internal fun Instant.toMemoDate(): String =
     "/Date(${this.toEpochMilli()})/"
 internal fun ZonedDateTime.toMemoDate(): String = this.toInstant().toMemoDate()
 
+fun CardWordEntry.asSinglePartOfSpeech(): PartOfSpeech {
+    val card = this
+    val partsOfSpeech = card.partsOfSpeech
+
+    val partOfSpeech: PartOfSpeech = when {
+        partsOfSpeech == null ->
+            guessPartOfSpeech(card)
+        partsOfSpeech.size == 1 ->
+            partsOfSpeech.first()
+        card.fromWordCount == 1 ->
+            PartOfSpeech.Word
+        else ->
+            PartOfSpeech.Phrase
+    }
+    return partOfSpeech
+}
 
 fun MemoCard.updateFrom(card: CardWordEntry) = this.update(
         Language.English, card.fromInMemoWordFormat,
         Language.Russian, card.toInMemoWordFormat,
         card.memoCardNote,
         card.updatedAt?.toInstant(),
-        card.partOfSpeech ?: guessPartOfSpeech(card.from)
+        card.asSinglePartOfSpeech(),
     )
 
 internal fun MemoCard.update(

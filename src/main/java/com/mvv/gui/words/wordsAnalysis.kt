@@ -258,6 +258,8 @@ internal fun CharSequence.getUnpairedBracketsIndex(): Int {
 
 
 internal val String.areAllVerbs: Boolean get() {
+    if (this.isBlank()) return false
+
     val translations = this.splitToToTranslations()
     return translations.filterNotBlank()
         .flatMap { it.splitTranslationToIndexed() }

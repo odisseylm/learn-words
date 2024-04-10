@@ -5,6 +5,7 @@ import com.mvv.gui.cardeditor.actions.moveSubTextToExamples
 import com.mvv.gui.cardeditor.actions.reanalyzeOnlyWords
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
+import com.mvv.gui.memoword.asSinglePartOfSpeech
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.*
 import javafx.application.Platform
@@ -26,9 +27,11 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
     private  val baseOfFrom1CharColumn  = TableColumn<CardWordEntry, BaseAndFrom>() //"B")
     internal val fromColumn             = TableColumn<CardWordEntry, String>("English")
     private  val fromWordCountColumn    = TableColumn<CardWordEntry, Int>() // "N")
+    private  val partsOfSpeechColumn    = TableColumn<CardWordEntry, Set<PartOfSpeech>?>()
     private  val statusesColumn         = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
     internal val toColumn               = TableColumn<CardWordEntry, String>("Russian")
     internal val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
+    @Suppress("MemberVisibilityCanBePrivate")
     internal val transcriptionColumn    = TableColumn<CardWordEntry, String>("Transcription")
     internal val exampleCountColumn     = TableColumn<CardWordEntry, ExampleCountEntry>() //"ExN")
     internal val examplesColumn         = TableColumn<CardWordEntry, String>("Examples")
@@ -70,6 +73,14 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         fromWordCountColumn.graphic = Label("N").also { it.tooltip = Tooltip("Word count") }
         fromWordCountColumn.styleClass.add("fromWordCountColumn")
 
+        partsOfSpeechColumn.id = "partsOfSpeech"
+        partsOfSpeechColumn.isEditable = false
+        partsOfSpeechColumn.cellValueFactory = Callback { p -> p.value.partsOfSpeechProperty
+            .ifNullOrEmptyCached( { setOf(p.value.predictedPartOfSpeechProperty.value) }, p.value.toProperty) }
+        partsOfSpeechColumn.graphic = Label("P").also { it.tooltip = Tooltip("Part of speech") }
+        partsOfSpeechColumn.styleClass.add("partsOfSpeech")
+        partsOfSpeechColumn.cellFactory = LabelTableCell.forTableColumn { cell, card, _ -> updatePartOfSpeechCell(cell, card) }
+
         toColumn.id = "toColumn"
         toColumn.isEditable = true
         toColumn.cellValueFactory = Callback { p -> p.value.toProperty }
@@ -100,7 +111,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         translationCountColumn.graphic = Label("N").also { it.tooltip = Tooltip("Translation count") }
         translationCountColumn.styleClass.add("translationCountColumn")
 
-        translationCountColumn.cellFactory = LabelStatusTableCell.forTableColumn { cell, _, translationCount ->
+        translationCountColumn.cellFactory = LabelTableCell.forTableColumn { cell, _, translationCount ->
             val translationCountStatus = translationCount?.toTranslationCountStatus ?: TranslationCountStatus.Ok
             cell.styleClass.removeAll(TranslationCountStatus.allCssClasses)
             cell.styleClass.add(translationCountStatus.cssClass)
@@ -178,7 +189,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
 
         val statusesIcons = StatusesIcons()
 
-        statusesColumn.cellFactory = LabelStatusTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
+        statusesColumn.cellFactory = LabelTableCell.forTableColumn(EmptyTextStringConverter()) { cell, card, _ ->
             updateWordCardStatusesCell(cell, card, statusesIcons) }
 
         // Impossible to move it to CSS ?!
@@ -186,6 +197,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         baseOfFrom1CharColumn.prefWidth = 40.0
         fromColumn.prefWidth = 200.0
         fromWordCountColumn.prefWidth = 30.0
+        partsOfSpeechColumn.prefWidth = 40.0
         statusesColumn.prefWidth = 50.0
         toColumn.prefWidth = 550.0
         translationCountColumn.prefWidth = 50.0
@@ -217,6 +229,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
             numberColumn,
             baseOfFrom1CharColumn,
             fromColumn, fromWordCountColumn,
+            partsOfSpeechColumn,
             statusesColumn,
             transcriptionColumn,
             translationCountColumn, toColumn,
@@ -375,6 +388,24 @@ private fun updateWordCardStatusesCell(cell: TableCell<CardWordEntry, Set<WordCa
         .forEach { updateCell(it) }
 
     val toolTipText = toolTips.joinToString("\n").trimToNull()
+    cell.toolTipText = toolTipText
+}
+
+
+private fun updatePartOfSpeechCell(cell: TableCell<CardWordEntry, Set<PartOfSpeech>?>, card: CardWordEntry) {
+
+    cell.styleClass.removeAll(PartOfSpeech.allCssClasses)
+
+    val partsOfSpeech = card.partsOfSpeech ?: setOf(card.predictedPartOfSpeechProperty.value)
+    val asSinglePartSpeech = card.asSinglePartOfSpeech()
+
+    val cssClass = if (card.from.isBlank()) "" else asSinglePartSpeech.name
+
+    val label = partsOfSpeech.map { it.name[0].uppercaseChar() }.joinToString(separator = "")
+    val toolTipText = partsOfSpeech.joinToString("\n") { it.name }
+
+    cell.styleClass.add(cssClass)
+    cell.text = label
     cell.toolTipText = toolTipText
 }
 
