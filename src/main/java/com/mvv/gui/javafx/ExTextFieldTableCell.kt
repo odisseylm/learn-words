@@ -241,7 +241,7 @@ class ExTextFieldTableCell<S, T>
 /**
  * It is modified copy of javafx.scene.control.cell.CellUtils (only functions which are required for TableView)
  */
-internal class TextFieldTableCellUtils {
+/*internal*/ class TextFieldTableCellUtils {
 
     companion object {
 
@@ -250,7 +250,7 @@ internal class TextFieldTableCellUtils {
             cell.graphic = graphic
         }
 
-        private fun <T> getItemText(cell: Cell<T>, converter: StringConverter<T>?): String =
+        /*private*/ fun <T> getItemText(cell: Cell<T>, converter: StringConverter<T>?): String =
             if (converter == null) { if (cell.item == null) "" else cell.item.toString() }
             else converter.toString(cell.item)
 

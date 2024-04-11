@@ -301,6 +301,8 @@ class LearnWordsController (
     }
 
     private fun onCardEdited(card: CardWordEntry) {
+        markDocumentIsDirty()
+
         val now = ZonedDateTime.now()
         card.updatedAt = now
         if (card.createdAt == null) card.createdAt = now

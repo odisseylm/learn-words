@@ -1,11 +1,11 @@
 package com.mvv.gui.cardeditor
 
 import com.mvv.gui.cardeditor.actions.*
-import com.mvv.gui.cardeditor.actions.moveSubTextToExamples
-import com.mvv.gui.cardeditor.actions.reanalyzeOnlyWords
 import com.mvv.gui.javafx.*
 import com.mvv.gui.javafx.ExTextFieldTableCell.TextFieldType
 import com.mvv.gui.memoword.asSinglePartOfSpeech
+import com.mvv.gui.util.filterNotBlank
+import com.mvv.gui.util.toEnumSet
 import com.mvv.gui.util.trimToNull
 import com.mvv.gui.words.*
 import javafx.application.Platform
@@ -18,6 +18,7 @@ import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.FlowPane
 import javafx.util.Callback
+import javafx.util.StringConverter
 import javafx.util.converter.DefaultStringConverter
 
 
@@ -74,12 +75,21 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         fromWordCountColumn.styleClass.add("fromWordCountColumn")
 
         partsOfSpeechColumn.id = "partsOfSpeech"
-        partsOfSpeechColumn.isEditable = false
+        partsOfSpeechColumn.isEditable = true
         partsOfSpeechColumn.cellValueFactory = Callback { p -> p.value.partsOfSpeechProperty
             .ifNullOrEmptyCached( { setOf(p.value.predictedPartOfSpeechProperty.value) }, p.value.toProperty) }
         partsOfSpeechColumn.graphic = Label("P").also { it.tooltip = Tooltip("Part of speech") }
         partsOfSpeechColumn.styleClass.add("partsOfSpeech")
-        partsOfSpeechColumn.cellFactory = LabelTableCell.forTableColumn { cell, card, _ -> updatePartOfSpeechCell(cell, card) }
+
+        partsOfSpeechColumn.cellFactory = CheckComboBoxCell.forTableColumn<CardWordEntry, PartOfSpeech, Set<PartOfSpeech>?>(
+            stringLabelConverter    = PartsOfSpeechStringConverter(),
+            stringDropDownConverter = PartOfSpeechStringConverter(),
+            items = PartOfSpeech.values().toList(),
+            valueToListConverter = { it?.toList() ?: emptyList() },
+            listToValueConverter = { it.toEnumSet() },
+            altSetProperty       = { cell -> cell.tableRow.item.partsOfSpeechProperty },
+            updateCellAttrs      = { cell, card, _ -> updatePartOfSpeechCell(cell, card) },
+        )
 
         toColumn.id = "toColumn"
         toColumn.isEditable = true
@@ -393,6 +403,8 @@ private fun updateWordCardStatusesCell(cell: TableCell<CardWordEntry, Set<WordCa
 
 
 private fun updatePartOfSpeechCell(cell: TableCell<CardWordEntry, Set<PartOfSpeech>?>, card: CardWordEntry) {
+    if ("PartOfSpeechCell" !in cell.styleClass)
+        cell.styleClass.add("PartOfSpeechCell")
 
     cell.styleClass.removeAll(PartOfSpeech.allCssClasses)
 
@@ -400,12 +412,15 @@ private fun updatePartOfSpeechCell(cell: TableCell<CardWordEntry, Set<PartOfSpee
     val asSinglePartSpeech = card.asSinglePartOfSpeech()
 
     val cssClass = if (card.from.isBlank()) "" else asSinglePartSpeech.name
-
-    val label = partsOfSpeech.map { it.name[0].uppercaseChar() }.joinToString(separator = "")
-    val toolTipText = partsOfSpeech.joinToString("\n") { it.name }
-
     cell.styleClass.add(cssClass)
-    cell.text = label
+
+    // Uncontrolled setting 'text' causes appearing Label and ComboBox at the same time,
+    // and causes hiding menu after 1st click on check-box
+    //
+    //val label = PartsOfSpeechStringConverter().toString(partsOfSpeech)
+    //cell.text = label
+
+    val toolTipText = partsOfSpeech.joinToString("\n") { it.name }
     cell.toolTipText = toolTipText
 }
 
@@ -416,5 +431,29 @@ internal class ExampleCountEntry (private val exampleCount: Int, private val new
         exampleCount == 0 -> "0"
         newCardCandidateCount == 0 -> "$exampleCount"
         else -> "$exampleCount ($newCardCandidateCount)"
+    }
+}
+
+
+class PartOfSpeechStringConverter : StringConverter<PartOfSpeech>() {
+    override fun toString(value: PartOfSpeech?): String = value?.name ?: ""
+    override fun fromString(string: String): PartOfSpeech = PartOfSpeech.valueOf(string.trim())
+}
+
+class PartsOfSpeechStringConverter : StringConverter<Collection<PartOfSpeech>?>() {
+    override fun toString(value: Collection<PartOfSpeech>?): String {
+        if (value.isNullOrEmpty()) return ""
+
+        val asStr = value.sortedBy { it.ordinal }.map { it.name[0] }.joinToString(",")
+        return asStr
+    }
+
+    override fun fromString(string: String?): Set<PartOfSpeech> {
+        if (string.isNullOrBlank()) return emptySet()
+
+        return string.split(",")
+            .filterNotBlank()
+            .map { PartOfSpeech.valueOf(it.trim()) }
+            .toEnumSet()
     }
 }
