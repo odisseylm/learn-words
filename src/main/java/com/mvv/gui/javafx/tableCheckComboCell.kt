@@ -12,8 +12,8 @@ import javafx.util.StringConverter
 
 
 
-class CheckComboBox<T,C:Collection<T>?> (
-    private val stringLabelConverter: StringConverter<Collection<T>?>,
+class CheckComboBox<T,C:Collection<T>> (
+    private val stringLabelConverter: StringConverter<Collection<T>>,
     private val stringDropDownConverter: StringConverter<T>,
             val items: List<T>,
                 getter: (()->C), // Just now getter is used only in constructor. T O D O: use it later too.
@@ -106,8 +106,8 @@ class CheckComboBox<T,C:Collection<T>?> (
 }
 
 
-class CheckComboBoxCell<S, T, C:Collection<T>?>(
-    private val stringLabelConverter: StringConverter<Collection<T>?>,
+class CheckComboBoxCell<S, T, C:Collection<T>>(
+    private val stringLabelConverter: StringConverter<Collection<T>>,
     private val stringDropDownConverter: StringConverter<T>,
     val items: List<T>,
     private val valueToListConverter: (C)->List<T>,
@@ -170,8 +170,14 @@ class CheckComboBoxCell<S, T, C:Collection<T>?>(
         graphic = null
     }
 
-    public override fun updateItem(item: C, empty: Boolean) {
+    public override fun updateItem(item: C?, empty: Boolean) {
         super.updateItem(item, empty)
+        // item can be null in case of 'empty row'
+        if (item == null || empty) {
+            text = null
+            return
+        }
+
         comboBox.valuesAsList = valueToListConverter(item)
 
         val isReallyEditing = comboBox.isMenuShown()
@@ -189,8 +195,8 @@ class CheckComboBoxCell<S, T, C:Collection<T>?>(
     }
 
     companion object {
-        fun <S, T, C:Collection<T>?> forTableColumn(
-            stringLabelConverter: StringConverter<Collection<T>?>,
+        fun <S, T, C:Collection<T>> forTableColumn(
+            stringLabelConverter: StringConverter<Collection<T>>,
             stringDropDownConverter: StringConverter<T>,
             items: List<T>,
             valueToListConverter: (C)->List<T>,

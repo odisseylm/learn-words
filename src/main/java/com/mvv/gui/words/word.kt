@@ -64,6 +64,20 @@ interface CardWordEntry {
     fun copy(baseWordExtractor: BaseWordExtractor?): CardWordEntry
 }
 
+
+// It is my mistake that I didn't add createdAt/updatedAt from the outset.
+// but now I cannot replace missed timestamps with 'now' since it will break
+// real 'latest card' verification.
+// Let's use date of project beginning.
+val defaultEpochDate: ZonedDateTime = ZonedDateTime.parse("2022-01-01T11:11:11+02:00")
+
+//fun ZonedDateTime?.toNullIfEpochDefault(): ZonedDateTime? =
+//    if (this != defaultEpochDate) null else this
+//@Suppress("NOTHING_TO_INLINE")
+//inline fun ZonedDateTime?.toNullIfUnset(): ZonedDateTime? = this.toNullIfEpochDefault()
+fun ZonedDateTime?.isUnset(): Boolean =
+    this == null || this == defaultEpochDate
+
 fun CardWordEntry(
     from: String, to: String,
     // val features: Set<CardWordEntryFeatures> = emptySet(),
@@ -78,31 +92,32 @@ fun CardWordEntry(
 inline fun cardWordEntry(init: CardWordEntry.()->Unit) = CardWordEntry("", "").apply(init)
 
 
-// There only needed for me values.
+// Currently I keep there only mostly required for learning,
+// otherwise it overloads UI (combo-box) for choosing  'part of speech'
 enum class PartOfSpeech (vararg shorts: String) {
     Noun("n.", "(n.)", "_n."),
     Adjective("adj.", "(adj.)", "_adj."),      // Прилагательное
 
     Verb("v.", "(v.)", "_v."),
-    AuxiliaryVerb("av.", "(av.)", "_av."),
-    ModalVerb("mv.", "(mv.)", "_mv."),
-    PhrasalVerb("phrv.", "(phrv.)", "_phrv."),
+    // AuxiliaryVerb("av.", "(av.)", "_av."),
+    // ModalVerb("mv.", "(mv.)", "_mv."),
+    // PhrasalVerb("phrv.", "(phrv.)", "_phrv."),
 
-    PluralPreposition("pi.", "(pi.)", "_pi."),
+    // PluralPreposition("pi.", "(pi.)", "_pi."),
 
     //Singular("sg.", "(sg.)", "_sg."),
     //Plural("pl.", "(pl.)", "_pl."),
 
-    Pronoun("pron.", "(.pron)", ".pron_"),     // Местоимение
+    //Pronoun("pron.", "(.pron)", ".pron_"),     // Местоимение
     Adverb("adv.", "(adv.)", "_adv."),         // Наречие
-    Union("un.", "(un.)", "_un."),             // Союз     // Is 'un.' ok?
+    // Union("un.", "(un.)", "_un."),             // Союз     // Is 'un.' ok?
     Numeral("num.", "(num.)", "_num.", "n-ord.", "(n-ord.)", "_n-ord.", "n-card.", "(n-card.)", "_n-card."),
-    Article("art.", "(art.)", "_art."),
-    Particle("part.", "(part.)", "_part."),    // Частица  // Is 'part.' ok?
-    Preposition("prep.", "(prep.)", "_prep."), // Предлог
-    Interjection("interj.", "(interj.)", "_interj."), // Междометие
-    Conjunction("cj.", "(cj.)", "_cj."),
-    Determiner("det.", "(det.)", "_det."),            // Is 'det.' ok?
+    // Article("art.", "(art.)", "_art."),
+    // Particle("part.", "(part.)", "_part."),    // Частица  // Is 'part.' ok?
+    // Preposition("prep.", "(prep.)", "_prep."), // Предлог
+    // Interjection("interj.", "(interj.)", "_interj."), // Междометие
+    // Conjunction("cj.", "(cj.)", "_cj."),
+    // Determiner("det.", "(det.)", "_det."),            // Is 'det.' ok?
     Exclamation("exclam.", "(exclam.)", "_exclam."),  // Is 'excl.' ok?
 
     // v.t.
@@ -160,13 +175,16 @@ enum class PartOfSpeech (vararg shorts: String) {
     //AmericanEnglish("Am Eng"),
     //BritishEnglish("Br Eng"),
 
-    // abbreviation or acronym
-    Abbreviation("abbrev.", "(abbrev.)", "_abbrev."), // Is 'abbrev.' ok?
+    // Enough good type, but it is not supported by memo and for that reason now it is disabled.
+    // Abbreviation or acronym
+    // Abbreviation("abbrev.", "(abbrev.)", "_abbrev."), // Is 'abbrev.' ok?
+
     // prepositional phrase
-    PrepPhrase("prep phr."),
+    // PrepPhrase("prep phr."),
 
     Word,
     Phrase("phr.", "(phr.)", "_phr."),     // Is 'phr.' ok?
+
     SetExpression("se.", "(se.)", "_se."), // Is 'se.' ok?
     ;
 
@@ -200,6 +218,7 @@ fun CardWordEntry.copyBasePropsTo(to: CardWordEntry) {
     to.missedBaseWords = this.missedBaseWords
     to.createdAt       = this.createdAt
     to.updatedAt       = this.updatedAt
+    to.partsOfSpeech   = this.partsOfSpeech
 }
 
 
@@ -208,8 +227,8 @@ private class CardWordEntryImpl (
     override val baseWordExtractor: BaseWordExtractor? = null,
     ) : CardWordEntry {
 
-    override val createdAtProperty = SimpleObjectProperty<ZonedDateTime>()
-    override val updatedAtProperty = SimpleObjectProperty<ZonedDateTime>()
+    override val createdAtProperty = SimpleObjectProperty(this, "createdAt", defaultEpochDate)
+    override val updatedAtProperty = SimpleObjectProperty(this, "updatedAt", defaultEpochDate)
 
     override val fromProperty = SimpleStringProperty(this, "from", "")
     override val fromWithPrepositionProperty = SimpleStringProperty(this, "fromWithPreposition", "")
@@ -228,7 +247,7 @@ private class CardWordEntryImpl (
     override val transcriptionProperty = SimpleStringProperty(this, "transcription", "")
     override val translationCountProperty: ObservableValue<Int> = toProperty.mapCached { it?.translationCount ?: 0 }
 
-    override val partsOfSpeechProperty: ObjectProperty<Set<PartOfSpeech>> = SimpleObjectProperty()
+    override val partsOfSpeechProperty: ObjectProperty<Set<PartOfSpeech>> = SimpleObjectProperty(this, "partsOfSpeech", emptySet())
     override val predictedPartOfSpeechProperty: CacheableObservableValue<PartOfSpeech> = fromProperty.mapCached(
         { guessPartOfSpeech(it, toProperty.value) }, toProperty)
 
@@ -255,7 +274,6 @@ private class CardWordEntryImpl (
             .also { this.copyBasePropsTo(it) }
 
 }
-
 
 val cardWordEntryComparator: Comparator<CardWordEntry> = Comparator.comparing({ it.from }, String.CASE_INSENSITIVE_ORDER)
 

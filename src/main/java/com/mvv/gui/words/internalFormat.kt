@@ -70,22 +70,13 @@ fun loadWordCardsFromInternalCsv(file: Path): List<CardWordEntry> =
                     card.predefinedSets = stringToEnums(it.getOrEmpty(index++))
                     card.sourcePositions = stringToInts(it.getOrEmpty(index++))
                     card.sourceSentences = it.getOrEmpty(index++)
-                    card.createdAt = it.getOrNull(index++).trimToNull() ?.let { s -> ZonedDateTime.parse(s) }
-                    card.updatedAt = it.getOrNull(index++).trimToNull() ?.let { s -> ZonedDateTime.parse(s) }
+                    card.createdAt = it.getOrNull(index++).parseDate()
+                    card.updatedAt = it.getOrNull(index++).parseDate()
                     card.partsOfSpeech = parsePartsOfSpeech(it.getOrEmpty(index))
                     card
                 }
                 .toList()
         }
-
-internal fun parsePartsOfSpeech(string: String): Set<PartOfSpeech> =
-    string.split('|')
-        .filterNotBlank()
-        .mapNotNull {
-            try { PartOfSpeech.valueOf(it.trim()) }
-            catch (_: Exception) { null }
-        }
-        .toSet()
 
 
 fun saveWordCardsIntoInternalCsv(file: Path, words: Iterable<CardWordEntry>) {
@@ -106,20 +97,38 @@ fun saveWordCardsIntoInternalCsv(file: Path, words: Iterable<CardWordEntry>) {
                     card.predefinedSets.joinToString(",") { it.name },
                     card.sourcePositions.joinToString(",") { it.toString() },
                     card.sourceSentences, // TODO: optimize it in some way to avoid having huge files
-                    card.createdAt?.toString(),
-                    card.updatedAt?.toString(),
-                    card.partsOfSpeech?.joinToString("|"),
+                    card.createdAt.formatDate(),
+                    card.updatedAt.formatDate(),
+                    card.partsOfSpeech.partsOfSpeechToString(),
                 ))
             }
         }
 }
 
 
+private fun String?.parseDate(): ZonedDateTime =
+    this.trimToNull() ?.let { s -> ZonedDateTime.parse(s) } ?: defaultEpochDate
+private fun ZonedDateTime?.formatDate(): String? =
+    if (this.isUnset()) null else this?.toString()
+
 private fun stringToInts(string: String): List<Int> =
     stringToCollectionImpl(string, mutableListOf<Int>()) { it.toInt() }
 
 private inline fun <reified T: Enum<T>> stringToEnums(string: String): Set<T> =
     stringToCollectionImpl(string, EnumSet.noneOf(T::class.java)) { EnumUtils.getEnum(T::class.java, it) }
+
+
+internal fun Set<PartOfSpeech>.partsOfSpeechToString(): String =
+    this.joinToString("|") { it.name }
+
+internal fun parsePartsOfSpeech(string: String): Set<PartOfSpeech> =
+    string.split('|', '&', ',')
+        .filterNotBlank()
+        .mapNotNull {
+            try { PartOfSpeech.valueOf(it.trim()) }
+            catch (_: Exception) { null }
+        }
+        .toEnumSet()
 
 
 private fun <T, C: MutableCollection<T>> stringToCollectionImpl(string: String, collection: C, converter: (String)->T): C {

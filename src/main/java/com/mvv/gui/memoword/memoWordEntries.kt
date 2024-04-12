@@ -312,23 +312,23 @@ val PartOfSpeech.asMemo: MemoWordPartOfSpeech get() = when (this) {
     PartOfSpeech.Adjective     -> MemoWordPartOfSpeech.Adjective
 
     PartOfSpeech.Verb          -> MemoWordPartOfSpeech.Verb
-    PartOfSpeech.AuxiliaryVerb -> MemoWordPartOfSpeech.Verb
-    PartOfSpeech.ModalVerb     -> MemoWordPartOfSpeech.Verb
-    PartOfSpeech.PhrasalVerb   -> MemoWordPartOfSpeech.Verb
+    //PartOfSpeech.AuxiliaryVerb -> MemoWordPartOfSpeech.Verb
+    //PartOfSpeech.ModalVerb     -> MemoWordPartOfSpeech.Verb
+    //PartOfSpeech.PhrasalVerb   -> MemoWordPartOfSpeech.Verb
 
-    PartOfSpeech.Pronoun       -> MemoWordPartOfSpeech.Pronoun
+    //PartOfSpeech.Pronoun       -> MemoWordPartOfSpeech.Pronoun
     PartOfSpeech.Adverb        -> MemoWordPartOfSpeech.Adverb
-    PartOfSpeech.Union         -> MemoWordPartOfSpeech.Union
+    //PartOfSpeech.Union         -> MemoWordPartOfSpeech.Union
     PartOfSpeech.Numeral       -> MemoWordPartOfSpeech.Numeral
-    PartOfSpeech.Article       -> MemoWordPartOfSpeech.Noun
-    PartOfSpeech.Particle      -> MemoWordPartOfSpeech.Particle
-    PartOfSpeech.Preposition   -> MemoWordPartOfSpeech.Preposition
-    PartOfSpeech.PluralPreposition -> MemoWordPartOfSpeech.Word
-    PartOfSpeech.Interjection  -> MemoWordPartOfSpeech.Interjection
+    //PartOfSpeech.Article       -> MemoWordPartOfSpeech.Noun
+    //PartOfSpeech.Particle      -> MemoWordPartOfSpeech.Particle
+    //PartOfSpeech.Preposition   -> MemoWordPartOfSpeech.Preposition
+    //PartOfSpeech.PluralPreposition -> MemoWordPartOfSpeech.Word
+    //PartOfSpeech.Interjection  -> MemoWordPartOfSpeech.Interjection
 
     PartOfSpeech.Word          -> MemoWordPartOfSpeech.Word
     PartOfSpeech.Phrase        -> MemoWordPartOfSpeech.Phrase
-    PartOfSpeech.PrepPhrase    -> MemoWordPartOfSpeech.Phrase
+    //PartOfSpeech.PrepPhrase    -> MemoWordPartOfSpeech.Phrase
 
     PartOfSpeech.Exclamation   -> MemoWordPartOfSpeech.Phrase
     PartOfSpeech.SetExpression -> MemoWordPartOfSpeech.SetExpression
@@ -336,9 +336,9 @@ val PartOfSpeech.asMemo: MemoWordPartOfSpeech get() = when (this) {
     //PartOfSpeech.Singular    -> MemoWordPartOfSpeech.Word
     //PartOfSpeech.Plural      -> MemoWordPartOfSpeech.Word
 
-    PartOfSpeech.Conjunction   -> MemoWordPartOfSpeech.Word
-    PartOfSpeech.Determiner    -> MemoWordPartOfSpeech.Word
-    PartOfSpeech.Abbreviation  -> MemoWordPartOfSpeech.Word
+    //PartOfSpeech.Conjunction   -> MemoWordPartOfSpeech.Word
+    //PartOfSpeech.Determiner    -> MemoWordPartOfSpeech.Word
+    //PartOfSpeech.Abbreviation  -> MemoWordPartOfSpeech.Word
 }
 
 
@@ -365,7 +365,7 @@ fun CardWordEntry.asSinglePartOfSpeech(): PartOfSpeech {
     val partsOfSpeech = card.partsOfSpeech
 
     val partOfSpeech: PartOfSpeech = when {
-        partsOfSpeech == null ->
+        partsOfSpeech.isEmpty() ->
             guessPartOfSpeech(card)
         partsOfSpeech.size == 1 ->
             partsOfSpeech.first()
@@ -381,7 +381,7 @@ fun MemoCard.updateFrom(card: CardWordEntry) = this.update(
         Language.English, card.fromInMemoWordFormat,
         Language.Russian, card.toInMemoWordFormat,
         card.memoCardNote,
-        card.updatedAt?.toInstant(),
+        card.updatedAt.let { if (it.isUnset()) null else it.toInstant() },
         card.asSinglePartOfSpeech(),
     )
 

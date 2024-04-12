@@ -3,14 +3,14 @@ package com.mvv.gui.words
 import java.time.ZonedDateTime
 
 
-var CardWordEntry.createdAt: ZonedDateTime?
+var CardWordEntry.createdAt: ZonedDateTime
     get()      = createdAtProperty.value
     set(value) = createdAtProperty.set(value)
-var CardWordEntry.updatedAt: ZonedDateTime?
+var CardWordEntry.updatedAt: ZonedDateTime
     get()      = updatedAtProperty.value
     set(value) = updatedAtProperty.set(value)
 
-val CardWordEntry.lastUpdatedAt: ZonedDateTime? get() = this.updatedAt ?: this.createdAt
+//val CardWordEntry.lastUpdatedAt: ZonedDateTime get() = this.updatedAt ?: this.createdAt
 
 var CardWordEntry.from: String
     get()      = fromProperty.valueSafe
@@ -56,6 +56,6 @@ var CardWordEntry.missedBaseWords: List<String>
     get()      = missedBaseWordsProperty.get()
     set(value) = missedBaseWordsProperty.set(value)
 
-var CardWordEntry.partsOfSpeech: Set<PartOfSpeech>?
+var CardWordEntry.partsOfSpeech: Set<PartOfSpeech>
     get()      = this.partsOfSpeechProperty.get()
     set(value) = this.partsOfSpeechProperty.set(value)

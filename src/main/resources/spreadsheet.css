@@ -208,8 +208,8 @@
 
 .PartOfSpeechCell {
     -fx-padding: 0;
-    -fx-border-insets: 0;
-    -fx-border-width: 0;
+    /*-fx-border-insets: 0;*/
+    /*-fx-border-width: 0;*/
     -fx-background-insets: 0;
     -fx-alignment: center;
 }
@@ -227,18 +227,19 @@
     -fx-border-width: 0;
     -fx-background-insets: 0;
     /*-fx-background-color: -fx-outer-border, -fx-inner-border, -fx-body-color;*/
-    -fx-alignment: center;
+    /*-fx-alignment: center;*/
+    -fx-alignment: center-left;
     -fx-focus-color: transparent; -fx-faint-focus-color: transparent;
     /*-fx-arrows-visible: false; -fx-arrow-button-gap: 0;*/
     /*-fx-mark-color: red; -fx-mark-highlight-color: blue;*/
     -fx-wrap-text: false;
-    -fx-line-spacing: 0;
+    /*-fx-line-spacing: 0;*/
     -fx-label-padding: 0;
     -fx-graphic-text-gap: 0;
     /*-fx-text-fill333: 0 0 0 0;*/
-    /*-fx-text-overrun333: false;*/
-    /*-fx-ellipsis-string333: false;*/
-    -fx-content-display: center;
+    -fx-text-overrun: clip;
+    -fx-ellipsis-string: "";
+    /*-fx-content-display: center;*/
 }
 
 /*
@@ -263,6 +264,22 @@
     /* Use if you want to hide arrow at all. */
     /*-fx-padding: 0;*/
     /*-fx-mark-color: transparent;*/
+}
+.PartOfSpeechCell .CheckComboBoxContainer .CheckComboBox .label {
+    -fx-padding: 0;
+    -fx-border-insets: 0;
+    -fx-border-width: 0;
+    /*-fx-border-color: transparent;*/
+    -fx-background-insets: 0;
+    /*-fx-alignment: center-left;*/
+    -fx-text-alignment: left;
+    -fx-alignment: top-left;
+    -fx-wrap-text: false;
+    /*-fx-label-padding: 0;*/
+    -fx-label-padding: 0 -5 0 -15;
+    /*-fx-graphic-text-gap: 0;*/
+    -fx-text-overrun: clip;
+    -fx-ellipsis-string: "";
 }
 .PartOfSpeechCell .CheckComboBoxContainer .CheckComboBox .arrow-button > .arrow {
     /* Use if you want to hide arrow at all. */

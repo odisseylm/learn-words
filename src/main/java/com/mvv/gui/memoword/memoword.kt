@@ -450,7 +450,8 @@ class MemoWordSession : AutoCloseable {
         return memoList
     }
 
-    private fun CardWordEntry.isCardValid() = this.from.isNotBlank() && this.to.isNotBlank()
+    private fun CardWordEntry.isCardValid() = this.from.isNotBlank() && this.to.isNotBlank() &&
+            !this.statuses.containsOneOf(WordCardStatus.TranslationIsNotPrepared, WordCardStatus.Duplicates, WordCardStatus.NoTranslation)
 
     private fun filterInsertingCards(cards: List<CardWordEntry>): List<CardWordEntry> {
 
@@ -771,12 +772,11 @@ class MemoWordSession : AutoCloseable {
             val memoCardIsUpdatedAt = memoCard.lastUpdatedAt
             requireNotNull(memoCardIsUpdatedAt) { "MemoCard ${memoCard.id} has no updatedAt info." }
 
-            val cardIsUpdatedAt = card.lastUpdatedAt
-            val toUpdate: Boolean =
-                if (cardIsUpdatedAt != null)
-                    card.from.isNotBlank() && (cardIsUpdatedAt.toInstant() > memoCardIsUpdatedAt)
-                else
-                    card.isBetterThan(memoCard)
+            val cardIsUpdatedAt = card.updatedAt
+            val toUpdate: Boolean = card.isCardValid() && (
+                (cardIsUpdatedAt.isUnset() && card.isBetterThan(memoCard)) ||
+                (cardIsUpdatedAt.toInstant() > memoCardIsUpdatedAt)
+            )
 
             if (toUpdate) entry else null
         }

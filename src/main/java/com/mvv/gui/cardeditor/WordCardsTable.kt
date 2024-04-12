@@ -28,7 +28,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
     private  val baseOfFrom1CharColumn  = TableColumn<CardWordEntry, BaseAndFrom>() //"B")
     internal val fromColumn             = TableColumn<CardWordEntry, String>("English")
     private  val fromWordCountColumn    = TableColumn<CardWordEntry, Int>() // "N")
-    private  val partsOfSpeechColumn    = TableColumn<CardWordEntry, Set<PartOfSpeech>?>()
+    private  val partsOfSpeechColumn    = TableColumn<CardWordEntry, Set<PartOfSpeech>>()
     private  val statusesColumn         = TableColumn<CardWordEntry, Set<WordCardStatus>>() // "S"
     internal val toColumn               = TableColumn<CardWordEntry, String>("Russian")
     internal val translationCountColumn = TableColumn<CardWordEntry, Int>() // "N"
@@ -81,11 +81,11 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
         partsOfSpeechColumn.graphic = Label("P").also { it.tooltip = Tooltip("Part of speech") }
         partsOfSpeechColumn.styleClass.add("partsOfSpeech")
 
-        partsOfSpeechColumn.cellFactory = CheckComboBoxCell.forTableColumn<CardWordEntry, PartOfSpeech, Set<PartOfSpeech>?>(
+        partsOfSpeechColumn.cellFactory = CheckComboBoxCell.forTableColumn<CardWordEntry, PartOfSpeech, Set<PartOfSpeech>>(
             stringLabelConverter    = PartsOfSpeechStringConverter(),
             stringDropDownConverter = PartOfSpeechStringConverter(),
             items = PartOfSpeech.values().toList(),
-            valueToListConverter = { it?.toList() ?: emptyList() },
+            valueToListConverter = { it.toList() },
             listToValueConverter = { it.toEnumSet() },
             altSetProperty       = { cell -> cell.tableRow.item.partsOfSpeechProperty },
             updateCellAttrs      = { cell, card, _ -> updatePartOfSpeechCell(cell, card) },
@@ -402,13 +402,13 @@ private fun updateWordCardStatusesCell(cell: TableCell<CardWordEntry, Set<WordCa
 }
 
 
-private fun updatePartOfSpeechCell(cell: TableCell<CardWordEntry, Set<PartOfSpeech>?>, card: CardWordEntry) {
+private fun updatePartOfSpeechCell(cell: TableCell<CardWordEntry, Set<PartOfSpeech>>, card: CardWordEntry) {
     if ("PartOfSpeechCell" !in cell.styleClass)
         cell.styleClass.add("PartOfSpeechCell")
 
     cell.styleClass.removeAll(PartOfSpeech.allCssClasses)
 
-    val partsOfSpeech = card.partsOfSpeech ?: setOf(card.predictedPartOfSpeechProperty.value)
+    val partsOfSpeech = card.partsOfSpeech.ifEmpty { setOf(card.predictedPartOfSpeechProperty.value) }
     val asSinglePartSpeech = card.asSinglePartOfSpeech()
 
     val cssClass = if (card.from.isBlank()) "" else asSinglePartSpeech.name
@@ -440,7 +440,7 @@ class PartOfSpeechStringConverter : StringConverter<PartOfSpeech>() {
     override fun fromString(string: String): PartOfSpeech = PartOfSpeech.valueOf(string.trim())
 }
 
-class PartsOfSpeechStringConverter : StringConverter<Collection<PartOfSpeech>?>() {
+class PartsOfSpeechStringConverter : StringConverter<Collection<PartOfSpeech>>() {
     override fun toString(value: Collection<PartOfSpeech>?): String {
         if (value.isNullOrEmpty()) return ""
 

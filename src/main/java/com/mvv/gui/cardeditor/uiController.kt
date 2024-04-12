@@ -305,7 +305,7 @@ class LearnWordsController (
 
         val now = ZonedDateTime.now()
         card.updatedAt = now
-        if (card.createdAt == null) card.createdAt = now
+        if (card.createdAt.isUnset()) card.createdAt = now
     }
 
     // timeout is needed because JavaFX window takes focus with some delay

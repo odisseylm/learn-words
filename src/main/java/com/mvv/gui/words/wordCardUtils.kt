@@ -125,11 +125,17 @@ fun guessPartOfSpeech(from: String, to: String): PartOfSpeech {
 }
 
 fun guessPartOfSpeech(wordOrPhrase: String): PartOfSpeech {
+    val trimmed = wordOrPhrase.trim()
     val allWords = wordOrPhrase.splitToWords()
     val mainWords = allWords.filterNot { it in ignorableWords }
     val mainWordCount = mainWords.size
 
     return when {
+        trimmed.endsWith('!') -> PartOfSpeech.Exclamation
+
+        // Now 'Abbreviation' is disabled/unused
+        // allWords.size == 1 && trimmed.length < 10 && trimmed.all { it.isUpperCase() } -> PartOfSpeech.Abbreviation
+
         allWords.size <= 1 -> PartOfSpeech.Word
 
         wordOrPhrase.startsWithOneOf("an ", "a ", "the ", ignoreCase = true) && mainWordCount <= 1
