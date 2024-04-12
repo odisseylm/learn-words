@@ -86,7 +86,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
             stringDropDownConverter = PartOfSpeechStringConverter(),
             items = PartOfSpeech.values().toList(),
             valueToListConverter = { it.toList() },
-            listToValueConverter = { it.toEnumSet() },
+            listToValueConverter = { it.removeSenseDuplicates().toEnumSet() },
             altSetProperty       = { cell -> cell.tableRow.item.partsOfSpeechProperty },
             updateCellAttrs      = { cell, card, _ -> updatePartOfSpeechCell(cell, card) },
         )
@@ -309,6 +309,17 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
     private val currentWordsSelection: TableViewSelectionModel<CardWordEntry> get() = selectionModel
 
     // companion object { }
+}
+
+private fun List<PartOfSpeech>.removeSenseDuplicates(): List<PartOfSpeech> = when {
+
+    this.size > 1 && PartOfSpeech.Word in this ->
+        this.filterNot { it == PartOfSpeech.Word }
+
+    this.size > 1 && PartOfSpeech.Phrase in this ->
+        this.filterNot { it == PartOfSpeech.Phrase }
+
+    else -> this
 }
 
 

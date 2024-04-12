@@ -369,6 +369,8 @@ fun CardWordEntry.asSinglePartOfSpeech(): PartOfSpeech {
             guessPartOfSpeech(card)
         partsOfSpeech.size == 1 ->
             partsOfSpeech.first()
+        PartOfSpeech.SetExpression in partsOfSpeech -> // and contains others
+            PartOfSpeech.SetExpression // SetExpression is more preferable than others (in my opinion)
         card.fromWordCount == 1 ->
             PartOfSpeech.Word
         else ->

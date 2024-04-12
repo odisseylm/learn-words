@@ -1,10 +1,7 @@
 package com.mvv.gui.memoword
 
 import com.mvv.gui.test.useAssertJSoftAssertions
-import com.mvv.gui.words.PartOfSpeech
-import com.mvv.gui.words.cardWordEntry
-import com.mvv.gui.words.from
-import com.mvv.gui.words.to
+import com.mvv.gui.words.*
 import org.junit.jupiter.api.Test
 
 
@@ -38,6 +35,18 @@ class MemoWordEntriesTest {
                          """
                     }.asSinglePartOfSpeech())
             .isEqualTo(PartOfSpeech.Verb)
+
+    } }
+
+    @Test
+    fun `asSinglePartOfSpeech when SetExpression and something else`() { useAssertJSoftAssertions {
+
+        assertThat(cardWordEntry {
+            from = "to make one's bread"
+            to = "зарабатывать на жизнь"
+            partsOfSpeech = setOf(PartOfSpeech.Verb, PartOfSpeech.SetExpression)
+        }.asSinglePartOfSpeech())
+        .isEqualTo(PartOfSpeech.SetExpression)
 
     } }
 }

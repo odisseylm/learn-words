@@ -37,9 +37,11 @@ class CheckComboBox<T,C:Collection<T>> (
         }
 
     private val checkListener: EventHandler<ActionEvent> = EventHandler {
-        valuesAsListInternal = checked()
+        val newValues = listToValueConverter(checked())
+        valuesAsListInternal = newValues.toList()
         updateTopLabel()
-        setter(listToValueConverter(valuesAsList))
+        updateCheckBoxes()
+        setter(newValues)
     }
 
     init {
