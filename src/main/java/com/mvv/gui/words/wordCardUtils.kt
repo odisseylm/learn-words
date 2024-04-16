@@ -5,7 +5,6 @@ import com.mvv.gui.cardeditor.actions.parseToCard
 import com.mvv.gui.util.containsEnglishLetters
 import com.mvv.gui.util.isOneOf
 import com.mvv.gui.util.splitToWords
-import com.mvv.gui.util.startsWithOneOf
 import java.util.TreeSet
 
 
@@ -126,7 +125,10 @@ fun guessPartOfSpeech(from: String, to: String): PartOfSpeech {
 
 fun guessPartOfSpeech(wordOrPhrase: String): PartOfSpeech {
     val trimmed = wordOrPhrase.trim()
-    val allWords = wordOrPhrase.splitToWords()
+
+    val allWords = trimmed.splitToWords()
+    val firstWord = allWords.firstOrNull()
+
     val mainWords = allWords.filterNot { it in ignorableWords }
     val mainWordCount = mainWords.size
 
@@ -136,15 +138,15 @@ fun guessPartOfSpeech(wordOrPhrase: String): PartOfSpeech {
         // Now 'Abbreviation' is disabled/unused
         // allWords.size == 1 && trimmed.length < 10 && trimmed.all { it.isUpperCase() } -> PartOfSpeech.Abbreviation
 
-        allWords.size <= 1 -> PartOfSpeech.Word
+        firstWord == null -> PartOfSpeech.Word
 
-        wordOrPhrase.startsWithOneOf("an ", "a ", "the ", ignoreCase = true) && mainWordCount <= 1
+        firstWord.isOneOf("an", "a", "the", ignoreCase = true) && mainWordCount == 1
             -> PartOfSpeech.Noun
 
-        wordOrPhrase.startsWithOneOf("to ") && mainWordCount <= 1
+        firstWord.isOneOf("to") && mainWordCount == 1
             -> PartOfSpeech.Verb
 
-        allWords.size > 2 -> PartOfSpeech.Phrase
+        allWords.size >= 2 -> PartOfSpeech.Phrase
 
         else -> PartOfSpeech.Word
     }
