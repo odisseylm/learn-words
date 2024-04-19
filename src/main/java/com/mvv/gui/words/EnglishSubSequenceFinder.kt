@@ -71,6 +71,9 @@ private val englishPossibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>
     "{pp} {verb} {verb} not {art}",
     "{pp} {verb} {verb} not {prep} {art}",
 
+    "{pp} is to be",
+    "{pp} are to be",
+
     "{verb} {pp} to {prep} {art}",
     "{verb} {pp} {prep} {art}",
     "{verb} {pp} to {art}",
