@@ -281,15 +281,19 @@ private val possibleNonRelevantForSortingPrefixTemplates: Alt<Seq<String>> = seq
 
 /**
  *  It contains only verbs which can be used very often.
- *  Do NOT include too many words there, because it may degrade performance of PrefixFinder creation.
  */
 private val verbs = listOf(
     "do", "does", "be", "is", "have", "has", "have no", "has no", "get", "gets", "go", "goes",
     "can", "could", "may", "might", "must", "shall", "should",
+    // https://enginform.com/article/contractions-in-english
+    "cannot", "can't", "couldn't", "mayn't", "mightn't", "mustn't", "shouldn't", "needn’t", "oughtn’t",
+    "isn't", "aren't", "wasn't", "weren't", "won't", "wouldn’t",
+    "doesn't", "don't", "didn't",
+    "hasn't", "haven't", "hadn't",
 
     "add", "allow", "answer", "appear", "ask",
     "become", "begin", "believe", "break", "bring", "build", "buy",
-    "call", "carry", "change", "clean", "close",
+    "call", "care", "carry", "change", "clean", "close",
     "come", "consider", "continue", "cook", "count", "cost", "cover", "create", "cut",
     "dance", "decide", "die", "dream", "drink", "drive",
     "eat", "expect", "explain",

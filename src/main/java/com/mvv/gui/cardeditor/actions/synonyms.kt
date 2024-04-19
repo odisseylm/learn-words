@@ -38,6 +38,11 @@ private val toIgnoreSynonymsFor: Set<String> = (
             + listOf(
                 "do", "does", "be", "is", "have", "has", "have no", "has no", "get", "gets", "go", "goes",
                 "can", "could", "may", "might", "must", "shall", "should",
+                // https://enginform.com/article/contractions-in-english
+                "cannot", "can't", "couldn't", "mayn't", "mightn't", "mustn't", "shouldn't", "needn’t", "oughtn’t",
+                "isn't", "aren't", "wasn't", "weren't", "won't", "wouldn’t",
+                "doesn't", "don't", "didn't",
+                "hasn't", "haven't", "hadn't",
                 // "_v", "_v.", "(v.)",
                 // "[02",
                 // "хим.

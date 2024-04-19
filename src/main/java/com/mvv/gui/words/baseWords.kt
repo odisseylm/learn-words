@@ -243,6 +243,7 @@ private val baseWordRules: List<BaseWordRule> = listOf(
     rule("on-"),
     rule("out-"),
     rule("over-"),
+    rule("mal-"),
 )
 
 

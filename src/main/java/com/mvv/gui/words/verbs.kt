@@ -4,14 +4,16 @@ package com.mvv.gui.words
 val englishCommonVerbs: Alt<Seq<String>> = sequenceOf(
     // TODO: keep there only base/infinitive forms and create 2nd/3rd/s/ing forms dynamically
     //
-    // TODO: add negatives like
-    //       "shouldn't" "couldn't" "wouldn't" "mightn't" "mustn't" "wasn't" so on
-    //
     "do", "does",
     "be", "is", "are",
     "have", "has", "have no", "has no", "had", "had no",
     "get", "gets", "go", "gone", "went", "goes", "going",
     "can", "could", "may", "might", "must", "shall", "should",
+    // https://enginform.com/article/contractions-in-english
+    "cannot", "can't", "couldn't", "mayn't", "mightn't", "mustn't", "shouldn't", "needn’t", "oughtn’t",
+    "isn't", "aren't", "wasn't", "weren't", "won't", "wouldn’t",
+    "doesn't", "don't", "didn't",
+    "hasn't", "haven't", "hadn't",
 
     "add", "allow", "answer", "appear", "ask",
     "become", "begin", "believe", "break", "bring", "build", "buy",
