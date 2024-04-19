@@ -31,23 +31,24 @@ abstract class CachingSpeechSynthesizer (
 
     protected abstract val soundWordUrlTemplates: List<String>
 
-    protected open fun adoptTextForUrl(text: String) = text.trim()
+    protected open fun prepareText(text: String) = text.trim()
+    protected open fun adoptTextForUrl(text: String) = text
 
     override fun speak(text: String) {
 
         if (text.isBlank()) return
 
-        val word = adoptTextForUrl(text)
+        val preparedText = prepareText(text)
 
-        validateSupport(word)
+        validateSupport(preparedText)
 
-        val cachedAudioFilePath = cachedAudioFilePath(word)
+        val cachedAudioFilePath = cachedAudioFilePath(preparedText)
         if (!cachedAudioFilePath.exists()) {
             cachedAudioFilePath.parent.createDirectories()
-            Files.write(cachedAudioFilePath, downloadAudioFile(word))
+            Files.write(cachedAudioFilePath, downloadAudioFile(preparedText))
         }
 
-        validateFileContent(cachedAudioFilePath, word)
+        validateFileContent(cachedAudioFilePath, preparedText)
 
         audioPlayer.play(AudioSource(cachedAudioFilePath))
     }
@@ -58,16 +59,21 @@ abstract class CachingSpeechSynthesizer (
 
     fun cleanCacheFor(text: String) = cachedAudioFilePath(text).deleteIfExists()
 
-    private fun downloadAudioFile(word: String): ByteArray =
-        soundWordUrlTemplates
+    private fun downloadAudioFile(text: String): ByteArray {
+        val urlText = adoptTextForUrl(text)
+        return soundWordUrlTemplates
             .asSequence()
             .mapNotNull { urlTemplate ->
-                val url = urlTemplate.replace("\${word}", word)
-                try { downloadUrl(url, netSettings) }
-                catch (ex: Exception) { log.debug(ex) { "Error of loading [$url]" }; null }
+                val url = urlTemplate.replace("\${word}", urlText)
+                try {
+                    downloadUrl(url, netSettings)
+                } catch (ex: Exception) {
+                    log.debug(ex) { "Error of loading [$url]" }; null
+                }
             }
             .filter { it.isNotEmpty() }
-            .firstOrThrow { IOException("Audio file for word [$word] is not loaded.") }
+            .firstOrThrow { IOException("Audio file for word [$text] is not loaded.") }
+    }
 
 }
 
