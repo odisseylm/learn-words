@@ -70,7 +70,9 @@ class VoiceManager {
 
     val bestVoices: List<SpeechSynthesizer> = listOf(
             HowJSayWebDownloadSpeechSynthesizer(audioPlayer),
-            AbbyLingvoWebDownloadSpeechSynthesizer(audioPlayer),
+            ReversoWebDownloadSpeechSynthesizer(audioPlayer),
+            // Now it needs VPN
+            // AbbyLingvoWebDownloadSpeechSynthesizer(audioPlayer),
         ) + getMsVoices() + getMarryVoices() + getFestivalVoices() + getFreeTtsVoices()
 
     // Ideally it would be nice/better to use BlockingQueue with size = 1 and with the policy to keep only the latest item.

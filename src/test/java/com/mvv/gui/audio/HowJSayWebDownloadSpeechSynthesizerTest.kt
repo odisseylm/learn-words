@@ -37,4 +37,15 @@ class HowJSayWebDownloadSpeechSynthesizerTest {
         speechSynthesizer.cleanCacheFor(text)
         speechSynthesizer.speak(text)
     }
+
+
+    @Test
+    @Disabled("for manual testing")
+    fun `speak Beijing`() {
+        val speechSynthesizer = HowJSayWebDownloadSpeechSynthesizer(JavaFxSoundPlayer(PlayingMode.Sync), debugDump = true)
+
+        val text = "Beijing"
+        speechSynthesizer.cleanCacheFor(text)
+        speechSynthesizer.speak(text)
+    }
 }

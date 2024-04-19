@@ -84,6 +84,7 @@ fun downloadUrlContent(url: URL, settings: NetSettings = defaultNetSettings): Co
 
     val request: HttpRequest = HttpRequest.newBuilder()
         .uri(url.toURI())
+        .headers("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0")
         .timeout(settings.timeout)
         .GET()
         .build()

@@ -15,14 +15,23 @@ import kotlin.text.Charsets.UTF_8
 
 
 // https://howjsay.com/how-to-pronounce-wear
-class HowJSayWebDownloadSpeechSynthesizer(audioPlayer: AudioPlayer) : CachingSpeechSynthesizer(audioPlayer) {
+class HowJSayWebDownloadSpeechSynthesizer(
+    audioPlayer: AudioPlayer,
+    internal val debugDump: Boolean = false,
+    ) : CachingSpeechSynthesizer(audioPlayer) {
+
     override val voiceId: String = "howjsay.com"
     override val audioFileExt: String = "mp3"
     override val soundWordUrlTemplates: List<String> by lazy { collectSoundWordUrlTemplates() }
     override val cacheDir: Path get() = userHome.resolve("english/.cache/web/howjsay.com")
 
-    private fun collectSoundWordUrlTemplates(): List<String> =
-        parseHowJSaySoundWordUrlTemplates(String(downloadUrl("https://howjsay.com/js/script-min.js"), UTF_8))
+    override fun prepareText(text: String): String = text.trim().lowercase()
+
+    private fun collectSoundWordUrlTemplates(): List<String> {
+        val bytes = downloadUrl("https://howjsay.com/js/script-min.js")
+        if (debugDump) dumpTempFile(bytes, "script-min.js")
+        return parseHowJSaySoundWordUrlTemplates(String(bytes, UTF_8))
+    }
 
     override fun isSupported(text: String): Boolean = text.isBlank() || isOneWordText(text)
     override fun validateSupport(text: String) = validateTextIsOneWord(text, this.javaClass.simpleName)

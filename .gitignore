@@ -6,6 +6,7 @@
 /dicts/**
 /dictionaries/**
 /temp/**
+/.tmp/**
 /temp-compare/**
 
 /log/**

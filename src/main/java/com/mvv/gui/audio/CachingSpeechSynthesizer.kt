@@ -1,5 +1,6 @@
 package com.mvv.gui.audio
 
+import com.mvv.gui.dictionary.getProjectDirectory
 import com.mvv.gui.util.*
 import java.io.IOException
 import java.nio.file.Files
@@ -30,12 +31,13 @@ abstract class CachingSpeechSynthesizer (
 
     protected abstract val soundWordUrlTemplates: List<String>
 
+    protected open fun prepareText(text: String) = text.trim()
 
     override fun speak(text: String) {
 
         if (text.isBlank()) return
 
-        val word = text.trim()
+        val word = prepareText(text)
 
         validateSupport(word)
 
@@ -76,3 +78,12 @@ fun validateTextIsOneWord(text: String, synthesizerName: String) {
 }
 
 fun isOneWordText(text: String): Boolean = text.wordCount == 1
+
+
+internal fun dumpTempFile(bytes: ByteArray, baseFilename: String) {
+    val dumpDir = getProjectDirectory(HowJSayWebDownloadSpeechSynthesizer::class).resolve(".tmp/.dump")
+    dumpDir.createDirectories()
+
+    val tempFile = Files.createTempFile(dumpDir, "~", baseFilename)
+    Files.write(tempFile, bytes)
+}

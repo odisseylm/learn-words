@@ -275,7 +275,9 @@ class MemoWordSession : AutoCloseable {
         else if (seemsSuccess)
             log.info { "Card set '$memoListName' is uploaded." }
         else {
-            Files.writeString(getProjectDirectory().resolve(".~temp-upload-cards-${System.currentTimeMillis()}.html"), uploadMemoListResponse.body())
+            Files.writeString(getProjectDirectory()
+                .resolve(".tmp/.dump")
+                .resolve(".~temp-upload-cards-${System.currentTimeMillis()}.html"), uploadMemoListResponse.body())
             throw IllegalStateException("Unknown upload status.")
         }
 
