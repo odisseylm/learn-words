@@ -25,7 +25,7 @@ class HowJSayWebDownloadSpeechSynthesizer(
     override val soundWordUrlTemplates: List<String> by lazy { collectSoundWordUrlTemplates() }
     override val cacheDir: Path get() = userHome.resolve("english/.cache/web/howjsay.com")
 
-    override fun prepareText(text: String): String = text.trim().lowercase()
+    override fun adoptTextForUrl(text: String): String = text.trim().lowercase()
 
     private fun collectSoundWordUrlTemplates(): List<String> {
         val bytes = downloadUrl("https://howjsay.com/js/script-min.js")

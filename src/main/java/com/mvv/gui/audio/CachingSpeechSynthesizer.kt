@@ -31,13 +31,13 @@ abstract class CachingSpeechSynthesizer (
 
     protected abstract val soundWordUrlTemplates: List<String>
 
-    protected open fun prepareText(text: String) = text.trim()
+    protected open fun adoptTextForUrl(text: String) = text.trim()
 
     override fun speak(text: String) {
 
         if (text.isBlank()) return
 
-        val word = prepareText(text)
+        val word = adoptTextForUrl(text)
 
         validateSupport(word)
 

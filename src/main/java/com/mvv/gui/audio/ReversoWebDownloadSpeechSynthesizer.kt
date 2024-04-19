@@ -19,7 +19,7 @@ class ReversoWebDownloadSpeechSynthesizer (
     override val soundWordUrlTemplates: List<String> = listOf("https://voice.reverso.net/RestPronunciation.svc/v1/output=json/GetVoiceStream/voiceName=Heather22k?voiceSpeed=100&inputText=\${word}")
     override val cacheDir: Path get() = userHome.resolve("english/.cache/web/reverso.net")
 
-    override fun prepareText(text: String): String = Base64.getEncoder().encodeToString(text.trim().lowercase().toByteArray(Charsets.UTF_8))
+    override fun adoptTextForUrl(text: String): String = Base64.getEncoder().encodeToString(text.trim().lowercase().toByteArray(Charsets.UTF_8))
 
     override fun toString(): String = javaClass.simpleName
 
