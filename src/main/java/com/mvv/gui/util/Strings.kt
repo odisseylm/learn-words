@@ -172,6 +172,17 @@ fun CharSequence.lastIndexOfOneOfChars(chars: String, startingFrom: Int, end: In
 }
 
 
+//fun CharSequence.removeOneOfPrefixes(vararg prefixes: CharSequence): CharSequence {
+//    for (prefix in prefixes)
+//        if (this.startsWith(prefix)) return this.subSequence(prefix.length, this.length)
+//    return this
+//}
+fun String.removeOneOfPrefixes(vararg prefixes: CharSequence): String {
+    for (prefix in prefixes)
+        if (this.startsWith(prefix)) return this.substring(prefix.length)
+    return this
+}
+
 fun <S: CharSequence> S.ifNotBlank(action: (S)->S): S = if (this.isBlank()) this else action(this)
 
 inline fun <C : CharSequence> C?.ifNullOrBlank(defaultValue: () -> C): C =

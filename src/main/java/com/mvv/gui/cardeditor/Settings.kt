@@ -35,6 +35,7 @@ class Settings (
     val recentDocumentsCount: Int = 10,
     val showSynonyms: Boolean = true,
     val openInNewWindow: Boolean = false,
+    val autoChangeKeyboardLanguage: Boolean = false,
 
     val memoLogin: String?    = null,
     val memoPassword: String? = null,
@@ -98,6 +99,7 @@ private fun loadSettings(): Settings {
         recentDocumentsCount = props.getInt("recentDocumentsCount") ?: defSet.recentDocumentsCount,
         showSynonyms = props.getBool("showSynonyms") ?: defSet.showSynonyms,
         openInNewWindow = props.getBool("openInNewWindow") ?: defSet.openInNewWindow,
+        autoChangeKeyboardLanguage = props.getBool("autoChangeKeyboardLanguage") ?: defSet.autoChangeKeyboardLanguage,
 
         memoLogin = props.getProperty("memoLogin"),
         memoPassword = props.getProperty("memoPassword"),
