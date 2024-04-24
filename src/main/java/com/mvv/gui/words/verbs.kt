@@ -50,11 +50,14 @@ class VerbForms (
 ) {
 
     companion object {
-        fun parse(items: List<String>): VerbForms = VerbForms(
-            items[0],
-            items[1].split("/").toList(),
-            items[2].split("/").toList(),
-        )
+        fun parse(items: List<String>): VerbForms {
+            require(items.size == 3) { " 3 verbs are expected $items." }
+            return VerbForms(
+                items[0],
+                items[1].split("/").toList(),
+                items[2].split("/").toList(),
+            )
+        }
     }
 }
 
@@ -171,169 +174,175 @@ private val irregularVerbs_RawList = listOf(
     "knit", "knitted/knit", "knitted/knit",
     "know", "knew", "known",
 
-    // TODO: add others from https://www.englishpage.com/irregularverbs/irregularverbs.html#google_vignette
+    // others from https://www.englishpage.com/irregularverbs/irregularverbs.html#google_vignette
     "lay", "laid", "laid",
     "lead", "led", "led",
     "lean", "leant/leaned", "leant/leaned",
-    //leap 	leaped / leapt [?] 	leaped / leapt [?]
-    //learn 	learned / learnt [?] 	learned / learnt [?]
+    "leap", "leaped/leapt", "leaped/leapt",
+    "learn", "learned/learnt", "learned/learnt",
     "leave", "left", "left",
     "lend", "lent", "lent",
     "let", "let", "let",
+
     //lie 	lay 	lain
     //lie (not tell truth) REGULAR 	lied 	lied
-    //light 	lit / lighted 	lit / lighted
-    //lip-read 	lip-read 	lip-read
+    "lie", "lied/lay", "lied/lain",
+
+    "light", "lit/lighted", "lit/lighted",
+    "lip-read", "lip-read", "lip-read",
     "lose", "lost", "lost",
 
     "make", "made", "made",
     "mean", "meant", "meant",
     "meet", "met", "met",
-    //miscast 	miscast 	miscast
-    //misdeal 	misdealt 	misdealt
-    //misdo 	misdid 	misdone
-    //mishear 	misheard 	misheard
-    //mislay 	mislaid 	mislaid
-    //mislead 	misled 	misled
-    //mislearn 	mislearned / mislearnt [?] 	mislearned / mislearnt [?]
-    //misread 	misread 	misread
-    //misset 	misset 	misset
-    //misspeak 	misspoke 	misspoken
-    //misspell 	misspelled / misspelt [?] 	misspelled / misspelt [?]
-    //misspend 	misspent 	misspent
-    //mistake 	mistook 	mistaken
-    //misteach 	mistaught 	mistaught
-    //misunderstand 	misunderstood 	misunderstood
-    //miswrite 	miswrote 	miswritten
-    //mow 	mowed 	mowed / mown
+    "miscast", "miscast", "miscast",
+    "misdeal", "misdealt", "misdealt",
+    "misdo", "misdid", "misdone",
+    "mishear", "misheard", "misheard",
+    "mislay", "mislaid", "mislaid",
+    "mislead", "misled", "misled",
+    "mislearn", "mislearned/mislearnt", "mislearned/mislearnt",
+    "misread", "misread", "misread",
+    "misset", "misset", "misset",
+    "misspeak", "misspoke", "misspoken",
+    "misspell", "misspelled/misspelt", "misspelled/misspelt",
+    "misspend", "misspent", "misspent",
+    "mistake", "mistook", "mistaken",
+    "misteach", "mistaught", "mistaught",
+    "misunderstand", "misunderstood", "misunderstood",
+    "miswrite", "miswrote", "miswritten",
+    "mow", "mowed", "mowed/mown",
 
-    //offset 	offset 	offset
-    //outbid 	outbid 	outbid
-    //outbreed 	outbred 	outbred
-    //outdo 	outdid 	outdone
-    //outdraw 	outdrew 	outdrawn
-    //outdrink 	outdrank 	outdrunk
-    //outdrive 	outdrove 	outdriven
-    //outfight 	outfought 	outfought
-    //outfly 	outflew 	outflown
-    //outgrow 	outgrew 	outgrown
-    //outleap 	outleaped / outleapt [?] 	outleaped / outleapt [?]
+    "offset", "offset", "offset",
+    "outbid", "outbid", "outbid",
+    "outbreed", "outbred", "outbred",
+    "outdo", "outdid", "outdone",
+    "outdraw", "outdrew", "outdrawn",
+    "outdrink", "outdrank", "outdrunk",
+    "outdrive", "outdrove", "outdriven",
+    "outfight", "outfought", "outfought",
+    "outfly", "outflew", "outflown",
+    "outgrow", "outgrew", "outgrown",
+    "outleap", "outleaped/outleapt", "outleaped/outleapt",
     //outlie (not tell truth) REGULAR 	outlied 	outlied
-    //outride 	outrode 	outridden
-    //outrun 	outran 	outrun
-    //outsell 	outsold 	outsold
-    //outshine 	outshined / outshone [?] 	outshined / outshone [?]
-    //outshoot 	outshot 	outshot
-    //outsing 	outsang 	outsung
-    //outsit 	outsat 	outsat
-    //outsleep 	outslept 	outslept
-    //outsmell 	outsmelled / outsmelt [?] 	outsmelled / outsmelt [?]
-    //outspeak 	outspoke 	outspoken
-    //outspeed 	outsped 	outsped
-    //outspend 	outspent 	outspent
-    //outswear 	outswore 	outsworn
-    //outswim 	outswam 	outswum
-    //outthink 	outthought 	outthought
-    //outthrow 	outthrew 	outthrown
-    //outwrite 	outwrote 	outwritten
-    //overbid 	overbid 	overbid
-    //overbreed 	overbred 	overbred
-    //overbuild 	overbuilt 	overbuilt
-    //overbuy 	overbought 	overbought
-    //overcome 	overcame 	overcome
-    //overdo 	overdid 	overdone
-    //overdraw 	overdrew 	overdrawn
-    //overdrink 	overdrank 	overdrunk
-    //overeat 	overate 	overeaten
-    //overfeed 	overfed 	overfed
-    //overhang 	overhung 	overhung
-    //overhear 	overheard 	overheard
-    //overlay 	overlaid 	overlaid
-    //overpay 	overpaid 	overpaid
-    //override 	overrode 	overridden
-    //overrun 	overran 	overrun
-    //oversee 	oversaw 	overseen
-    //oversell 	oversold 	oversold
-    //oversew 	oversewed 	oversewn / oversewed
-    //overshoot 	overshot 	overshot
-    //oversleep 	overslept 	overslept
-    //overspeak 	overspoke 	overspoken
-    //overspend 	overspent 	overspent
-    //overspill 	overspilled / overspilt [?] 	overspilled / overspilt [?]
-    //overtake 	overtook 	overtaken
-    //overthink 	overthought 	overthought
-    //overthrow 	overthrew 	overthrown
-    //overwind 	overwound 	overwound
-    //overwrite 	overwrote 	overwritten
+    "outlie", "outlied", "outlied",
+    "outride", "outrode", "outridden",
+    "outrun", "outran", "outrun",
+    "outsell", "outsold", "outsold",
+    "outshine", "outshined/outshone", "outshined/outshone",
+    "outshoot", "outshot", "outshot",
+    "outsing", "outsang", "outsung",
+    "outsit", "outsat", "outsat",
+    "outsleep", "outslept", "outslept",
+    "outsmell", "outsmelled/outsmelt", "outsmelled/outsmelt",
+    "outspeak", "outspoke", "outspoken",
+    "outspeed", "outsped", "outsped",
+    "outspend", "outspent", "outspent",
+    "outswear", "outswore", "outsworn",
+    "outswim", "outswam", "outswum",
+    "outthink", "outthought", "outthought",
+    "outthrow", "outthrew", "outthrown",
+    "outwrite", "outwrote", "outwritten",
+    "overbid", "overbid", "overbid",
+    "overbreed", "overbred", "overbred",
+    "overbuild", "overbuilt", "overbuilt",
+    "overbuy", "overbought", "overbought",
+    "overcome", "overcame", "overcome",
+    "overdo", "overdid", "overdone",
+    "overdraw", "overdrew", "overdrawn",
+    "overdrink", "overdrank", "overdrunk",
+    "overeat", "overate", "overeaten",
+    "overfeed", "overfed", "overfed",
+    "overhang", "overhung", "overhung",
+    "overhear", "overheard", "overheard",
+    "overlay", "overlaid", "overlaid",
+    "overpay", "overpaid", "overpaid",
+    "override", "overrode", "overridden",
+    "overrun", "overran", "overrun",
+    "oversee", "oversaw", "overseen",
+    "oversell", "oversold", "oversold",
+    "oversew", "oversewed", "oversewn/oversewed",
+    "overshoot", "overshot", "overshot",
+    "oversleep", "overslept", "overslept",
+    "overspeak", "overspoke", "overspoken",
+    "overspend", "overspent", "overspent",
+    "overspill", "overspilled/overspilt", "overspilled/overspilt",
+    "overtake", "overtook", "overtaken",
+    "overthink", "overthought", "overthought",
+    "overthrow", "overthrew", "overthrown",
+    "overwind", "overwound", "overwound",
+    "overwrite", "overwrote", "overwritten",
 
-    //partake 	partook 	partaken
+    "partake", "partook", "partaken",
     "pay", "paid", "paid",
-    //plead 	pleaded / pled 	pleaded / pled
-    //prebuild 	prebuilt 	prebuilt
-    //predo 	predid 	predone
-    //premake 	premade 	premade
-    //prepay 	prepaid 	prepaid
-    //presell 	presold 	presold
-    //preset 	preset 	preset
-    //preshrink 	preshrank 	preshrunk
-    //proofread 	proofread 	proofread
-    //prove 	proved 	proven / proved
+    "plead", "pleaded/pled", "pleaded/pled",
+    "prebuild", "prebuilt", "prebuilt",
+    "predo", "predid", "predone",
+    "premake", "premade", "premade",
+    "prepay", "prepaid", "prepaid",
+    "presell", "presold", "presold",
+    "preset", "preset", "preset",
+    "preshrink", "preshrank", "preshrunk",
+    "proofread", "proofread", "proofread",
+    "prove", "proved", "proven/proved",
     "put", "put", "put",
 
-    // quick-freeze 	quick-froze 	quick-frozen
-    // quit 	quit / quitted [?] 	quit / quitted [?]
+    "quick-freeze", "quick-froze", "quick-frozen",
+    "quit", "quit/quitted", "quit/quitted",
     "quit", "quit", "quit",
 
     "read", "read", "read",
-    //reawake 	reawoke 	reawaken
-    //rebid 	rebid 	rebid
-    //rebind 	rebound 	rebound
-    //rebroadcast 	rebroadcast / rebroadcasted 	rebroadcast / rebroadcasted
-    //rebuild 	rebuilt 	rebuilt
-    //recast 	recast 	recast
-    //recut 	recut 	recut
-    //redeal 	redealt 	redealt
-    //redo 	redid 	redone
-    //redraw 	redrew 	redrawn
+    "reawake", "reawoke", "reawaken",
+    "rebid", "rebid", "rebid",
+    "rebind", "rebound", "rebound",
+    "rebroadcast", "rebroadcast/rebroadcasted", "rebroadcast/rebroadcasted",
+    "rebuild", "rebuilt", "rebuilt",
+    "recast", "recast", "recast",
+    "recut", "recut", "recut",
+    "redeal", "redealt", "redealt",
+    "redo", "redid", "redone",
+    "redraw", "redrew", "redrawn",
     //refit (replace parts) 	refit / refitted [?] 	refit / refitted [?]
     //refit (retailor) 	refitted / refit [?] 	refitted / refit [?]
-    //regrind 	reground 	reground
-    //regrow 	regrew 	regrown
-    //rehang 	rehung 	rehung
-    //rehear 	reheard 	reheard
-    //reknit 	reknitted / reknit 	reknitted / reknit
+    "refit", "refit/refitted", "refit/refitted",
+    "regrind", "reground", "reground",
+    "regrow", "regrew", "regrown",
+    "rehang", "rehung", "rehung",
+    "rehear", "reheard", "reheard",
+    "reknit", "reknitted/reknit", "reknitted/reknit",
     //relay (for example tiles) 	relaid 	relaid
-    //relay (pass along) REGULAR 	relayed 	relayed
-    //relearn 	relearned / relearnt [?] 	relearned / relearnt [?]
-    //relight 	relit / relighted 	relit / relighted
-    //remake 	remade 	remade
-    //repay 	repaid 	repaid
-    //reread 	reread 	reread
-    //rerun 	reran 	rerun
-    //resell 	resold 	resold
-    //resend 	resent 	resent
-    //reset 	reset 	reset
-    //resew 	resewed 	resewn / resewed
-    //retake 	retook 	retaken
-    //reteach 	retaught 	retaught
-    //retear 	retore 	retorn
-    //retell 	retold 	retold
-    //rethink 	rethought 	rethought
-    //retread 	retread 	retread
-    //retrofit 	retrofitted / retrofit [?] 	retrofitted / retrofit [?]
-    //rewake 	rewoke / rewaked 	rewaken / rewaked
-    //rewear 	rewore 	reworn
-    //reweave 	rewove / reweaved 	rewoven / reweaved
-    //rewed 	rewed / rewedded 	rewed / rewedded
-    //rewet 	rewet / rewetted [?] 	rewet / rewetted [?]
-    //rewin 	rewon 	rewon
-    //rewind 	rewound 	rewound
-    //rewrite 	rewrote 	rewritten
-    //rid 	rid 	rid
+    //relay (pass along) REGULAR 	relayed relayed
+    "relay", "relaid/relayed", "relaid/relayed",
+    "relearn", "relearned/relearnt", "relearned/relearnt",
+    "relight", "relit/relighted", "relit/relighted",
+    "remake", "remade", "remade",
+    "repay", "repaid", "repaid",
+    "reread", "reread", "reread",
+    "rerun", "reran", "rerun",
+    "resell", "resold", "resold",
+    "resend", "resent", "resent",
+    "reset", "reset", "reset",
+    "resew", "resewed", "resewn/resewed",
+    "retake", "retook", "retaken",
+    "reteach", "retaught", "retaught",
+    "retear", "retore", "retorn",
+    "retell", "retold", "retold",
+    "rethink", "rethought", "rethought",
+    "retread", "retread", "retread",
+    "retrofit", "retrofitted/retrofit", "retrofitted/retrofit",
+    "rewake", "rewoke/rewaked", "rewaken/rewaked",
+    "rewear", "rewore", "reworn",
+    "reweave", "rewove/reweaved", "rewoven/reweaved",
+    "rewed", "rewed/rewedded", "rewed/rewedded",
+    "rewet", "rewet/rewetted", "rewet/rewetted",
+    "rewin", "rewon", "rewon",
+    "rewind", "rewound", "rewound",
+    "rewrite", "rewrote", "rewritten",
+    "rid", "rid", "rid",
     "ride", "rode", "ridden",
     "ring", "rang", "rung",
     "rise", "rose", "risen",
-    //roughcast 	roughcast 	roughcast
+    "roughcast", "roughcast", "roughcast",
     "run", "ran", "run",
 
     "sand-cast", "sand-cast", "sand-cast",
@@ -364,7 +373,7 @@ private val irregularVerbs_RawList = listOf(
     "sit", "sat", "sat",
     //slay (kill) 	slew / slayed 	slain / slayed
     //slay (amuse) REGULAR 	slayed 	slayed
-    "slay", "slew/slayed", "slew/slayed",
+    "slay", "slew/slayed", "slain/slew/slayed",
     "sleep", "slept", "slept",
     "slide", "slid", "slid",
     "sling", "slung", "slung",
@@ -421,49 +430,50 @@ private val irregularVerbs_RawList = listOf(
     "typeset", "typeset", "typeset",
     "typewrite", "typewrote", "typewritten",
 
-    //unbend 	unbent 	unbent
-    //unbind 	unbound 	unbound
-    //unclothe 	unclothed / unclad [?] 	unclothed / unclad [?]
-    //underbid 	underbid 	underbid
-    //undercut 	undercut 	undercut
-    //underfeed 	underfed 	underfed
-    //undergo 	underwent 	undergone
-    //underlie 	underlay 	underlain
-    //undersell 	undersold 	undersold
-    //underspend 	underspent 	underspent
-    //understand 	understood 	understood
-    //undertake 	undertook 	undertaken
-    //underwrite 	underwrote 	underwritten
-    //undo 	undid 	undone
-    //unfreeze 	unfroze 	unfrozen
-    //unhang 	unhung 	unhung
-    //unhide 	unhid 	unhidden
-    //unknit 	unknitted / unknit 	unknitted / unknit
-    //unlearn 	unlearned / unlearnt [?] 	unlearned / unlearnt [?]
-    //unsew 	unsewed 	unsewn / unsewed
-    //unsling 	unslung 	unslung
-    //unspin 	unspun 	unspun
-    //unstick 	unstuck 	unstuck
-    //unstring 	unstrung 	unstrung
-    //unweave 	unwove / unweaved 	unwoven / unweaved
-    //unwind 	unwound 	unwound
-    //uphold 	upheld 	upheld
-    //upset 	upset 	upset
+    "unbend", "unbent", "unbent",
+    "unbind", "unbound", "unbound",
+    "unclothe", "unclothed/unclad", "unclothed/unclad",
+    "underbid", "underbid", "underbid",
+    "undercut", "undercut", "undercut",
+    "underfeed", "underfed", "underfed",
+    "undergo", "underwent", "undergone",
+    "underlie", "underlay", "underlain",
+    "undersell", "undersold", "undersold",
+    "underspend", "underspent", "underspent",
+    "understand", "understood", "understood",
+    "undertake", "undertook", "undertaken",
+    "underwrite", "underwrote", "underwritten",
+    "undo", "undid", "undone",
+    "unfreeze", "unfroze", "unfrozen",
+    "unhang", "unhung", "unhung",
+    "unhide", "unhid", "unhidden",
+    "unknit", "unknitted/unknit", "unknitted/unknit",
+    "unlearn", "unlearned/unlearnt", "unlearned/unlearnt",
+    "unsew", "unsewed", "unsewn/unsewed",
+    "unsling", "unslung", "unslung",
+    "unspin", "unspun", "unspun",
+    "unstick", "unstuck", "unstuck",
+    "unstring", "unstrung", "unstrung",
+    "unweave", "unwove/unweaved", "unwoven/unweaved",
+    "unwind", "unwound", "unwound",
+    "uphold", "upheld", "upheld",
+    "upset", "upset", "upset",
     "understand", "understood", "understood",
 
     "wake", "woke", "woken",
-    //waylay 	waylaid 	waylaid
+    "waylay", "waylaid", "waylaid",
     "wear", "wore", "worn",
-    //weave 	wove / weaved 	woven / weaved
-    //wed 	wed / wedded 	wed / wedded
-    //weep 	wept 	wept
-    //wet 	wet / wetted [?] 	wet / wetted [?]
+    "weave", "wove/weaved", "woven/weaved",
+    "wed", "wed/wedded", "wed/wedded",
+    "weep", "wept", "wept",
+    "wet", "wet/wetted", "wet/wetted",
     //whet  REGULAR 	whetted 	whetted
+    "whet", "whetted", "whetted",
     "win", "won", "won",
-    //wind 	wound 	wound
-    //withdraw 	withdrew 	withdrawn
-    //withhold 	withheld 	withheld
-    //withstand 	withstood 	withstood
+    "wind", "wound", "wound",
+    "withdraw", "withdrew", "withdrawn",
+    "withhold", "withheld", "withheld",
+    "withstand", "withstood", "withstood",
     "wring", "wrung", "wrung",
     "write", "wrote", "written",
 )
