@@ -9,6 +9,7 @@ import kotlin.collections.ArrayList
 
 private val log = mu.KotlinLogging.logger {}
 
+val Boolean.asAdverb: String get() = if (this) "" else " not"
 
 inline fun Boolean.doIfTrue(action: ()->Unit) {
     if (this) action()

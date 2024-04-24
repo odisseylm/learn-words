@@ -25,7 +25,6 @@ import javafx.scene.input.MouseEvent
 import javafx.stage.Stage
 import javafx.stage.Window
 import javafx.stage.WindowEvent
-import org.apache.commons.lang3.SystemUtils.IS_OS_LINUX
 import java.nio.file.Path
 import java.time.ZonedDateTime
 import java.util.*
@@ -231,12 +230,12 @@ class LearnWordsController (
         val cardAnyCellOnEditEventHandler = EventHandler<TableColumn.CellEditEvent<CardWordEntry, Any>> { onCardEdited(it.rowValue) }
         pane.wordEntriesTable.columns.forEach { it.addEventHandler(TableColumn.editCommitEvent(), cardAnyCellOnEditEventHandler) }
 
-        if (settings.autoChangeKeyboardLanguage && IS_OS_LINUX) {
+        if (settings.autoChangeKeyboardLanguage) {
             pane.wordEntriesTable.fromColumn.addEventHandler(TableColumn.editStartEvent(), EventHandler<TableColumn.CellEditEvent<CardWordEntry, String>> {
-                CompletableFuture.runAsync { selectGnomeInputSource(Locale.ENGLISH) }
+                CompletableFuture.runAsync { selectKeyboardLayout(Locale.ENGLISH) }
             })
             pane.wordEntriesTable.toColumn.addEventHandler(TableColumn.editStartEvent(), EventHandler<TableColumn.CellEditEvent<CardWordEntry, String>> {
-                CompletableFuture.runAsync { selectGnomeInputSource(Locale("ru")) }
+                CompletableFuture.runAsync { selectKeyboardLayout(Locale("ru")) }
             })
         }
 

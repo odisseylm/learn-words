@@ -18,9 +18,9 @@ fun MutableList<String>.addParam(param: String, paramValue: Any?): MutableList<S
 }
 
 
-private fun Iterable<String>.toCommandLine(): CommandLine =
+private fun Iterable<String>.toCommandLine(handleQuoting: Boolean = false): CommandLine =
     CommandLine(this.first())
-        .also { cl -> this.asSequence().drop(1).forEach { cl.addArgument(it) } }
+        .also { cl -> this.asSequence().drop(1).forEach { cl.addArgument(it, handleQuoting) } }
 
 fun commandLine(vararg args: String) = args.asIterable().toCommandLine()
 

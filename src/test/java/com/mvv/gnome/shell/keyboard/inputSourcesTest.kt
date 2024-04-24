@@ -1,9 +1,10 @@
-package com.mvv.gui.javafx
+package com.mvv.gnome.shell.keyboard
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.mvv.gnome.gsettings.findInputSource
 import com.mvv.gui.test.useAssertJSoftAssertions
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -11,12 +12,18 @@ import java.util.*
 import kotlin.collections.LinkedHashMap
 
 
-class KeyboardTest {
+
+class GnomeShellInputSourcesTest {
+
+    @Test
+    fun `is ShellEval available`() { useAssertJSoftAssertions {
+        assertThat(isShellEvalAvailableImpl()).isTrue
+    } }
 
     @Test
     fun deserializeInputSource() { useAssertJSoftAssertions {
 
-        val s = jsonMapper.readValue<InputSource>("""
+        val s = jsonMapper.readValue<ShellInputSource>("""
             {
                 "type":"type1",
                 "id":"id1",
@@ -36,7 +43,7 @@ class KeyboardTest {
         assertThat(s.index).isEqualTo(555)
         assertThat(s.xkbId).isEqualTo("xkbId1")
 
-        val s2 = jsonMapper.readValue<InputSource>(
+        val s2 = jsonMapper.readValue<ShellInputSource>(
             """ {
                   "type":"xkb",
                   "id":"us",
@@ -56,6 +63,7 @@ class KeyboardTest {
         assertThat(s2.index).isEqualTo(0)
         assertThat(s2.xkbId).isEqualTo("us")
     } }
+
 
     @Test
     fun `findInputSource  general real cases`() { useAssertJSoftAssertions {
@@ -96,77 +104,63 @@ class KeyboardTest {
                  }
             } """)
 
-        val matchByLanguage = findGnomeInputSource(inputSources, Locale.ENGLISH)
+        val matchByLanguage = inputSources.findInputSource(Locale.ENGLISH)
         assertThat(matchByLanguage).isNotNull
         if (matchByLanguage != null) {
-            assertThat(matchByLanguage.key).isEqualTo("0")
-            assertThat(matchByLanguage.value).isSameAs(inputSources["0"])
-            assertThat(matchByLanguage.value.displayName).isEqualTo("English (US)")
+            assertThat(matchByLanguage.displayName).isEqualTo("English (US)")
         }
 
-        val matchByLanguage2 = findGnomeInputSource(inputSources, Locale("en"))
+        val matchByLanguage2 = inputSources.findInputSource(Locale("en"))
         assertThat(matchByLanguage2).isNotNull
         if (matchByLanguage2 != null) {
-            assertThat(matchByLanguage2.key).isEqualTo("0")
-            assertThat(matchByLanguage2.value).isSameAs(inputSources["0"])
-            assertThat(matchByLanguage2.value.displayName).isEqualTo("English (US)")
+            assertThat(matchByLanguage2.displayName).isEqualTo("English (US)")
         }
 
-        val matchByLanguageAndCountryUS = findGnomeInputSource(inputSources, Locale.US)
+        val matchByLanguageAndCountryUS = inputSources.findInputSource(Locale.US)
         assertThat(matchByLanguageAndCountryUS).isNotNull
         if (matchByLanguageAndCountryUS != null) {
-            assertThat(matchByLanguageAndCountryUS.key).isEqualTo("0")
-            assertThat(matchByLanguageAndCountryUS.value).isSameAs(inputSources["0"])
+            assertThat(matchByLanguageAndCountryUS.id).isEqualTo("us")
         }
 
-        val matchByLanguageAndCountryUK = findGnomeInputSource(inputSources, Locale.UK)
+        val matchByLanguageAndCountryUK = inputSources.findInputSource(Locale.UK)
         assertThat(matchByLanguageAndCountryUK).isNotNull
         if (matchByLanguageAndCountryUK != null) {
-            assertThat(matchByLanguageAndCountryUK.key).isEqualTo("0")
-            assertThat(matchByLanguageAndCountryUK.value).isSameAs(inputSources["0"])
+            assertThat(matchByLanguageAndCountryUK.id).isEqualTo("us")
         }
 
-        val ru = findGnomeInputSource(inputSources, Locale("ru"))
+        val ru = inputSources.findInputSource(Locale("ru"))
         assertThat(ru).isNotNull
         if (ru != null) {
-            assertThat(ru.key).isEqualTo("2")
-            assertThat(ru.value).isSameAs(inputSources["2"])
-            assertThat(ru.value.id).isEqualTo("ru")
-            assertThat(ru.value.displayName).isEqualTo("Russian")
+            assertThat(ru.id).isEqualTo("ru")
+            assertThat(ru.displayName).isEqualTo("Russian")
         }
 
-        val ruRu = findGnomeInputSource(inputSources, Locale("ru", "RU"))
+        val ruRu = inputSources.findInputSource(Locale("ru", "RU"))
         assertThat(ruRu).isNotNull
         if (ruRu != null) {
-            assertThat(ruRu.key).isEqualTo("2")
-            assertThat(ruRu.value).isSameAs(inputSources["2"])
-            assertThat(ruRu.value.id).isEqualTo("ru")
-            assertThat(ruRu.value.displayName).isEqualTo("Russian")
+            assertThat(ruRu.id).isEqualTo("ru")
+            assertThat(ruRu.displayName).isEqualTo("Russian")
         }
 
-        val ruUa = findGnomeInputSource(inputSources, Locale("ru" ,"UA"))
+        val ruUa = inputSources.findInputSource(Locale("ru" ,"UA"))
         assertThat(ruUa).isNotNull
         if (ruUa != null) {
-            assertThat(ruUa.key).isEqualTo("2")
-            assertThat(ruUa.value).isSameAs(inputSources["2"])
-            assertThat(ruUa.value.id).isEqualTo("ru")
-            assertThat(ruUa.value.displayName).isEqualTo("Russian")
+            assertThat(ruUa.id).isEqualTo("ru")
+            assertThat(ruUa.displayName).isEqualTo("Russian")
         }
 
-        val ua = findGnomeInputSource(inputSources, Locale("uk"))
-        //val ua = findInputSource(inputSources, Locale("uk", "UA"))
+        val ua = inputSources.findInputSource(Locale("uk"))
+        //val ua = inputSources.findInputSource(Locale("uk", "UA"))
         assertThat(ua).isNotNull
         if (ua != null) {
-            assertThat(ua.key).isEqualTo("1")
-            assertThat(ua.value).isSameAs(inputSources["1"])
-            assertThat(ua.value.id).isEqualTo("ua")
-            assertThat(ua.value.displayName).isEqualTo("Ukrainian")
+            assertThat(ua.id).isEqualTo("ua")
+            assertThat(ua.displayName).isEqualTo("Ukrainian")
         }
 
-        val spanish = findGnomeInputSource(inputSources, Locale("es"))
+        val spanish = inputSources.findInputSource(Locale("es"))
         assertThat(spanish).isNull()
 
-        val spanishEs = findGnomeInputSource(inputSources, Locale("es", "ES"))
+        val spanishEs = inputSources.findInputSource(Locale("es", "ES"))
         assertThat(spanishEs).isNull()
     } }
 
@@ -195,12 +189,10 @@ class KeyboardTest {
                   }
             } """)
 
-        val matchByLanguage = findGnomeInputSource(inputSources, Locale("en1"))
+        val matchByLanguage = inputSources.findInputSource(Locale("en1"))
         assertThat(matchByLanguage).isNotNull
         if (matchByLanguage != null) {
-            assertThat(matchByLanguage.key).isEqualTo("0")
-            assertThat(matchByLanguage.value).isSameAs(inputSources["0"])
-            assertThat(matchByLanguage.value.shortName).isEqualTo("en1")
+            assertThat(matchByLanguage.shortName).isEqualTo("en1")
         }
     } }
 
@@ -221,12 +213,10 @@ class KeyboardTest {
 
         val locale = mockLocale(displayLanguage = "English1")
 
-        val matchByLanguage = findGnomeInputSource(inputSources, locale)
+        val matchByLanguage = inputSources.findInputSource(locale)
         assertThat(matchByLanguage).isNotNull
         if (matchByLanguage != null) {
-            assertThat(matchByLanguage.key).isEqualTo("0")
-            assertThat(matchByLanguage.value).isSameAs(inputSources["0"])
-            assertThat(matchByLanguage.value.displayName).isEqualTo("English1 (bla-bla)")
+            assertThat(matchByLanguage.displayName).isEqualTo("English1 (bla-bla)")
         }
     } }
 
@@ -255,20 +245,16 @@ class KeyboardTest {
              }
              """)
 
-        val us = findGnomeInputSource(inputSources, Locale.US)
+        val us = inputSources.findInputSource(Locale.US)
         assertThat(us).isNotNull
         if (us != null) {
-            assertThat(us.key).isEqualTo("0")
-            assertThat(us.value).isSameAs(inputSources["0"])
-            assertThat(us.value.displayName).isEqualTo("English (US)")
+            assertThat(us.displayName).isEqualTo("English (US)")
         }
 
-        val uk = findGnomeInputSource(inputSources, Locale.UK)
+        val uk = inputSources.findInputSource(Locale.UK)
         assertThat(uk).isNotNull
         if (uk != null) {
-            assertThat(uk.key).isEqualTo("1")
-            assertThat(uk.value).isSameAs(inputSources["1"])
-            assertThat(uk.value.displayName).isEqualTo("English (GB)")
+            assertThat(uk.displayName).isEqualTo("English (GB)")
         }
     } }
 
@@ -279,8 +265,8 @@ private val jsonMapper = jsonMapper {
     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }.registerKotlinModule()
 
-private fun inputSources(inputSources: String): Map<String, InputSource> =
-    jsonMapper.readValue<LinkedHashMap<String, InputSource>>(inputSources)
+private fun inputSources(inputSources: String): Collection<ShellInputSource> =
+    jsonMapper.readValue<LinkedHashMap<String, ShellInputSource>>(inputSources).values
 
 
 private fun mockLocale(
