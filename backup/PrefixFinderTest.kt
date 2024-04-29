@@ -232,7 +232,7 @@ class PrefixFinderTest {
     //@Test
     @org.junit.jupiter.api.RepeatedTest(2)
     fun performanceTest(ri: RepetitionInfo) {
-        val words = Files.readAllLines(Path.of("/home/vmelnykov/projects/words/learn-words/src/test/resources/Friends S01E03.txt"))
+        val words = Files.readAllLines(getProjectDirectory().resolve("src/test/resources/Friends S01E03.txt"))
         log.info { "performanceTest => words (${words.size}) are loaded" }
 
         if (ri.currentRepetition == 1) {

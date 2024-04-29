@@ -235,7 +235,7 @@ class LearnWordsController (
                 CompletableFuture.runAsync { selectKeyboardLayout(Locale.ENGLISH) }
             })
             pane.wordEntriesTable.toColumn.addEventHandler(TableColumn.editStartEvent(), EventHandler<TableColumn.CellEditEvent<CardWordEntry, String>> {
-                CompletableFuture.runAsync { selectKeyboardLayout(Locale("ru")) }
+                CompletableFuture.runAsync { selectKeyboardLayout(locale("ru")) }
             })
         }
 

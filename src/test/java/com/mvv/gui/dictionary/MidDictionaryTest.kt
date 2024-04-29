@@ -123,6 +123,8 @@ class MidDictionaryTest {
         assertThat(dictEntry.word).isEqualTo("apple")
         assertThat(dictEntry.transcription).isNull()
         assertThat(dictEntry.translations).containsExactly(
+            // It corresponds to DfM_OmegaWiki_EngRus_3.5.9_08.May.2014.zip
+            // Version DfM_OmegaWiki_EngRus_3.5.9.zip has '[02n]' instead of '[02noun]'
             "[02noun]",
             "[01 The popular, crisp, round fruit of the apple tree, usually with red, yellow or green skin, light-coloured flesh and pips inside.]",
             "яблоко",
@@ -214,6 +216,8 @@ class MidDictionaryTest {
         assertThat(dictEntry.word).isEqualTo("washington washington d c")
         assertThat(dictEntry.transcription).isNull()
         assertThat(dictEntry.translations).containsExactlyInAnyOrder(
+            // It corresponds to DfM_OmegaWiki_EngRus_3.5.9_08.May.2014.zip
+            // Version DfM_OmegaWiki_EngRus_3.5.9.zip has '[02n]' instead of '[02noun]'
             "[02noun]",
             "[01 The capital of the United States of America, located in the District of Columbia.]",
             "Вашингтон",

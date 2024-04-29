@@ -1,12 +1,12 @@
 package com.mvv.gui.dictionary
 
 import com.mvv.gui.util.startsWithOneOf
+import com.mvv.gui.util.url
 import org.apache.commons.lang3.StringUtils
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.net.URL
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -313,7 +313,7 @@ class MidDictionary(val source: MidDictionarySource) : Dictionary {
 private fun getFileStream(jarFile: Path, pathInArchive: Path): InputStream =
     //if (jarFile.exists()) FileInputStream(jarFile.toFile())
     //else URL("jar:file:${jarFile}!/${pathInArchive}").openStream()
-    URL("jar:file:${jarFile}!/${pathInArchive}").openStream()
+    url("jar:file:${jarFile}!/${pathInArchive}".replace('\\', '/')).openStream()
 
 
 private fun jarContains(jarFile: Path, pathInArchive: Path): Boolean =

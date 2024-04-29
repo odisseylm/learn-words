@@ -130,7 +130,7 @@ fun CharSequence.separateCharSuffixesRepeatably(prefixes: String): List<String> 
         }
     }
 
-    return res.reversed()
+    return res.reversedList()
 }
 
 

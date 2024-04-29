@@ -4,6 +4,8 @@ import com.mvv.gui.test.useAssertJSoftAssertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 
 
 // echo "testing festival" | festival --tts
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.Test
 private val log = mu.KotlinLogging.logger {}
 
 
+@EnabledOnOs(OS.LINUX)
 class FestivalTest {
 
     @Test

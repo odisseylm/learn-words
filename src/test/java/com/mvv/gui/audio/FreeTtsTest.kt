@@ -10,6 +10,7 @@ import org.junit.jupiter.api.condition.EnabledIf
 import java.io.IOException
 
 
+private val log = mu.KotlinLogging.logger {}
 
 class FreeTtsTest {
 
@@ -268,8 +269,15 @@ class FreeTtsTest {
 
     companion object {
         @JvmStatic
-        fun isMbrolaExecutablePresent(): Boolean =
-                try { executeCommand(findMbrolaBinary(), "-help") == 0 }
+        val isMbrolaExecutablePresent: Boolean by lazy {
+                try {
+                    val mbrolaPath = findMbrolaBinary()
+
+                    // log explanation to see that it is planned and not configuration error
+                    log.info { "Calling [$mbrolaPath] for validation (for unit tests).\n\n\"$mbrolaPath\" -help" }
+
+                    executeCommand(mbrolaPath, "-help") == 0 }
                 catch (_: IOException) { false }
+        }
     }
 }

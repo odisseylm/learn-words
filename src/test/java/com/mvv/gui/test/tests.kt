@@ -33,8 +33,9 @@ class TestUtilsTest {
             fail("SoftAssertions.assertAll() is not called.")
         }
         catch (ex: AssertionError) {
-            assertTrue(ex.message?.contains("Multiple Failures (1 failure)") ?: false)
-            assertTrue(ex.message?.contains("expected: 2\n but was: 1") ?: false)
+            val errMsg = ex.message?.replace("\r\n", "\n") // possible fix for Windows
+            assertTrue(errMsg?.contains("Multiple Failures (1 failure)") ?: false)
+            assertTrue(errMsg?.contains("expected: 2\n but was: 1") ?: false)
         }
     }
 
@@ -50,8 +51,9 @@ class TestUtilsTest {
             fail("SoftAssertions.assertAll() is not called.")
         }
         catch (ex: AssertionError) {
-            assertTrue(ex.message?.contains("Multiple Failures (1 failure)") ?: false)
-            assertTrue(ex.message?.contains("expected: 2\n but was: 1") ?: false)
+            val errMsg = ex.message?.replace("\r\n", "\n") // possible fix for Windows
+            assertTrue(errMsg?.contains("Multiple Failures (1 failure)") ?: false)
+            assertTrue(errMsg?.contains("expected: 2\n but was: 1") ?: false)
         }
     }
 

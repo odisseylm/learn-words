@@ -1,5 +1,6 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.dictionary.getProjectDirectory
 import com.mvv.gui.util.logInfo
 import com.mvv.gui.util.startStopWatch
 import org.assertj.core.api.Assertions.assertThat
@@ -8,12 +9,12 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepetitionInfo
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
-import java.nio.file.Path
 
 
 private val log = mu.KotlinLogging.logger {}
 
 
+@Disabled("Old code. Disabled since it requires much time.")
 class PrefixFinderOldTest {
 
     @Test
@@ -259,7 +260,7 @@ class PrefixFinderOldTest {
     //@Test
     @org.junit.jupiter.api.RepeatedTest(2)
     fun performanceTest(ri: RepetitionInfo) {
-        val words = Files.readAllLines(Path.of("/home/vmelnykov/projects/words/learn-words/src/test/resources/Friends S01E03.txt"))
+        val words = Files.readAllLines(getProjectDirectory().resolve("src/test/resources/Friends S01E03.txt"))
         log.info { "performanceTest => words (${words.size}) are loaded" }
 
         if (ri.currentRepetition == 1) {

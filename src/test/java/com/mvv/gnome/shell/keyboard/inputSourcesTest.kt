@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.mvv.gnome.gsettings.findInputSource
+import com.mvv.gui.javafx.findInputSource
 import com.mvv.gui.test.useAssertJSoftAssertions
+import com.mvv.gui.util.locale
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.mockito.kotlin.mock
 import java.util.*
 import kotlin.collections.LinkedHashMap
@@ -16,8 +19,15 @@ import kotlin.collections.LinkedHashMap
 class GnomeShellInputSourcesTest {
 
     @Test
+    @EnabledOnOs(OS.LINUX)
     fun `is ShellEval available`() { useAssertJSoftAssertions {
         assertThat(isShellEvalAvailableImpl()).isTrue
+    } }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun `is ShellEval unavailable on Windows`() { useAssertJSoftAssertions {
+        assertThat(isShellEvalAvailableImpl()).isFalse
     } }
 
     @Test
@@ -110,7 +120,7 @@ class GnomeShellInputSourcesTest {
             assertThat(matchByLanguage.displayName).isEqualTo("English (US)")
         }
 
-        val matchByLanguage2 = inputSources.findInputSource(Locale("en"))
+        val matchByLanguage2 = inputSources.findInputSource(locale("en"))
         assertThat(matchByLanguage2).isNotNull
         if (matchByLanguage2 != null) {
             assertThat(matchByLanguage2.displayName).isEqualTo("English (US)")
@@ -128,28 +138,28 @@ class GnomeShellInputSourcesTest {
             assertThat(matchByLanguageAndCountryUK.id).isEqualTo("us")
         }
 
-        val ru = inputSources.findInputSource(Locale("ru"))
+        val ru = inputSources.findInputSource(locale("ru"))
         assertThat(ru).isNotNull
         if (ru != null) {
             assertThat(ru.id).isEqualTo("ru")
             assertThat(ru.displayName).isEqualTo("Russian")
         }
 
-        val ruRu = inputSources.findInputSource(Locale("ru", "RU"))
+        val ruRu = inputSources.findInputSource(locale("ru", "RU"))
         assertThat(ruRu).isNotNull
         if (ruRu != null) {
             assertThat(ruRu.id).isEqualTo("ru")
             assertThat(ruRu.displayName).isEqualTo("Russian")
         }
 
-        val ruUa = inputSources.findInputSource(Locale("ru" ,"UA"))
+        val ruUa = inputSources.findInputSource(locale("ru" ,"UA"))
         assertThat(ruUa).isNotNull
         if (ruUa != null) {
             assertThat(ruUa.id).isEqualTo("ru")
             assertThat(ruUa.displayName).isEqualTo("Russian")
         }
 
-        val ua = inputSources.findInputSource(Locale("uk"))
+        val ua = inputSources.findInputSource(locale("uk"))
         //val ua = inputSources.findInputSource(Locale("uk", "UA"))
         assertThat(ua).isNotNull
         if (ua != null) {
@@ -157,10 +167,10 @@ class GnomeShellInputSourcesTest {
             assertThat(ua.displayName).isEqualTo("Ukrainian")
         }
 
-        val spanish = inputSources.findInputSource(Locale("es"))
+        val spanish = inputSources.findInputSource(locale("es"))
         assertThat(spanish).isNull()
 
-        val spanishEs = inputSources.findInputSource(Locale("es", "ES"))
+        val spanishEs = inputSources.findInputSource(locale("es", "ES"))
         assertThat(spanishEs).isNull()
     } }
 
@@ -182,17 +192,17 @@ class GnomeShellInputSourcesTest {
                   "type":"xkb",
                   "id":"us",
                   "displayName":"English (US)",
-                  "_shortName":"en1",
+                  "_shortName":"bla",
                   "index":0,
                   "properties":null,
                   "xkbId":"us"
                   }
             } """)
 
-        val matchByLanguage = inputSources.findInputSource(Locale("en1"))
+        val matchByLanguage = inputSources.findInputSource(locale("bla"))
         assertThat(matchByLanguage).isNotNull
         if (matchByLanguage != null) {
-            assertThat(matchByLanguage.shortName).isEqualTo("en1")
+            assertThat(matchByLanguage.shortName).isEqualTo("bla")
         }
     } }
 
@@ -314,6 +324,33 @@ private fun mockLocale2(
     whenever(locale.isO3Country).thenReturn(isO3Country)
     whenever(locale.displayCountry).thenReturn(displayCountry)
     whenever(locale.getDisplayCountry(Locale.ENGLISH)).thenReturn(englishDisplayCountry)
+
+    return locale
+}
+
+
+private fun mockLocale3(
+    language: String = "",
+    isO3Language: String = "",
+    displayLanguage: String = "",
+    englishDisplayLanguage: String = "",
+    languageTag: String = "",
+    country: String = "",
+    isO3Country: String = "",
+    displayCountry: String = "",
+    englishDisplayCountry: String = "",
+): Locale {
+
+    val locale = Mockito.mock(Locale::class.java)
+    `when`(locale.language).thenReturn(language)
+    `when`(locale.isO3Language).thenReturn(isO3Language)
+    `when`(locale.displayLanguage).thenReturn(displayLanguage)
+    `when`(locale.getDisplayLanguage(Locale.ENGLISH)).thenReturn(englishDisplayLanguage)
+    `when`(locale.toLanguageTag()).thenReturn(languageTag)
+    `when`(locale.country).thenReturn(country)
+    `when`(locale.isO3Country).thenReturn(isO3Country)
+    `when`(locale.displayCountry).thenReturn(displayCountry)
+    `when`(locale.getDisplayCountry(Locale.ENGLISH)).thenReturn(englishDisplayCountry)
 
     return locale
 }

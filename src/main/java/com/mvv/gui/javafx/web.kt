@@ -1,9 +1,12 @@
 package com.mvv.gui.javafx
 
 import com.mvv.gui.util.executeCommand
+import com.mvv.win.programFiles
 import javafx.application.Application
 import javafx.scene.web.WebView
 import javafx.stage.Stage
+import org.apache.commons.lang3.SystemUtils.IS_OS_LINUX
+import org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS
 import kotlin.concurrent.thread
 
 
@@ -29,7 +32,14 @@ fun openWebBrowser(browser: BrowserType = BrowserType.Default, url: String) {
         BrowserType.Opera   -> {
             val exitCodeOfReusingExistentSession = 24
             thread (isDaemon = true, name = "web-browser $browser") {
-                executeCommand(listOf("opera", url), listOf(0, exitCodeOfReusingExistentSession))
+                when {
+                    IS_OS_LINUX   -> executeCommand(
+                        listOf("opera", url),
+                        listOf(0, exitCodeOfReusingExistentSession))
+                    IS_OS_WINDOWS -> executeCommand(
+                        listOf(programFiles.resolve("Opera/opera.exe").toString(), url),
+                        listOf(0, exitCodeOfReusingExistentSession))
+                }
             }
         }
     }

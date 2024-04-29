@@ -1,8 +1,10 @@
 package com.mvv.gui.util
 
 import com.mvv.gui.dictionary.getProjectDirectory
+import com.mvv.gui.test.useAssertJSoftAssertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import kotlin.io.path.readText
 
 
 class NetTest {
@@ -19,15 +21,17 @@ class NetTest {
     }
 
     @Test
-    fun downloadUrlText_File() {
+    fun downloadUrlText_File() { useAssertJSoftAssertions {
         val file = getProjectDirectory(NetTest::class).resolve("src/test/resources/nuance.txt")
         downloadUrlText(file.toUri())
 
-        assertThat(downloadUrlText(file.toUri())).hasSize(2312).contains("POST https://tts.api.nuance.com/api/v1/synthesize")
-        assertThat(downloadUrlText(file.toUri().toURL())).hasSize(2312)
-        assertThat(downloadUrlText(file.toUri().toString())).hasSize(2312)
-        assertThat(downloadUrlText(file.toUri().toURL().toString())).hasSize(2312)
-    }
+        val expectedContentTextLength = file.readText(Charsets.UTF_8).length
+
+        assertThat(downloadUrlText(file.toUri())).hasSize(expectedContentTextLength).contains("POST https://tts.api.nuance.com/api/v1/synthesize")
+        assertThat(downloadUrlText(file.toUri().toURL())).hasSize(expectedContentTextLength)
+        assertThat(downloadUrlText(file.toUri().toString())).hasSize(expectedContentTextLength)
+        assertThat(downloadUrlText(file.toUri().toURL().toString())).hasSize(expectedContentTextLength)
+    } }
 
     @Test
     fun downloadUrl_web() {

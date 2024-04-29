@@ -170,3 +170,18 @@ inline fun <E, C: MutableCollection<E>> C.addAll(vararg values: E): C {
     this.addAll(values)
     return this
 }
+
+
+// To avoid deprecation warnings
+//
+fun locale(language: String): Locale = Locale.of(language)
+fun locale(language: String, country: String): Locale = Locale.of(language, country)
+
+// Kotlin: 'reversed(): (Mutable)List<E!>!' is deprecated.
+// This member is not fully supported by Kotlin compiler,
+// so it may be absent or have different signature in next major version
+//
+// kotlin.collections.reversed
+// fun <T> Iterable<T>.reversed(): List<T> = this.`kotlin.collections.reversed`()
+
+fun <T> Iterable<T>.reversedList(): List<T> = this.reversed() // strange... now (with wrapper) it does not show warning!? Why?

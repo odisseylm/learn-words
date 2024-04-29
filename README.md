@@ -26,15 +26,17 @@ Currently used dictionaries (en-ru):
 - [DictionaryForMIDs](https://dictionarymid.sourceforge.net/) (Dictionaries packed for MID (old java platform for mobile phones))
   - !!! Remember to extract JAR files from archives !!!
   - Used now
-    - dicts/DfM_OmegaWiki_Eng_3.5.9.jar
-    - dicts/DfM_OmegaWiki_EngRus_3.5.9.jar
-    - dicts/DictionaryForMIDs_EngRus_Mueller.jar
+    - dicts/DfM_OmegaWiki_Eng_3.5.9.jar (http://prdownloads.sourceforge.net/dictionarymid/DfM_OmegaWiki_Eng_3.5.9_08.May.2014.zip?download)
+    - dicts/DfM_OmegaWiki_EngRus_3.5.9.jar (http://prdownloads.sourceforge.net/dictionarymid/DfM_OmegaWiki_EngRus_3.5.9_08.May.2014.zip?download)
+    - dicts/DictionaryForMIDs_EngRus_Mueller.jar (http://prdownloads.sourceforge.net/dictionarymid/DictionaryForMIDs_3.4.0_EngRus_Mueller.zip?download)
   - [Dictionaries for Download](https://dictionarymid.sourceforge.net/dict.html)
     - Other Bilingual Dictionaries / Russian Bilinguals
       - [DictionaryForMIDs_3.4.0_EngRus_Mueller.zip](http://prdownloads.sourceforge.net/dictionarymid/DictionaryForMIDs_3.4.0_EngRus_Mueller.zip?download)
        - It also Mueller dictionary, you can skip it if you already added mueller dictionary.
     - [Bilingual Dictionaries from OmegaWiki](https://dictionarymid.sourceforge.net/dictionaries/dictsBinlingualsOmegaWiki.html)
       - [English <> Russian](http://prdownloads.sourceforge.net/dictionarymid/DfM_OmegaWiki_EngRus_3.5.9_08.May.2014.zip?download)
+    - [Monolinguals Dictionaries from OmegaWiki](https://dictionarymid.sourceforge.net/dictionaries/dictsMonolingualsOmegaWiki.html)
+      - [DfM_OmegaWiki_Eng_3.5.9_08.May.2014.zip](http://prdownloads.sourceforge.net/dictionarymid/DfM_OmegaWiki_Eng_3.5.9_08.May.2014.zip?download) 
  - Search other dictionaries ))
 
 

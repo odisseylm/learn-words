@@ -724,9 +724,9 @@ class TextParserExTest {
         assertions.assertThat(abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 4)).isTrue
 
         assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 5) }
-            .hasMessage("String index out of range: 5")
+            .message().isIn("String index out of range: 5", "Index 5 out of bounds for length 5")
         assertions.assertThatCode { abbreviation.thisDotIsPartOfTheAbbreviation(" e.g.", 6) }
-            .hasMessage("String index out of range: 6")
+            .message().isIn("String index out of range: 6", "Index 6 out of bounds for length 5")
 
         assertions.assertAll()
     }

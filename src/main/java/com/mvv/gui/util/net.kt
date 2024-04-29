@@ -18,6 +18,10 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 
+// to avoid deprecation warnings
+fun url(url: String): URL = URI(url).toURL()
+
+
 data class NetSettings (
     val timeout: Duration = Duration.ofSeconds(10),
     val ignoreCertificate: Boolean = false
@@ -27,7 +31,7 @@ data class NetSettings (
 private val defaultNetSettings = NetSettings()
 
 fun downloadUrl(url: String, settings: NetSettings = defaultNetSettings): ByteArray =
-    downloadUrl(URL(url), settings)
+    downloadUrl(url(url), settings)
 
 fun downloadUrl(url: URI, settings: NetSettings = defaultNetSettings): ByteArray =
     downloadUrl(url.toURL(), settings)
@@ -45,7 +49,7 @@ fun downloadUrl(url: URL, settings: NetSettings = defaultNetSettings): ByteArray
 
 
 fun downloadUrlText(url: String, settings: NetSettings = defaultNetSettings): String =
-    downloadUrlText(URL(url), settings)
+    downloadUrlText(url(url), settings)
 fun downloadUrlText(url: URI, settings: NetSettings = defaultNetSettings): String =
     downloadUrlText(url.toURL(), settings)
 fun downloadUrlText(url: URL, settings: NetSettings = defaultNetSettings): String {

@@ -1,11 +1,13 @@
 package com.mvv.gui.words
 
+import com.mvv.gui.dictionary.getProjectDirectory
 import com.mvv.gui.test.useAssertJSoftAssertions
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 
 
+@Disabled("Investigation code. Now synonyms are not used because such approach generates too many synonyms.")
 class DbSynonymsTest {
 
     @Test
@@ -57,13 +59,13 @@ class DbSynonymsTest {
     @Test
     @DisplayName("printAllSqlLiteTables")
     fun test_printAllSqlLiteTables() {
-        printAllSqlLiteTables(Path.of("/home/vmelnykov/projects/words/learn-words/temp/russian-synonyms-newdatabase.db"))
+        printAllSqlLiteTables(getProjectDirectory().resolve("temp/russian-synonyms-newdatabase.db"))
     }
 
     @Test
     @DisplayName("printAllSqlLiteTables2")
     fun test_printAllSqlLiteTables2() {
-        printAllSqlLiteTables(Path.of("/home/vmelnykov/projects/words/learn-words/temp/english-synonyms-newdatabase.db"))
+        printAllSqlLiteTables(getProjectDirectory().resolve("temp/english-synonyms-newdatabase.db"))
     }
 }
 

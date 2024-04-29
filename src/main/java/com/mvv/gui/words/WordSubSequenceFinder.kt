@@ -6,8 +6,8 @@ import com.mvv.gui.util.*
 enum class Direction { Forward, Backward }
 
 fun List<String>.bypassDirection(direction: Direction): List<String> = when (direction) {
-    Direction.Forward -> this
-    Direction.Backward -> this.reversed()
+    Direction.Forward  -> this
+    Direction.Backward -> this.reversedList()
 }
 
 data class SubSequenceFinderOptions (
