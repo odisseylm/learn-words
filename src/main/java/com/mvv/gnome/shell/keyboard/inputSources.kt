@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.mvv.gnome.gsettings.InputSource
-import com.mvv.gnome.gsettings.findInputSource
+import com.mvv.gnome.gsettings.GnomeInputSource
+import com.mvv.gui.javafx.findInputSource
 import com.mvv.gui.util.*
 import java.util.Locale
 
@@ -99,7 +99,7 @@ data class ShellInputSource (
     val xkbId: String,                // "us"
     override val displayName: String, // "English (US)"
     private val _shortName: String?,  // "en"
-) : InputSource {
+) : GnomeInputSource {
     override val shortName: String get() = _shortName ?: id
 }
 

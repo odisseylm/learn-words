@@ -1,6 +1,7 @@
 package com.mvv.gnome.gsettings
 
 import com.mvv.gui.test.useAssertJSoftAssertions
+import com.mvv.gui.util.locale
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -73,34 +74,34 @@ class GSettingsInputSourceKeysTest {
         assertThat(inputSourceKeys.findInputSourceKey(Locale.ENGLISH))
             .isEqualTo(InputSourceKey("us"))
 
-        assertThat(inputSourceKeys.findInputSourceKey(Locale("en", "AU")))
+        assertThat(inputSourceKeys.findInputSourceKey(locale("en", "AU")))
             .isEqualTo(InputSourceKey("au"))
 
-        assertThat(inputSourceKeys.findInputSourceKey(Locale("en", "US")))
+        assertThat(inputSourceKeys.findInputSourceKey(locale("en", "US")))
             .isEqualTo(InputSourceKey("us"))
 
-        assertThat(inputSourceKeys.findInputSourceKey(Locale("en", "GB")))
+        assertThat(inputSourceKeys.findInputSourceKey(locale("en", "GB")))
             .isEqualTo(InputSourceKey("gb"))
 
-        assertThat(inputSourceKeys.findInputSourceKey(Locale("ru")))
+        assertThat(inputSourceKeys.findInputSourceKey(locale("ru")))
             .isEqualTo(InputSourceKey("ru"))
 
-        assertThat(inputSourceKeys.findInputSourceKey(Locale("ru", "GE")))
+        assertThat(inputSourceKeys.findInputSourceKey(locale("ru", "GE")))
             .isEqualTo(InputSourceKey("ge+ru"))
 
-        assertThat(listOf(InputSourceKey("ge+ru")).findInputSourceKey(Locale("ru")))
+        assertThat(listOf(InputSourceKey("ge+ru")).findInputSourceKey(locale("ru")))
             .isEqualTo(InputSourceKey("ge+ru"))
 
         assertThat(listOf(InputSourceKey("au")).findInputSourceKey(Locale.ENGLISH))
             .isEqualTo(InputSourceKey("au"))
 
-        assertThat(listOf(InputSourceKey("au")).findInputSourceKey(Locale("en", "US")))
+        assertThat(listOf(InputSourceKey("au")).findInputSourceKey(locale("en", "US")))
             .isEqualTo(InputSourceKey("au"))
 
-        assertThat(listOf(InputSourceKey("us")).findInputSourceKey(Locale("en", "AU")))
+        assertThat(listOf(InputSourceKey("us")).findInputSourceKey(locale("en", "AU")))
             .isEqualTo(InputSourceKey("us"))
 
-        assertThat(listOf(InputSourceKey("gb")).findInputSourceKey(Locale("en", "AU")))
+        assertThat(listOf(InputSourceKey("gb")).findInputSourceKey(locale("en", "AU")))
             .isEqualTo(InputSourceKey("gb"))
     } }
 

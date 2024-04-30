@@ -1,11 +1,12 @@
 package com.mvv.gui.javafx
 
-import com.mvv.gnome.shell.keyboard.isShellEvalAvailable
-import com.mvv.gnome.shell.keyboard.isShyriiwookExtensionAvailable
-import com.mvv.gnome.shell.keyboard.selectInputSourceByShyriiwookExtension
+import com.mvv.gnome.selectKeyboardLayout as selectGnomeKeyboardLayout
+import com.mvv.win.selectKeyboard as selectWindowsKeyboard
+import com.mvv.gui.util.containsOneOf
+import com.mvv.gui.util.filterNotBlank
 import com.mvv.gui.util.measureTime
-import com.mvv.gnome.shell.keyboard.selectInputSource as selectGnomeInputSourceByShellEval
 import org.apache.commons.lang3.SystemUtils.IS_OS_LINUX
+import org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS
 import java.util.Locale
 
 
@@ -32,22 +33,85 @@ private val log = mu.KotlinLogging.logger {}
 
 
 fun selectKeyboardLayout(locale: Locale) { measureTime("select keyboard for $locale", log) {
-    if (IS_OS_LINUX)
-        when {
-            // Custom Gnome extension
-            isShyriiwookExtensionAvailable -> selectInputSourceByShyriiwookExtension(locale)
-
-            // ShellEval is removed since Ubuntu 22.0 due to security reasons.
-            //
-            isShellEvalAvailable           -> selectGnomeInputSourceByShellEval(locale)
-
-            // Using THIS gSettings approach is bad idea,
-            // because it requires full gnome session update
-            //
-            // else                        -> selectGSettingsInputSource(locale)
-        }
-
-        //selectGnomeInputSourceByShellEval(locale)
-        //selectGSettingsInputSource(locale)
-        //selectInputSourceByShyriiwookExtension(locale)
+    when {
+        IS_OS_LINUX   -> selectGnomeKeyboardLayout(locale)
+        IS_OS_WINDOWS -> selectWindowsKeyboard(locale)
+    }
 } }
+
+
+
+interface InputSource {
+    val id: Any              // String in Gnome; HKL/DWORD in Windows
+    val displayName: String  // "English (US)"
+    //val shortName: String  // "en" or "Eng" // not portable, maybe absent in Windows
+
+    val languageCode: String // "en"
+    val languageName: String // "English" (preferably should be in English, if it is possible)
+
+    val countryCode: String // preferably "us" (? but may be "usa" ?)
+    val countryName: String // preferably "USA", "Ukraine"
+}
+
+
+// Java locales:
+//  https://www.oracle.com/java/technologies/javase/java8locales.html
+//
+internal fun <T: InputSource> Iterable<T>.findInputSource(locale: Locale): T? {
+
+    val inputSources = this.toList()
+
+    val localeLanguageIds = listOf(
+            locale.language,
+            locale.isO3Language,
+            locale.displayLanguage,
+            locale.getDisplayLanguage(Locale.ENGLISH),
+            locale.toLanguageTag(),
+        )
+        .map { it.lowercase() }
+        .filterNotBlank()
+        .distinct()
+
+    val localeCountryIds = listOf(
+            locale.country,
+            locale.isO3Country,
+            locale.displayCountry,
+            locale.getDisplayCountry(Locale.ENGLISH),
+        )
+        .map { it.lowercase() }
+        .filterNotBlank()
+        .distinct()
+
+    val fullMatch = inputSources.find { s ->
+        val sourceLanguageIds = s.languageIds()
+        val sourceCountryIds  = s.countryIds()
+        sourceLanguageIds.containsOneOf(localeLanguageIds) && sourceCountryIds.containsOneOf(localeCountryIds)
+    }
+
+    if (fullMatch != null) return fullMatch
+
+    val byLangMatch = inputSources.find { s ->
+        val sourceLanguageIds = s.languageIds()
+        sourceLanguageIds.containsOneOf(localeLanguageIds)
+    }
+
+    return byLangMatch
+}
+
+
+// Returns lowercase values.
+private fun InputSource.languageIds(): List<String> = listOf(
+        languageCode,
+        languageName,
+    )
+    .filterNotBlank()
+    .map { it.lowercase() }
+
+
+// Returns lowercase values.
+private fun InputSource.countryIds(): List<String> = listOf(
+        countryCode,
+        countryName,
+    )
+    .filterNotBlank()
+    .map { it.lowercase() }

@@ -13,7 +13,7 @@ private data class InputSourceSimple (
     override val id: String,
     override val displayName: String,
     override val shortName: String,
-) : InputSource
+) : GnomeInputSource
 
 
 internal data class InputSourceConfigEntry (
@@ -78,14 +78,14 @@ internal fun loadAllXkbInputSources(): List<InputSourceConfigEntry> {
 }
 
 
-internal fun InputSourceConfigEntry.toInputSource(): InputSource = InputSourceSimple(
+internal fun InputSourceConfigEntry.toInputSource(): GnomeInputSource = InputSourceSimple(
     type  = "xkb",
     id    = name,
     displayName = description,
     shortName   = shortDescription,
 )
 
-internal fun InputSourceConfigEntry.toInputSourceWithVariant(variant: InputSourceConfigEntry.Variant): InputSource = InputSourceSimple(
+internal fun InputSourceConfigEntry.toInputSourceWithVariant(variant: InputSourceConfigEntry.Variant): GnomeInputSource = InputSourceSimple(
     type  = "xkb",
     id    = name + '+' + variant.name,
     displayName = variant.description,

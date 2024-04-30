@@ -1,5 +1,7 @@
 package com.mvv.gnome.gsettings
 
+import com.mvv.gui.javafx.InputSource
+import com.mvv.gui.javafx.findInputSource
 import com.mvv.gui.util.*
 import java.util.*
 
@@ -47,6 +49,19 @@ private val log = mu.KotlinLogging.logger {}
 //   model:      pc105
 //   layout:     us,gb,au,us
 //   variant:    ,,,
+
+
+
+interface GnomeInputSource : InputSource {
+    val type: String                // "xkb"
+    override val id: String         // "us", "ge+ru"
+    val shortName: String           // "en"
+
+    override val languageCode: String get() = shortName.filter { it.isEnglishLetter() || it == '-' }
+    override val languageName: String get() = displayName.substringBefore("(").trim()
+    override val countryCode:  String get() = id
+    override val countryName:  String get() = displayName.substringAfter("(", "").removeSuffix(")").trim()
+}
 
 
 data class InputSourceKey (
@@ -120,7 +135,7 @@ internal fun String.parseInputSourceKeys(): List<InputSourceKey> {
 }
 
 
-val allXkbInputSources: Map<String, InputSource> by lazy {
+val allXkbInputSources: Map<String, GnomeInputSource> by lazy {
     loadAllXkbInputSources()
         .flatMap { l ->
                     listOf(l.name to l.toInputSource()) +
