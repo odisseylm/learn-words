@@ -1015,6 +1015,103 @@
           </additionalClasspathElements>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <toolchains>
+            <jdk>
+              <version>22</version>
+              <!--<vendor>openjdk</vendor>-->
+            </jdk>
+          </toolchains>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.4.0</version>
+        <executions>
+          <execution>
+            <id>use-maven-toolchain-jdk-for-kotlin</id>
+            <!-- Binds to the "validate" phase by default. -->
+            <goals>
+              <goal>bsh-property</goal>
+            </goals>
+            <configuration>
+              <properties>kotlin.compiler.jdkHome</properties>
+              <source>
+                <![CDATA[
+                import org.apache.maven.plugin.descriptor.PluginDescriptor;
+                import org.apache.maven.plugin.descriptor.PluginDescriptor;
+                import org.apache.maven.model.PluginExecution;
+
+                PluginDescriptor pluginDescr = new PluginDescriptor();
+                pluginDescr.setGroupId("org.apache.maven.plugins");
+                pluginDescr.setArtifactId("maven-toolchains-plugin");
+
+                log.info("session = " + session);
+                log.info("mojos = " + mojos);
+
+                Map pluginContext = session.getPluginContext(pluginDescr, project);
+                log.info("pluginContext = " + pluginContext);
+                log.info("\n\n------------------\n\n");
+                log.info("pluginContext = " + pluginContext.keySet());
+                log.info("\n\n------------------\n\n");
+                log.info("toolchain-jdk = " + pluginContext.get("toolchain-jdk"));
+
+                String toolChainJdk = pluginContext.get("toolchain-jdk").getConfiguration().getChild(0).getValue();
+                log.info("toolchain-jdk = " + toolChainJdk);
+
+                log.info("\n\n------------------\n\n");
+
+                project.getProperties().setProperty("toolchain-jdk", toolChainJdk);
+                //project.getProperties().setProperty("kotlin.compiler.jdkHome", toolChainJdk);
+                kotlin.compiler.jdkHome = toolChainJdk;
+
+                Object kotlinPlugin = project.getPlugin("org.jetbrains.kotlin:kotlin-maven-plugin");
+                log.info("\n\n kotlinPlugin = " + kotlinPlugin);
+                log.info("\n\n kotlinPlugin = " + kotlinPlugin.getClass().getName());
+                log.info("\n\n kotlinPlugin.configuration = " + kotlinPlugin.getConfiguration());
+                log.info("\n\n kotlinPlugin.configuration = " + kotlinPlugin.getConfiguration().getClass().getName());
+                log.info("\n\n kotlinPlugin.configuration .jdkHome = " + kotlinPlugin.getConfiguration().getChild("jdkHome"));
+
+                /*
+                kotlinPlugin.getConfiguration().getChild("jdkHome").setValue(toolChainJdk);
+                log.info("\n\n kotlinPlugin.configuration = " + kotlinPlugin.getConfiguration());
+
+                //log.info("\n\n kotlinPlugin.configuration = " + kotlinPlugin.getExecutions().get(0).getConfiguration());
+
+                for (int i = 0; i < kotlinPlugin.getExecutions().size(); i++) {
+                    PluginExecution ex = kotlinPlugin.getExecutions().get(i);
+                    ex.getConfiguration().getChild("jdkHome").setValue(toolChainJdk);
+
+                    log.info("\n\n Execution " + ex.getClass().getName() + " = " + ex.getConfiguration());
+                }
+                */
+
+                //null.toString(); //
+
+                //for (Map.Entry entry : project.getProperties().entrySet())  {
+                //  log.info(entry.getKey() + " = " + entry.getValue());
+                //}
+                ]]>
+              </source>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 
