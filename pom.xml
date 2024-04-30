@@ -1049,62 +1049,59 @@
               <goal>bsh-property</goal>
             </goals>
             <configuration>
+              <!-- Usage of 'properties' it is more preferable way. -->
               <properties>kotlin.compiler.jdkHome</properties>
-              <source>
-                <![CDATA[
-                import org.apache.maven.plugin.descriptor.PluginDescriptor;
+              <source><![CDATA[
                 import org.apache.maven.plugin.descriptor.PluginDescriptor;
                 import org.apache.maven.model.PluginExecution;
 
-                PluginDescriptor pluginDescr = new PluginDescriptor();
-                pluginDescr.setGroupId("org.apache.maven.plugins");
-                pluginDescr.setArtifactId("maven-toolchains-plugin");
+                String toolChainJdk = null;
 
-                log.info("session = " + session);
-                log.info("mojos = " + mojos);
+                try {
+                  PluginDescriptor pd = new PluginDescriptor();
+                  pd.setGroupId("org.apache.maven.plugins");
+                  pd.setArtifactId("maven-toolchains-plugin");
 
-                Map pluginContext = session.getPluginContext(pluginDescr, project);
-                log.info("pluginContext = " + pluginContext);
-                log.info("\n\n------------------\n\n");
-                log.info("pluginContext = " + pluginContext.keySet());
-                log.info("\n\n------------------\n\n");
-                log.info("toolchain-jdk = " + pluginContext.get("toolchain-jdk"));
+                  Map pluginContext = session.getPluginContext(pd, project);
+                  if (pluginContext == null)
+                    throw IllegalStateException("maven-toolchains-plugin plugin context is not found. Probably it is not set up.");
 
-                String toolChainJdk = pluginContext.get("toolchain-jdk").getConfiguration().getChild(0).getValue();
-                log.info("toolchain-jdk = " + toolChainJdk);
+                  // A bit risky part of code: I'm not sure that this class will be used in the future
+                  // It is not specified in the org.apache.maven.model.ConfigurationContainer, just java.lang.Object.
+                  //
+                  // We can use type Object in bean-shell script instead of Xpp3Dom.
+                  // Real type is XML DOM object (currently org.codehaus.plexus.util.xml.Xpp3Dom)
+                  //
+                  Object config = pluginContext.get("toolchain-jdk").getConfiguration();
+                  if (config.getChildCount() == 0)
+                    throw IllegalStateException("maven-toolchains-plugin plugin context has empty configuration. Probably it is not set up properly.");
 
-                log.info("\n\n------------------\n\n");
+                  toolChainJdk = config.getChild(0).getValue().trim();
+                } catch (Exception ex) {
+                  log.error("toolchain-jdk is not found. " + ex.getMessage(), ex);
 
-                project.getProperties().setProperty("toolchain-jdk", toolChainJdk);
-                //project.getProperties().setProperty("kotlin.compiler.jdkHome", toolChainJdk);
-                kotlin.compiler.jdkHome = toolChainJdk;
-
-                Object kotlinPlugin = project.getPlugin("org.jetbrains.kotlin:kotlin-maven-plugin");
-                log.info("\n\n kotlinPlugin = " + kotlinPlugin);
-                log.info("\n\n kotlinPlugin = " + kotlinPlugin.getClass().getName());
-                log.info("\n\n kotlinPlugin.configuration = " + kotlinPlugin.getConfiguration());
-                log.info("\n\n kotlinPlugin.configuration = " + kotlinPlugin.getConfiguration().getClass().getName());
-                log.info("\n\n kotlinPlugin.configuration .jdkHome = " + kotlinPlugin.getConfiguration().getChild("jdkHome"));
-
-                /*
-                kotlinPlugin.getConfiguration().getChild("jdkHome").setValue(toolChainJdk);
-                log.info("\n\n kotlinPlugin.configuration = " + kotlinPlugin.getConfiguration());
-
-                //log.info("\n\n kotlinPlugin.configuration = " + kotlinPlugin.getExecutions().get(0).getConfiguration());
-
-                for (int i = 0; i < kotlinPlugin.getExecutions().size(); i++) {
-                    PluginExecution ex = kotlinPlugin.getExecutions().get(i);
-                    ex.getConfiguration().getChild("jdkHome").setValue(toolChainJdk);
-
-                    log.info("\n\n Execution " + ex.getClass().getName() + " = " + ex.getConfiguration());
+                  // Or we can rethrow error just there.
+                  // throw IllegalStateException("toolchain-jdk is not found.", ex);
                 }
-                */
 
-                //null.toString(); //
+                if (toolChainJdk != null && !toolChainJdk.isEmpty()) {
 
-                //for (Map.Entry entry : project.getProperties().entrySet())  {
-                //  log.info(entry.getKey() + " = " + entry.getValue());
-                //}
+                  // Using 'properties' tag it is more preferable/standard way,
+                  // but seems now it works fine even if we set the property using project.getProperties().setProperty()
+                  //
+                  // project.getProperties().setProperty("kotlin.compiler.jdkHome", toolChainJdk);
+
+                  // It is needed to update maven property.
+                  // It should be used together with <properties>kotlin.compiler.jdkHome</properties>.
+                  kotlin.compiler.jdkHome = toolChainJdk;
+                }
+                else {
+                  log.error("toolchain-jdk is not found.");
+
+                  // Or throw error
+                  // throw IllegalStateException("toolchain-jdk is not found.", ex);
+                }
+
                 ]]>
               </source>
             </configuration>
