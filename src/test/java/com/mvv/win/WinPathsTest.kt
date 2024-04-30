@@ -43,13 +43,13 @@ class WinPathsTest {
     @EnabledOnOs(OS.LINUX)
     fun `programFiles on Unix`() { useAssertJSoftAssertions {
        assertThat(programFiles)
-           .isIn(Path.of("C:/Program Files")) // default value
+           .isEqualTo(Path.of("C:/Program Files")) // default value
     } }
 
     @Test
     @EnabledOnOs(OS.LINUX)
     fun `windowsDir on Unix`() { useAssertJSoftAssertions {
         assertThat(windowsDir)
-            .isIn(Path.of("C:/Windows")) // default value
+            .isEqualTo(Path.of("C:/Windows")) // default value
     } }
 }

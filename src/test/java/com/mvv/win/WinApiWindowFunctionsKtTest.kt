@@ -5,7 +5,11 @@ import com.mvv.win.winapi.gdi.CreateSolidBrush
 import com.mvv.win.winapi.gdi.DeleteObject
 import com.mvv.win.winapi.window.GetForegroundWindow
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 
+
+@EnabledOnOs(OS.WINDOWS)
 class WinApiWindowFunctionsKtTest {
 
     @Test
