@@ -174,8 +174,10 @@ inline fun <E, C: MutableCollection<E>> C.addAll(vararg values: E): C {
 
 // To avoid deprecation warnings
 //
-fun locale(language: String): Locale = Locale.of(language)
-fun locale(language: String, country: String): Locale = Locale.of(language, country)
+//fun locale(language: String): Locale = Locale.of(language)
+//fun locale(language: String, country: String): Locale = Locale.of(language, country)
+fun locale(language: String): Locale = Locale(language)
+fun locale(language: String, country: String): Locale = Locale(language, country)
 
 // Kotlin: 'reversed(): (Mutable)List<E!>!' is deprecated.
 // This member is not fully supported by Kotlin compiler,

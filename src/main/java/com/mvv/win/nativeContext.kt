@@ -1,7 +1,7 @@
 package com.mvv.win
 
 import com.mvv.gui.util.measureTime
-import java.lang.foreign.*
+import com.mvv.foreign.*
 import java.lang.invoke.MethodHandle
 import java.nio.file.Path
 

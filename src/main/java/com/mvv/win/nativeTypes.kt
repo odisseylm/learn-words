@@ -2,10 +2,7 @@
 
 package com.mvv.win
 
-import java.lang.foreign.Arena
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout
-
+import com.mvv.foreign.*
 
 
 fun Any?.nativeToDebugString(): String = when (this) {
@@ -37,7 +34,7 @@ fun MemorySegment.copyFrom(elementLayout: ValueLayout.OfByte, from: ByteArray) {
     require(this.byteSize() >= elementLayout.byteSize() * from.size)
 
     for (i in from.indices)
-        this.set(elementLayout, i.toLong(), from[i])
+        this.setAtIndex(elementLayout, i.toLong(), from[i])
 }
 
 fun MemorySegment.copyFrom(elementLayout: ValueLayout.OfChar, from: CharArray) {
@@ -56,10 +53,10 @@ fun NativeContext.allocateNullPtr(): MemorySegment =
 
 fun Arena.allocateInt(value: Int = 0): MemorySegment =
     this.allocate(ValueLayout.JAVA_INT.byteSize()).also {
-        it.set(ValueLayout.JAVA_INT, 0, value)
+        it.setAtIndex(ValueLayout.JAVA_INT, 0, value)
     }
 
 
 var MemorySegment.intValue: Int
-    get() = this.get(ValueLayout.JAVA_INT, 0)
-    set(value) = this.set(ValueLayout.JAVA_INT, 0, value)
+    get() = this.getAtIndex(ValueLayout.JAVA_INT, 0)
+    set(value) = this.setAtIndex(ValueLayout.JAVA_INT, 0, value)

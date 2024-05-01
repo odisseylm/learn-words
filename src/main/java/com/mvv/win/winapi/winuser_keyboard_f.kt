@@ -6,7 +6,7 @@ import com.mvv.win.winapi.*
 import com.mvv.win.winapi.locale.LANGID
 import com.mvv.win.winapi.locale.LCID
 import com.mvv.win.winapi.locale.toLANGID
-import java.lang.foreign.*
+import com.mvv.foreign.*
 
 
 // Language Identifier Constants and Strings

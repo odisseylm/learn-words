@@ -4,7 +4,7 @@ package com.mvv.win.winapi.locale
 import com.mvv.win.*
 import com.mvv.win.winapi.*
 import com.mvv.win.winapi.keyboard.*
-import java.lang.foreign.*
+import com.mvv.foreign.*
 
 
 

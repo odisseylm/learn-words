@@ -5,25 +5,25 @@ import com.mvv.gui.util.ifIndexNotFound
 import com.mvv.win.*
 import com.mvv.win.winapi.gdi.COLORREF
 import com.mvv.win.winapi.gdi.ValueLayout_COLORREF
-import java.lang.foreign.Arena
-import java.lang.foreign.MemoryLayout
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout
+import com.mvv.foreign.Arena
+import com.mvv.foreign.MemoryLayout
+import com.mvv.foreign.MemorySegment
+import com.mvv.foreign.ValueLayout
 import kotlin.math.min
 
 
 
 fun Arena.allocateBOOL(value: Boolean = false): MemorySegment =
     this.allocate(ValueLayout_BOOL.byteSize()).also {
-        it.set(ValueLayout_BOOL, 0, if (value) 1 else 0)
+        it.setAtIndex(ValueLayout_BOOL, 0, if (value) 1 else 0)
     }
 fun NativeContext.allocateBOOL(value: Boolean = false): MemorySegment =
     this.arena.allocateBOOL(value)
 
 
 var MemorySegment.BOOL_Value: Boolean
-    get() = this.get(ValueLayout_BOOL, 0) != 0
-    set(value) = this.set(ValueLayout_BOOL, 0, if (value) 1 else 0)
+    get() = this.getAtIndex(ValueLayout_BOOL, 0) != 0
+    set(value) = this.setAtIndex(ValueLayout_BOOL, 0, if (value) 1 else 0)
 
 
 
@@ -77,13 +77,13 @@ fun MemorySegment.winUtf16StringToJavaString(charCount: Int): String {
 
 fun Arena.allocateCOLORREF(color: COLORREF): MemorySegment =
     this.allocate(ValueLayout_COLORREF)
-        .also { it.set(ValueLayout_COLORREF, 0, color) }
+        .also { it.setAtIndex(ValueLayout_COLORREF, 0, color) }
 fun NativeContext.allocateCOLORREF(color: COLORREF): MemorySegment = this.arena.allocateCOLORREF(color)
 
 
 fun Arena.allocateDWORD(value: DWORD): MemorySegment =
     this.allocate(ValueLayout_DWORD)
-        .also { it.set(ValueLayout_DWORD, 0, value) }
+        .also { it.setAtIndex(ValueLayout_DWORD, 0, value) }
 fun NativeContext.allocateDWORD(value: DWORD): MemorySegment = this.arena.allocateDWORD(value)
 
 

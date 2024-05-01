@@ -3,9 +3,7 @@ package com.mvv.win
 import com.mvv.gui.test.useAssertJSoftAssertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import java.lang.foreign.*
-import java.lang.foreign.ValueLayout.ADDRESS
-import java.lang.foreign.ValueLayout.JAVA_LONG
+import com.mvv.foreign.*
 import java.lang.invoke.MethodHandle
 
 
@@ -17,7 +15,7 @@ class ArenaTypeTest {
         val linker = Linker.nativeLinker()
         val strlen: MethodHandle = linker.downcallHandle(
             linker.defaultLookup().find("strlen").orElseThrow(),
-            FunctionDescriptor.of(JAVA_LONG, ADDRESS)
+            FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
         )
 
         Arena.ofConfined().use { arena ->

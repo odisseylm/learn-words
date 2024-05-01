@@ -2,7 +2,7 @@
 package com.mvv.win.winapi.gdi
 
 import com.mvv.win.winapi.*
-import java.lang.foreign.ValueLayout
+import com.mvv.foreign.ValueLayout
 
 
 typealias HBRUSH = HANDLE

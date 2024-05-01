@@ -6,9 +6,9 @@ import com.mvv.win.winapi.*
 import com.mvv.win.winapi.error.HR_SUCCEEDED
 import com.mvv.win.winapi.window.HWND
 import com.mvv.win.winapi.window.ValueLayout_HWND
-import java.lang.foreign.MemoryLayout
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.StructLayout
+//import com.mvv.foreign.MemoryLayout
+//import com.mvv.foreign.MemorySegment
+//import com.mvv.foreign.StructLayout
 
 
 // https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmgetcolorizationcolor
@@ -26,7 +26,7 @@ fun DwmGetColorizationColor(): DWORD? = nativeContext {
         ))
         .call<HRESULT>(pcrColorization, pfOpaqueBlend)
 
-    println(pfOpaqueBlend.get(ValueLayout_DWORD, 0))
+    println(pfOpaqueBlend.getAtIndex(ValueLayout_DWORD, 0))
     if (HR_SUCCEEDED(hResult)) pcrColorization.getAtIndex(ValueLayout_DWORD, 0) else null
 }
 
@@ -81,7 +81,14 @@ fun DwmSetWindowAttribute(hWnd: HWND, dwAttribute: DWORD, dwValue: DWORD): HRESU
 }
 
 
+@Suppress("UNUSED_PARAMETER")
+fun SetWindowCompositionAttribute(hWnd: HWND, attribute: WINDOWCOMPOSITIONATTRIB, dwValue: DWORD): Boolean = false
+@Suppress("UNUSED_PARAMETER")
+fun SetWindowCompositionAttribute(hWnd: HWND, attribute: WINDOWCOMPOSITIONATTRIB, value: Boolean): Boolean = false
+@Suppress("UNUSED_PARAMETER")
+fun GetWindowCompositionAttribute(hWnd: HWND, dwAttribute: WINDOWCOMPOSITIONATTRIB): DWORD? = null
 
+/*
 fun SetWindowCompositionAttribute(hWnd: HWND, attribute: WINDOWCOMPOSITIONATTRIB, dwValue: DWORD): Boolean =
     SetWindowCompositionAttribute(hWnd, attribute.nativeValue, dwValue)
 fun SetWindowCompositionAttribute(hWnd: HWND, attribute: WINDOWCOMPOSITIONATTRIB, value: Boolean): Boolean =
@@ -181,3 +188,4 @@ private class WINDOWCOMPOSITIONATTRIBDATA (nativeContext: NativeContext) {
         get() = dwValueBuffer.getAtIndex(ValueLayout_DWORD, 0)
         set(value) = dwValueBuffer.setAtIndex(ValueLayout_DWORD, 0, value)
 }
+*/

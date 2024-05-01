@@ -3,7 +3,7 @@ package com.mvv.win.winapi.keyboard
 
 import com.mvv.win.winapi.toUInt64
 import com.mvv.win.winapi.toULONG
-import java.lang.foreign.ValueLayout
+import com.mvv.foreign.ValueLayout
 
 
 // https://learn.microsoft.com/en-us/windows/win32/intl/language-identifier-constants-and-strings

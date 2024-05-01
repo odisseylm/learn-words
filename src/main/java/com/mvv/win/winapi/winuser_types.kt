@@ -3,9 +3,9 @@ package com.mvv.win.winapi.window
 
 import com.mvv.win.winapi.LONG
 import com.mvv.win.winapi.ValueLayout_LONG
-import java.lang.foreign.MemoryLayout
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.StructLayout
+import com.mvv.foreign.MemoryLayout
+import com.mvv.foreign.MemorySegment
+import com.mvv.foreign.StructLayout
 
 
 //------------------------------------------------------------------------------

@@ -18,7 +18,8 @@
   <properties>
     <toolchain.jdk.version>[22,)</toolchain.jdk.version>
 
-    <java.version>22</java.version>
+    <!--<java.version>22</java.version>-->
+    <java.version>17</java.version>
     <java.release>${java.version}</java.release>
     <!--<kotlin.version>1.6.21</kotlin.version>-->
     <!--<kotlin.compiler.languageVersion>1.6</kotlin.compiler.languageVersion>-->
@@ -735,6 +736,7 @@
       <scope>provided</scope>
     </dependency>
     -->
+
   </dependencies>
 
   <dependencyManagement>

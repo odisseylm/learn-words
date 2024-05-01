@@ -3,8 +3,8 @@ package com.mvv.win.winapi.window
 
 import com.mvv.win.winapi.HANDLE
 import com.mvv.win.winapi.ValueLayout_HANDLE
-import java.lang.foreign.AddressLayout
-import java.lang.foreign.ValueLayout
+import com.mvv.foreign.AddressLayout
+import com.mvv.foreign.ValueLayout
 
 
 //#ifndef __MSABI_LONG

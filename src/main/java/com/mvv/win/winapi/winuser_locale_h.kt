@@ -2,7 +2,7 @@
 package com.mvv.win.winapi.locale
 
 import com.mvv.win.winapi.*
-import java.lang.foreign.ValueLayout
+import com.mvv.foreign.ValueLayout
 
 
 

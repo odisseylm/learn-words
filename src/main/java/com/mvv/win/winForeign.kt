@@ -1,6 +1,6 @@
 package com.mvv.win
 
-import java.lang.foreign.*
+import com.mvv.foreign.*
 import java.nio.file.Path
 import java.nio.file.Paths
 

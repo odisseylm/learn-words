@@ -1,7 +1,7 @@
 @file:Suppress("SpellCheckingInspection", "unused", "NOTHING_TO_INLINE")
 package com.mvv.win.winapi
 
-import java.lang.foreign.*
+import com.mvv.foreign.*
 import kotlin.experimental.and
 
 
