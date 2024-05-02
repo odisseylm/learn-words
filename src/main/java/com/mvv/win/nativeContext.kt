@@ -2,7 +2,6 @@ package com.mvv.win
 
 import com.mvv.gui.util.measureTime
 import com.mvv.foreign.*
-import java.lang.invoke.MethodHandle
 import java.nio.file.Path
 
 
@@ -28,7 +27,6 @@ class NativeContext (
         if (toClose) arena.close()
     }
 }
-
 
 
 fun <R> nativeContext(arenaType: ArenaType, action: NativeContext.()->R): R =

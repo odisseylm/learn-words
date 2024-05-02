@@ -875,6 +875,12 @@
           <source>${java.version}</source>
           <target>${java.version}</target>
           <parameters>true</parameters>
+          <compilerArgs>
+            <arg>--add-modules</arg>
+            <arg>jdk.incubator.foreign</arg>
+          </compilerArgs>
+          <compilerArguments>
+          </compilerArguments>
           <annotationProcessorPaths>
             <!--<path>-->
             <!--  <groupId>org.mapstruct</groupId>-->
@@ -997,6 +1003,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
+          <argLine>--add-modules jdk.incubator.foreign --enable-native-access=ALL-UNNAMED</argLine>
           <excludes>
             <exclude>**/*ITTest*</exclude>
             <exclude>**/*ITest*</exclude>

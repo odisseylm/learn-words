@@ -4,7 +4,10 @@ import com.mvv.gui.test.useAssertJSoftAssertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import com.mvv.foreign.*
-import java.lang.invoke.MethodHandle
+import com.mvv.foreign.MethodHandle
+import com.mvv.win.winapi.allocateWinUtf16String
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 
 
 class ArenaTypeTest {
@@ -48,5 +51,38 @@ class ArenaTypeTest {
         assertThatCode { ml?.getAtIndex(ValueLayout.JAVA_BYTE, 0) }
             .message()
             .isIn("Already closed")
+    } }
+
+
+    class DllLoader {
+        companion object {
+            init {
+                println("DllLoader loading")
+                //System.load("C:/Windows/System32/msvcrt.dll")
+                System.loadLibrary("msvcrt")
+            }
+        }
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun wcslenTest() { useAssertJSoftAssertions {
+
+        val linker = Linker.nativeLinker()
+
+        Class.forName(DllLoader::class.java.name, true, Arena::class.java.classLoader)
+        val wcslen: MethodHandle = linker.downcallHandle(
+            linker.defaultLookup().find("wcslen").orElseThrow(),
+            FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+        )
+
+        Arena.ofConfined().use { arena ->
+            // !? Strange - it adds leading strange 2 bytes.
+            //val str = arena.allocateFrom("Hello", Charsets.UTF_16)
+            //
+            val str = arena.allocateWinUtf16String("Hello")
+            val len = wcslen.invokeExact(str) as Long // 5
+            assertThat(len).isEqualTo(5)
+        }
     } }
 }

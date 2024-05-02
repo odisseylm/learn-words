@@ -14,6 +14,8 @@ fun <K, V> Map<K, V>.containsOneOfKeys(vararg keys: K): Boolean =
 fun <V> Collection<V>.containsOneOf(values: Iterable<V>): Boolean =
     values.any { this.contains(it) }
 
+@Suppress("NOTHING_TO_INLINE")
+inline fun <V> Collection<V>.containsOneOf(value: V): Boolean = this.contains(value)
 fun <V> Collection<V>.containsOneOf(vararg values: V): Boolean =
     values.any { this.contains(it) }
 
