@@ -50,7 +50,7 @@ class ArenaTypeTest {
         }
         assertThatCode { ml?.getAtIndex(ValueLayout.JAVA_BYTE, 0) }
             .message()
-            .isIn("Already closed")
+            .isIn("This segment is already closed", "Already closed")
     } }
 
 
