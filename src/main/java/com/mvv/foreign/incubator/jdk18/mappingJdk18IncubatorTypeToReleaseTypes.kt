@@ -1,6 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk18
 
+/*
 import com.mvv.gui.util.removeOneOfSuffixes
 import java.nio.charset.Charset
 import java.util.*
@@ -345,14 +346,14 @@ open class ValueLayout (private val delegate0: JIValueLayout) : MemoryLayout(del
     }
 
     companion object {
-        val ADDRESS: AddressLayout  = AddressLayout(JIMemoryLayouts.ADDRESS)
-        val JAVA_CHAR:   OfChar   = OfChar   (JIMemoryLayouts.JAVA_CHAR)
-        val JAVA_BYTE:   OfByte   = OfByte   (JIMemoryLayouts.JAVA_BYTE)
-        val JAVA_SHORT:  OfShort  = OfShort  (JIMemoryLayouts.JAVA_SHORT)
-        val JAVA_INT:    OfInt    = OfInt    (JIMemoryLayouts.JAVA_INT)
-        val JAVA_LONG:   OfLong   = OfLong   (JIMemoryLayouts.JAVA_LONG)
-        val JAVA_FLOAT:  OfFloat  = OfFloat  (JIMemoryLayouts.JAVA_FLOAT)
-        val JAVA_DOUBLE: OfDouble = OfDouble (JIMemoryLayouts.JAVA_DOUBLE)
+        val ADDRESS: AddressLayout = AddressLayout(JIMemoryLayouts.ADDRESS)
+        val JAVA_CHAR:   OfChar    = OfChar   (JIMemoryLayouts.JAVA_CHAR)
+        val JAVA_BYTE:   OfByte    = OfByte   (JIMemoryLayouts.JAVA_BYTE)
+        val JAVA_SHORT:  OfShort   = OfShort  (JIMemoryLayouts.JAVA_SHORT)
+        val JAVA_INT:    OfInt     = OfInt    (JIMemoryLayouts.JAVA_INT)
+        val JAVA_LONG:   OfLong    = OfLong   (JIMemoryLayouts.JAVA_LONG)
+        val JAVA_FLOAT:  OfFloat   = OfFloat  (JIMemoryLayouts.JAVA_FLOAT)
+        val JAVA_DOUBLE: OfDouble  = OfDouble (JIMemoryLayouts.JAVA_DOUBLE)
     }
 }
 
@@ -380,3 +381,4 @@ class StructLayout (delegate: JIMemoryLayout) : MemoryLayout(delegate) {
     override fun withName(name: String): StructLayout = StructLayout(delegate.withName(name))
     fun byteOffset(vararg path: PathElement): Long = delegate.byteOffset(*path.map { it.delegate }.toTypedArray())
 }
+*/

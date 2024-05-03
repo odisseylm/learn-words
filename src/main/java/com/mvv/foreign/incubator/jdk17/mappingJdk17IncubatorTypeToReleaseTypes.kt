@@ -1,7 +1,6 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk17
 
-/*
 import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.removeOneOfSuffixes
 import com.mvv.gui.util.trimToNull
@@ -116,10 +115,10 @@ private val cIntTypesMap: Map<Long, JIMemoryLayout> = listOf(
 
 private fun findCInt(bytesSize: Long): JIMemoryLayout =
     when (bytesSize) {
-        1L -> JICLinker.C_CHAR
-        2L -> JICLinker.C_SHORT
-        4L -> cIntTypesMap[bytesSize]
-        8L -> cIntTypesMap[bytesSize]
+        1L  -> JICLinker.C_CHAR
+        2L  -> JICLinker.C_SHORT
+        4L  -> cIntTypesMap[bytesSize]
+        8L  -> cIntTypesMap[bytesSize]
         16L -> cIntTypesMap[bytesSize] // most probably not supported
         else -> null
     }.let {
@@ -391,24 +390,8 @@ open class MemoryLayout (private val delegate0: JIMemoryLayout) {
     }
 }
 
-open class AddressLayout (private val delegate0: JIMemoryLayout) : MemoryLayout(delegate0) {
-    override val delegate: JIMemoryLayout get() = delegate0
 
-    override fun withName(name: String): AddressLayout =
-        AddressLayout(delegate.withName(name))
-
-    @Suppress("UNUSED_PARAMETER")
-    fun withTargetLayout(targetLayout: AddressLayout): AddressLayout = this
-
-    @Suppress("UNUSED_PARAMETER")
-    fun withTargetLayout(targetLayout: StructLayout): AddressLayout = this
-
-    override fun withByteAlignment(byteAlignment: Long): AddressLayout =
-        AddressLayout(delegate.withBitAlignment(byteAlignment * 8))
-}
-
-
-open class ValueLayout (private val delegate0: JIValueLayout) : AddressLayout(delegate0) {
+open class ValueLayout (private val delegate0: JIValueLayout) : MemoryLayout(delegate0) {
     override val delegate: JIValueLayout get() = delegate0
 
     override fun withName(name: String): ValueLayout =
@@ -453,19 +436,38 @@ open class ValueLayout (private val delegate0: JIValueLayout) : AddressLayout(de
     }
 
     companion object {
-        val ADDRESS: ValueLayout  = ValueLayout(JIMemoryLayouts.ADDRESS)
-        val JAVA_CHAR:   OfChar   = OfChar   (JIMemoryLayouts.JAVA_CHAR)
-        val JAVA_BYTE:   OfByte   = OfByte   (JIMemoryLayouts.JAVA_BYTE)
-        val JAVA_SHORT:  OfShort  = OfShort  (JIMemoryLayouts.JAVA_SHORT)
-        val JAVA_INT:    OfInt    = OfInt    (JIMemoryLayouts.JAVA_INT)
-        val JAVA_LONG:   OfLong   = OfLong   (JIMemoryLayouts.JAVA_LONG)
-        val JAVA_FLOAT:  OfFloat  = OfFloat  (JIMemoryLayouts.JAVA_FLOAT)
-        val JAVA_DOUBLE: OfDouble = OfDouble (JIMemoryLayouts.JAVA_DOUBLE)
+        val ADDRESS: AddressLayout = AddressLayout(JIMemoryLayouts.ADDRESS)
+        val JAVA_CHAR:   OfChar    = OfChar   (JIMemoryLayouts.JAVA_CHAR)
+        val JAVA_BYTE:   OfByte    = OfByte   (JIMemoryLayouts.JAVA_BYTE)
+        val JAVA_SHORT:  OfShort   = OfShort  (JIMemoryLayouts.JAVA_SHORT)
+        val JAVA_INT:    OfInt     = OfInt    (JIMemoryLayouts.JAVA_INT)
+        val JAVA_LONG:   OfLong    = OfLong   (JIMemoryLayouts.JAVA_LONG)
+        val JAVA_FLOAT:  OfFloat   = OfFloat  (JIMemoryLayouts.JAVA_FLOAT)
+        val JAVA_DOUBLE: OfDouble  = OfDouble (JIMemoryLayouts.JAVA_DOUBLE)
     }
+}
+
+
+open class AddressLayout (private val delegate0: JIValueLayout) : ValueLayout(delegate0) {
+    override val delegate: JIValueLayout get() = delegate0
+
+    override fun withName(name: String): AddressLayout =
+        AddressLayout(delegate.withName(name))
+
+    @Suppress("UNUSED_PARAMETER")
+    fun withTargetLayout(targetLayout: ValueLayout): AddressLayout = this
+
+    @Suppress("UNUSED_PARAMETER")
+    fun withTargetLayout(targetLayout: AddressLayout): AddressLayout = this
+
+    @Suppress("UNUSED_PARAMETER")
+    fun withTargetLayout(targetLayout: StructLayout): AddressLayout = this
+
+    override fun withByteAlignment(byteAlignment: Long): AddressLayout =
+        AddressLayout(delegate.withBitAlignment(byteAlignment * 8))
 }
 
 class StructLayout (delegate: JIMemoryLayout) : MemoryLayout(delegate) {
     override fun withName(name: String): StructLayout = StructLayout(delegate.withName(name))
     fun byteOffset(vararg path: PathElement): Long = delegate.byteOffset(*path.map { it.delegate }.toTypedArray())
 }
-*/
