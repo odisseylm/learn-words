@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "Since15")
 
 package com.mvv.win
 
@@ -14,11 +14,11 @@ fun Any?.nativeToDebugString(): String = when (this) {
 }
 
 
-fun MemorySegment.toList(elementLayout: ValueLayout.OfInt): List<Int> =
+fun MemorySegment.toList(elementLayout: OfInt): List<Int> =
     this.toArray(elementLayout).toList()
-fun MemorySegment.toList(elementLayout: ValueLayout.OfLong): List<Long> =
+fun MemorySegment.toList(elementLayout: OfLong): List<Long> =
     this.toArray(elementLayout).toList()
-fun MemorySegment.toList(elementLayout: ValueLayout.OfLong, count: Int): List<Long> =
+fun MemorySegment.toList(elementLayout: OfLong, count: Int): List<Long> =
     this.toArray(elementLayout).toList(0, count)
 
 
@@ -30,18 +30,32 @@ fun LongArray.toList(fromIndex: Int, toIndex: Int): List<Long> {
 }
 
 
-fun MemorySegment.copyFrom(elementLayout: ValueLayout.OfByte, from: ByteArray) {
+fun MemorySegment.copyFrom(elementLayout: OfByte, from: ByteArray) {
+    require(this.byteSize() >= elementLayout.byteSize() * from.size)
+
+    for (i in from.indices)
+        this.set(elementLayout, i.toLong(), from[i])
+}
+
+fun MemorySegment.copyFrom(elementLayout: OfChar, from: CharArray) {
     require(this.byteSize() >= elementLayout.byteSize() * from.size)
 
     for (i in from.indices)
         this.setAtIndex(elementLayout, i.toLong(), from[i])
 }
 
-fun MemorySegment.copyFrom(elementLayout: ValueLayout.OfChar, from: CharArray) {
+fun MemorySegment.copyFrom(elementLayout: OfShort, from: ShortArray) {
     require(this.byteSize() >= elementLayout.byteSize() * from.size)
 
     for (i in from.indices)
         this.setAtIndex(elementLayout, i.toLong(), from[i])
+}
+
+fun MemorySegment.copyFrom(elementLayout: OfShort, from: CharArray) {
+    require(this.byteSize() >= elementLayout.byteSize() * from.size)
+
+    for (i in from.indices)
+        this.setAtIndex(elementLayout, i.toLong(), from[i].code.toShort())
 }
 
 

@@ -1,27 +1,28 @@
-@file:Suppress("FunctionName", "unused", "PackageDirectoryMismatch", "SpellCheckingInspection", "NOTHING_TO_INLINE")
+@file:Suppress("FunctionName", "unused", "PackageDirectoryMismatch", "SpellCheckingInspection", "NOTHING_TO_INLINE",
+    "Since15"
+)
 package com.mvv.win.winapi.locale
 
 import com.mvv.win.winapi.*
-import com.mvv.foreign.ValueLayout
 
 
 
 // typedef DWORD LCID;
 typealias LCID = DWORD
-val ValueLayout_LCID: ValueLayout.OfInt = ValueLayout_DWORD.withName("LCID")
+val ValueLayout_LCID: ValueLayout_DWORD_Type = ValueLayout_DWORD.withName("LCID")
 inline fun Int .toLCID(): LCID = this.toDWORD()
 inline fun Long.toLCID(): LCID = this.toDWORD()
 
 
 // typedef DWORD LCTYPE;
 typealias LCTYPE = DWORD
-val ValueLayout_LCTYPE: ValueLayout.OfInt = ValueLayout_DWORD.withName("LCTYPE")
+val ValueLayout_LCTYPE: ValueLayout_DWORD_Type = ValueLayout_DWORD.withName("LCTYPE")
 
 
 //typedef USHORT LANGID;
 typealias LANGID = USHORT
-val ValueLayout_LANGID: ValueLayout.OfShort = ValueLayout_USHORT.withName("LANGID")
-inline fun Int.toLANGID()  = this.toUSHORT()
+val ValueLayout_LANGID: ValueLayout_USHORT_Type = ValueLayout_USHORT.withName("LANGID")
+inline fun Int .toLANGID() = this.toUSHORT()
 inline fun Long.toLANGID() = this.toUSHORT()
 
 

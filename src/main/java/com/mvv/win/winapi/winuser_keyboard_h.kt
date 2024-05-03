@@ -1,9 +1,9 @@
-@file:Suppress("FunctionName", "unused", "PackageDirectoryMismatch", "SpellCheckingInspection", "NOTHING_TO_INLINE")
+@file:Suppress("FunctionName", "unused", "PackageDirectoryMismatch", "SpellCheckingInspection", "NOTHING_TO_INLINE",
+    "Since15"
+)
 package com.mvv.win.winapi.keyboard
 
-import com.mvv.win.winapi.toUInt64
-import com.mvv.win.winapi.toULONG
-import com.mvv.foreign.ValueLayout
+import com.mvv.win.winapi.*
 
 
 // https://learn.microsoft.com/en-us/windows/win32/intl/language-identifier-constants-and-strings
@@ -14,10 +14,10 @@ import com.mvv.foreign.ValueLayout
 // typedef HANDLE HKL;
 //
 // Actually only 4 (2 lang + 2 others) bytes are used, but it is defined as HANDLE ?!
-typealias HKL = Long // 64 bit int
-val ValueLayout_HKL: ValueLayout.OfLong = ValueLayout.JAVA_LONG.withName("HKL")
+typealias HKL = HANDLE // 64 bit int
+val ValueLayout_HKL: ValueLayout_HANDLE_Type = ValueLayout_HANDLE.withName("HKL")
 inline fun Short.toHKL(): HKL = this.toULONG().toUInt64()
-inline fun Int.toHKL(): HKL = this.toUInt64()
+inline fun Int  .toHKL(): HKL = this.toUInt64()
 
 
 

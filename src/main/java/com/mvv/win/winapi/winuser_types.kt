@@ -1,4 +1,4 @@
-@file:Suppress("unused", "SpellCheckingInspection", "PackageDirectoryMismatch")
+@file:Suppress("unused", "SpellCheckingInspection", "PackageDirectoryMismatch", "Since15")
 package com.mvv.win.winapi.window
 
 import com.mvv.win.winapi.LONG

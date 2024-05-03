@@ -34,7 +34,7 @@ fun Arena.allocateWinUtf16String(string: String): MemorySegment {
     val asChars = string.toCharArray()
     val mem = this.allocate((asChars.size + 1) * ValueLayout_WCHAR.byteSize())
     mem.copyFrom(ValueLayout_WCHAR, asChars)
-    mem.setAtIndex(ValueLayout_WCHAR, asChars.size.toLong(), 0.toChar())
+    mem.setAtIndex(ValueLayout_WCHAR, asChars.size.toLong(), 0.toWCHAR())
 
     // probably better to use mem.setString() ??
     // mem.setString(0, string, Charsets.UTF_16)

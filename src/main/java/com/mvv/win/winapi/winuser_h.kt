@@ -1,10 +1,7 @@
-@file:Suppress("unused", "SpellCheckingInspection", "PackageDirectoryMismatch")
+@file:Suppress("unused", "SpellCheckingInspection", "PackageDirectoryMismatch", "Since15")
 package com.mvv.win.winapi.window
 
-import com.mvv.win.winapi.HANDLE
-import com.mvv.win.winapi.ValueLayout_HANDLE
-import com.mvv.foreign.AddressLayout
-import com.mvv.foreign.ValueLayout
+import com.mvv.win.winapi.*
 
 
 //#ifndef __MSABI_LONG
@@ -25,23 +22,23 @@ val ValueLayout_HDWP = ValueLayout_HANDLE
 
 
 // typedef UINT_PTR WPARAM;
-typealias WPARAM = Long
-val ValueLayout_WPARAMAsPlain: ValueLayout.OfLong = ValueLayout.JAVA_LONG.withName("WPARAM")
-val ValueLayout_WPARAMAsPtr: AddressLayout = ValueLayout.ADDRESS.withName("WPARAM")
+typealias WPARAM = PTRPlain
+val ValueLayout_WPARAMAsPlain: ValueLayout_PTRPlain_TYPE = ValueLayout_PTRPlain.withName("WPARAM")
+val ValueLayout_WPARAMAsPtr:   ValueLayout_PTR_TYPE      = ValueLayout_PTR.withName("WPARAM")
 val ValueLayout_WPARAM = ValueLayout_WPARAMAsPlain
 
 
 // typedef LONG_PTR LPARAM;
-typealias LPARAM = Long
-val ValueLayout_LPARAMAsPlain: ValueLayout.OfLong = ValueLayout.JAVA_LONG.withName("LPARAM")
-val ValueLayout_LPARAMAsPtr: AddressLayout = ValueLayout.ADDRESS.withName("LPARAM")
+typealias LPARAM = PTRPlain
+val ValueLayout_LPARAMAsPlain: ValueLayout_PTRPlain_TYPE = ValueLayout_PTRPlain.withName("LPARAM")
+val ValueLayout_LPARAMAsPtr:   ValueLayout_PTR_TYPE      = ValueLayout_PTR.withName("LPARAM")
 val ValueLayout_LPARAM = ValueLayout_LPARAMAsPlain
 
 
 // typedef LONG_PTR LRESULT;
-typealias LRESULT = Long
-val ValueLayout_LRESULTAsPlain: ValueLayout.OfLong = ValueLayout.JAVA_LONG.withName("LRESULT")
-val ValueLayout_LRESULTAsPtr: AddressLayout = ValueLayout.ADDRESS.withName("LRESULT")
+typealias LRESULT = PTRPlain
+val ValueLayout_LRESULTAsPlain: ValueLayout_PTRPlain_TYPE = ValueLayout_PTRPlain.withName("LRESULT")
+val ValueLayout_LRESULTAsPtr:   ValueLayout_PTR_TYPE      = ValueLayout_PTR.withName("LRESULT")
 val ValueLayout_LRESULT = ValueLayout_LRESULTAsPlain
 
 

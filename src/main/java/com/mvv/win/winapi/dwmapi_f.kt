@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName", "SpellCheckingInspection", "unused", "PackageDirectoryMismatch")
+@file:Suppress("FunctionName", "SpellCheckingInspection", "unused", "PackageDirectoryMismatch", "Since15")
 package com.mvv.win.winapi.dwm
 
 import com.mvv.win.*
@@ -7,6 +7,7 @@ import com.mvv.win.winapi.error.HR_SUCCEEDED
 import com.mvv.win.winapi.window.HWND
 import com.mvv.win.winapi.window.ValueLayout_HWND
 import com.mvv.foreign.*
+import com.mvv.foreign.paddingLayout
 
 
 // https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmgetcolorizationcolor
@@ -19,9 +20,9 @@ fun DwmGetColorizationColor(): DWORD? = nativeContext {
 
     val hResult = functionHandle(
         WinModule.Dwmapi, "DwmGetColorizationColor",
-        ValueLayout_HRESULT, ValueLayout_PTR.withTargetLayout(ValueLayout_DWORD), ValueLayout_PTR.withTargetLayout(
-            ValueLayout_BOOL
-        ))
+        ValueLayout_HRESULT,
+        ValueLayout_PTR.withTargetLayout(ValueLayout_DWORD),
+        ValueLayout_PTR.withTargetLayout(ValueLayout_BOOL))
         .call<HRESULT>(pcrColorization, pfOpaqueBlend)
 
     println(pfOpaqueBlend.getAtIndex(ValueLayout_DWORD, 0))
@@ -153,15 +154,15 @@ private class WINDOWCOMPOSITIONATTRIBDATA (nativeContext: NativeContext) {
 
     val structLayout: StructLayout = MemoryLayout.structLayout(
         attr,
-        MemoryLayout.paddingLayout(4), // T O D O: how to avoid it?
+        paddingLayout(ValueLayout_Int32), // T O D O: how to avoid it?
         pvData,
         cbData,
-        MemoryLayout.paddingLayout(4),
+        paddingLayout(ValueLayout_Int32),
     ).withName("WINDOWCOMPOSITIONATTRIBDATA")
 
-    private val attrOffset = structLayout.byteOffset(MemoryLayout.PathElement.groupElement(attr.name().get()))
-    private val pvDataOffset = structLayout.byteOffset(MemoryLayout.PathElement.groupElement(pvData.name().get()))
-    private val cbDataOffset = structLayout.byteOffset(MemoryLayout.PathElement.groupElement(cbData.name().get()))
+    private val attrOffset = structLayout.byteOffset(PathElement.groupElement(attr.name().get()))
+    private val pvDataOffset = structLayout.byteOffset(PathElement.groupElement(pvData.name().get()))
+    private val cbDataOffset = structLayout.byteOffset(PathElement.groupElement(cbData.name().get()))
 
     private val dwValueBuffer = nativeContext.allocateDWORD(0)
     val memorySegment: MemorySegment = nativeContext.arena.allocate(structLayout)
