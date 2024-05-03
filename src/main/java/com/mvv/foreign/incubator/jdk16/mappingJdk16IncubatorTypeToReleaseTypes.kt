@@ -1,6 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk17
 
+/*
 import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.isOneOf
 import com.mvv.gui.util.trimToNull
@@ -514,3 +515,4 @@ internal class ResourceScope (private val resourceScopeType: ResourceScopeType) 
 }
 
 private val globalResourceScope = ResourceScope(ResourceScopeType.Global)
+*/
