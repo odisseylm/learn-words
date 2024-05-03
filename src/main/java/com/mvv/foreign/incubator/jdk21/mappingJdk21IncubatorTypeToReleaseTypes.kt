@@ -1,7 +1,6 @@
 @file:Suppress("PackageDirectoryMismatch", "Since15", "unused")
 package com.mvv.foreign
 
-/*
 import java.nio.charset.Charset
 import java.util.*
 import java.lang.foreign.SymbolLookup as JISymbolLookup
@@ -16,20 +15,20 @@ public class Jdk18IncubatorForeignSample {
         Linker linker = Linker.nativeLinker();
         SymbolLookup stdlib = linker.defaultLookup();
         MethodHandle strlen = linker.downcallHandle(
-            stdlib.find("strlen").get(),
+            stdlib.find("strlen").orElseThrow(),
             FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
         );
 
-        try (Arena arena = Arena.openConfined()) {
+        try (Arena arena = Arena.ofConfined()) {
             MemorySegment cString = arena.allocateUtf8String("Hello");
-            long len = (long)strlen.invoke(cString); // 5
+            long len = (long)strlen.invokeExact(cString); // 5
         }
     }
 }
 
 See other docs
- https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/foreign/package-summary.html
- https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/foreign/Linker.html
+ https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/foreign/package-summary.html
+ https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/foreign/Linker.html
 
 */
 
@@ -38,7 +37,7 @@ typealias MemoryAddress = Long
 typealias MemorySegment = java.lang.foreign.MemorySegment
 
 typealias MemoryLayout  = java.lang.foreign.MemoryLayout
-typealias AddressLayout = java.lang.foreign.ValueLayout.OfAddress
+typealias AddressLayout = java.lang.foreign.AddressLayout
 typealias ValueLayout   = java.lang.foreign.ValueLayout
 
 typealias OfChar   = java.lang.foreign.ValueLayout.OfChar
@@ -57,11 +56,13 @@ typealias MethodHandle = java.lang.invoke.MethodHandle
 typealias FunctionDescriptor = java.lang.foreign.FunctionDescriptor
 typealias Linker = java.lang.foreign.Linker
 
+//typealias Arena = java.lang.foreign.Arena
+//typealias SymbolLookup = java.lang.foreign.SymbolLookup
+
 
 class Arena private constructor(
     private val arenaType: ArenaType,
     internal val delegate: JIArena,
-    //internal val memorySession: MemorySession,
     ) : AutoCloseable {
 
     override fun close() {
@@ -96,15 +97,13 @@ class Arena private constructor(
 
     companion object {
         fun ofConfined(): Arena =
-            Arena(ArenaType.Confined, JIArena.openConfined())
+            Arena(ArenaType.Confined, JIArena.ofConfined())
         fun ofAuto(): Arena =
-            //Arena(ArenaType.Auto, MemorySession.openImplicit())
-            throw IllegalStateException("Arena.ofAuto() is not supported in jdk 20")
+            Arena(ArenaType.Auto, JIArena.ofAuto())
         fun ofShared(): Arena =
-            Arena(ArenaType.Shared, JIArena.openShared())
+            Arena(ArenaType.Shared, JIArena.ofShared())
         fun global(): Arena =
-            //Arena(ArenaType.Global, MemorySession.global())
-            throw IllegalStateException("Arena.global() is not supported in jdk 20")
+            Arena(ArenaType.Global, JIArena.global())
     }
 
     private enum class ArenaType (val toClose: Boolean) {
@@ -122,36 +121,27 @@ class SymbolLookup (internal val delegate: JISymbolLookup) : JISymbolLookup {
 
     companion object {
         fun libraryLookup(name: String, arena: Arena): SymbolLookup =
-            SymbolLookup(JISymbolLookup.libraryLookup(name, arena.delegate.scope()))
+            SymbolLookup(JISymbolLookup.libraryLookup(name, arena.delegate))
     }
 }
 
 
-@Suppress("UNUSED_PARAMETER")
-fun ValueLayout.withTargetLayout(targetLayout: ValueLayout): ValueLayout = this
-@Suppress("UNUSED_PARAMETER")
-fun ValueLayout.withTargetLayout(targetLayout: GroupLayout): ValueLayout = this
-@Suppress("UNUSED_PARAMETER")
-fun AddressLayout.withTargetLayout(targetLayout: GroupLayout): AddressLayout = this
+/*
+// Converts a Java string into a null-terminated C string using the UTF-8 charset
+fun Arena.allocateFrom(string: String): MemorySegment = allocateFrom(string, Charsets.UTF_8)
 
-fun AddressLayout.withByteAlignment(byteAlignment: Long): AddressLayout = this.withBitAlignment(byteAlignment * 8)
-fun ValueLayout.withByteAlignment(byteAlignment: Long): ValueLayout = this.withBitAlignment(byteAlignment * 8)
-fun OfChar.withByteAlignment(byteAlignment: Long): OfChar = this.withBitAlignment(byteAlignment * 8)
-fun OfByte.withByteAlignment(byteAlignment: Long): OfByte = this.withBitAlignment(byteAlignment * 8)
-fun OfShort.withByteAlignment(byteAlignment: Long): OfShort = this.withBitAlignment(byteAlignment * 8)
-fun OfInt.withByteAlignment(byteAlignment: Long): OfInt = this.withBitAlignment(byteAlignment * 8)
-fun OfLong.withByteAlignment(byteAlignment: Long): OfLong = this.withBitAlignment(byteAlignment * 8)
-fun OfFloat.withByteAlignment(byteAlignment: Long): OfFloat = this.withBitAlignment(byteAlignment * 8)
-fun OfDouble.withByteAlignment(byteAlignment: Long): OfDouble = this.withBitAlignment(byteAlignment * 8)
+fun Arena.allocateFrom(string: String, charset: Charset): MemorySegment {
+    val asBytes = string.toByteArray(charset)
 
-
-fun MemorySegment.getAtIndex(layout: java.lang.foreign.ValueLayout.OfByte, index: Long): Byte =
-    this.get(layout, index)
-fun MemorySegment.setAtIndex(layout: java.lang.foreign.ValueLayout.OfByte, index: Long, value: Byte) {
-    this.set(layout, index, value)
+    val bytesEnd = 4L // in the worst case it is utf32 => char size = 4
+    val mem = allocate(asBytes.size + bytesEnd)
+    for (i in asBytes.indices)
+        mem.set(ValueLayout.JAVA_BYTE, i.toLong(), asBytes[i])
+    for (i in asBytes.size until asBytes.size + bytesEnd)
+        mem.set(ValueLayout.JAVA_BYTE, i, 0)
+    return mem
 }
-
+*/
 
 // To avoid problems with bit or byte size
-fun paddingLayout(layout: MemoryLayout): MemoryLayout = MemoryLayout.paddingLayout(layout.byteSize() * 8)
-*/
+fun paddingLayout(layout: MemoryLayout): MemoryLayout = MemoryLayout.paddingLayout(layout.byteSize())
