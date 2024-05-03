@@ -1,6 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk18
 
+/*
 import com.mvv.gui.util.removeOneOfSuffixes
 import java.nio.charset.Charset
 
@@ -178,13 +179,13 @@ class Arena (
             Arena(toClose = true, JIResourceScope.newConfinedScope())
         @JvmStatic
         fun ofAuto(): Arena =
-            Arena(toClose = true, JIResourceScope.newImplicitScope())
-        @JvmStatic
-        fun ofShared(): Arena =
-            Arena(toClose = true, JIResourceScope.newSharedScope())
+            Arena(toClose = false, JIResourceScope.newImplicitScope())
+        //@JvmStatic
+        //fun ofShared(): Arena =
+        //    Arena(toClose = true, JIResourceScope.newSharedScope())
         @JvmStatic
         fun global(): Arena =
-            Arena(toClose = true, JIResourceScope.globalScope())
+            Arena(toClose = false, JIResourceScope.globalScope())
     }
 }
 
@@ -378,3 +379,4 @@ class StructLayout (impl: JIMemoryLayout) : MemoryLayout(impl) {
     override fun withName(name: String): StructLayout = StructLayout(impl.withName(name))
     fun byteOffset(vararg path: PathElement): Long = impl.byteOffset(*path.map { it.impl }.toTypedArray())
 }
+*/

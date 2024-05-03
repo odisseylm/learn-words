@@ -1004,11 +1004,28 @@
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <argLine>
+            -Dforeign.restricted=permit
             --add-modules jdk.incubator.foreign
-            --enable-native-access=ALL-UNNAMED
             --add-opens java.desktop/java.awt=ALL-UNNAMED
             --add-opens java.desktop/sun.awt.windows=ALL-UNNAMED
           </argLine>
+          <!--<argLine__16>-->
+          <!--  -Dforeign.restricted=permit-->
+          <!--  &#45;&#45;add-modules jdk.incubator.foreign-->
+          <!--  &#45;&#45;add-opens java.desktop/java.awt=ALL-UNNAMED-->
+          <!--  &#45;&#45;add-opens java.desktop/sun.awt.windows=ALL-UNNAMED-->
+          <!--</argLine__16>-->
+          <!--<argLine__17_18>-->
+          <!--  &#45;&#45;add-modules jdk.incubator.foreign-->
+          <!--  &#45;&#45;enable-native-access=ALL-UNNAMED-->
+          <!--  &#45;&#45;add-opens java.desktop/java.awt=ALL-UNNAMED-->
+          <!--  &#45;&#45;add-opens java.desktop/sun.awt.windows=ALL-UNNAMED-->
+          <!--</argLine__17_18>-->
+          <!--<argLine__19>-->
+          <!--  &#45;&#45;enable-native-access=ALL-UNNAMED-->
+          <!--  &#45;&#45;add-opens java.desktop/java.awt=ALL-UNNAMED-->
+          <!--  &#45;&#45;add-opens java.desktop/sun.awt.windows=ALL-UNNAMED-->
+          <!--</argLine__19>-->
           <excludes>
             <exclude>**/*ITTest*</exclude>
             <exclude>**/*ITest*</exclude>
