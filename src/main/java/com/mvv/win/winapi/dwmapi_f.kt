@@ -6,9 +6,7 @@ import com.mvv.win.winapi.*
 import com.mvv.win.winapi.error.HR_SUCCEEDED
 import com.mvv.win.winapi.window.HWND
 import com.mvv.win.winapi.window.ValueLayout_HWND
-//import com.mvv.foreign.MemoryLayout
-//import com.mvv.foreign.MemorySegment
-//import com.mvv.foreign.StructLayout
+import com.mvv.foreign.*
 
 
 // https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmgetcolorizationcolor
@@ -81,14 +79,7 @@ fun DwmSetWindowAttribute(hWnd: HWND, dwAttribute: DWORD, dwValue: DWORD): HRESU
 }
 
 
-@Suppress("UNUSED_PARAMETER")
-fun SetWindowCompositionAttribute(hWnd: HWND, attribute: WINDOWCOMPOSITIONATTRIB, dwValue: DWORD): Boolean = false
-@Suppress("UNUSED_PARAMETER")
-fun SetWindowCompositionAttribute(hWnd: HWND, attribute: WINDOWCOMPOSITIONATTRIB, value: Boolean): Boolean = false
-@Suppress("UNUSED_PARAMETER")
-fun GetWindowCompositionAttribute(hWnd: HWND, dwAttribute: WINDOWCOMPOSITIONATTRIB): DWORD? = null
 
-/*
 fun SetWindowCompositionAttribute(hWnd: HWND, attribute: WINDOWCOMPOSITIONATTRIB, dwValue: DWORD): Boolean =
     SetWindowCompositionAttribute(hWnd, attribute.nativeValue, dwValue)
 fun SetWindowCompositionAttribute(hWnd: HWND, attribute: WINDOWCOMPOSITIONATTRIB, value: Boolean): Boolean =
@@ -131,8 +122,9 @@ fun GetWindowCompositionAttribute(hWnd: HWND, dwAttribute: WINDOWCOMPOSITIONATTR
 // https://learn.microsoft.com/en-us/windows/win32/dwm/getwindowcompositionattribute
 //
 fun GetWindowCompositionAttribute(hWnd: HWND, dwAttribute: DWORD): DWORD? = nativeContext {
+    // user32.dll / no lib/ no header
     // BOOL GetWindowCompositionAttribute( HWND hwnd, [INOUT] WINDOWCOMPOSITIONATTRIBDATA* pwcad )
-
+    //
     val attrData = WINDOWCOMPOSITIONATTRIBDATA(this)
     attrData.attribute = dwAttribute
 
@@ -188,4 +180,3 @@ private class WINDOWCOMPOSITIONATTRIBDATA (nativeContext: NativeContext) {
         get() = dwValueBuffer.getAtIndex(ValueLayout_DWORD, 0)
         set(value) = dwValueBuffer.setAtIndex(ValueLayout_DWORD, 0, value)
 }
-*/

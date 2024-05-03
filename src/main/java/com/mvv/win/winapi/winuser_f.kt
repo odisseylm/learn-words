@@ -14,6 +14,16 @@ fun GetForegroundWindow(): HWND = nativeContext {
 }
 
 
+// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-iswindow
+//
+fun IsWindow(hWnd: HWND): Boolean = nativeContext {
+    // User32.dll / User32.lib / winuser.h
+    // BOOL IsWindow( [in, optional] HWND hWnd )
+    functionHandle(WinModule.User, "IsWindow", ValueLayout_BOOL, ValueLayout_HWND)
+        .call<BOOL>(hWnd).asBool
+}
+
+
 // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-postmessagew
 //
 fun PostMessage(hWnd: HWND, msg: UINT, wParam: WPARAM, lParam: LPARAM): BOOL = nativeContext {

@@ -1003,7 +1003,12 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
-          <argLine>--add-modules jdk.incubator.foreign --enable-native-access=ALL-UNNAMED</argLine>
+          <argLine>
+            --add-modules jdk.incubator.foreign
+            --enable-native-access=ALL-UNNAMED
+            --add-opens java.desktop/java.awt=ALL-UNNAMED
+            --add-opens java.desktop/sun.awt.windows=ALL-UNNAMED
+          </argLine>
           <excludes>
             <exclude>**/*ITTest*</exclude>
             <exclude>**/*ITest*</exclude>

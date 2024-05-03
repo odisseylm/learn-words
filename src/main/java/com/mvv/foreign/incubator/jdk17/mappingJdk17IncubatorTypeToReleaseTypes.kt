@@ -17,6 +17,7 @@ import jdk.incubator.foreign.MemorySegment as JIMemorySegment
 import jdk.incubator.foreign.MemoryAddress as JIMemoryAddress
 import jdk.incubator.foreign.SymbolLookup as JISymbolLookup
 import jdk.incubator.foreign.ResourceScope as JIResourceScope
+import jdk.incubator.foreign.MemoryLayout.PathElement as JIPathElement
 
 import java.lang.invoke.MethodHandle as JMethodHandle
 import java.lang.invoke.MethodType as JMethodType
@@ -286,14 +287,42 @@ class MemoryAddress (internal val impl: JIMemoryAddress)
 class MemorySegment (val impl: JIMemorySegment) {
     fun byteSize(): Long = impl.byteSize()
 
-    fun getAtIndex(elementLayout: ValueLayout.OfByte, offset: Long): Byte =
-        impl.toByteArray()[offset.toInt()]
-    fun getAtIndex(elementLayout: ValueLayout.OfShort, offset: Long): Short =
-        impl.toShortArray()[offset.toInt()]
-    fun getAtIndex(elementLayout: ValueLayout.OfInt, offset: Long): Int =
-        impl.toIntArray()[offset.toInt()]
-    fun getAtIndex(elementLayout: ValueLayout.OfLong, offset: Long): Long =
-        impl.toLongArray()[offset.toInt()]
+    fun getAtIndex(elementLayout: ValueLayout.OfChar, index: Long): Char =
+        //impl.toCharArray()[index.toInt()]
+        JIMemoryAccess.getCharAtIndex(impl, index)
+    fun getAtIndex(elementLayout: ValueLayout.OfByte, index: Long): Byte =
+        //impl.toByteArray()[index.toInt()]
+        JIMemoryAccess.getByteAtOffset(impl, index)
+    fun getAtIndex(elementLayout: ValueLayout.OfShort, index: Long): Short =
+        //impl.toShortArray()[index.toInt()]
+        JIMemoryAccess.getShortAtIndex(impl, index)
+    fun getAtIndex(elementLayout: ValueLayout.OfInt, index: Long): Int =
+        //impl.toIntArray()[index.toInt()]
+        JIMemoryAccess.getIntAtIndex(impl, index)
+    fun getAtIndex(elementLayout: ValueLayout.OfLong, index: Long): Long =
+        //impl.toLongArray()[index.toInt()]
+        JIMemoryAccess.getLongAtIndex(impl, index)
+    fun getAtIndex(elementLayout: ValueLayout.OfFloat, index: Long): Float =
+        //impl.toFloatArray()[index.toInt()]
+        JIMemoryAccess.getFloatAtIndex(impl, index)
+    fun getAtIndex(elementLayout: ValueLayout.OfDouble, index: Long): Double =
+        //impl.toDoubleArray()[index.toInt()]
+        JIMemoryAccess.getDoubleAtIndex(impl, index)
+
+    fun get(elementLayout: ValueLayout.OfChar, offset: Long): Char =
+        JIMemoryAccess.getCharAtOffset(impl, offset)
+    fun get(elementLayout: ValueLayout.OfByte, offset: Long): Byte =
+        JIMemoryAccess.getByteAtOffset(impl, offset)
+    fun get(elementLayout: ValueLayout.OfShort, offset: Long): Short =
+        JIMemoryAccess.getShortAtOffset(impl, offset)
+    fun get(elementLayout: ValueLayout.OfInt, offset: Long): Int =
+        JIMemoryAccess.getIntAtOffset(impl, offset)
+    fun get(elementLayout: ValueLayout.OfLong, offset: Long): Long =
+        JIMemoryAccess.getLongAtOffset(impl, offset)
+    fun get(elementLayout: ValueLayout.OfFloat, offset: Long): Float =
+        JIMemoryAccess.getFloatAtOffset(impl, offset)
+    fun get(elementLayout: ValueLayout.OfDouble, offset: Long): Double =
+        JIMemoryAccess.getDoubleAtOffset(impl, offset)
 
     fun setAtIndex(elementLayout: ValueLayout.OfChar, index: Long, value: Char) =
         JIMemoryAccess.setCharAtIndex(impl, index, value)
@@ -306,19 +335,51 @@ class MemorySegment (val impl: JIMemorySegment) {
     fun setAtIndex(elementLayout: ValueLayout.OfLong, index: Long, value: Long) =
         JIMemoryAccess.setLongAtOffset(impl, index, value)
 
+    fun set(attr: ValueLayout.OfChar, offset: Long, value: Char) =
+        JIMemoryAccess.setCharAtOffset(impl, offset, value)
+    fun set(attr: ValueLayout.OfByte, offset: Long, value: Byte) =
+        JIMemoryAccess.setByteAtOffset(impl, offset, value)
+    fun set(attr: ValueLayout.OfShort, offset: Long, value: Short) =
+        JIMemoryAccess.setShortAtOffset(impl, offset, value)
+    fun set(attr: ValueLayout.OfInt, offset: Long, value: Int) =
+        JIMemoryAccess.setIntAtOffset(impl, offset, value)
+    fun set(attr: ValueLayout.OfLong, offset: Long, value: Long) =
+        JIMemoryAccess.setLongAtOffset(impl, offset, value)
+    fun set(attr: ValueLayout.OfFloat, offset: Long, value: Float) =
+        JIMemoryAccess.setFloatAtOffset(impl, offset, value)
+    fun set(attr: ValueLayout.OfDouble, offset: Long, value: Double) =
+        JIMemoryAccess.setDoubleAtOffset(impl, offset, value)
+    fun set(attr: AddressLayout, offset: Long, value: MemorySegment) =
+        JIMemoryAccess.setAddressAtOffset(impl, offset, value.impl.address())
+
     fun toArray(elementLayout: ValueLayout.OfChar): CharArray =
         impl.toCharArray()
     fun toArray(elementLayout: ValueLayout.OfByte): ByteArray =
         impl.toByteArray()
+    fun toArray(elementLayout: ValueLayout.OfShort): ShortArray =
+        impl.toShortArray()
     fun toArray(elementLayout: ValueLayout.OfInt): IntArray =
         impl.toIntArray()
     fun toArray(elementLayout: ValueLayout.OfLong): LongArray =
         impl.toLongArray()
+    fun toArray(elementLayout: ValueLayout.OfFloat): FloatArray =
+        impl.toFloatArray()
+    fun toArray(elementLayout: ValueLayout.OfDouble): DoubleArray =
+        impl.toDoubleArray()
 }
 
 open class MemoryLayout (val impl: JIMemoryLayout) {
+    class PathElement (val impl: JIPathElement) {
+        companion object {
+            fun groupElement(name: String): PathElement =
+                PathElement(JIPathElement.groupElement(name))
+        }
+    }
+
     fun byteSize(): Long = impl.byteSize()
+    fun name(): Optional<String> = impl.name()
     open fun withName(name: String): MemoryLayout = MemoryLayout(impl.withName(name))
+    open fun withByteAlignment(byteAlignment: Long): MemoryLayout = MemoryLayout(impl.withBitAlignment(byteAlignment * 8))
 
     companion object {
         @JvmStatic
@@ -328,43 +389,68 @@ open class MemoryLayout (val impl: JIMemoryLayout) {
             )
             return StructLayout(sl)
         }
+
+        fun paddingLayout(byteSize: Long): MemoryLayout = MemoryLayout(JIMemoryLayout.paddingLayout(byteSize * 8))
     }
 }
 
 open class AddressLayout (impl: JIMemoryLayout) : MemoryLayout(impl) {
     override fun withName(name: String): AddressLayout =
         AddressLayout(impl.withName(name))
+
     @Suppress("UNUSED_PARAMETER")
     fun withTargetLayout(targetLayout: AddressLayout): AddressLayout = this
+
     @Suppress("UNUSED_PARAMETER")
     fun withTargetLayout(targetLayout: StructLayout): AddressLayout = this
+
+    override fun withByteAlignment(byteAlignment: Long): AddressLayout =
+        AddressLayout(impl.withBitAlignment(byteAlignment * 8))
 }
+
+//private inline fun <M: JIMemoryLayout> M.withByteAlignment(byteAlignment: Long): M = this.withBitAlignment(byteAlignment * 8)
 
 open class ValueLayout (val valueImpl: JIValueLayout) : AddressLayout(valueImpl) {
 
     override fun withName(name: String): ValueLayout =
         ValueLayout(valueImpl.withName(name))
+    override fun withByteAlignment(byteAlignment: Long): ValueLayout =
+        ValueLayout(valueImpl.withBitAlignment(byteAlignment * 8))
 
     class OfChar (impl: JIValueLayout) : ValueLayout(impl) {
         override fun withName(name: String): OfChar = OfChar(valueImpl.withName(name))
+        override fun withByteAlignment(byteAlignment: Long): OfChar =
+            OfChar(valueImpl.withBitAlignment(byteAlignment * 8))
     }
     class OfByte  (impl: JIValueLayout) : ValueLayout(impl) {
         override fun withName(name: String): OfByte = OfByte(valueImpl.withName(name))
+        override fun withByteAlignment(byteAlignment: Long): OfByte =
+            OfByte(valueImpl.withBitAlignment(byteAlignment * 8))
     }
     class OfShort (impl: JIValueLayout) : ValueLayout(impl) {
         override fun withName(name: String): OfShort = OfShort(valueImpl.withName(name))
+        override fun withByteAlignment(byteAlignment: Long): OfShort =
+            OfShort(valueImpl.withBitAlignment(byteAlignment * 8))
     }
     class OfInt (impl: JIValueLayout) : ValueLayout(impl) {
         override fun withName(name: String): OfInt = OfInt(valueImpl.withName(name))
+        override fun withByteAlignment(byteAlignment: Long): OfInt =
+            OfInt(valueImpl.withBitAlignment(byteAlignment * 8))
     }
     class OfLong (impl: JIValueLayout) : ValueLayout(impl) {
         override fun withName(name: String): OfLong = OfLong(valueImpl.withName(name))
+        override fun withByteAlignment(byteAlignment: Long): OfLong =
+            OfLong(valueImpl.withBitAlignment(byteAlignment * 8))
     }
     class OfFloat (impl: JIValueLayout) : ValueLayout(impl) {
         override fun withName(name: String): OfFloat = OfFloat(valueImpl.withName(name))
+        override fun withByteAlignment(byteAlignment: Long): OfFloat =
+            OfFloat(valueImpl.withBitAlignment(byteAlignment * 8))
     }
     class OfDouble (impl: JIValueLayout) : ValueLayout(impl) {
         override fun withName(name: String): OfDouble = OfDouble(valueImpl.withName(name))
+        override fun withByteAlignment(byteAlignment: Long): OfDouble =
+            OfDouble(valueImpl.withBitAlignment(byteAlignment * 8))
     }
 
     companion object {
@@ -381,4 +467,5 @@ open class ValueLayout (val valueImpl: JIValueLayout) : AddressLayout(valueImpl)
 
 class StructLayout (impl: JIMemoryLayout) : MemoryLayout(impl) {
     override fun withName(name: String): StructLayout = StructLayout(impl.withName(name))
+    fun byteOffset(vararg path: PathElement): Long = impl.byteOffset(*path.map { it.impl }.toTypedArray())
 }
