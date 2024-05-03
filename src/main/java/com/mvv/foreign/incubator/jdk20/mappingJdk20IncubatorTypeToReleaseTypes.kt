@@ -1,45 +1,39 @@
 @file:Suppress("PackageDirectoryMismatch", "Since15", "unused")
 package com.mvv.foreign
 
-/*
-import java.lang.foreign.MemorySession
 import java.nio.charset.Charset
 import java.util.*
-import java.lang.invoke.MethodHandle as JMethodHandle
-import java.lang.invoke.MethodType as JMethodType
-import java.lang.foreign.Linker as JLinker
 import java.lang.foreign.SymbolLookup as JISymbolLookup
-
+import java.lang.foreign.Arena as JIArena
 
 
 /*
-JDK19 feature-preview (incubator) java sample
+JDK20 feature-preview (incubator) java sample
 
 public class Jdk18IncubatorForeignSample {
     public static void main(String[] args) throws Throwable {
+        Linker linker = Linker.nativeLinker();
+        SymbolLookup stdlib = linker.defaultLookup();
+        MethodHandle strlen = linker.downcallHandle(
+            stdlib.find("strlen").get(),
+            FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+        );
 
-        MemorySegment segment = MemorySegment.allocateNative(10 * 4, MemorySession.openImplicit());
-        for (int i = 0 ; i < 10 ; i++) {
-            segment.setAtIndex(ValueLayout.JAVA_INT, i, i);
-        }
-
-        try (MemorySession session = MemorySession.openConfined()) {
-            MemorySegment segment = MemorySegment.allocateNative(10 * 4, session);
-            for (int i = 0 ; i < 10 ; i++) {
-                segment.setAtIndex(ValueLayout.JAVA_INT, i, i);
-            }
+        try (Arena arena = Arena.openConfined()) {
+            MemorySegment cString = arena.allocateUtf8String("Hello");
+            long len = (long)strlen.invoke(cString); // 5
         }
     }
 }
 
 See other docs
- https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/foreign/package-summary.html
- https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/foreign/Linker.html
+ https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/foreign/package-summary.html
+ https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/foreign/Linker.html
 
 */
 
 
-typealias MemoryAddress = java.lang.foreign.MemoryAddress
+typealias MemoryAddress = Long
 typealias MemorySegment = java.lang.foreign.MemorySegment
 
 typealias MemoryLayout  = java.lang.foreign.MemoryLayout
@@ -55,46 +49,23 @@ typealias OfFloat  = java.lang.foreign.ValueLayout.OfFloat
 typealias OfDouble = java.lang.foreign.ValueLayout.OfDouble
 
 typealias GroupLayout  = java.lang.foreign.GroupLayout
-typealias StructLayout = java.lang.foreign.GroupLayout
-
+typealias StructLayout = java.lang.foreign.StructLayout
 typealias PathElement = java.lang.foreign.MemoryLayout.PathElement
 
+typealias MethodHandle = java.lang.invoke.MethodHandle
 typealias FunctionDescriptor = java.lang.foreign.FunctionDescriptor
+typealias Linker = java.lang.foreign.Linker
 
 
-
-class MethodHandle (private val delegate: JMethodHandle) {
-    fun invoke(vararg args: Any?): Any? =
-        delegate.invokeWithArguments(fixArgs(args.toList()))
-    fun invokeWithArguments(asList: List<Any?>): Any? =
-        delegate.invokeWithArguments(fixArgs(asList))
-    //inline fun <reified R> invokeExact(vararg args: Any?): R =
-    @Suppress("UNCHECKED_CAST")
-    fun <R> invokeExact(vararg args: Any?): R =
-        delegate.invokeWithArguments(fixArgs(args.toList())) as R
-
-    // for compatibility with foreign production
-    private fun fixArgs(args: List<Any?>): List<Any?> =
-        args.map {
-            when (it) {
-                is MemorySegment   -> it.address()
-                else -> it
-            }
-        }
-
-    fun type(): JMethodType = delegate.type()
-}
-
-
-//typealias Arena = java.lang.foreign.Arena
 class Arena private constructor(
     private val arenaType: ArenaType,
-    internal val memorySession: MemorySession,
+    internal val delegate: JIArena,
+    //internal val memorySession: MemorySession,
     ) : AutoCloseable {
 
     override fun close() {
         if (arenaType.toClose)
-            memorySession.close()
+            delegate.close()
     }
 
     // Converts a Java string into a null-terminated C string using the UTF-8 charset
@@ -114,23 +85,25 @@ class Arena private constructor(
     }
 
     fun allocate(byteSize: Long): MemorySegment =
-        memorySession.allocate(byteSize)
+        delegate.allocate(byteSize)
 
     fun allocate(layout: MemoryLayout): MemorySegment =
-        memorySession.allocate(layout)
+        delegate.allocate(layout)
 
     fun allocate(layout: MemoryLayout, count: Long): MemorySegment =
-        memorySession.allocate(layout.byteSize() * count)
+        delegate.allocate(layout.byteSize() * count)
 
     companion object {
         fun ofConfined(): Arena =
-            Arena(ArenaType.Confined, MemorySession.openConfined())
+            Arena(ArenaType.Confined, JIArena.openConfined())
         fun ofAuto(): Arena =
-            Arena(ArenaType.Auto, MemorySession.openImplicit())
+            //Arena(ArenaType.Auto, MemorySession.openImplicit())
+            throw IllegalStateException("Arena.ofAuto() is not supported in jdk 20")
         fun ofShared(): Arena =
-            Arena(ArenaType.Shared, MemorySession.openShared())
+            Arena(ArenaType.Shared, JIArena.openShared())
         fun global(): Arena =
-            Arena(ArenaType.Global, MemorySession.global())
+            //Arena(ArenaType.Global, MemorySession.global())
+            throw IllegalStateException("Arena.global() is not supported in jdk 20")
     }
 
     private enum class ArenaType (val toClose: Boolean) {
@@ -144,28 +117,11 @@ class Arena private constructor(
 
 class SymbolLookup (internal val delegate: JISymbolLookup) : JISymbolLookup {
 
-    fun find(name: String): Optional<MemorySegment> = delegate.lookup(name)
-
-    @Deprecated(message = "SymbolLookup.find()", replaceWith = ReplaceWith("SymbolLookup.find"))
-    override fun lookup(name: String): Optional<java.lang.foreign.MemorySegment> = find(name)
+    override fun find(name: String): Optional<MemorySegment> = delegate.find(name)
 
     companion object {
         fun libraryLookup(name: String, arena: Arena): SymbolLookup =
-            SymbolLookup(JISymbolLookup.libraryLookup(name, arena.memorySession))
-    }
-}
-
-
-class Linker (internal val delegate: JLinker) {
-    fun downcallHandle(function: FunctionDescriptor): MethodHandle =
-        MethodHandle(delegate.downcallHandle(function))
-    fun downcallHandle(memory: MemorySegment, function: FunctionDescriptor): MethodHandle =
-        MethodHandle(delegate.downcallHandle(memory.address(), function))
-
-    fun defaultLookup(): SymbolLookup = SymbolLookup(delegate.defaultLookup())
-
-    companion object {
-        fun nativeLinker(): Linker = Linker(JLinker.nativeLinker())
+            SymbolLookup(JISymbolLookup.libraryLookup(name, arena.delegate.scope()))
     }
 }
 
@@ -194,6 +150,6 @@ fun MemorySegment.setAtIndex(layout: java.lang.foreign.ValueLayout.OfByte, index
     this.set(layout, index, value)
 }
 
+
 // To avoid problems with bit or byte size
 fun paddingLayout(layout: MemoryLayout): MemoryLayout = MemoryLayout.paddingLayout(layout.byteSize() * 8)
-*/
