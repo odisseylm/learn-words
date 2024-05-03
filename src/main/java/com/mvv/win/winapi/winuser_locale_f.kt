@@ -21,9 +21,9 @@ fun GetLocaleInfo(localeId: LCID, lcType: LCTYPE): String = nativeContext {
     // )
 
     val fGetLocaleInfo = functionHandle(WinModule.Kernel, "GetLocaleInfoW",
-        ValueLayout.JAVA_INT,
+        ValueLayout_C_INT,
         // args
-        ValueLayout_LCID, ValueLayout_LCTYPE, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+        ValueLayout_LCID, ValueLayout_LCTYPE, ValueLayout.ADDRESS, ValueLayout_C_INT)
 
     val requiredBufferLength = fGetLocaleInfo.call<Int>(localeId, lcType, allocateNullPtr(), 0)
 

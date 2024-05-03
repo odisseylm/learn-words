@@ -15,6 +15,8 @@ typealias UInt32 = Int32
 typealias UInt64 = Int64
 
 
+typealias ValueLayout_Byte_Type = OfByte
+
 typealias ValueLayout_Int8_Type  = OfByte
 typealias ValueLayout_Int16_Type = OfShort
 typealias ValueLayout_Int32_Type = OfInt
@@ -28,6 +30,8 @@ typealias ValueLayout_UInt16_Type = ValueLayout_Int16_Type
 typealias ValueLayout_UInt32_Type = ValueLayout_Int32_Type
 typealias ValueLayout_UInt64_Type = ValueLayout_Int64_Type
 
+
+val ValueLayout_Byte:  ValueLayout_Byte_Type  = ValueLayout.JAVA_BYTE
 
 val ValueLayout_Int8:  ValueLayout_Int8_Type  = ValueLayout.JAVA_BYTE
 val ValueLayout_Int16: ValueLayout_Int16_Type = ValueLayout.JAVA_SHORT

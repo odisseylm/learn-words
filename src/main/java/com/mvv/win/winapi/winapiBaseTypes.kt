@@ -17,6 +17,10 @@ val BOOL.asBool: Boolean get() = (this != 0)
 val Boolean.asBOOL: BOOL get() = if (this) 1 else 0
 
 
+typealias BYTE = Byte
+val ValueLayout_BYTE: ValueLayout_Byte_Type = ValueLayout_Byte
+
+
 // corrsponds 'int' (lowercase) in windows heasers
 typealias C_INT = Int32
 val ValueLayout_C_INT: ValueLayout_Int32_Type = ValueLayout_Int32
@@ -27,15 +31,42 @@ val ValueLayout_INT: ValueLayout_Int32_Type = ValueLayout_Int32
 typealias UINT = UInt32 // UInt
 val ValueLayout_UINT: ValueLayout_UInt32_Type = ValueLayout_Int32
 
-//typealias WCHAR = Char
-//val ValueLayout_WCHAR: ValueLayout_Char16_Type = ValueLayout_Int16
+typealias CHAR = BYTE
+val ValueLayout_CHAR: ValueLayout_Byte_Type = ValueLayout_BYTE
+fun Byte .toCHAR(): CHAR = this
+fun Short.toCHAR(): CHAR = this.toByte()
+fun Int  .toCHAR(): CHAR = this.toByte()
+fun Long .toCHAR(): CHAR = this.toByte()
+fun Char .toCHAR(): CHAR = this.code.toByte()
 
-typealias WCHAR = Int16
-val ValueLayout_WCHAR: ValueLayout_Int16_Type = ValueLayout_Int16
-fun Short.toWCHAR(): WCHAR = this.toUInt16()
-fun Int  .toWCHAR(): WCHAR = this.toUInt16()
-fun Char .toWCHAR(): WCHAR = this.code.toUInt16()
+typealias WCHAR = Char
+typealias WCHARArray = CharArray
+val ValueLayout_WCHAR: OfChar = ValueLayout.JAVA_CHAR
+fun Byte .toWCHAR(): WCHAR = this.toInt().toChar()
+fun Short.toWCHAR(): WCHAR = this.toInt().toChar()
+fun Int  .toWCHAR(): WCHAR = this.toChar()
+fun Long .toWCHAR(): WCHAR = this.toInt().toChar()
+fun Char .toWCHAR(): WCHAR = this
 
+
+// What is better? WCHAR=Char or WCHAR=Short
+
+//typealias WCHAR = Int16
+//typealias WCHARArray = ShortArray
+//val ValueLayout_WCHAR: ValueLayout_Int16_Type = ValueLayout_Int16
+//fun Byte .toWCHAR(): WCHAR = this.toUInt16()
+//fun Short.toWCHAR(): WCHAR = this.toUInt16()
+//fun Int  .toWCHAR(): WCHAR = this.toUInt16()
+//fun Long .toWCHAR(): WCHAR = this.toUInt16()
+//fun Char .toWCHAR(): WCHAR = this.code.toUInt16()
+
+fun ShortArray.toCharArray(): CharArray {
+    val charArray = CharArray(this.size)
+    for (i in this.indices)
+        charArray[i] = this[i].toInt().toChar()
+    return charArray
+}
+fun CharArray.toCharArray(): CharArray = this
 
 typealias USHORT = UInt16 // UShort
 typealias ValueLayout_USHORT_Type = ValueLayout_Int16_Type

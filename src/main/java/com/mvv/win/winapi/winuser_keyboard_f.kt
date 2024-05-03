@@ -55,61 +55,6 @@ inline fun SORTVERSIONFROMLCID(lcid: Long): Int = SORTVERSIONFROMLCID(lcid.toDWO
 
 // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeyboardlayoutnamew
 //
-fun GetKeyboardLayoutName_Old(): String {
-
-    // User32.dll / User32.lib
-    // winuser.h (include Windows.h)
-    // BOOL GetKeyboardLayoutNameW( [out] LPWSTR pwszKLID );
-    //
-    // typedef int BOOL;
-    // typedef PVOID HANDLE;
-    // #define CALLBACK __stdcall
-
-    val fdGetKeyboardLayoutNameW: FunctionDescriptor = FunctionDescriptor.of(
-        ValueLayout_BOOL,
-        // args
-        ValueLayout.ADDRESS,
-    )
-
-    //val fdGetKeyboardLayoutNameW_22: FunctionDescriptor = FunctionDescriptor.of(
-    //    // res
-    //    C_LONG,
-    //    C_INT,
-    //    //CallArranger.C_LONG,
-    //    // args
-    //    C_POINTER
-    //)
-
-    // val C_LONG = ValueLayout.JAVA_LONG
-    // val C_POINTER = ValueLayout.ADDRESS.withTargetLayout(MemoryLayout.sequenceLayout(Long.MAX_VALUE, ValueLayout.JAVA_BYTE))
-
-    val arena = Arena.ofAuto()
-
-    val functionName = "GetKeyboardLayoutNameW"
-    val memorySegment = SymbolLookup
-        .libraryLookup("User32.dll", arena)
-        .find(functionName)
-        .orElseThrow { IllegalStateException("Function [$functionName] is not found.") }
-
-    val fHandle = Linker.nativeLinker().downcallHandle(
-        //Linker.systemLookup().lookup("strlen").get(),
-        //SymbolLookup.loaderLookup().lookup("multiplyMatrix").orElseThrow(),
-        memorySegment,
-        fdGetKeyboardLayoutNameW,
-        //Linker.Option.
-    )
-
-    val charsSegment = arena.allocateWinUtf16String(KL_NAMELENGTH)
-
-    val result = fHandle.invoke(charsSegment) as BOOL
-    check(result.asBool) { "$functionName is failed." }
-
-    return charsSegment.winUtf16StringToJavaString()
-}
-
-
-// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeyboardlayoutnamew
-//
 fun GetKeyboardLayoutName(): String = nativeContext {
     // User32.dll / User32.lib / winuser.h (Windows.h)
     // BOOL GetKeyboardLayoutNameW( [out] LPWSTR pwszKLID );
@@ -136,14 +81,14 @@ fun GetKeyboardLayoutList(): List<HKL> = nativeContext {
     // int GetKeyboardLayoutList( [in]  int nBuff, [out] HKL *lpList )
 
     val fGetKeyboardLayoutList = functionHandle(WinModule.User, "GetKeyboardLayoutList",
-        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+        ValueLayout_C_INT, ValueLayout_C_INT, ValueLayout_PTR)
 
-    val keyboardCount = fGetKeyboardLayoutList.call<Int>(0, allocateNullPtr())
+    val keyboardCount = fGetKeyboardLayoutList.call<C_INT>(0, allocateNullPtr())
     if (keyboardCount == 0) return@nativeContext emptyList()
 
     val lpList = arena.allocate(ValueLayout_HKL, keyboardCount.toLong())
 
-    val loadedKeyboardCount = fGetKeyboardLayoutList.call<Int>(keyboardCount, lpList)
+    val loadedKeyboardCount = fGetKeyboardLayoutList.call<C_INT>(keyboardCount, lpList)
     if (loadedKeyboardCount == 0) return@nativeContext emptyList()
 
     lpList.toList(ValueLayout_HKL, count = loadedKeyboardCount)

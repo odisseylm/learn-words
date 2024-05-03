@@ -5,10 +5,7 @@ import com.mvv.gui.util.ifIndexNotFound
 import com.mvv.win.*
 import com.mvv.win.winapi.gdi.COLORREF
 import com.mvv.win.winapi.gdi.ValueLayout_COLORREF
-import com.mvv.foreign.Arena
-import com.mvv.foreign.MemoryLayout
-import com.mvv.foreign.MemorySegment
-import com.mvv.foreign.ValueLayout
+import com.mvv.foreign.*
 import kotlin.math.min
 
 
@@ -41,10 +38,10 @@ fun Arena.allocateWinUtf16String(string: String): MemorySegment {
 
     //val asBytes = string.toByteArray(Charsets.UTF_16)
     //val mem = this.allocate(asBytes.size + ValueLayout_WCHAR.byteSize())
-    //mem.copyFrom(ValueLayout.JAVA_BYTE, asBytes)
+    //mem.copyFrom(ValueLayout_BYTE, asBytes)
     //
-    //mem.set(ValueLayout.JAVA_BYTE, asBytes.size.toLong(), 0)
-    //mem.set(ValueLayout.JAVA_BYTE, asBytes.size.toLong() + 1, 0)
+    //mem.set(ValueLayout_BYTE, asBytes.size.toLong(), 0)
+    //mem.set(ValueLayout_BYTE, asBytes.size.toLong() + 1, 0)
 
     return mem
 }
@@ -68,7 +65,7 @@ fun MemorySegment.winUtf16StringToJavaString(charCount: Int): String {
 
     require(this.byteSize() % 2 == 0L) { "UTF16 string bytes size should be even (${this.byteSize()})." }
 
-    val chars = this.toArray(ValueLayout.JAVA_CHAR)
+    val chars = this.toArray(ValueLayout_WCHAR).toCharArray()
     val length = min(charCount, chars.indexOf(0.toChar()).ifIndexNotFound(chars.size))
 
     return String(chars, 0, length)
