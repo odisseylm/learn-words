@@ -56,10 +56,11 @@ typealias MethodHandle = java.lang.invoke.MethodHandle
 typealias FunctionDescriptor = java.lang.foreign.FunctionDescriptor
 typealias Linker = java.lang.foreign.Linker
 
-//typealias Arena = java.lang.foreign.Arena
-//typealias SymbolLookup = java.lang.foreign.SymbolLookup
 
 
+// !!!
+// We need this Arena class because Arena.allocate(layout.long) in release and in Jdk20 works absolutely on another way
+// !!!
 class Arena private constructor(
     private val arenaType: ArenaType,
     internal val delegate: JIArena,
@@ -125,23 +126,6 @@ class SymbolLookup (internal val delegate: JISymbolLookup) : JISymbolLookup {
     }
 }
 
-
-/*
-// Converts a Java string into a null-terminated C string using the UTF-8 charset
-fun Arena.allocateFrom(string: String): MemorySegment = allocateFrom(string, Charsets.UTF_8)
-
-fun Arena.allocateFrom(string: String, charset: Charset): MemorySegment {
-    val asBytes = string.toByteArray(charset)
-
-    val bytesEnd = 4L // in the worst case it is utf32 => char size = 4
-    val mem = allocate(asBytes.size + bytesEnd)
-    for (i in asBytes.indices)
-        mem.set(ValueLayout.JAVA_BYTE, i.toLong(), asBytes[i])
-    for (i in asBytes.size until asBytes.size + bytesEnd)
-        mem.set(ValueLayout.JAVA_BYTE, i, 0)
-    return mem
-}
-*/
 
 // To avoid problems with bit or byte size
 fun paddingLayout(layout: MemoryLayout): MemoryLayout = MemoryLayout.paddingLayout(layout.byteSize())
