@@ -27,7 +27,6 @@ import java.util.*
 
 
 /*
-
 JDK17 incubator java sample
 
 public class Jdk17IncubatorForeignSample {
@@ -420,6 +419,10 @@ open class MemoryLayout (private val delegate0: JIMemoryLayout) {
         fun paddingLayout(byteSize: Long): MemoryLayout = MemoryLayout(JIMemoryLayout.paddingLayout(byteSize * 8))
     }
 }
+
+
+// To avoid problems with bit or byte size
+fun paddingLayout(layout: MemoryLayout): MemoryLayout = MemoryLayout(JIMemoryLayout.paddingLayout(layout.byteSize() * 8))
 
 
 open class ValueLayout (private val delegate0: JIValueLayout) : MemoryLayout(delegate0) {

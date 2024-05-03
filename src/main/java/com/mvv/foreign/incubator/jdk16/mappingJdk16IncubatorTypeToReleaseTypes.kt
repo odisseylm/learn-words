@@ -1,6 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk17
 
+/*
 import com.mvv.gui.util.isOneOf
 import java.nio.charset.Charset
 
@@ -28,7 +29,6 @@ private val log = mu.KotlinLogging.logger {}
 
 
 /*
-
 JDK17 incubator java sample
 
 public class Jdk16IncubatorForeignSample {
@@ -428,6 +428,10 @@ open class MemoryLayout (private val delegate0: JIMemoryLayout) {
 }
 
 
+// To avoid problems with bit or byte size
+fun paddingLayout(layout: MemoryLayout): MemoryLayout = MemoryLayout(JIMemoryLayout.ofPaddingBits(layout.byteSize() * 8))
+
+
 open class ValueLayout (private val delegate0: JIValueLayout) : MemoryLayout(delegate0) {
 
     override val delegate: JIValueLayout get() = delegate0
@@ -547,3 +551,4 @@ internal class ResourceScope (private val resourceScopeType: ResourceScopeType) 
 }
 
 private val globalResourceScope = ResourceScope(ResourceScopeType.Global)
+*/
