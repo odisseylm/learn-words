@@ -1,6 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk17
 
+/*
 import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.removeOneOfSuffixes
 import com.mvv.gui.util.trimToNull
@@ -143,6 +144,7 @@ internal fun toExternalLayout(layout: MemoryLayout): MemoryLayout {
 }
 
 
+/*
 internal fun layoutToType(layout: MemoryLayout?): Class<*> {
 
     val fullName = layout?.delegate?.name()?.orElse(null)?.lowercase()
@@ -165,6 +167,35 @@ internal fun layoutToType(layout: MemoryLayout?): Class<*> {
             Int::class.java
         layout is ValueLayout.OfLong || allTypeNames.containsOneOf("java_long", "b64") ->
             Long::class.java
+        else ->
+            throw IllegalArgumentException("Unexpected type layout $layout.")
+    }
+
+    return asType
+}
+*/
+
+internal fun layoutToType(layout: MemoryLayout?): Class<*> {
+
+    val asType: Class<*> = when {
+        layout === null ->
+            Void::class.java
+        layout is AddressLayout ->
+            JIMemoryAddress::class.java
+        layout is ValueLayout.OfChar ->
+            Char::class.java
+        layout is ValueLayout.OfByte ->
+            Byte::class.java
+        layout is ValueLayout.OfShort ->
+            Short::class.java
+        layout is ValueLayout.OfInt ->
+            Int::class.java
+        layout is ValueLayout.OfLong ->
+            Long::class.java
+        layout is ValueLayout.OfFloat ->
+            Float::class.java
+        layout is ValueLayout.OfDouble ->
+            Double::class.java
         else ->
             throw IllegalArgumentException("Unexpected type layout $layout.")
     }
@@ -471,3 +502,4 @@ class StructLayout (delegate: JIMemoryLayout) : MemoryLayout(delegate) {
     override fun withName(name: String): StructLayout = StructLayout(delegate.withName(name))
     fun byteOffset(vararg path: PathElement): Long = delegate.byteOffset(*path.map { it.delegate }.toTypedArray())
 }
+*/

@@ -1,10 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk17
 
-/*
-import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.isOneOf
-import com.mvv.gui.util.trimToNull
 import java.nio.charset.Charset
 
 import jdk.incubator.foreign.CLinker as JICLinker
@@ -142,7 +139,7 @@ internal fun toExternalLayout(layout: MemoryLayout): MemoryLayout {
     return MemoryLayout(l ?: layout.delegate)
 }
 
-
+/*
 internal fun layoutToType(layout: MemoryLayout?): Class<*> {
 
     val fullName = layout?.delegate?.name()?.orElse(null)?.lowercase()
@@ -165,6 +162,35 @@ internal fun layoutToType(layout: MemoryLayout?): Class<*> {
             Int::class.java
         layout is ValueLayout.OfLong || allTypeNames.containsOneOf("java_long", "b64") ->
             Long::class.java
+        else ->
+            throw IllegalArgumentException("Unexpected type layout $layout.")
+    }
+
+    return asType
+}
+*/
+
+internal fun layoutToType(layout: MemoryLayout?): Class<*> {
+
+    val asType: Class<*> = when {
+        layout === null ->
+            Void::class.java
+        layout is AddressLayout ->
+            JIMemoryAddress::class.java
+        layout is ValueLayout.OfChar ->
+            Char::class.java
+        layout is ValueLayout.OfByte ->
+            Byte::class.java
+        layout is ValueLayout.OfShort ->
+            Short::class.java
+        layout is ValueLayout.OfInt ->
+            Int::class.java
+        layout is ValueLayout.OfLong ->
+            Long::class.java
+        layout is ValueLayout.OfFloat ->
+            Float::class.java
+        layout is ValueLayout.OfDouble ->
+            Double::class.java
         else ->
             throw IllegalArgumentException("Unexpected type layout $layout.")
     }
@@ -372,6 +398,7 @@ class MemorySegment (val delegate: JIMemorySegment) {
         delegate.toDoubleArray()
 }
 
+
 open class MemoryLayout (private val delegate0: JIMemoryLayout) {
     class PathElement (val delegate: JIPathElement) {
         companion object {
@@ -400,22 +427,8 @@ open class MemoryLayout (private val delegate0: JIMemoryLayout) {
     }
 }
 
-open class AddressLayout (delegate: JIMemoryLayout) : MemoryLayout(delegate) {
-    override fun withName(name: String): AddressLayout =
-        AddressLayout(delegate.withName(name))
 
-    @Suppress("UNUSED_PARAMETER")
-    fun withTargetLayout(targetLayout: AddressLayout): AddressLayout = this
-
-    @Suppress("UNUSED_PARAMETER")
-    fun withTargetLayout(targetLayout: StructLayout): AddressLayout = this
-
-    override fun withByteAlignment(byteAlignment: Long): AddressLayout =
-        AddressLayout(delegate.withBitAlignment(byteAlignment * 8))
-}
-
-
-open class ValueLayout (private val delegate0: JIValueLayout) : AddressLayout(delegate0) {
+open class ValueLayout (private val delegate0: JIValueLayout) : MemoryLayout(delegate0) {
 
     override val delegate: JIValueLayout get() = delegate0
 
@@ -461,16 +474,35 @@ open class ValueLayout (private val delegate0: JIValueLayout) : AddressLayout(de
     }
 
     companion object {
-        val ADDRESS: ValueLayout  = ValueLayout(JIMemoryLayouts.ADDRESS)
-        val JAVA_CHAR:   OfChar   = OfChar   (JIMemoryLayouts.JAVA_CHAR)
-        val JAVA_BYTE:   OfByte   = OfByte   (JIMemoryLayouts.JAVA_BYTE)
-        val JAVA_SHORT:  OfShort  = OfShort  (JIMemoryLayouts.JAVA_SHORT)
-        val JAVA_INT:    OfInt    = OfInt    (JIMemoryLayouts.JAVA_INT)
-        val JAVA_LONG:   OfLong   = OfLong   (JIMemoryLayouts.JAVA_LONG)
-        val JAVA_FLOAT:  OfFloat  = OfFloat  (JIMemoryLayouts.JAVA_FLOAT)
-        val JAVA_DOUBLE: OfDouble = OfDouble (JIMemoryLayouts.JAVA_DOUBLE)
+        val ADDRESS: AddressLayout = AddressLayout(JIMemoryLayouts.ADDRESS)
+        val JAVA_CHAR:   OfChar    = OfChar   (JIMemoryLayouts.JAVA_CHAR)
+        val JAVA_BYTE:   OfByte    = OfByte   (JIMemoryLayouts.JAVA_BYTE)
+        val JAVA_SHORT:  OfShort   = OfShort  (JIMemoryLayouts.JAVA_SHORT)
+        val JAVA_INT:    OfInt     = OfInt    (JIMemoryLayouts.JAVA_INT)
+        val JAVA_LONG:   OfLong    = OfLong   (JIMemoryLayouts.JAVA_LONG)
+        val JAVA_FLOAT:  OfFloat   = OfFloat  (JIMemoryLayouts.JAVA_FLOAT)
+        val JAVA_DOUBLE: OfDouble  = OfDouble (JIMemoryLayouts.JAVA_DOUBLE)
     }
 }
+
+
+open class AddressLayout (delegate: JIValueLayout) : ValueLayout(delegate) {
+    override fun withName(name: String): AddressLayout =
+        AddressLayout(delegate.withName(name))
+
+    @Suppress("UNUSED_PARAMETER")
+    fun withTargetLayout(targetLayout: ValueLayout): AddressLayout = this
+
+    @Suppress("UNUSED_PARAMETER")
+    fun withTargetLayout(targetLayout: AddressLayout): AddressLayout = this
+
+    @Suppress("UNUSED_PARAMETER")
+    fun withTargetLayout(targetLayout: StructLayout): AddressLayout = this
+
+    override fun withByteAlignment(byteAlignment: Long): AddressLayout =
+        AddressLayout(delegate.withBitAlignment(byteAlignment * 8))
+}
+
 
 class StructLayout (delegate: JIMemoryLayout) : MemoryLayout(delegate) {
     override fun withName(name: String): StructLayout = StructLayout(delegate.withName(name))
@@ -515,4 +547,3 @@ internal class ResourceScope (private val resourceScopeType: ResourceScopeType) 
 }
 
 private val globalResourceScope = ResourceScope(ResourceScopeType.Global)
-*/
