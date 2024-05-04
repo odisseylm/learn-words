@@ -1,7 +1,6 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk18
 
-/*
 import com.mvv.gui.util.removeOneOfSuffixes
 import java.nio.charset.Charset
 import java.util.*
@@ -61,6 +60,7 @@ class MethodHandle (private val delegate: JMethodHandle) {
     private fun fixArgs(args: List<Any?>): List<Any?> =
         args.map {
             when (it) {
+                MemorySegment.NULL -> JIMemoryAddress.NULL
                 is MemorySegment   -> it.delegate.address()
                 is JIMemorySegment -> it.address()
                 else -> it
@@ -263,6 +263,11 @@ class MemorySegment (val delegate: JIMemorySegment) {
         delegate.toArray(elementLayout.delegate)
     fun toArray(elementLayout: ValueLayout.OfDouble): DoubleArray =
         delegate.toArray(elementLayout.delegate)
+
+    companion object {
+        // Just indicator, it should not be really passed to native engine
+        val NULL: MemorySegment = MemorySegment(JIMemorySegment.allocateNative(4, JIResourceScope.globalScope()))
+    }
 }
 
 
@@ -361,6 +366,16 @@ open class ValueLayout (private val delegate0: JIValueLayout) : MemoryLayout(del
 }
 
 
+typealias OfChar   = ValueLayout.OfChar
+typealias OfByte   = ValueLayout.OfByte
+typealias OfShort  = ValueLayout.OfShort
+typealias OfInt    = ValueLayout.OfInt
+typealias OfLong   = ValueLayout.OfLong
+typealias OfFloat  = ValueLayout.OfFloat
+typealias OfDouble = ValueLayout.OfDouble
+typealias PathElement = MemoryLayout.PathElement
+
+
 open class AddressLayout (private val delegate0: JIMemoryLayouts.OfAddress) : ValueLayout(delegate0) {
     override val delegate: JIMemoryLayouts.OfAddress get() = delegate0
 
@@ -384,4 +399,3 @@ class StructLayout (delegate: JIMemoryLayout) : MemoryLayout(delegate) {
     override fun withName(name: String): StructLayout = StructLayout(delegate.withName(name))
     fun byteOffset(vararg path: PathElement): Long = delegate.byteOffset(*path.map { it.delegate }.toTypedArray())
 }
-*/
