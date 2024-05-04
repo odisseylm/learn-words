@@ -1,7 +1,6 @@
 @file:Suppress("PackageDirectoryMismatch", "Since15", "unused")
 package com.mvv.foreign
 
-/*
 import java.nio.charset.Charset
 import java.util.*
 import java.lang.foreign.SymbolLookup as JISymbolLookup
@@ -130,4 +129,5 @@ class SymbolLookup (internal val delegate: JISymbolLookup) : JISymbolLookup {
 
 // To avoid problems with bit or byte size
 fun paddingLayout(layout: MemoryLayout): MemoryLayout = MemoryLayout.paddingLayout(layout.byteSize())
-*/
+
+val NULL_PTR: MemorySegment = MemorySegment.NULL

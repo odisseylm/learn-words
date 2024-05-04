@@ -1,6 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "Since15", "unused")
 package com.mvv.foreign
 
+/*
 import java.nio.charset.Charset
 import java.util.*
 import java.lang.foreign.SymbolLookup as JISymbolLookup
@@ -155,3 +156,4 @@ fun MemorySegment.setAtIndex(layout: java.lang.foreign.ValueLayout.OfByte, index
 fun paddingLayout(layout: MemoryLayout): MemoryLayout = MemoryLayout.paddingLayout(layout.byteSize() * 8)
 
 val NULL_PTR: MemorySegment = MemorySegment.NULL
+*/
