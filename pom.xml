@@ -19,7 +19,7 @@
     <toolchain.jdk.version>[22,)</toolchain.jdk.version>
 
     <!--<java.version>22</java.version>-->
-    <java.version>17</java.version>
+    <java.version>16</java.version>
     <java.release>${java.version}</java.release>
     <!--<kotlin.version>1.6.21</kotlin.version>-->
     <!--<kotlin.compiler.languageVersion>1.6</kotlin.compiler.languageVersion>-->
@@ -1004,7 +1004,8 @@
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <argLine>
-            --enable-native-access=ALL-UNNAMED
+            -Dforeign.restricted=permit
+            --add-modules jdk.incubator.foreign
             --add-opens java.desktop/java.awt=ALL-UNNAMED
             --add-opens java.desktop/sun.awt.windows=ALL-UNNAMED
           </argLine>

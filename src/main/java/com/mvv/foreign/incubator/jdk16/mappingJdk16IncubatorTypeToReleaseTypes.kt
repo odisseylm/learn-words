@@ -1,7 +1,6 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk17
 
-/*
 import com.mvv.gui.util.isOneOf
 import java.nio.charset.Charset
 
@@ -66,6 +65,7 @@ class MethodHandle (private val delegate: JMethodHandle) {
     private fun fixArgs(args: List<Any?>): List<Any?> =
         args.map {
             when (it) {
+                MemorySegment.NULL -> JIMemoryAddress.NULL
                 is MemorySegment   -> it.delegate.address()
                 is JIMemorySegment -> it.address()
                 else -> it
@@ -396,6 +396,10 @@ class MemorySegment (val delegate: JIMemorySegment) {
         delegate.toFloatArray()
     fun toArray(elementLayout: ValueLayout.OfDouble): DoubleArray =
         delegate.toDoubleArray()
+
+    companion object {
+        val NULL: MemorySegment = MemorySegment(JIMemorySegment.allocateNative(4))
+    }
 }
 
 
@@ -489,6 +493,14 @@ open class ValueLayout (private val delegate0: JIValueLayout) : MemoryLayout(del
     }
 }
 
+typealias OfChar   = ValueLayout.OfChar
+typealias OfByte   = ValueLayout.OfByte
+typealias OfShort  = ValueLayout.OfShort
+typealias OfInt    = ValueLayout.OfInt
+typealias OfLong   = ValueLayout.OfLong
+typealias OfFloat  = ValueLayout.OfFloat
+typealias OfDouble = ValueLayout.OfDouble
+typealias PathElement = MemoryLayout.PathElement
 
 open class AddressLayout (delegate: JIValueLayout) : ValueLayout(delegate) {
     override fun withName(name: String): AddressLayout =
@@ -551,4 +563,3 @@ internal class ResourceScope (private val resourceScopeType: ResourceScopeType) 
 }
 
 private val globalResourceScope = ResourceScope(ResourceScopeType.Global)
-*/
