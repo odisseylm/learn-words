@@ -1,6 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk17
 
+/*
 import com.mvv.gui.util.isOneOf
 import java.nio.charset.Charset
 
@@ -398,6 +399,7 @@ class MemorySegment (val delegate: JIMemorySegment) {
         delegate.toDoubleArray()
 
     companion object {
+        // Just indicator, it should not be really passed to native engine
         val NULL: MemorySegment = MemorySegment(JIMemorySegment.allocateNative(4))
     }
 }
@@ -493,6 +495,7 @@ open class ValueLayout (private val delegate0: JIValueLayout) : MemoryLayout(del
     }
 }
 
+
 typealias OfChar   = ValueLayout.OfChar
 typealias OfByte   = ValueLayout.OfByte
 typealias OfShort  = ValueLayout.OfShort
@@ -501,6 +504,7 @@ typealias OfLong   = ValueLayout.OfLong
 typealias OfFloat  = ValueLayout.OfFloat
 typealias OfDouble = ValueLayout.OfDouble
 typealias PathElement = MemoryLayout.PathElement
+
 
 open class AddressLayout (delegate: JIValueLayout) : ValueLayout(delegate) {
     override fun withName(name: String): AddressLayout =
@@ -563,3 +567,4 @@ internal class ResourceScope (private val resourceScopeType: ResourceScopeType) 
 }
 
 private val globalResourceScope = ResourceScope(ResourceScopeType.Global)
+*/

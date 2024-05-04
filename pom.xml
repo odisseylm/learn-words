@@ -1004,8 +1004,8 @@
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <argLine>
-            -Dforeign.restricted=permit
             --add-modules jdk.incubator.foreign
+            --enable-native-access=ALL-UNNAMED
             --add-opens java.desktop/java.awt=ALL-UNNAMED
             --add-opens java.desktop/sun.awt.windows=ALL-UNNAMED
           </argLine>

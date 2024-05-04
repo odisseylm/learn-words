@@ -1,10 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk17
 
-/*
-import com.mvv.gui.util.containsOneOf
 import com.mvv.gui.util.removeOneOfSuffixes
-import com.mvv.gui.util.trimToNull
 import java.nio.charset.Charset
 
 import jdk.incubator.foreign.CLinker as JICLinker
@@ -68,6 +65,7 @@ class MethodHandle (private val delegate: JMethodHandle) {
     private fun fixArgs(args: List<Any?>): List<Any?> =
         args.map {
             when (it) {
+                MemorySegment.NULL -> JIMemoryAddress.NULL
                 is MemorySegment   -> it.delegate.address()
                 is JIMemorySegment -> it.address()
                 else -> it
@@ -391,6 +389,11 @@ class MemorySegment (val delegate: JIMemorySegment) {
         delegate.toFloatArray()
     fun toArray(elementLayout: ValueLayout.OfDouble): DoubleArray =
         delegate.toDoubleArray()
+
+    companion object {
+        // Just indicator, it should not be really passed to native engine
+        val NULL: MemorySegment = MemorySegment(JIMemorySegment.allocateNative(4, JIResourceScope.globalScope()))
+    }
 }
 
 
@@ -482,6 +485,16 @@ open class ValueLayout (private val delegate0: JIValueLayout) : MemoryLayout(del
 }
 
 
+typealias OfChar   = ValueLayout.OfChar
+typealias OfByte   = ValueLayout.OfByte
+typealias OfShort  = ValueLayout.OfShort
+typealias OfInt    = ValueLayout.OfInt
+typealias OfLong   = ValueLayout.OfLong
+typealias OfFloat  = ValueLayout.OfFloat
+typealias OfDouble = ValueLayout.OfDouble
+typealias PathElement = MemoryLayout.PathElement
+
+
 open class AddressLayout (private val delegate0: JIValueLayout) : ValueLayout(delegate0) {
     override val delegate: JIValueLayout get() = delegate0
 
@@ -505,4 +518,3 @@ class StructLayout (delegate: JIMemoryLayout) : MemoryLayout(delegate) {
     override fun withName(name: String): StructLayout = StructLayout(delegate.withName(name))
     fun byteOffset(vararg path: PathElement): Long = delegate.byteOffset(*path.map { it.delegate }.toTypedArray())
 }
-*/
