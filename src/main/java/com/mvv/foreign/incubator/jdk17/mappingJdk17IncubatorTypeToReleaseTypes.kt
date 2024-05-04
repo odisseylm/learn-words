@@ -397,6 +397,8 @@ class MemorySegment (val delegate: JIMemorySegment) {
     }
 }
 
+val NULL_PTR: MemorySegment = MemorySegment.NULL
+
 
 open class MemoryLayout (private val delegate0: JIMemoryLayout) {
     class PathElement (val delegate: JIPathElement) {

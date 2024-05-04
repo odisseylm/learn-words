@@ -1,6 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch", "unused")
 package com.mvv.foreign//.incubator.jdk18
 
+/*
 import com.mvv.gui.util.removeOneOfSuffixes
 import java.nio.charset.Charset
 import java.util.*
@@ -270,6 +271,8 @@ class MemorySegment (val delegate: JIMemorySegment) {
     }
 }
 
+val NULL_PTR: MemorySegment = MemorySegment.NULL
+
 
 open class MemoryLayout (private val delegate0: JIMemoryLayout) {
     class PathElement (val delegate: JIPathElement) {
@@ -399,3 +402,4 @@ class StructLayout (delegate: JIMemoryLayout) : MemoryLayout(delegate) {
     override fun withName(name: String): StructLayout = StructLayout(delegate.withName(name))
     fun byteOffset(vararg path: PathElement): Long = delegate.byteOffset(*path.map { it.delegate }.toTypedArray())
 }
+*/

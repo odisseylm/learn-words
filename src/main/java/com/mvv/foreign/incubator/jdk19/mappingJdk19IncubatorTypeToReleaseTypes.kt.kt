@@ -1,7 +1,6 @@
 @file:Suppress("PackageDirectoryMismatch", "Since15", "unused")
 package com.mvv.foreign
 
-/*
 import java.lang.foreign.MemorySession
 import java.nio.charset.Charset
 import java.util.*
@@ -196,4 +195,5 @@ fun MemorySegment.setAtIndex(layout: java.lang.foreign.ValueLayout.OfByte, index
 
 // To avoid problems with bit or byte size
 fun paddingLayout(layout: MemoryLayout): MemoryLayout = MemoryLayout.paddingLayout(layout.byteSize() * 8)
-*/
+
+val NULL_PTR: MemorySegment = MemorySegment.ofAddress(MemoryAddress.NULL, 0L, MemorySession.global())

@@ -61,7 +61,7 @@ fun MemorySegment.copyFrom(elementLayout: OfShort, from: CharArray) {
 
 @Suppress("UnusedReceiverParameter")
 fun Arena.allocateNullPtr(): MemorySegment =
-    MemorySegment.NULL
+    NULL_PTR
 fun NativeContext.allocateNullPtr(): MemorySegment =
     this.arena.allocateNullPtr()
 
