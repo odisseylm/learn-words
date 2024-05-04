@@ -155,7 +155,7 @@ class ESpeakTest {
         assertThat(mbrolaVoices).describedAs("No mbrola voices.").isNotEmpty
 
         mbrolaVoices.forEach { voice ->
-            log.info("Voice: {}", voice.name)
+            log.info("Mbrola Voice: {}", voice.name)
             ESpeakSpeechSynthesizer(voice).speak("Hello Marina!")
             ESpeakSpeechSynthesizer(voice).speak("Hello John!")
         }
@@ -171,7 +171,7 @@ class ESpeakTest {
         assertThat(mbrolaVoices).describedAs("No mbrola core US voices.").isNotEmpty
 
         mbrolaVoices.forEach { voice ->
-            log.info("Voice: {}", voice.name)
+            log.info("Core UsMbrola Voice: {}", voice.name)
             ESpeakSpeechSynthesizer(voice).speak("Hello Marina!")
             ESpeakSpeechSynthesizer(voice).speak("Hello John!")
         }

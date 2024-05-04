@@ -21,7 +21,7 @@ internal class SetApplicationNamePreloader : Preloader() {
         // SetThemeAppProperties(STAP_VALIDBITS)
 
         // this code does not work if just to call it from main()
-        com.sun.glass.ui.Application.GetApplication().setName("Learn Words Editor")
+        com.sun.glass.ui.Application.GetApplication().name = "Learn Words Editor"
     }
 }
 
@@ -40,11 +40,15 @@ class LearnWordsEditorApp : Application() {
 
     companion object {
         // for running with good java class name LearnWordsEditorApp
-        @JvmStatic fun main(args: Array<String>) = launch(LearnWordsEditorApp::class.java)
+        @JvmStatic fun main(args: Array<String>) {
+            launch(LearnWordsEditorApp::class.java)
+            System.setProperty("javafx.preloader", SetApplicationNamePreloader::class.java.name)
+        }
     }
 }
 
-
+// Under java < 22
+//   --add-modules jdk.incubator.foreign --enable-native-access=ALL-UNNAMED
 fun main() {
     System.setProperty("javafx.preloader", SetApplicationNamePreloader::class.java.name)
     Application.launch(LearnWordsEditorApp::class.java)

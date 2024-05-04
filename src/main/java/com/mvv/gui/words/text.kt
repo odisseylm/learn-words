@@ -85,7 +85,7 @@ fun CharSequence.splitByBrackets(): List<Part> {
 }
 
 
-@Suppress("unused")
+@Suppress("unused", "FunctionName")
 internal fun extractWordsFromText_Old(content: CharSequence, ignoredWords: Collection<String>): List<CardWordEntry> =
     TextParser()
         .parse(content)

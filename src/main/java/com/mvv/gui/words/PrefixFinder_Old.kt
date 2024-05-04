@@ -40,6 +40,7 @@ private inline fun <T> alt(value: T): Alt<T> = singletonList(value)
  * BUT test show a bit another unexpected result:
  *  search by PrefixFinder_Old = 0.0632ms, search by new PrefixFinder = 0.015ms !?!, and I cannot explain this strange unlogical result!
  */
+@Suppress("ClassName")
 class PrefixFinder_Old internal constructor(@Suppress("SameParameterValue") prefixTemplates: Alt<Seq<Alt<Seq<String>>>>, val ignoredInPrefix: Set<String> = emptySet()) /*: AbstractObservable<Any>()*/ {
 
     constructor(toIgnoreInPrefix: Set<String> = emptySet())
@@ -391,6 +392,7 @@ private inline fun <M: MutableMap<String, PrefixWordTreeNode>> M.addTreeNodeImpl
 
 
 private val emptyNodesMap: HashMap<String, PrefixWordTreeNode> = object : HashMap<String, PrefixWordTreeNode>() {
+    @Suppress("SameReturnValue")
     override fun get(key: String): PrefixWordTreeNode? = null
     override fun getOrDefault(key: String, defaultValue: PrefixWordTreeNode): PrefixWordTreeNode = defaultValue
     override val size: Int get() = 0

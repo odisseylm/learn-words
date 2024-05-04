@@ -731,7 +731,7 @@ class MemoWordSession : AutoCloseable {
     fun deleteTempMemoLists() {
         val memoLists = tempMemoLists.toTypedArray()
         deleteExistentMemoLists(memoLists.map { it.id })
-        this.tempMemoLists.removeAll(memoLists.toList())
+        this.tempMemoLists.removeAll(memoLists.toSet())
     }
 
     private fun findExistentMemoCardsFor(

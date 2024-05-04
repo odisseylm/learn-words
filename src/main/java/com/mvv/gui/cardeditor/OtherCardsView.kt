@@ -57,8 +57,8 @@ class OtherCardsViewPopup(appContext: AppContext) :
     }
 
     private fun addOpenCardSetAction() {
-        cardsTable.addEventHandler(MouseEvent.MOUSE_CLICKED) {
-            if (it.clickCount < 2) return@addEventHandler
+        cardsTable.addEventHandler(MouseEvent.MOUSE_CLICKED) { ev ->
+            if (ev.clickCount < 2) return@addEventHandler
 
             val card = cardsTable.singleSelection as AllCardWordEntry?
             val cardSetFile = card?.file

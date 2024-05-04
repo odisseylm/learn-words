@@ -1,7 +1,6 @@
 @file:Suppress("unused", "SpellCheckingInspection", "FunctionName", "PackageDirectoryMismatch")
 package com.mvv.win.winapi.window
 
-import com.mvv.foreign.*
 import com.mvv.win.*
 import com.mvv.win.winapi.*
 

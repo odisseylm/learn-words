@@ -73,7 +73,7 @@ class WindowsSpeechSynthesizerTest {
         log.info("speakByRussian() => Say [$russianText]")
 
         russianVoices.forEach {
-            log.info("speak by voice ${it.name}/${it.culture} (${it.gender} ${it.age})")
+            log.info("speak by russian voice ${it.name}/${it.culture} (${it.gender} ${it.age})")
             WindowsSpeechSynthesizer(it).speak(russianText)
         }
     }

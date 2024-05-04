@@ -154,7 +154,7 @@ inline fun <T, L: List<T>> L.subList(fromIndex: Int): List<T> = this.subList(fro
 
 
 fun <T> treeSet(comparator: Comparator<T>, vararg items: T): TreeSet<T> {
-    val set = TreeSet<T>(comparator)
+    val set = TreeSet(comparator)
     set.addAll(items.asIterable())
     return set
 }
@@ -176,6 +176,7 @@ inline fun <E, C: MutableCollection<E>> C.addAll(vararg values: E): C {
 //
 //fun locale(language: String): Locale = Locale.of(language)
 //fun locale(language: String, country: String): Locale = Locale.of(language, country)
+// TODO: find some universal solution
 fun locale(language: String): Locale = Locale(language)
 fun locale(language: String, country: String): Locale = Locale(language, country)
 

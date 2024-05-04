@@ -191,7 +191,9 @@ enum class PartOfSpeech (vararg shorts: String) {
     val all: List<String> = (shorts.toList() + shorts.map { "($it)" } + this.name.lowercase() + this.name).sortedBy { it.length }
 
     companion object {
+        @Suppress("MemberVisibilityCanBePrivate")
         val allCssClasses = PartOfSpeech.values().map { it.name }
+        val allCssClassesSet = allCssClasses.toSet()
     }
 }
 
@@ -304,7 +306,9 @@ enum class TranslationCountStatus(val color: Color) {
     val cssClass: String get() = "TranslationCountStatus-${this.name}"
 
     companion object {
+        @Suppress("MemberVisibilityCanBePrivate")
         val allCssClasses = TranslationCountStatus.values().map { it.cssClass }
+        val allCssClassesSet = allCssClasses.toSet()
     }
 }
 
@@ -385,7 +389,9 @@ enum class WordCardStatus (
     val cssClass: String get() = "WordCardStatus-${this.name}"
 
     companion object {
+        @Suppress("MemberVisibilityCanBePrivate")
         val allCssClasses = WordCardStatus.values().map { it.cssClass }
+        val allCssClassesSet = allCssClasses.toSet()
     }
 }
 

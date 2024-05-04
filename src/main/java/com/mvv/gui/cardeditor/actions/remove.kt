@@ -15,7 +15,7 @@ fun LearnWordsController.removeSelected() {
 
 
 fun LearnWordsController.removeCards(toRemove: List<CardWordEntry>) {
-    currentWords.removeAll(toRemove)
+    currentWords.removeAll(toRemove.toSet())
     removeChangeCardListener(toRemove)
 }
 
@@ -62,7 +62,7 @@ fun removeWordsFromOtherSetsFromCurrentWords(currentWords: MutableList<CardWordE
     val currentToRemove = currentWords.filter { it.from.trim() in toRemoveAsSet }
 
     // perform removing as ONE operation to minimize change events
-    currentWords.removeAll(currentToRemove)
+    currentWords.removeAll(currentToRemove.toSet())
 
     return currentToRemove
 }

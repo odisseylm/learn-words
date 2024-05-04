@@ -176,6 +176,7 @@ class AllWordCardSetsManagerTest {
 
 
     //@Test
+    @Suppress("GrazieInspection")
     @RepeatedTest(2) // to see performance at 2nd attempt (1st one takes about 1 second)
     @DisplayName("splitTranslation other cases")
     fun test_splitTranslation_cases() { useAssertJSoftAssertions {

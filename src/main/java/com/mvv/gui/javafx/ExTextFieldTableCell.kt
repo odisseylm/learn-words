@@ -250,7 +250,7 @@ class ExTextFieldTableCell<S, T>
             cell.graphic = graphic
         }
 
-        /*private*/ fun <T> getItemText(cell: Cell<T>, converter: StringConverter<T>?): String =
+        private fun <T> getItemText(cell: Cell<T>, converter: StringConverter<T>?): String =
             if (converter == null) { if (cell.item == null) "" else cell.item.toString() }
             else converter.toString(cell.item)
 

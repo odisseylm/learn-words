@@ -123,7 +123,7 @@ open class WordCardsTable(val controller: LearnWordsController) : TableView<Card
 
         translationCountColumn.cellFactory = LabelTableCell.forTableColumn { cell, _, translationCount ->
             val translationCountStatus = translationCount?.toTranslationCountStatus ?: TranslationCountStatus.Ok
-            cell.styleClass.removeAll(TranslationCountStatus.allCssClasses)
+            cell.styleClass.removeAll(TranslationCountStatus.allCssClassesSet)
             cell.styleClass.add(translationCountStatus.cssClass)
         }
 
@@ -391,7 +391,7 @@ private class StatusesIcons {
 
 private fun updateWordCardStatusesCell(cell: TableCell<CardWordEntry, Set<WordCardStatus>>, card: CardWordEntry, icons: StatusesIcons) {
 
-    cell.styleClass.removeAll(WordCardStatus.allCssClasses)
+    cell.styleClass.removeAll(WordCardStatus.allCssClassesSet)
     cell.graphic = null
 
     val toolTips = mutableListOf<String>()
@@ -417,7 +417,7 @@ private fun updatePartOfSpeechCell(cell: TableCell<CardWordEntry, Set<PartOfSpee
     if ("PartOfSpeechCell" !in cell.styleClass)
         cell.styleClass.add("PartOfSpeechCell")
 
-    cell.styleClass.removeAll(PartOfSpeech.allCssClasses)
+    cell.styleClass.removeAll(PartOfSpeech.allCssClassesSet)
 
     val partsOfSpeech = card.partsOfSpeech.ifEmpty { setOf(card.predictedPartOfSpeechProperty.value) }
     val asSinglePartSpeech = card.asSinglePartOfSpeech()

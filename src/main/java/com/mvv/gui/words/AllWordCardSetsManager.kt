@@ -324,11 +324,13 @@ private fun CharSequence.splitRussianTranslationToIndexed(): List<String> {
              else emptyList()
 
     return (t1 + t2)
+        .asSequence()
         .map { it.trim().removeRepeatableSpaces(SpaceCharPolicy.UseSpaceOnly) }
         .distinct()
         .flatMap { listOf(it, it.removeOptionalTranslationEnding()) }
         .filter { wordCount == 1 || it !in veryBaseVerbs }
         .distinct()
+        .toList()
 }
 
 
@@ -383,6 +385,7 @@ private fun CharSequence.splitRussianTranslationImpl(processChildren: Boolean): 
 
 
         // case: "страшный (ужасный)"
+        @Suppress("GrazieInspection")
         if (part1.withoutBrackets && part2.inBrackets
             && part1WordCount == 1 && part2WordCount == 1
             && ((part1Text.isVerb && part2Text.isVerb) || (part1Text.isAdjective && part2Text.isAdjective)))

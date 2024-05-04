@@ -117,7 +117,7 @@ fun IsAppThemed(): Boolean = nativeContext {
 
 // https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-getthemefilename
 //
-fun GetThemeFilename(hTheme: HTHEME, iPartId: Int, iStateId: Int, iPropId: Int,): String? = nativeContext {
+fun GetThemeFilename(hTheme: HTHEME, iPartId: Int, iStateId: Int, iPropId: Int): String? = nativeContext {
     // HRESULT GetThemeFilename(
     //  [in]  HTHEME hTheme,
     //  [in]  int    iPartId,

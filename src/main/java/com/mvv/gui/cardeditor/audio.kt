@@ -68,7 +68,7 @@ class VoiceManager {
 
     private val lastPlayer = AtomicReference<SpeechSynthesizer>()
 
-    val bestVoices: List<SpeechSynthesizer> = listOf(
+    private val bestVoices: List<SpeechSynthesizer> = listOf(
             HowJSayWebDownloadSpeechSynthesizer(audioPlayer),
             ReversoWebDownloadSpeechSynthesizer(audioPlayer),
             // Now it needs VPN

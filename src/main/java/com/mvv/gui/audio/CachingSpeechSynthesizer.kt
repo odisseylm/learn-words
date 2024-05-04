@@ -19,8 +19,8 @@ val defaultSpeechSynthesizerNetSettings = NetSettings(timeout = Duration.ofSecon
 val availabilityTestNetSettings = NetSettings(timeout = Duration.ofSeconds(5))
 
 abstract class CachingSpeechSynthesizer (
-    protected val audioPlayer: AudioPlayer,
-    private   val netSettings: NetSettings = defaultSpeechSynthesizerNetSettings,
+    private val audioPlayer: AudioPlayer,
+    private val netSettings: NetSettings = defaultSpeechSynthesizerNetSettings,
     ) : SpeechSynthesizer {
 
     private fun cachedAudioFilePath(word: String): Path = cacheDir.resolve("${word.trim()}.$audioFileExt")

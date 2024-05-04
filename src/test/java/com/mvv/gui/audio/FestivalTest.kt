@@ -41,7 +41,7 @@ class FestivalTest {
     @Disabled("for manual testing")
     fun sayUsingGoodVoices() =
         FestivalVoiceManager().goodVoices.forEach {
-            log.info("Testing voice '{}'", it.name)
+            log.info("Testing good voice '{}'", it.name)
             FestivalVoiceSpeechSynthesizer(it).speak("Hello Marina!")
         }
 
@@ -49,7 +49,7 @@ class FestivalTest {
     @Disabled("for manual testing")
     fun sayDifficultText1_UsingGoodVoices() =
         FestivalVoiceManager().goodVoices.forEach {
-            log.info("Testing voice '{}'", it.name)
+            log.info("Testing difficult test with good voice '{}'", it.name)
             FestivalVoiceSpeechSynthesizer(it).speak("6 new wireless networks found")
         }
 

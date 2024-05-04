@@ -112,7 +112,7 @@ private fun ZonedDateTime?.formatDate(): String? =
     if (this.isUnset()) null else this?.toString()
 
 private fun stringToInts(string: String): List<Int> =
-    stringToCollectionImpl(string, mutableListOf<Int>()) { it.toInt() }
+    stringToCollectionImpl(string, mutableListOf()) { it.toInt() }
 
 private inline fun <reified T: Enum<T>> stringToEnums(string: String): Set<T> =
     stringToCollectionImpl(string, EnumSet.noneOf(T::class.java)) { EnumUtils.getEnum(T::class.java, it) }

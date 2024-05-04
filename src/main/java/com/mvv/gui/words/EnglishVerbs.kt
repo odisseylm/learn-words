@@ -10,7 +10,7 @@ class EnglishVerbs {
             irregularVerbs.asSequence().flatMap { it.pastParticiple.map { pastParticiple -> Pair(pastParticiple, it.base) } } +
             irregularVerbs.asSequence().flatMap { it.pastTense.map { pastTense -> Pair(pastTense, it.base) } } +
             // special cases
-            listOf(Pair("is", "be"), Pair("am", "be"), Pair("are", "be"), )
+            listOf(Pair("is", "be"), Pair("am", "be"), Pair("are", "be"))
         )
         .associate { it }
 

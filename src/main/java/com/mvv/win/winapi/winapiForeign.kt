@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "Since15")
 package com.mvv.win.winapi
 
 import com.mvv.gui.util.ifIndexNotFound

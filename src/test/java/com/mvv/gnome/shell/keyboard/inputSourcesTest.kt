@@ -289,7 +289,7 @@ private fun mockLocale(
     isO3Country: String = "",
     displayCountry: String = "",
     englishDisplayCountry: String = "",
-    ): Locale = mock<Locale>() {
+    ): Locale = mock<Locale> {
         on { this.language }.thenReturn(language)
         on { this.isO3Language }.thenReturn(isO3Language)
         on { this.displayLanguage }.thenReturn(displayLanguage)

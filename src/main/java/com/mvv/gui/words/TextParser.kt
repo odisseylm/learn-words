@@ -63,24 +63,21 @@ class Delimiter (
 
 
 @Suppress("EqualsOrHashCode")
-class Sentence internal constructor(text: CharSequence, tokens: Iterable<Token>) {
+class Sentence internal constructor(
+    val text: CharSequence,
+    tokens: Iterable<Token>,
+    ) {
 
-    val text: CharSequence
-    val allTokens: List<Token>
-    val allWords: List<WordEntry>
-    val translatableWords: List<WordEntry>
+    val allTokens: List<Token> = tokens.toList()
 
-    init {
-        this.text = text
-        this.allTokens = tokens.toList()
-        this.allWords = tokens
-            .asSequence()
-            .filterIsInstance<WordEntry>()
-            .map { WordEntry(it.word, it.position, this) }
-            .toList()
-        this.translatableWords = this.allWords.filter { it.word.isTranslatable }
-    }
+    val allWords: List<WordEntry> = tokens
+        .asSequence()
+        .filterIsInstance<WordEntry>()
+        .map { WordEntry(it.word, it.position, this) }
+        .toList()
 
+    val translatableWords: List<WordEntry> =
+        this.allWords.filter { it.word.isTranslatable }
 
     override fun toString(): String =
         "Sentence([$text], allWords=$allWords, translatableWords=$translatableWords)"
