@@ -33,9 +33,19 @@ private val log = mu.KotlinLogging.logger {}
 
 
 fun selectKeyboardLayout(locale: Locale) { measureTime("select keyboard for $locale", log) {
-    when {
-        IS_OS_LINUX   -> selectGnomeKeyboardLayout(locale)
-        IS_OS_WINDOWS -> selectWindowsKeyboard(locale)
+    try {
+        when {
+            IS_OS_LINUX -> selectGnomeKeyboardLayout(locale)
+            IS_OS_WINDOWS -> selectWindowsKeyboard(locale)
+        }
+    }
+    catch (ex: Throwable) {
+        log.warn {
+            "\n" +
+            "\tKeyboard was no selected due to error [$ex].\n" +
+            "\tProbably your system (OS + JRE) are not supported.\n" +
+            "\tIt might have sense to disable 'autoChangeKeyboardLanguage' in settings."
+        }
     }
 } }
 

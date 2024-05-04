@@ -172,13 +172,24 @@ inline fun <E, C: MutableCollection<E>> C.addAll(vararg values: E): C {
 }
 
 
-// To avoid deprecation warnings
-//
-//fun locale(language: String): Locale = Locale.of(language)
-//fun locale(language: String, country: String): Locale = Locale.of(language, country)
-// TODO: find some universal solution
-fun locale(language: String): Locale = Locale(language)
-fun locale(language: String, country: String): Locale = Locale(language, country)
+@Suppress("DEPRECATION")
+private fun createLocaleOldByLang(language: String): Locale = Locale(language)
+@Suppress("DEPRECATION")
+private fun createLocaleOldByLangAndCountry(language: String, country: String): Locale = Locale(language, country)
+
+private fun createLocaleSinceJava19ByLang(language: String): Locale = Locale.of(language)
+private fun createLocaleSinceJava19ByLangAndCountry(language: String, country: String): Locale = Locale.of(language, country)
+
+private val createLocaleByLang: (String)->Locale =
+    try { createLocaleSinceJava19ByLang(Locale.ENGLISH.language); ::createLocaleSinceJava19ByLang }
+    catch (_: NoSuchMethodError) { ::createLocaleOldByLang }
+private val createLocaleByLangAndCountry: (String,String)->Locale =
+    try { createLocaleSinceJava19ByLangAndCountry(Locale.ENGLISH.language, "US"); ::createLocaleSinceJava19ByLangAndCountry }
+    catch (_: NoSuchMethodError) { ::createLocaleOldByLangAndCountry }
+
+fun locale(language: String): Locale = createLocaleByLang(language)
+fun locale(language: String, country: String): Locale = createLocaleByLangAndCountry(language, country)
+
 
 // Kotlin: 'reversed(): (Mutable)List<E!>!' is deprecated.
 // This member is not fully supported by Kotlin compiler,

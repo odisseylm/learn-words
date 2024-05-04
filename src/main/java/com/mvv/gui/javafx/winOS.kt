@@ -5,6 +5,9 @@ import com.mvv.win.UseWindowDarkMode
 import javafx.stage.Window
 import org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS
 
+
+private val log = mu.KotlinLogging.logger {}
+
 /*
 import com.sun.jna.Library
 import com.sun.jna.PointerType
@@ -87,7 +90,12 @@ fun setDarkTitle(wnd: Window): Boolean {
         return false
     }
 
-    UseWindowDarkMode(hWnd)
+    try {
+        UseWindowDarkMode(hWnd)
+    }
+    catch (ex: Throwable) {
+        log.warn { "Error of using dark border on Windows [$ex]" }
+    }
 
     return true
 }
