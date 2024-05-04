@@ -12,6 +12,8 @@ import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
 
 
+private val log = mu.KotlinLogging.logger {}
+
 class ArenaTypeTest {
 
     @Test
@@ -59,8 +61,8 @@ class ArenaTypeTest {
     class DllLoader {
         companion object {
             init {
-                println("DllLoader loading")
-                //System.load("C:/Windows/System32/msvcrt.dll")
+                log.info { "DllLoader loading. Loading 'msvcrt'." }
+                // C:/Windows/System32/msvcrt.dll
                 System.loadLibrary("msvcrt")
             }
         }
@@ -72,7 +74,10 @@ class ArenaTypeTest {
 
         val linker = Linker.nativeLinker()
 
-        Class.forName(DllLoader::class.java.name, true, Arena::class.java.classLoader)
+        // required for earlier incubator versions with my version of Arena class
+        try { Class.forName(DllLoader::class.java.name, true, Arena::class.java.classLoader) }
+        catch (ex: Exception) { log.warn(ex) { } }
+
         val wcslen: MethodHandle = linker.downcallHandle(
             linker.defaultLookup().find("wcslen").orElseThrow(),
             FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
